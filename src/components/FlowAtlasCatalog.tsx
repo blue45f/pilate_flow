@@ -1,9 +1,20 @@
-import { ArrowRight, Check, Heart, Info, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
-import type { RefObject } from 'react';
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Heart,
+  Info,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
+import { useRef, useState, type RefObject } from 'react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
+import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import type { ApparatusType, PilatesExercise } from '../types/pilates';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import '../styles/flow-atlas.css';
@@ -16,6 +27,12 @@ const APPARATUS_ORDER: readonly ApparatusType[] = [
   'barrel',
 ];
 const LEVEL_LABELS = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
+const APPARATUS_FILTERS = APPARATUS_ORDER.map((apparatus) => ({
+  apparatus,
+  ids: EQUIPMENT_OPTIONS.filter((item) => item.apparatusFamily === apparatus).map(
+    (item) => item.id,
+  ),
+}));
 
 export interface FlowAtlasCardState {
   inSequence: boolean;
@@ -29,6 +46,8 @@ export interface FlowAtlasCatalogProps {
   totalCount: number;
   search: string;
   equipment: readonly string[];
+  level: string;
+  duration: string;
   favoritesOnly: boolean;
   filterCount: number;
   activeFilters: readonly { key: string; label: string; onClear: () => void }[];
@@ -42,6 +61,9 @@ export interface FlowAtlasCatalogProps {
   gridRef: RefObject<HTMLDivElement | null>;
   onSearch: (value: string) => void;
   onSelectEquipment: (ids: string[]) => void;
+  onSelectLevel: (level: string) => void;
+  onSelectDuration: (duration: string) => void;
+  onToggleOwned: () => void;
   onToggleFavorites: () => void;
   onClearSearch: () => void;
   onReset: () => void;
@@ -63,6 +85,8 @@ export function FlowAtlasCatalog({
   totalCount,
   search,
   equipment,
+  level,
+  duration,
   favoritesOnly,
   filterCount,
   activeFilters,
@@ -76,6 +100,9 @@ export function FlowAtlasCatalog({
   gridRef,
   onSearch,
   onSelectEquipment,
+  onSelectLevel,
+  onSelectDuration,
+  onToggleOwned,
   onToggleFavorites,
   onClearSearch,
   onReset,
@@ -89,6 +116,22 @@ export function FlowAtlasCatalog({
   onLoadMore,
   getCardState,
 }: FlowAtlasCatalogProps) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const selectedApparatus = APPARATUS_FILTERS.find(
+    ({ ids }) => ids.length === equipment.length && ids.every((id) => equipment.includes(id)),
+  );
+  const extraFilters = activeFilters.filter(
+    (chip) =>
+      chip.key !== 'search' &&
+      !(selectedApparatus && chip.key.startsWith('eq-')) &&
+      !(filtersOpen && (chip.key === 'level' || chip.key === 'duration')),
+  );
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    filterButtonRef.current?.focus();
+  };
+
   return (
     <section className="flow-atlas" aria-labelledby="workspace-main-heading">
       <header className="flow-atlas__heading">
@@ -138,10 +181,16 @@ export function FlowAtlasCatalog({
           <button
             className="flow-atlas__button flow-atlas__button--quiet"
             type="button"
-            onClick={() => onOpenTools(true)}
+            ref={filterButtonRef}
+            aria-expanded={filtersOpen}
+            aria-controls="flow-atlas-filters"
+            onClick={() => setFiltersOpen((open) => !open)}
           >
             <SlidersHorizontal size={17} aria-hidden="true" /> 필터
-            {filterCount > 0 ? <span className="flow-atlas__count">{filterCount}</span> : null}
+            {filterCount > 0 || ownedOnly ? (
+              <span className="flow-atlas__count">{filterCount + Number(ownedOnly)}</span>
+            ) : null}
+            <ChevronDown size={15} aria-hidden="true" />
           </button>
         </div>
         <div className="flow-atlas__browse-row">
@@ -153,12 +202,8 @@ export function FlowAtlasCatalog({
             >
               전체
             </button>
-            {APPARATUS_ORDER.map((apparatus) => {
-              const ids = EQUIPMENT_OPTIONS.filter(
-                (item) => item.apparatusFamily === apparatus,
-              ).map((item) => item.id);
-              const selected =
-                ids.length === equipment.length && ids.every((id) => equipment.includes(id));
+            {APPARATUS_FILTERS.map(({ apparatus, ids }) => {
+              const selected = selectedApparatus?.apparatus === apparatus;
               return (
                 <button
                   key={apparatus}
@@ -181,31 +226,96 @@ export function FlowAtlasCatalog({
             즐겨찾기
           </button>
         </div>
+        <div
+          id="flow-atlas-filters"
+          className="flow-atlas__inline-filters"
+          role="group"
+          aria-label="추가 검색 조건"
+          hidden={!filtersOpen}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.stopPropagation();
+            closeFilters();
+          }}
+        >
+          <div className="flow-atlas__filter-fields">
+            <label>
+              난이도
+              <select value={level} onChange={(event) => onSelectLevel(event.target.value)}>
+                <option value="all">전체 난이도</option>
+                {Object.entries(LEVEL_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              동작 시간
+              <select value={duration} onChange={(event) => onSelectDuration(event.target.value)}>
+                <option value="all">전체 시간</option>
+                <option value="short">3분 이하</option>
+                <option value="medium">3분 초과~5분</option>
+                <option value="long">5분 초과</option>
+              </select>
+            </label>
+            <label className="flow-atlas__owned-filter">
+              <input type="checkbox" checked={ownedOnly} onChange={onToggleOwned} />내 보유 장비로
+              가능한 동작만
+            </label>
+          </div>
+          <div className="flow-atlas__filter-footer">
+            <button
+              type="button"
+              className="flow-atlas__text-button"
+              onClick={() => onOpenTools(true)}
+            >
+              자세·소도구 등 더 자세한 조건
+              <ArrowRight size={14} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="flow-atlas__button flow-atlas__button--quiet"
+              onClick={closeFilters}
+            >
+              결과 보기
+            </button>
+          </div>
+        </div>
         {activeFilters.length > 0 || ownedOnly ? (
           <div className="flow-atlas__active-filters" role="group" aria-label="적용된 검색·필터">
-            {ownedOnly ? (
-              <button type="button" onClick={() => onOpenTools(true)}>
+            {ownedOnly && !filtersOpen ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleOwned();
+                  searchRef.current?.focus();
+                }}
+                aria-label="내 보유 장비 범위 필터 해제"
+              >
                 내 보유 장비 범위
+                <X size={12} aria-hidden="true" />
               </button>
             ) : null}
-            {activeFilters
-              .filter((chip) => chip.key !== 'search')
-              .map((chip) => (
-                <button
-                  type="button"
-                  key={chip.key}
-                  onClick={chip.onClear}
-                  aria-label={`${chip.label} 필터 해제`}
-                >
-                  {chip.label}
-                  <X size={12} aria-hidden="true" />
-                </button>
-              ))}
-            {activeFilters.length > 0 ? (
-              <button type="button" className="flow-atlas__reset" onClick={onReset}>
-                초기화
+            {extraFilters.map((chip) => (
+              <button
+                type="button"
+                key={chip.key}
+                onClick={chip.onClear}
+                aria-label={`${chip.label} 필터 해제`}
+              >
+                {chip.label}
+                <X size={12} aria-hidden="true" />
               </button>
-            ) : null}
+            ))}
+            <button
+              type="button"
+              className="flow-atlas__reset"
+              onClick={ownedOnly ? onShowAll : onReset}
+            >
+              조건 초기화
+            </button>
           </div>
         ) : null}
       </section>
@@ -247,6 +357,16 @@ export function FlowAtlasCatalog({
             const idea = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
             const photo =
               idea?.photoDataUrl && !brokenPhotoIds[exercise.id] ? idea.photoDataUrl : null;
+            const previewLabel = idea
+              ? photo
+                ? '내 사진과 메모'
+                : '내 동작 메모'
+              : sourceOnly
+                ? '원본 영상 참고'
+                : getExerciseArtworkFrame(exercise)
+                  ? '계획용 동작 도해'
+                  : '동작 설명';
+            const previewHintId = `flow-atlas-preview-${exercise.id}`;
             return (
               <article
                 className={`flow-atlas__card ${state.inSequence ? 'is-in-sequence' : ''}`}
@@ -254,76 +374,87 @@ export function FlowAtlasCatalog({
                 aria-label={`${exercise.nameKo} 동작`}
                 data-exercise-id={exercise.id}
               >
-                <div className="flow-atlas__art-wrap">
-                  <button
-                    type="button"
-                    className="flow-atlas__art"
-                    onClick={() => onOpenDetails(exercise)}
-                    aria-label={`${exercise.nameKo} 상세 보기`}
-                  >
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt=""
-                        loading="lazy"
-                        onError={() => onPhotoError(exercise.id)}
-                      />
-                    ) : (
-                      <ExerciseMotionArtwork exercise={exercise} />
-                    )}
-                  </button>
+                <div className="flow-atlas__preview">
+                  <div className="flow-atlas__art-wrap">
+                    <div className="flow-atlas__art">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt=""
+                          loading="lazy"
+                          onError={() => onPhotoError(exercise.id)}
+                        />
+                      ) : (
+                        <ExerciseMotionArtwork exercise={exercise} />
+                      )}
+                    </div>
+                    {state.inSequence ? (
+                      <span className="flow-atlas__added-marker">
+                        <Check size={13} aria-hidden="true" /> 수업에 담김
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flow-atlas__card-content">
+                    <p className="flow-atlas__card-meta">
+                      <span>{APPARATUS_LABELS[exercise.apparatus].ko}</span>
+                      <span>{LEVEL_LABELS[exercise.level]}</span>
+                      <span>{exercise.defaultDurationMin}분</span>
+                    </p>
+                    <h2>
+                      <button
+                        type="button"
+                        className="flow-atlas__preview-button"
+                        onClick={() => onOpenDetails(exercise)}
+                        aria-label={`${exercise.nameKo} 미리보기`}
+                        aria-describedby={previewHintId}
+                      >
+                        {exercise.nameKo}
+                      </button>
+                    </h2>
+                    <p className="flow-atlas__preview-hint">
+                      <span id={previewHintId}>{previewLabel}</span>
+                      <span aria-hidden="true">
+                        미리보기 <ArrowRight size={14} />
+                      </span>
+                    </p>
+                  </div>
                   <button
                     type="button"
                     className="flow-atlas__favorite-button"
                     aria-pressed={favorite}
                     aria-label={`${exercise.nameKo} 즐겨찾기 ${favorite ? '해제' : '추가'}`}
-                    onClick={() => onToggleFavorite(exercise)}
+                    onClick={() => {
+                      onToggleFavorite(exercise);
+                      if (favoritesOnly && favorite) searchRef.current?.focus();
+                    }}
                   >
                     <Heart size={18} aria-hidden="true" fill={favorite ? 'currentColor' : 'none'} />
                   </button>
-                  {state.inSequence ? (
-                    <span className="flow-atlas__added-marker">
-                      <Check size={13} aria-hidden="true" /> 수업에 담김
-                    </span>
-                  ) : null}
                 </div>
-                <div className="flow-atlas__card-content">
-                  <p className="flow-atlas__card-meta">
-                    <span>{APPARATUS_LABELS[exercise.apparatus].ko}</span>
-                    <span>{LEVEL_LABELS[exercise.level]}</span>
-                    <span>{exercise.defaultDurationMin}분</span>
-                  </p>
-                  <h2>
-                    <button type="button" onClick={() => onOpenDetails(exercise)}>
-                      {exercise.nameKo}
-                    </button>
-                  </h2>
+                <div className="flow-atlas__card-footer">
                   {state.note ? <p className="flow-atlas__card-note">{state.note}</p> : null}
                   <div className="flow-atlas__card-actions">
                     <button
                       type="button"
-                      className="flow-atlas__button flow-atlas__button--quiet"
-                      onClick={() => onOpenDetails(exercise)}
-                      aria-label={`${exercise.nameKo} ${sourceOnly ? '영상 보기' : '자세히 보기'}`}
-                    >
-                      보기
-                    </button>
-                    <button
-                      type="button"
                       className={`flow-atlas__button flow-atlas__button--add ${state.inSequence ? 'is-added' : ''}`}
-                      onClick={() => onAdd(exercise)}
-                      aria-label={`${exercise.nameKo} 수업안에 추가`}
+                      onClick={() => (state.inSequence ? onReturnToClass() : onAdd(exercise))}
+                      aria-label={
+                        state.inSequence
+                          ? `${exercise.nameKo} 담긴 수업안 보기`
+                          : `${exercise.nameKo} 수업안에 추가`
+                      }
                     >
                       {addedId === exercise.id || state.inSequence ? (
                         <Check size={17} aria-hidden="true" />
                       ) : (
                         <Plus size={17} aria-hidden="true" />
                       )}
-                      {addedId === exercise.id
-                        ? '추가됨'
-                        : state.inSequence
-                          ? `담김 · ${state.orderNumber}번`
-                          : '추가'}
+                      {state.inSequence
+                        ? '수업안 보기'
+                        : addedId === exercise.id
+                          ? '추가됨'
+                          : '수업에 담기'}
+                      {state.inSequence ? <ArrowRight size={16} aria-hidden="true" /> : null}
                     </button>
                   </div>
                 </div>

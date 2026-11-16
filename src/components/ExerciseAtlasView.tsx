@@ -902,6 +902,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     draftCriteria,
     appendExerciseToSequence,
     setExerciseFavoriteTag,
+    activeSequenceId,
     activeSteps,
     setActiveTab,
     reformerBrand,
@@ -930,8 +931,16 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [showMotionExamples, setShowMotionExamples] = useState(false);
   const [showApparatusGuide, setShowApparatusGuide] = useState(false);
   const [showPatternDrafts, setShowPatternDrafts] = useState(false);
-  const [toast, setToast] = useState<{ success: boolean; message: string } | null>(null);
-  const [addedId, setAddedId] = useState<string | null>(null);
+  const [recentToast, setToast] = useState<{ success: boolean; message: string } | null>(null);
+  const [recentAddedId, setAddedId] = useState<string | null>(null);
+  const [additionSequenceId, setAdditionSequenceId] = useState<string | null>(null);
+  const additionIsCurrent = additionSequenceId === activeSequenceId;
+  const addedId =
+    additionIsCurrent && activeSteps.some((step) => step.exerciseId === recentAddedId)
+      ? recentAddedId
+      : null;
+  // A restored/replaced class or a removed step must not inherit the previous add's success.
+  const toast = additionIsCurrent && (!recentToast?.success || addedId !== null) ? recentToast : null;
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
   const [previewReference, setPreviewReference] = useState<MotionPatternReference | null>(null);
   const [previewCatalogMotionId, setPreviewCatalogMotionId] = useState<string | null>(null);
@@ -1181,6 +1190,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const addExercise = (exercise: PilatesExercise) => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
+    setAdditionSequenceId(usePilatesStore.getState().activeSequenceId);
     setAddedId(null);
     setToast(null);
     if (isMovementIdeaExercise(exercise)) {
@@ -1227,6 +1237,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         totalCount={exercises.length}
         search={filters.search}
         equipment={filters.equipment}
+        level={filters.level}
+        duration={filters.duration}
         favoritesOnly={filters.favorite !== 'all'}
         filterCount={activeFilterCount}
         activeFilters={activeFilterChips.map((chip) => ({
@@ -1246,6 +1258,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         gridRef={cardGridRef}
         onSearch={(value) => update('search', value)}
         onSelectEquipment={(ids) => update('equipment', ids)}
+        onSelectLevel={(value) => update('level', value)}
+        onSelectDuration={(value) => update('duration', value)}
+        onToggleOwned={() => setExerciseBrowseScope(exerciseBrowseScope === 'owned' ? 'all' : 'owned')}
         onToggleFavorites={() => update('favorite', filters.favorite === 'all' ? 'saved' : 'all')}
         onClearSearch={clearSearch}
         onReset={resetFilters}

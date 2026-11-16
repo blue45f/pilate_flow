@@ -1,0 +1,420 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-16",
+  "baselineCommit": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+  "repository": "blue45f/pilate_flow",
+  "method": {
+    "reaExecuted": false,
+    "authenticatedCompetitorAccess": false,
+    "browserInteraction": false,
+    "bundleAnalysis": false,
+    "contentCopiedIntoProduct": false,
+    "sourceAccess": "Public first-party page retrieval plus baseline repository static source and read-only GitHub API inspection",
+    "competitorPerformanceMeasured": false,
+    "newTestsExecutedByResearchTask": true,
+    "deploymentExecuted": false
+  },
+  "evidenceTypes": {
+    "public_page_observation": "Labels, metadata and links present in the retrieved public first-party page; not an interaction replay",
+    "official_documentation_claim": "Behavior described by the provider; not verified within an authenticated product",
+    "local_static_observation": "Baseline source or test content inspected; not proof of current browser behavior",
+    "design_inference": "Our proposed product decision or acceptance target, not a competitor metric",
+    "ci_log_observation": "Specific existing remote CI job and log inspected"
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "title": "Pilates Anytime exercise library",
+      "url": "https://www.pilatesanytime.com/pilates-exercises",
+      "retrievalRef": "turn2view0",
+      "evidenceType": "public_page_observation",
+      "supportedClaims": [
+        "Apparatus and level navigation are exposed",
+        "Exercise entries include instructor, difficulty, duration and apparatus metadata"
+      ],
+      "shortExcerpt": null,
+      "limitations": [
+        "Filter behavior, mobile layout and member player were not exercised"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Pilatesology Classes",
+      "url": "https://pilatesology.com/classes/",
+      "retrievalRef": "turn2view2",
+      "evidenceType": "public_page_observation",
+      "supportedClaims": [
+        "Search, filters and clear controls are exposed",
+        "Workout and Observe & Learn are distinct class types",
+        "Duration, teacher and level or tempo appear in class entries"
+      ],
+      "shortExcerpt": null,
+      "limitations": [
+        "No runtime filter selection or responsive layout check"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "Creating and using custom playlists",
+      "url": "https://pilatesology.com/creating-using-custom-playlists/",
+      "retrievalRef": "turn2view1",
+      "evidenceType": "official_documentation_claim",
+      "supportedClaims": [
+        "Documentation describes adding a thumbnail to a chosen playlist, rearranging entries, seeing its count and returning from a video to the playlist"
+      ],
+      "shortExcerpt": "Back to Playlist",
+      "limitations": [
+        "Documentation may describe an older interface",
+        "Current signed-in behavior was not reproduced"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Forme Pilates features",
+      "url": "https://www.formepilates.app/features",
+      "retrievalRef": "turn3view0",
+      "evidenceType": "official_documentation_claim",
+      "supportedClaims": [
+        "Provider describes library insertion, ordering, sections, target and running total",
+        "Teach mode describes current cues and springs with the next setup",
+        "Printable class sheets are described"
+      ],
+      "shortExcerpt": "Target length with a live total",
+      "limitations": [
+        "No authenticated builder interaction",
+        "No measured time savings, AI plan quality or safety validation",
+        "Do not conflate this .app domain with similarly named products"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "How to watch videos in your language",
+      "url": "https://pilatesology.helpscoutdocs.com/article/63-classes-in-other-languages",
+      "retrievalRef": "turn3view1",
+      "documentUpdatedAt": "2026-08-10",
+      "evidenceType": "official_documentation_claim",
+      "supportedClaims": [
+        "Help distinguishes site language, class-language filtering, audio tracks and subtitles"
+      ],
+      "shortExcerpt": null,
+      "limitations": [
+        "Language availability for individual videos was not verified",
+        "This does not justify treating country metadata as audio language"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "Sequence/OS FAQ",
+      "url": "https://sequenceos.app/faq",
+      "retrievalRef": "turn2view3",
+      "evidenceType": "official_documentation_claim",
+      "supportedClaims": [
+        "FAQ describes sequence ordering, durations, reusable groups and focused current/next teaching information",
+        "FAQ explicitly describes a product without pose images"
+      ],
+      "shortExcerpt": null,
+      "limitations": [
+        "Adjacent yoga planner, not a Pilates authority",
+        "Not used as evidence of superior motion imagery or medical safety",
+        "No hands-on testing"
+      ]
+    }
+  ],
+  "localFindings": [
+    {
+      "id": "L1",
+      "evidenceType": "local_static_observation",
+      "paths": [
+        "src/components/ExerciseAtlasView.tsx",
+        "src/components/FlowAtlasCatalog.tsx"
+      ],
+      "claim": "The normal atlas entry renders FlowAtlasCatalog; additional source and authoring tools have a separate advanced entry. Preserve this structure while improving exit and focus continuity."
+    },
+    {
+      "id": "L2",
+      "evidenceType": "local_static_observation",
+      "paths": [
+        "src/components/SequenceStudioWorkbench.tsx",
+        "src/test/sequenceInsertionAndReuse.test.ts"
+      ],
+      "claim": "Insertion position, recent insertion feedback, duration summary and preparation actions already exist; extend their contracts instead of introducing another editor."
+    },
+    {
+      "id": "L3",
+      "evidenceType": "local_static_observation",
+      "paths": [
+        "src/components/ExerciseVideoGallery.tsx"
+      ],
+      "claim": "Video selection and explicit playback are separate; region filters are country metadata, not verified audio or subtitle languages."
+    },
+    {
+      "id": "L4",
+      "evidenceType": "local_static_observation",
+      "paths": [
+        "src/components/LiveStageView.tsx",
+        "src/components/ExerciseMotionArtwork.tsx"
+      ],
+      "claim": "Focused teaching presentation and current/next information exist. Preserve native-motion versus source-only coverage rather than implying universal native animation."
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "R1",
+      "flow": "find movement",
+      "evidenceType": "design_inference",
+      "sourceIds": [
+        "S1",
+        "S2"
+      ],
+      "localFindingIds": [
+        "L1"
+      ],
+      "inference": "Keep search and apparatus primary, disclose optional controls and preserve discovery state on return.",
+      "acceptanceTargets": [
+        "At most two explicit actions from a valid selected result to insertion",
+        "Close does not clear search or filters",
+        "Logical focus returns after detail/filter exit",
+        "Empty-state reset and scope expansion remain distinct"
+      ],
+      "measuredResult": null
+    },
+    {
+      "id": "R2",
+      "flow": "add and order lesson",
+      "evidenceType": "design_inference",
+      "sourceIds": [
+        "S3",
+        "S4"
+      ],
+      "localFindingIds": [
+        "L2"
+      ],
+      "inference": "Show the active insertion point and resulting order in the existing workflow.",
+      "acceptanceTargets": [
+        "One successful add produces exactly one entry",
+        "Count, duration and resulting position agree",
+        "Stale insertion anchors require a new valid selection",
+        "Undo, locks, rests, side data and source metadata survive",
+        "Unsaved drafts remain usable"
+      ],
+      "measuredResult": null
+    },
+    {
+      "id": "R3",
+      "flow": "lesson-ready state",
+      "evidenceType": "design_inference",
+      "sourceIds": [
+        "S4",
+        "S6"
+      ],
+      "localFindingIds": [
+        "L2",
+        "L4"
+      ],
+      "inference": "Summarize concrete readiness facts and the next action; keep target mismatch distinct from actual blockers.",
+      "acceptanceTargets": [
+        "Each blocker has a concrete explanation and relevant action",
+        "No new blocking rule based only on target-time mismatch",
+        "View changes preserve clock, voice and source context",
+        "Idle unchanged stage exit adds no unnecessary confirmation",
+        "Running session replacement follows existing exit decision"
+      ],
+      "measuredResult": null
+    },
+    {
+      "id": "R4",
+      "flow": "media readability",
+      "evidenceType": "design_inference",
+      "sourceIds": [
+        "S1",
+        "S2",
+        "S5"
+      ],
+      "localFindingIds": [
+        "L3",
+        "L4"
+      ],
+      "inference": "Use one clear media stage with readable attribution and controlled playback; preserve accurate source and language semantics.",
+      "acceptanceTargets": [
+        "Selecting a thumbnail alone does not autoplay",
+        "Title, channel and exercise relationship remain readable",
+        "Image failure preserves a fallback and source link",
+        "Reduced-motion, paused and hidden states do not introduce unsolicited motion",
+        "Check overflow at 360, 390, 768 and 1280 CSS pixels with 44px primary touch targets",
+        "Consistent figure/apparatus proportions, complete limbs and continuous contacts are visual review targets, not a safety certification"
+      ],
+      "measuredResult": null
+    }
+  ],
+  "remoteDuplicateAudit": {
+    "method": "Read-only GitHub GETs and matching baseline source inspection",
+    "mainRefUrl": "https://api.github.com/repos/blue45f/pilate_flow/branches/main",
+    "mainSha": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+    "branchesUrl": "https://api.github.com/repos/blue45f/pilate_flow/branches?per_page=100",
+    "branchNames": [
+      "main"
+    ],
+    "openPullRequestsUrl": "https://api.github.com/repos/blue45f/pilate_flow/pulls?state=open&per_page=100",
+    "openPullRequestCount": 0,
+    "relatedMergedPullRequests": [
+      {
+        "number": 2,
+        "url": "https://github.com/blue45f/pilate_flow/pull/2",
+        "mergeCommit": "2c8471e98d0a22aa437395af92843ab471a4a5a9",
+        "mergedAt": "2026-11-13T08:34:15Z"
+      },
+      {
+        "number": 3,
+        "url": "https://github.com/blue45f/pilate_flow/pull/3",
+        "mergeCommit": "a51252ac959d6342bd6d4de7d4ca8e392e02db89",
+        "mergedAt": "2026-11-13T09:33:01Z"
+      },
+      {
+        "number": 4,
+        "url": "https://github.com/blue45f/pilate_flow/pull/4",
+        "mergeCommit": "f3641ef9293e51cb2358dfd387a04fb13a0a5cc6",
+        "mergedAt": "2026-11-13T11:24:47Z"
+      },
+      {
+        "number": 5,
+        "url": "https://github.com/blue45f/pilate_flow/pull/5",
+        "mergeCommit": "92c189ec37fe957cc17b42fb6eb27646c787f074",
+        "mergedAt": "2026-11-13T16:25:42Z"
+      }
+    ],
+    "alreadyPresent": [
+      "Sequence authoring/rehearsal eligibility and moved-occurrence context guards in InstructorScheduleView",
+      "Deferred workspace/saved-class transitions in App.requestWorkspaceTransition",
+      "LiveStage exit decision, exact step-jump/time-add undo and record-failure retention",
+      "Idle unchanged session exit without a redundant decision",
+      "Voice/sensory cancellation on hidden state"
+    ],
+    "importantLimits": [
+      "Schedule warnings/time conflicts affect readiness labeling but are not direct predicates of canStartDatedStage or canStartLinkedStage",
+      "LiveStage clock is initialized in component memory; examined code does not prove recovery of a running timer after browser termination",
+      "visibilitychange samples elapsed time; it is not an automatic timer-pause policy",
+      "No separate unmerged remote patch was found; this does not rule out deleted branches or other local machines"
+    ],
+    "existingTestFilesToReuse": [
+      "src/components/InstructorScheduleView.prepFlow.test.tsx",
+      "src/test/stageGlobalNavigation.test.tsx",
+      "src/components/LiveStageView.usability.test.tsx"
+    ],
+    "ciEvidence": {
+      "evidenceType": "ci_log_observation",
+      "runId": 43550560016,
+      "jobId": 132311807567,
+      "url": "https://github.com/blue45f/pilate_flow/actions/runs/43550560016/job/132311807567",
+      "headSha": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+      "qualityJobConclusion": "success",
+      "deploymentJobConclusion": "skipped",
+      "observedPassedFiles": 70,
+      "observedPassedTests": 506,
+      "observedRelevantResults": [
+        {
+          "path": "src/test/stageGlobalNavigation.test.tsx",
+          "passedTests": 17
+        },
+        {
+          "path": "src/components/LiveStageView.usability.test.tsx",
+          "passedTests": 6
+        }
+      ],
+      "notInThatWorkflowExplicitSuite": [
+        "src/components/InstructorScheduleView.prepFlow.test.tsx"
+      ],
+      "limit": "Existing baseline CI evidence only; does not validate subsequent changes"
+    }
+  },
+  "legacyEvidenceHandling": {
+    "path": "docs/rea-peer-service-analysis-20261108/README.md",
+    "revalidated": false,
+    "treatment": "Historical repository record, not fresh REA evidence",
+    "notAdoptedAsCompetitorOrSafetyFacts": [
+      "Prior AST/DOM counts and bundle hashes",
+      "20-35 seconds for equipment changes",
+      "20-second unilateral movement minimum",
+      "Composite readiness score as a validated standard"
+    ]
+  },
+  "unverified": [
+    "Authenticated competitor flows and current paid product UI",
+    "Competitor click counts, task times, satisfaction or superiority",
+    "Individual reference-video audio/subtitle availability",
+    "Current implementation acceptance-target results",
+    "Production deployment or production user data"
+  ],
+  "localRegressionEvidence": {
+    "evidenceType": "executed_local_regression",
+    "startedAt": "2026-11-16T02:57:22.809783+00:00",
+    "finishedAt": "2026-11-16T02:58:37.665936+00:00",
+    "branch": "feat/simple-flow-natural-motion-20261116",
+    "headSha": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+    "workingTreeIncludesConcurrentUncommittedChanges": true,
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "src/components/InstructorScheduleView.prepFlow.test.tsx",
+      "src/test/stageGlobalNavigation.test.tsx",
+      "src/components/LiveStageView.usability.test.tsx",
+      "src/test/sequenceStudioWorkbench.test.tsx",
+      "src/utils/sequenceSimulation.test.ts",
+      "src/components/DatedSequencePlanningDialog.flowSafety.test.tsx",
+      "src/components/LogSessionModal.flowRecovery.test.tsx",
+      "src/components/SequenceWorkbench.flowRecovery.test.tsx",
+      "--reporter=verbose"
+    ],
+    "environment": "Vitest 3.2.7 / jsdom / existing maxWorkers=1 and unchanged time limits",
+    "exitCode": 0,
+    "passedFiles": 8,
+    "passedTests": 98,
+    "failedFiles": 0,
+    "failedTests": 0,
+    "vitestDurationSeconds": 72.78,
+    "passedByFile": {
+      "src/test/stageGlobalNavigation.test.tsx": 17,
+      "src/test/sequenceStudioWorkbench.test.tsx": 15,
+      "src/components/LiveStageView.usability.test.tsx": 6,
+      "src/components/SequenceWorkbench.flowRecovery.test.tsx": 6,
+      "src/components/DatedSequencePlanningDialog.flowSafety.test.tsx": 6,
+      "src/components/InstructorScheduleView.prepFlow.test.tsx": 5,
+      "src/components/LogSessionModal.flowRecovery.test.tsx": 3,
+      "src/utils/sequenceSimulation.test.ts": 40
+    },
+    "logPath": "/workspace/scratch/43e9d7cc5bc9/schedule-start-recovery-20261116.log",
+    "logSha256": "960eb2c96ac36e0126be568ceb694a66f14c414dc32551fff2dfaa7c26d9eadc",
+    "metadataPath": "/workspace/scratch/43e9d7cc5bc9/schedule-start-recovery-20261116.json",
+    "checkedFileCount": 18,
+    "filesChangedDuringRun": [],
+    "checkedFileSha256": {
+      "src/components/InstructorScheduleView.prepFlow.test.tsx": "84b9cdc5bd53530ea97d0d6f41dc1110da7e485ca55b0e8123e6c92e9bfe084b",
+      "src/test/stageGlobalNavigation.test.tsx": "92f12b7c9a7ad3744d69ebfb8510461ccf3088579a5428d586a0d276f2c1755c",
+      "src/components/LiveStageView.usability.test.tsx": "e210292518a9cdf295c61d7babce0096abf926a50a9aaa314f80ca6bc8b079c4",
+      "src/test/sequenceStudioWorkbench.test.tsx": "b2025da682bf1fb09b6c72ec6f6af9e6992b6850f89da22b4dcc17681b783eca",
+      "src/utils/sequenceSimulation.test.ts": "5f75f17124d165b540610032834fafef8138138b0d745c7da30ff1aff8a8843f",
+      "src/components/DatedSequencePlanningDialog.flowSafety.test.tsx": "5a55da103eec919f4a7fab1240125292bdd4fb1beedbe5e6f67c93287e788b38",
+      "src/components/LogSessionModal.flowRecovery.test.tsx": "8a88b670e37c08c7b1b50786ce4440860b9fad9e71f72e8be09064cb5fa11751",
+      "src/components/SequenceWorkbench.flowRecovery.test.tsx": "faf3964c4a90d961ef730242810b6b11e43b4c6c0c665c2b5b5a78b60566c2e6",
+      "src/components/InstructorScheduleView.tsx": "dc0cee40529df2f11566017942dd5bb1392afe1088a51308d8f8c4f80ff4cf00",
+      "src/components/LiveStageView.tsx": "7db2a2151b49269fa4a4d7aac2a7f54e2aa31b2f02fab35731448c9b44f33817",
+      "src/components/SequenceStudioWorkbench.tsx": "3c08f971a4fa941d6c6a56f48d26d1f5183ffb9be9de3a79e2548f339e4faac5",
+      "src/components/SequenceWorkbench.tsx": "2a920ae529d4ea8622e6a1837ed641235762c056d3e0b0cd15d4c25b886f5638",
+      "src/components/DatedSequencePlanningDialog.tsx": "35b7a9acfd10eead534d50b57193379533555fe656a4bf8c4b366225abc9ccbc",
+      "src/components/LogSessionModal.tsx": "5c4d915411b006f93c373ca3b79b7e458e82f3105d3d1659e171a34e3f7ddc04",
+      "src/utils/sequenceSimulation.ts": "cc3655ba066924a4797456a39bb170a685402d46cf33ab9395ef3e59f84378bc",
+      "src/App.tsx": "91eacb2b067ee027c3cbff88a5d75457ea7450869c0afc77bd338be30f71e0c3",
+      "src/store/usePilatesStore.ts": "4725a86b26d3a782e3dbfbc45d95df3bb7c91765bd2f0ef74d56328660449a8e",
+      "vitest.config.ts": "05d7fe483629ce0b486321e23736a50200c42d119c5483799cbac794c585377b"
+    },
+    "limits": [
+      "Selected regression suite only, not the full suite or final integrated commit",
+      "No real browser or termination/restart persistence test",
+      "Hashes cover listed tests and direct sources, not the entire repository",
+      "Changes made after the run need subsequent verification",
+      "No application code, configuration or timeout changes by this research task",
+      "No deployment or production-data access"
+    ]
+  }
+}

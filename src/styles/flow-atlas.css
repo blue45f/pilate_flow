@@ -21,7 +21,8 @@
   box-sizing: border-box;
 }
 .flow-atlas button,
-.flow-atlas input {
+.flow-atlas input,
+.flow-atlas select {
   font: inherit;
 }
 .flow-atlas button {
@@ -30,6 +31,7 @@
 }
 .flow-atlas button:focus-visible,
 .flow-atlas input:focus-visible,
+.flow-atlas select:focus-visible,
 .flow-atlas h1:focus-visible {
   outline: 3px solid #9cbba2;
   outline-offset: 3px;
@@ -220,6 +222,76 @@
   border-color: #c5d5c4;
   color: #315b40;
 }
+.flow-atlas__inline-filters {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--atlas-line);
+}
+.flow-atlas__inline-filters[hidden] {
+  display: none;
+}
+.flow-atlas__filter-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: end;
+  gap: 14px;
+}
+.flow-atlas__filter-fields > label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: #52655a;
+  font-size: 12px;
+  font-weight: 600;
+}
+.flow-atlas__filter-fields select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #c8d5c8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--atlas-ink);
+  font-size: 14px;
+}
+.flow-atlas__filter-fields .flow-atlas__owned-filter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 8px 0;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.flow-atlas__owned-filter input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--atlas-green);
+}
+.flow-atlas__filter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.flow-atlas__text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--atlas-muted);
+  font-size: 12px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .flow-atlas__active-filters {
   display: flex;
   flex-wrap: wrap;
@@ -329,6 +401,13 @@
 .flow-atlas .flow-atlas__card.is-in-sequence {
   border-color: #8daf91;
 }
+.flow-atlas__preview {
+  position: relative;
+  min-width: 0;
+}
+.flow-atlas__preview:hover .flow-atlas__preview-hint {
+  color: var(--atlas-green);
+}
 .flow-atlas__art-wrap {
   position: relative;
   min-width: 0;
@@ -359,6 +438,7 @@
 }
 .flow-atlas__favorite-button {
   position: absolute;
+  z-index: 2;
   top: 10px;
   right: 10px;
   display: grid;
@@ -390,10 +470,9 @@
 }
 .flow-atlas__card-content {
   display: flex;
-  flex: 1;
   flex-direction: column;
   min-width: 0;
-  padding: 18px;
+  padding: 18px 18px 14px;
 }
 .flow-atlas__card-meta {
   display: flex;
@@ -409,7 +488,7 @@
   color: #aab5aa;
 }
 .flow-atlas .flow-atlas__card h2 {
-  margin: 8px 0 16px;
+  margin: 5px 0 8px;
   font-size: 17px;
   font-weight: 650;
   line-height: 1.45;
@@ -428,8 +507,43 @@
   overflow-wrap: anywhere;
   word-break: keep-all;
 }
+.flow-atlas__preview-button::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: '';
+}
+.flow-atlas__preview-button:focus-visible {
+  outline: 0 !important;
+}
+.flow-atlas__preview-button:focus-visible::after {
+  outline: 3px solid #6f987d;
+  outline-offset: -4px;
+  border-radius: 14px 14px 0 0;
+}
+.flow-atlas__preview-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--atlas-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.flow-atlas__preview-hint > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--atlas-green);
+  font-weight: 600;
+}
+.flow-atlas__card-footer {
+  margin-top: auto;
+  padding: 0 18px 18px;
+}
 .flow-atlas__card-note {
-  margin: -4px 0 12px !important;
+  margin: 0 0 12px !important;
   color: #7a6a48;
   font-size: 11px;
   line-height: 1.5;
@@ -437,7 +551,7 @@
 }
 .flow-atlas__card-actions {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   margin-top: auto;
 }
@@ -553,12 +667,28 @@
   .flow-atlas__favorites {
     margin-left: 0;
   }
+  .flow-atlas__filter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .flow-atlas__filter-fields .flow-atlas__owned-filter {
+    grid-column: 1 / -1;
+  }
+  .flow-atlas__filter-footer {
+    align-items: flex-start;
+  }
+  .flow-atlas__filter-footer > .flow-atlas__button {
+    flex: 0 0 auto;
+  }
   .flow-atlas__grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
   .flow-atlas__card-content {
-    padding: 16px;
+    padding: 16px 16px 12px;
+  }
+  .flow-atlas__card-footer {
+    padding: 0 16px 16px;
   }
   .flow-atlas__results-bar {
     gap: 5px;

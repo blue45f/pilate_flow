@@ -1,0 +1,33 @@
+
+ RUN  v3.2.7 /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored
+
+ ✓ src/components/GeneratedPractitionerFigure.test.tsx (9 tests) 5267ms
+   ✓ generated practitioner art on authored movement geometry > renders one shared atlas and one practitioner for every authored phase without invalid transforms  2443ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored original-mat-bridge frames  468ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored original-reformer-parallel-footwork frames  731ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored original-chair-seated-breath frames  631ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored ex-lower-03 frames  534ms
+ ✓ src/components/StudioMotionPlayback.lifecycle.test.tsx (15 tests) 5048ms
+   ✓ shared motion playback lifecycle > starts Orbit paused at setup, seeks through the return phase, and redraws a paused resized canvas  995ms
+   ✓ shared motion playback lifecycle > pauses catalog when offscreen, hidden or reduced-motion, requiring explicit replay  1037ms
+   ✓ shared motion playback lifecycle > resets catalog controls and playback when the exercise identity changes  579ms
+   ✓ shared motion playback lifecycle > supports precise paused frame steps, keyboard steps, phase stops and slow playback  308ms
+   ✓ shared motion playback lifecycle > keeps reduced-motion frame inspection available and makes optional figure layers explicit  348ms
+   ✓ shared motion playback lifecycle > starts reference playback without trails and adds comparisons only when requested  422ms
+ ✓ src/test/motionRenderingQualityRegression.test.tsx (12 tests) 3369ms
+   ✓ rendered motion quality regressions > original-cadillac-table-ankle keeps both feet attached to their own ankles in every static view  765ms
+   ✓ rendered motion quality regressions > original-mat-heel-slide keeps both feet attached to their own ankles in every static view  530ms
+   ✓ rendered motion quality regressions > original-cadillac-table-knee-fold keeps both feet attached to their own ankles in every static view  444ms
+   ✓ rendered motion quality regressions > original-mat-side-leg-lift keeps both feet attached to their own ankles in every static view  412ms
+   ✓ rendered motion quality regressions > ex-kr-reformer-04 keeps both feet attached to their own ankles in every static view  471ms
+ ✓ src/utils/generatedPractitionerArt.test.ts (6 tests) 2638ms
+   ✓ stable practitioner geometry > has no abrupt face reversal across all 98 continuous authored motion cycles  2627ms
+ ✓ src/test/motionImageQualityCorrections.test.tsx (5 tests) 1104ms
+   ✓ source-text motion image corrections > draws the moving cushion beneath the same body points and draws the heel on the fixed bar, including mirrored intermediate frames  419ms
+   ✓ source-text motion image corrections > keeps the character head size fixed while interpolated chest and seated curls change trunk shape  585ms
+
+ Test Files  5 passed (5)
+      Tests  47 passed (47)
+   Start at  12:17:16
+   Duration  33.59s (transform 4.07s, setup 507ms, collect 9.65s, tests 17.43s, environment 3.53s, prepare 754ms)
+

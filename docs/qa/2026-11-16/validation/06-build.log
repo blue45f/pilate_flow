@@ -1,0 +1,88 @@
+$ node scripts/generate-exercise-artwork.mjs --check && tsc -b && vite build && node scripts/check-pwa-build.mjs
+{"status":"verified","exercises":98,"frames":294,"rasterizedFrames":0,"format":"webp","width":640,"height":400,"totalBytes":2689722}
+vite v6.4.5 building for production...
+transforming...
+✓ 2575 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                              2.53 kB │ gzip:   1.19 kB
+dist/assets/review-queue-DAqDtFg1.csv                        7.29 kB
+dist/sw.js                                                   9.06 kB
+dist/assets/EquipmentDiscoveryScope-Cj0C1DZD.css             1.00 kB │ gzip:   0.46 kB
+dist/assets/CloudSyncPanel-C61ONMnL.css                      2.39 kB │ gzip:   0.79 kB
+dist/assets/motion-review-worksheet-D6_vipwe.css             3.17 kB │ gzip:   0.96 kB
+dist/assets/MovementPhaseDiagramSvg-DY5Jsq2v.css             3.65 kB │ gzip:   1.16 kB
+dist/assets/PostureAnatomyGuide-BVzwZdl3.css                 5.27 kB │ gzip:   1.46 kB
+dist/assets/RecoveryPreview-DEgghwyK.css                     6.71 kB │ gzip:   1.49 kB
+dist/assets/LogSessionModal-DxkAQVix.css                     7.25 kB │ gzip:   1.82 kB
+dist/assets/OnePageVisual3DCueSheet-qhyN4GaO.css             8.12 kB │ gzip:   2.00 kB
+dist/assets/ApparatusVisualGuideRibbon-BPpD1S_Y.css          8.56 kB │ gzip:   1.93 kB
+dist/assets/MotionReferencePlayer-DZslxVJM.css               8.85 kB │ gzip:   2.34 kB
+dist/assets/InstructorStudyDialog-BddSJS_n.css               9.67 kB │ gzip:   2.09 kB
+dist/assets/FreeAiAssistantPanel-dvF-_xqk.css                9.87 kB │ gzip:   2.36 kB
+dist/assets/FirstClassTutorialCandidate-VbItuAdE.css        10.50 kB │ gzip:   1.94 kB
+dist/assets/PilatesSettingsPage-DSaH1XvC.css                10.51 kB │ gzip:   2.15 kB
+dist/assets/OfflinePresetPicker-Bw4Sg02m.css                10.63 kB │ gzip:   2.34 kB
+dist/assets/referenceLinkPolicy-Brc5DuGg.css                11.91 kB │ gzip:   3.05 kB
+dist/assets/CatalogMotionInteractivePlayer-9hafTcZb.css     14.53 kB │ gzip:   2.98 kB
+dist/assets/ClassCueSheetPreview-BrkJi0y5.css               15.98 kB │ gzip:   2.42 kB
+dist/assets/MotionDraftLabDialog-C_m8YmRP.css               16.07 kB │ gzip:   3.55 kB
+dist/assets/ClassBinderView-Bg7UU8Rf.css                    23.79 kB │ gzip:   4.30 kB
+dist/assets/LiveStageView-D_yDdMBA.css                      28.21 kB │ gzip:   5.05 kB
+dist/assets/teaching-D3DjC89B.css                           34.05 kB │ gzip:   6.53 kB
+dist/assets/YouTubeClipModal-DFnD9Tno.css                   39.82 kB │ gzip:   7.01 kB
+dist/assets/InstructorScheduleView-B8CwE_ta.css             45.77 kB │ gzip:   7.87 kB
+dist/assets/library-4CGJpWza.css                            54.71 kB │ gzip:   9.84 kB
+dist/assets/ExerciseAtlasView-C3o-mBeC.css                  82.13 kB │ gzip:  14.33 kB
+dist/assets/SequenceWorkbench-BRwz0BHx.css                 163.36 kB │ gzip:  27.00 kB
+dist/assets/index-CacsPTl9.css                             319.06 kB │ gzip:  54.75 kB
+dist/assets/stepTimeEstimate-C6JesCNQ.js                     0.82 kB │ gzip:   0.56 kB
+dist/assets/useWorkspaceBrowseState-DDjKcss_.js              0.95 kB │ gzip:   0.57 kB
+dist/assets/NativeExerciseMotionArtwork-Cpy3hTpQ.js          1.15 kB │ gzip:   0.73 kB
+dist/assets/EquipmentDiscoveryScope-BDSGaWAt.js              2.25 kB │ gzip:   1.11 kB
+dist/assets/ExerciseThumbnailBadge-BDfJ_jMB.js               2.65 kB │ gzip:   1.19 kB
+dist/assets/CloudSyncPanel-BO2-0jMP.js                       4.39 kB │ gzip:   1.87 kB
+dist/assets/Studio3DMotionHeroCard-0C3uFjub.js               6.36 kB │ gzip:   2.39 kB
+dist/assets/OnePageVisual3DCueSheet-B5uaVNVn.js              7.41 kB │ gzip:   3.01 kB
+dist/assets/RecoveryPreview-B7JwnoN2.js                      9.05 kB │ gzip:   3.44 kB
+dist/assets/historyAdaptiveBridge-C2S62otS.js               10.08 kB │ gzip:   4.57 kB
+dist/assets/CatalogMotionInteractivePlayer-DX13mkWz.js      13.74 kB │ gzip:   5.23 kB
+dist/assets/SupineReachFigure-hNQt8pC2.js                   13.89 kB │ gzip:   5.04 kB
+dist/assets/InstructorStudyDialog-DdfDSLgG.js               14.71 kB │ gzip:   5.75 kB
+dist/assets/PostureAnatomyGuide-4DBYZm8R.js                 15.52 kB │ gzip:   5.97 kB
+dist/assets/clinicalVerificationLibrary-CQs1rY4A.js         18.64 kB │ gzip:   7.09 kB
+dist/assets/LogSessionModal-DGadmjXH.js                     22.31 kB │ gzip:   7.89 kB
+dist/assets/PfTabs-C8fKwHIU.js                              25.04 kB │ gzip:   8.86 kB
+dist/assets/FirstClassTutorialCandidate-RlfGtza3.js         28.46 kB │ gzip:   8.77 kB
+dist/assets/MotionCoveragePreviewHarness-CNnSU3aQ.js        34.51 kB │ gzip:  10.21 kB
+dist/assets/previewHarnessSelectors-DDaMxMQD.js             42.90 kB │ gzip:  10.72 kB
+dist/assets/vendor-lucide-BJxKaLOI.js                       47.37 kB │ gzip:   9.38 kB
+dist/assets/DesignSystemInspector-D2hP_CGE.js               55.35 kB │ gzip:  20.65 kB
+dist/assets/MotionDraftFigure-BL50Rh6u.js                   63.50 kB │ gzip:  16.28 kB
+dist/assets/FreeAiAssistantPanel-Da0ttJG8.js                64.31 kB │ gzip:  17.08 kB
+dist/assets/PilatesSettingsPage-UQudAEFY.js                 68.99 kB │ gzip:  19.33 kB
+dist/assets/LiveStageView-CAjj2BGv.js                       73.43 kB │ gzip:  21.59 kB
+dist/assets/ClassCueSheetPreview-BvgIuZgi.js                75.11 kB │ gzip:  24.11 kB
+dist/assets/ClassBinderView-BEGJ45MY.js                     83.10 kB │ gzip:  25.53 kB
+dist/assets/ApparatusVisualGuideRibbon-Bf8EkGEG.js          85.17 kB │ gzip:  26.44 kB
+dist/assets/index-cs9vbeRY.js                               89.75 kB │ gzip:  24.31 kB
+dist/assets/OfflinePresetPicker-cuD61aFr.js                 94.13 kB │ gzip:  28.24 kB
+dist/assets/InstructorScheduleView-0b9REVJ9.js             104.69 kB │ gzip:  29.03 kB
+dist/assets/referenceLinkPolicy-0VCOJY4Y.js                117.60 kB │ gzip:  31.33 kB
+dist/assets/ExerciseAtlasView-BcClYbJD.js                  150.61 kB │ gzip:  42.75 kB
+dist/assets/vendor-firebase-BIlTEimM.js                    154.92 kB │ gzip:  31.61 kB
+dist/assets/MotionDraftLabDialog-BCx1v0j0.js               157.47 kB │ gzip:  26.66 kB
+dist/assets/vendor-react-Buvp7Wui.js                       223.63 kB │ gzip:  69.42 kB
+dist/assets/MovementPhaseDiagramSvg-D0s1-gBk.js            273.00 kB │ gzip:  62.44 kB
+dist/assets/motionDrafts-Dsb7hwD2.js                       415.12 kB │ gzip: 100.28 kB
+dist/assets/SequenceWorkbench-D9r09fFR.js                  477.31 kB │ gzip: 142.42 kB
+dist/assets/YouTubeClipModal-C0QrC7tA.js                   530.30 kB │ gzip: 143.77 kB
+dist/assets/MotionReferencePlayer-Dc1JgNsc.js            1,055.19 kB │ gzip: 141.35 kB
+dist/assets/index-Bd9Clluz.js                            2,184.17 kB │ gzip: 542.96 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 13.14s
+PWA build verified: 76 real static files, 4 Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks.

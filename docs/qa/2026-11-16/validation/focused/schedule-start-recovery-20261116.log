@@ -1,0 +1,107 @@
+
+ RUN  v3.2.7 /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored
+
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > defers loading a saved class until the instructor confirms leaving the running session 3355ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > records the original session before committing the saved class replacement 2221ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after close-button, including a later direct finish 1631ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after escape, including a later direct finish 1839ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after record-cancel, including a later direct finish 1795ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > guards the sidebar member-role switch and preserves the clock when cancelled 1828ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > guards the palette member-role switch and preserves the clock when cancelled 1797ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > announces the mobile timer action for ready, running and paused states 406ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > leaves a ready never-started unchanged session without an unnecessary confirmation 456ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > still asks before losing a session-only minute added before the timer starts 992ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > asks before 'desktop history' can unmount tracked movement/rest progress 1340ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > asks before 'brand workbench' can unmount tracked movement/rest progress 1547ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > asks before 'upcoming schedule' can unmount tracked movement/rest progress 1414ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > keeps the paused session when a navigation-triggered record form is cancelled 1659ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > retains the requested schedule through validation failure and records exact movement/rest time once 1607ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > does not navigate or erase the form when the store fails to append a matching record 1885ms
+ ✓ src/test/stageGlobalNavigation.test.tsx > actual app navigation preserves an unrecorded teaching session > allows leaving an idle pending stage without changing review evidence 1026ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > opens an unsaved nonempty draft without treating the missing addition receipt as a recent step 276ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > adds successive movements after the selected row in chosen order and reveals the new row 412ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > uses the store lock-position contract and still allows insertion directly after the last locked row 141ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > requires an explicit new position after its anchor is removed and defaults to the end for another class 209ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > explains a blocked start beside the action and clears the explanation when missing exercise data is restored 125ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > marks an infeasible target invalid, restores the applied value on blur, and still lets a longer target be typed 83ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > returns focus and uses the applied Reformer plan after leaving an unapplied Cadillac draft in advanced tools 1135ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > persists a valid title and target before blur, and retains the last valid plan when an incomplete field is abandoned 136ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > returns focus to the visible plan heading after removing the last row and lets undo restore it 215ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > creates, filters, adds, reorders, edits a bilateral budget, undoes, saves and starts the current plan without touching a saved source 798ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > reports a rejected addition without marking it added, then accepts it after applying its prop condition 238ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > keeps locked rows and exposes move, edit and delete guards while allowing undo of an unlocked deletion 199ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > keeps new-class decisions reversible and opens a recent saved class as an editable copy 275ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > rejects a stale inspector apply instead of overwriting a newer row edit 89ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx > single-canvas sequence studio journeys > keeps the current class open when saving before a new class fails in browser storage 94ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > guides ready -> start -> pause/resume -> step completion 1-tap start -> final finish while tracking remaining class time and current spring setup 1907ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > recovers accidental single and rapid double-tap step jumps with exact remaining time, running state, and honest elapsed time 1212ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > handles rapid repeated +1분 추가 clicks without stale closures, steps back via undo, and preserves exit confirmation contract 1618ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > supports keyboard Space, ArrowLeft/ArrowRight, and Backspace mistake recovery while ignoring interactive focus and open dialogs 478ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > adapts to 390px mobile viewport with collapsed outline by default and >= 44px touch targets in CSS 318ms
+ ✓ src/components/LiveStageView.usability.test.tsx > LiveStageView instructor teaching flow & mistake recovery usability > passes an explicit empty taughtStepIds array and exact +1m step snapshot without mutating activeSteps when finishing a paused zero-timer session 576ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > renders mobile step navigation bar with >=44px touch height, keep-all wrapping, and step transitions 724ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > recovers the conditions dialog and its equipment tab above the editor across unmount/remount 954ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > recovers the open contextual picker and query without changing the existing class 594ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > recovers open step block inspector and in-progress note edits across tab switches and narrow mobile viewports 989ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > persists non-empty inline finder search query across remounts and resets search+filters in one click on 0 results 145ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx > Wave1-1 Home Workbench Flow & Mid-Flow Recovery > preserves StepBlockInspector in-progress edits on 320px/360px/390px viewports with clear top summary 165ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > filters unassigned occurrences, previews pre-save venue/time warnings, cancels draft selection cleanly across close/reopen, and supports Escape / detail close focus return 488ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > resets occurrence detail, filter pills, and replace banner on date/mode transitions while marking open week-copy previews stale 283ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > guards rapid double-clicks across assign, state toggle, snapshot replace, week copy, draft load, and schedule handoff while keeping failures retryable 441ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > displays actual copied items and all skipped reasons honestly after week copy, never overwrites existing next-week plans, and navigates directly to next week 184ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > handles empty day, empty saved sequences, all-assigned filter state, and zero-candidate week copy gracefully 329ms
+ ✓ src/components/DatedSequencePlanningDialog.flowSafety.test.tsx > DatedSequencePlanningDialog usability, cancellation, double-click, and copy/replace honesty > does not claim unverified previews before props update, distinguishes 0 and partial additions, and prevents unrelated occurrence additions from polluting the copy summary 188ms
+ ✓ src/components/InstructorScheduleView.prepFlow.test.tsx > InstructorScheduleView date -> class preparation & start flow > jumps from an empty day to the next scheduled class day in the week with focus handoff and zero store mutation 506ms
+ ✓ src/components/InstructorScheduleView.prepFlow.test.tsx > InstructorScheduleView date -> class preparation & start flow > summarizes readiness counts, supports keyboard roving filter, and jumps focus to the next unready class while respecting prefers-reduced-motion 645ms
+ ✓ src/components/InstructorScheduleView.prepFlow.test.tsx > InstructorScheduleView date -> class preparation & start flow > toggles occurrence ready state in 1 tap and opens an independent workbench copy without touching saved sequences or history 367ms
+ ✓ src/components/InstructorScheduleView.prepFlow.test.tsx > InstructorScheduleView date -> class preparation & start flow > starts LiveStage directly only when the sequence passes rehearsal eligibility and guards moved or broken plans 229ms
+ ✓ src/components/InstructorScheduleView.prepFlow.test.tsx > InstructorScheduleView date -> class preparation & start flow > enforces >=44x44px touch targets, focus-visible rings, mobile breakpoints, and prefers-reduced-motion in CSS 57ms
+ ✓ src/components/LogSessionModal.flowRecovery.test.tsx > LogSessionModal draft recovery & performed movement selection invariants > distinguishes an explicitly cleared empty selection ([]) from an omitted selectedStepIds field across reopen and taughtStepIds=[] 568ms
+ ✓ src/components/LogSessionModal.flowRecovery.test.tsx > LogSessionModal draft recovery & performed movement selection invariants > preserves empty/partial selection across step round-trips, focuses offending controls on validation errors without auto-selecting, and recovers cleanly 562ms
+ ✓ src/components/LogSessionModal.flowRecovery.test.tsx > LogSessionModal draft recovery & performed movement selection invariants > filters unknown step IDs from saved drafts while blocking duplicate completion logs 178ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > matches teaching → movement side(s) → transition and rests in actual array order for a 50 minute plan 10ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > omits zero-length phases and divides odd movement seconds without multiplying the budget 8ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > keeps teacher repetitions and sets as metadata without creating extra segments or time 8ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > uses truthful unknown default side order and explicit single/together overrides 6ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > returns a deeply frozen primitive snapshot without cue text or mutable source references 4ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > allows inspection and timed rehearsal for pending notes without changing review evidence 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > allows inspection and timed rehearsal for stale notes without changing review evidence 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > retains the missing exercise budget as unavailable rather than inventing motion or a default side 3ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > fails closed on malformed or ambiguous exercise records while ignoring unrelated catalog duplicates 7ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > uses the common normalized movement key for duplicate detection without deleting inspection segments 3ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > reports target differences without blocking rehearsal and derives an optional target 7ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target 0 without changing timeline time 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target -1 without changing timeline time 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target NaN without changing timeline time 3ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target Infinity without changing timeline time 5ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target 50 without changing timeline time 5ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target null without changing timeline time 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target {} without changing timeline time 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target Symbol(target) without changing timeline time 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > blocks an invalid provided target 1n without changing timeline time 1ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > handles empty, rest-only, duplicate-step-ID and malformed plans without inventing movement 2ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration NaN without an invalid clock 1ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration Infinity without an invalid clock 1ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration -1 without an invalid clock 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration 0 without an invalid clock 1ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration 0.001 without an invalid clock 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > whole-class plan simulation timeline > rejects an uninterpretable step duration 121 without an invalid clock 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 0 seconds 1ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 30 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 810 seconds 4ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 840 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 870 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 1350 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 1830 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 1860 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 1980 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 2025 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > selects the next phase exactly at 2985 seconds 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > keeps the preceding phase just before a boundary and returns no current phase at exact end 0ms
+ ✓ src/utils/sequenceSimulation.test.ts > pure timeline seek boundaries > clamps finite seek values, resets nonfinite values, and returns elapsed/remaining values without mutating the plan 0ms
+
+ Test Files  8 passed (8)
+      Tests  98 passed (98)
+   Start at  11:57:24
+   Duration  72.78s (transform 8.88s, setup 691ms, collect 13.75s, tests 51.54s, environment 3.81s, prepare 724ms)
+

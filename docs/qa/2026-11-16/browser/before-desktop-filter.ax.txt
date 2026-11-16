@@ -1,0 +1,247 @@
+Browser tab: 1, Title: "Flow Atelier · 필라테스 수업 플래너", URL: "http://127.0.0.1:5175/".
+1 AXWebArea Flow Atelier · 필라테스 수업 플래너, URL: 127.0.0.1:5175/
+	2 container root
+		3 link Description: 본문으로 이동, Value: 127.0.0.1:5175/#main-content
+		4 container 스튜디오 탐색
+			5 link Description: Pilates Flow 수업 만들기로, Value: 127.0.0.1:5175/#
+			6 container 주 메뉴
+				7 button 수업 만들기
+					8 image
+					9 text 수업 만들기
+				10 button 동작 라이브러리 158
+					11 image
+					12 text 동작 라이브러리
+					13 text 158
+				14 button 저장한 수업
+					15 image
+					16 text 저장한 수업
+				17 button 수업 일정
+					18 image
+					19 text 수업 일정
+			20 button 수업 준비하기
+			21 button (collapsed) 기록 · 도구 더보기, Secondary Actions: Expand
+				22 text 기록 · 도구 더보기
+			23 button F 나의 스튜디오 이 기기에 저장
+				24 text F
+				25 text 나의 스튜디오
+				26 text 이 기기에 저장
+				27 image
+		28 container
+			29 text 나의 스튜디오  / 동작 라이브러리
+			30 container 이용자 화면 전환
+				31 checkbox 강사 작업실, Value: 1
+				32 checkbox 회원 예약, Value: 0
+			33 button 빠른 이동 및 동작 검색 열기
+			34 button 새 동작 메모
+			35 button 데이터 백업과 사용 안내
+				36 image
+		232 container main-content
+			237 button 동작 라이브러리로 돌아가기
+			238 text 자료와 고급 도구
+			239 container
+				240 heading 자료와 고급 도구, Value: 1, ID: workspace-main-heading
+					241 text 자료와 고급 도구
+				242 text 수집 자료와 검토 기록, 제작 중인 패턴 도해를 살펴보세요.
+				243 button 한 줄 동작 메모
+					244 image
+					245 text 한 줄 동작 메모
+				246 button 내 동작 직접 등록
+					247 image
+					248 text 내 동작 직접 등록
+				249 button 유튜브 참조 추가
+					250 image
+					251 text 유튜브 참조 추가
+			252 tab group 자료 모음
+				253 tab (selected, settable, boolean) 동작 노트 158, Value: 1, ID: library-notes-tab
+				254 tab (selectable, settable, boolean) 확장 도감·영상 60, Value: 0, ID: library-repertoire-tab
+				255 tab (selectable, settable, boolean) 동작 영상 350, Value: 0, ID: library-videos-tab
+				256 tab (selectable, settable, boolean) 공개 자료 30, Value: 0, ID: library-references-tab
+				257 tab (selectable, settable, boolean) 수업 영상 32, Value: 0, ID: library-courses-tab
+			258 container Description: 동작 노트 158, ID: library-notes-panel
+				259 container 동작 검색과 필터
+					260 container 동작 검색창
+						261 container
+							262 text 동작 검색
+							263 search text field (settable) Description: 동작 검색, Value: 매트 브리지
+							264 button 검색어 지우기
+								265 image
+						266 button (expanded) 필터, Secondary Actions: Collapse
+							267 image
+							268 text 필터
+							269 image
+					270 container 기구 선택
+						271 checkbox 전체 기구 158, Value: 1
+						272 checkbox 매트, Value: 0
+						273 checkbox 리포머, Value: 0
+						274 checkbox 체어, Value: 0
+						275 checkbox 캐딜락, Value: 0
+						276 checkbox 타워, Value: 0
+						277 checkbox 래더 바렐, Value: 0
+						278 checkbox 스파인 코렉터, Value: 0
+						279 checkbox 바렐 · 종류 미지정, Value: 0
+						280 checkbox 즐겨찾기, Value: 0
+							281 image
+							282 text 즐겨찾기
+					283 container 적용된 검색·필터
+						284 button 검색: 매트 브리지 필터 해제
+					285 text 기구는 여러 개 선택할 수 있어요. 선택 기구 중 하나와 일치하는 동작을 찾으며, ‘내 보유 장비만’은 모든 요구 조건을 확인합니다.
+					286 container library-filters
+						287 container
+							288 text 동작 부위·구간
+							289 pop up button (collapsed, settable) 동작 부위·구간, Value: 전체 부위·구간, Secondary Actions: Expand
+								290 menu
+									291 (selected) 전체 부위·구간
+									292 호흡 & 골반/흉곽 예열
+									293 풋워크 & 하지 정렬
+									294 브릿징 & 척추 분절
+									295 코어 & 헌드레드 시리즈
+									296 상체 & 로잉/흉추 회전
+									297 하체 & 스탠딩/런지
+									298 플랭크 & 전신 컨트롤
+									299 신전 & 스완/백 익스텐션
+									300 핏인스트랩 & 고관절 모빌리티
+									301 머메이드 & 파이널 롤다운
+						302 container
+							303 text 몸의 자세
+							304 pop up button (collapsed, settable) 몸의 자세, Value: 전체 자세, Secondary Actions: Expand
+								305 menu
+									306 (selected) 전체 자세
+									307 수파인 (누운 자세)
+									308 프론 (엎드린 자세)
+									309 사이드 (옆으로 누운)
+									310 시티드 (앉은 자세)
+									311 닐링 (무릎 선 자세)
+									312 스탠딩 (선 자세)
+									313 쿼드러페드 (네발기기)
+						314 container
+							315 text 난이도
+							316 pop up button (collapsed, settable) 난이도, Value: 전체 난이도, Secondary Actions: Expand
+								317 menu
+									318 (selected) 전체 난이도
+									319 기초 · Lv 1.0
+									320 중급 · Lv 1.5
+									321 심화 · Lv 2.0
+						322 container
+							323 text 계획 시간
+							324 pop up button (collapsed, settable) 계획 시간, Value: 전체 시간, Secondary Actions: Expand
+								325 menu
+									326 (selected) 전체 시간
+									327 3분 이하
+									328 3분 초과~5분
+									329 5분 초과
+						330 container
+							331 text 내 강사 검토 상태
+							332 pop up button (collapsed, settable) 내 강사 검토 상태, Value: 전체 검토 상태, Secondary Actions: Expand
+								333 menu
+									334 (selected) 전체 검토 상태
+									335 내 검토 기록 있음 · 자격 인증 미확인
+									336 내 검토 전 · 직접 구성 가능 (자동 추천 제외)
+									337 정보 변경 · 재검토 필요
+						338 container
+							339 text 모션 제작 초안
+							340 pop up button (collapsed, settable) 모션 제작 초안, Value: 전체 제작 상태, Secondary Actions: Expand
+								341 menu
+									342 (selected) 전체 제작 상태
+									343 관련 제작 초안 있음 · 정식 미연결
+									344 관련 제작 초안 없음
+						345 container 소도구 · 여러 개 선택
+							346 text 소도구 · 여러 개 선택
+							347 checkbox 소도구 없음, Value: 0
+							348 checkbox 미니볼, Value: 0
+							349 checkbox 짐볼, Value: 0
+							350 checkbox 써클링 · 매직 서클, Value: 0
+							351 checkbox 탄력 밴드 · 종류 미지정, Value: 0
+							352 checkbox 루프 밴드, Value: 0
+							353 checkbox 튜브 밴드, Value: 0
+							354 checkbox 롱 밴드, Value: 0
+							355 checkbox 폼롤러, Value: 0
+							356 checkbox 가벼운 덤벨, Value: 0
+							357 checkbox 슬라이더, Value: 0
+							358 checkbox 요가 블록, Value: 0
+							359 checkbox 보수, Value: 0
+							360 checkbox 토닝볼, Value: 0
+						361 container
+							362 text 즐겨찾기 분류
+							363 pop up button (collapsed, settable) 즐겨찾기 분류, Value: 전체, Secondary Actions: Expand
+								364 menu
+									365 (selected) 전체
+									366 즐겨찾기 전체
+									367 내 시그니처
+									368 회원님 인기
+									369 정렬·가동성
+									370 강도 높이기
+						371 checkbox (settable, integer) Description: 내 보유 기구·소도구로 모두 가능한 동작만, Value: 1
+						372 checkbox (settable, integer) Description: 최근 10일 수업 동작 숨기기, Value: 0
+						373 container
+							374 text 최근 수업 기준
+							375 pop up button (collapsed, settable) 최근 수업 기준, Value: 월·수 저녁반, Secondary Actions: Expand
+								376 menu
+									377 전체 반
+									378 (selected) 월·수 저녁반
+									379 화·목 오전반
+									380 개인 01
+									381 토요일 심화반
+				382 container
+					383 text 1 개의 동작 · 이름을 선택하면 상세 정보를 볼 수 있어요
+				384 button 필터 초기화
+					385 text 필터 초기화
+					386 image
+				387 text 개인 검토 상태와 출처는 동작 상세에서 확인하세요.
+				388 text 현재 수업 기준:
+				389 text 매트
+				390 text · 최대 Lv  1.0  · 목표  50 분
+				391 container
+					392 button 매트 브리지 상세 보기
+						393 text 매트 브리지 · 양발 삼각 지면반력 & 둔근·햄스트링 사선 기둥 분리 · 동작 패턴 도해
+					394 checkbox Description: 매트 브리지 즐겨찾기 추가, Help: 즐겨찾기: 일반 보관, Value: 0
+						395 image
+					396 text 기초  · Lv  1.0 수파인 (누운 자세)
+					397 image
+					398 text 4 분
+					399 text 맨몸
+					400 heading 매트 브리지, Value: 2
+						401 button (collapsed) 매트 브리지, Secondary Actions: Expand
+					402 text Mat Bridge 개인 검토 전 둔근 · 하체 · 몸통
+					403 container 타겟 부위 태그
+						404 checkbox Description: 둔근 태그로 검색, Value: 0
+						405 checkbox Description: 하체 태그로 검색, Value: 0
+						406 checkbox Description: 몸통 태그로 검색, Value: 0
+					407 text 오리지널 계획 자료
+					408 button 자세히 보기
+						409 text 자세히 보기
+						410 image
+					411 checkbox Description: 매트 브리지 비교 담기, Value: 0
+					412 button 매트 브리지 수업안에 추가
+						413 image
+						414 text 동작 추가
+				415 container 동작 도해와 참고 자료
+					416 button (collapsed) 도해 초안 22개 전문가 검토 전, Secondary Actions: Expand
+						417 text 도해 초안 
+						418 text 22
+						419 text 개
+						420 text 전문가 검토 전
+					421 text 관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.
+					422 button (collapsed) 동작 도해, Secondary Actions: Expand
+						423 text 동작 도해
+					424 button (collapsed) 기구 설정 참고, Secondary Actions: Expand
+						425 text 기구 설정 참고
+				426 button (collapsed) 공개 참고 자료와 이용 범위, Secondary Actions: Expand
+					427 image
+					428 text 공개 참고 자료와 이용 범위
+					429 image
+				430 button (collapsed) 검토와 수업 사용 기준, Secondary Actions: Expand
+					431 text 검토와 수업 사용 기준
+				432 text 움직임의 이름은 시작점입니다. 순서와 강도는 오늘의 수업에 맞게 조정하세요.
+			433 container
+				434 text 0 개 현재 수업안에 담긴 동작
+				435 button 수업 구성으로 돌아가기
+					436 text 수업 구성으로 돌아가기
+					437 image
+			234 container 강사 검토 안내
+				235 button (collapsed) 자료·모션의 검토 상태 안내, Secondary Actions: Expand
+					236 text 자료·모션의 검토 상태 안내
+		229 container
+			230 text PILATES FLOW  ·  나의 수업, 나의 흐름
+			231 button 저장·복구 안내
+
+The focused UI element is 240 heading 자료와 고급 도구, Value: 1, ID: workspace-main-heading

@@ -1,0 +1,693 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+  "candidateBranch": "feat/simple-flow-natural-motion-20261116",
+  "date": "2026-11-16",
+  "origins": {
+    "baseline": "http://127.0.0.1:5175",
+    "candidate": "http://127.0.0.1:5176"
+  },
+  "dummyData": {
+    "className": "QA 20261116 초보 강사 흐름",
+    "movement": "original-mat-bridge",
+    "items": 1,
+    "plannedMinutes": 4,
+    "targetMinutes": 50,
+    "productionDataTouched": false,
+    "sessionsRecorded": false
+  },
+  "method": "Normal UI interactions in desktop Chromium. A localhost-only iframe provides actual CSS viewport sizes; this is not physical-mobile or mobile-OS emulation. Screenshots retain the QA harness context. No store injection or restricted DevTools use.",
+  "limitations": [
+    "Baseline desktop 1348x936 and candidate desktop 1280x844 are functional comparisons, not pixel-perfect same-size diffs.",
+    "Before-mobile preview depicts start and after-mobile preview depicts peak; phase-aligned visual comparisons are in ../motion-renderer/.",
+    "The 768x900 app viewport exceeds the outer visible height slightly; screenshot is a viewport capture, not the full app document.",
+    "Screenshot/AX captures occur sequentially; timer text can differ by a second.",
+    "Real iOS/Android, Safari, touch, screen readers, device speech/Bluetooth/vibration and all-animation-frame visual inspection are unverified."
+  ],
+  "observations": [
+    {
+      "id": "baseline-duplicate",
+      "status": "observed",
+      "viewports": [
+        "desktop 1348x936",
+        "390x844"
+      ],
+      "action": "Add Mat Bridge once, then click the same added-card action again.",
+      "result": "One item remains; duplicate error is announced instead of opening the sequence.",
+      "evidence": [
+        "before-desktop-repeat-add.ax.txt",
+        "before-mobile390-repeat-add.ax.txt"
+      ]
+    },
+    {
+      "id": "candidate-sequence-return",
+      "status": "observed",
+      "viewports": [
+        "1280x844",
+        "390x844"
+      ],
+      "action": "Search Mat Bridge, add, preview, close preview, activate added-card action.",
+      "result": "Returns to the same named draft; one Mat Bridge, four minutes, mat apparatus and fifty-minute target preserved. The regression test additionally compares the full store except activeTab.",
+      "evidence": [
+        "after-mobile390-added.jpg",
+        "../../../../src/components/ExerciseAtlasView.simplified.test.tsx"
+      ]
+    },
+    {
+      "id": "inline-filters",
+      "status": "observed",
+      "viewports": [
+        "1280x844",
+        "390x844",
+        "360x800"
+      ],
+      "result": "Difficulty, duration and owned-apparatus controls stay in the library. Escape and result button restore filter trigger focus.",
+      "evidence": [
+        "after-desktop-filter.jpg",
+        "after-mobile390-filter.jpg",
+        "after-mobile360-filter.jpg"
+      ]
+    },
+    {
+      "id": "preview-target",
+      "status": "observed",
+      "viewports": [
+        "390x844",
+        "1280x844"
+      ],
+      "result": "Image-area pointer click and keyboard Enter open preview. Escape returns focus to the preview trigger. Favorite remains an independent control."
+    },
+    {
+      "id": "favorite-removal-focus",
+      "status": "observed",
+      "viewports": [
+        "390x844"
+      ],
+      "result": "Removing the only favorite while favorites-only is active removes the card and focuses the search input."
+    },
+    {
+      "id": "source-media",
+      "status": "observed",
+      "result": "Opening the planning preview yields zero source-video iframe elements within the app; no source video auto-load observed."
+    },
+    {
+      "id": "motion-position",
+      "status": "observed",
+      "result": "Single-cycle playback reaches position 1000; selected peak is 500; End on the range reaches 1000. Final fresh preview has loaded atlas opacity 1."
+    },
+    {
+      "id": "class-start",
+      "status": "observed",
+      "viewports": [
+        "before/after desktop",
+        "before/after 390x844"
+      ],
+      "result": "The existing start path opens the class and starts the real local timer; pause control is visible. Candidate exit cancellation retains Mat Bridge and resume control. Dummy sessions were left without recording.",
+      "evidence": [
+        "before-desktop-class-start.jpg",
+        "after-desktop-class-start.jpg",
+        "before-mobile390-class-start.jpg",
+        "after-mobile390-class-start.jpg"
+      ]
+    },
+    {
+      "id": "app-console",
+      "status": "observed-sample",
+      "result": "No app-origin console errors or warnings in the inspected final fresh-preview logs; browser extension diagnostics excluded. Not an exhaustive all-session console claim."
+    },
+    {
+      "id": "final-cache",
+      "status": "observed",
+      "result": "Final library card loaded /motion-artwork-v2/original-mat-bridge.middle.8ccaa3adc537.webp with naturalWidth 640.",
+      "evidence": [
+        "after-mobile390-added.jpg",
+        "after-desktop-filter.jpg"
+      ]
+    }
+  ],
+  "responsiveChecks": [
+    {
+      "contentWidth": 345,
+      "height": 800,
+      "previewButtons": [
+        {
+          "height": 44,
+          "name": "매트 브리지 미리보기",
+          "width": 287
+        },
+        {
+          "height": 47.59375,
+          "name": "매트 브리지 담긴 수업안 보기",
+          "width": 287
+        }
+      ],
+      "scrollWidth": 345,
+      "width": 360
+    },
+    {
+      "contentWidth": 345,
+      "height": 800,
+      "scenario": "filters-open",
+      "scrollWidth": 345,
+      "width": 360
+    },
+    {
+      "contentWidth": 753,
+      "height": 900,
+      "scenario": "library",
+      "scrollWidth": 753,
+      "width": 768
+    }
+  ],
+  "captures": [
+    {
+      "name": "before-desktop-filter",
+      "activeElement": "자료와 고급 도구",
+      "heading": "자료와 고급 도구",
+      "height": 936,
+      "scrollWidth": 1348,
+      "width": 1348,
+      "version": "baseline",
+      "method": "direct desktop Chromium viewport",
+      "capturedAt": "2026-11-16T02:59:15.465941+00:00",
+      "files": [
+        {
+          "path": "before-desktop-filter.jpg",
+          "sha256": "4cd8e2423f852e9562b754b1992e7cf93e0b59408898bcd7b5534095a2ca7c11",
+          "bytes": 81935
+        },
+        {
+          "path": "before-desktop-filter.ax.txt",
+          "sha256": "9329d044d5d24b0a06cfedfdd9a8ebb42578f38fbaf8ddfef0f05fd7b5b6ebf4",
+          "bytes": 11114
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1348,
+        "height": 926
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-desktop-repeat-add",
+      "activeElement": "매트 브리지 수업안에 추가",
+      "heading": "동작 라이브러리",
+      "height": 936,
+      "scrollWidth": 1348,
+      "width": 1348,
+      "version": "baseline",
+      "method": "direct desktop Chromium viewport",
+      "capturedAt": "2026-11-16T02:59:38.344860+00:00",
+      "files": [
+        {
+          "path": "before-desktop-repeat-add.jpg",
+          "sha256": "69e3b744c0964c232a54f3ac919ab3b4c0c2d285514b554a0347c2c1e56df860",
+          "bytes": 55491
+        },
+        {
+          "path": "before-desktop-repeat-add.ax.txt",
+          "sha256": "31056946094b8035a13d1d3d0f9893b3b346758f6da19af78366d73a0470f3d0",
+          "bytes": 3436
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1348,
+        "height": 926
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-desktop-class-start",
+      "activeElement": "일시정지",
+      "heading": "QA 20261116 초보 강사 흐름",
+      "height": 936,
+      "scrollWidth": 1348,
+      "width": 1348,
+      "version": "baseline",
+      "method": "direct desktop Chromium viewport",
+      "capturedAt": "2026-11-16T03:01:30.259571+00:00",
+      "files": [
+        {
+          "path": "before-desktop-class-start.jpg",
+          "sha256": "3722bd5748a2c6e6d3bbb12e8ac440cb11478dd11067dcbea184fcdf79777a33",
+          "bytes": 74548
+        },
+        {
+          "path": "before-desktop-class-start.ax.txt",
+          "sha256": "460127e7aed1d1f9170e9094b142e91e04640e5ab839cd8ac6195558bf36ad50",
+          "bytes": 8327
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1348,
+        "height": 926
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-mobile390-filter",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "자료와 고급 도구",
+      "contentWidth": 375,
+      "heading": "자료와 고급 도구",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "baseline",
+      "capturedAt": "2026-11-16T03:09:09.729847+00:00",
+      "files": [
+        {
+          "path": "before-mobile390-filter.jpg",
+          "sha256": "cc7a5c2e85c0475d23ae69772b2f804ffe1749c0782d16835f99f4aac8748731",
+          "bytes": 53687
+        },
+        {
+          "path": "before-mobile390-filter.ax.txt",
+          "sha256": "c59784593666d1f027a75262e27f99826ba6401ff5876fa5577cb0bc4babb9e6",
+          "bytes": 12064
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-mobile390-repeat-add",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지 수업안에 추가",
+      "contentWidth": 375,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "baseline",
+      "capturedAt": "2026-11-16T03:09:11.545761+00:00",
+      "files": [
+        {
+          "path": "before-mobile390-repeat-add.jpg",
+          "sha256": "ca7133520c800a2d39e0ec6cb9764aafb952b12c113a7027361acd25a63c9e57",
+          "bytes": 46714
+        },
+        {
+          "path": "before-mobile390-repeat-add.ax.txt",
+          "sha256": "43433855cbb3ace71d32109b9cd1637eb56abfe50fde18beb7f3d2588bab89b2",
+          "bytes": 3745
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-mobile390-preview",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지Mat Bridge1 구간 재생·큐 확인2 시작·종료 시각 및 큐 메모 수정지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.이전 단계다음 단계매트 · 수파인 (누운 자세)임",
+      "contentWidth": 375,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "baseline",
+      "capturedAt": "2026-11-16T03:11:21.291631+00:00",
+      "files": [
+        {
+          "path": "before-mobile390-preview.jpg",
+          "sha256": "d329cba79dc68a9aa5619fa040b1dfb1dd303ab6682e86adfee24db6bd61dae9",
+          "bytes": 52801
+        },
+        {
+          "path": "before-mobile390-preview.ax.txt",
+          "sha256": "735c2bfb3b2e4e3b8546bd000413c32a5adfbe52629ebe102a15a32bd08329d9",
+          "bytes": 10079
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "before-mobile390-class-start",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "일시정지",
+      "contentWidth": 375,
+      "heading": "QA 20261116 초보 강사 흐름",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "baseline",
+      "capturedAt": "2026-11-16T03:10:20.982481+00:00",
+      "files": [
+        {
+          "path": "before-mobile390-class-start.jpg",
+          "sha256": "62e149803651725b664a003095d144c013c7b203dca495de4eaf22e8d15bd458",
+          "bytes": 58954
+        },
+        {
+          "path": "before-mobile390-class-start.ax.txt",
+          "sha256": "cb8db920f9af54c5889452f142958b3bb9ca8fc360be11122b4b4a22b2fb6adf",
+          "bytes": 8005
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-mobile390-filter",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": " 필터1",
+      "contentWidth": 375,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:13:10.182497+00:00",
+      "files": [
+        {
+          "path": "after-mobile390-filter.jpg",
+          "sha256": "b4702e8139c310d65ed307651752e394383a090f4c6cd9abeaf8ebf5ebbba19c",
+          "bytes": 49135
+        },
+        {
+          "path": "after-mobile390-filter.ax.txt",
+          "sha256": "aaaa601f3540ae897c079895cc997d97d8c158dc859ee721a08de6994a0267be",
+          "bytes": 4505
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-mobile390-added",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지 즐겨찾기 추가",
+      "contentWidth": 375,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:29:59.418807+00:00",
+      "files": [
+        {
+          "path": "after-mobile390-added.jpg",
+          "sha256": "c22cbe8b8f95791b28d0fd4df12c01186f4157f4446f284d996875265589fd4d",
+          "bytes": 47626
+        },
+        {
+          "path": "after-mobile390-added.ax.txt",
+          "sha256": "c5e44eab4c999f9353525dab9e4cc4b8d0ed1682da2bf6dc33d2f92fec6bff4a",
+          "bytes": 3832
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-mobile390-preview-peak",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지Mat Bridge1 구간 재생·큐 확인2 시작·종료 시각 및 큐 메모 수정지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.이전 단계다음 단계매트 · 수파인 (누운 자세)임",
+      "contentWidth": 375,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:22:58.814687+00:00",
+      "files": [
+        {
+          "path": "after-mobile390-preview-peak.jpg",
+          "sha256": "04e9c53a8f6518546447ab7e08c2cbde116877319c9d570255ad82af38206707",
+          "bytes": 55533
+        },
+        {
+          "path": "after-mobile390-preview-peak.ax.txt",
+          "sha256": "0968a337e862a400e55541a80df977282a51f6de15c0f2d505e0c5797ffb2212",
+          "bytes": 10239
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-mobile390-class-start",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "일시정지",
+      "contentWidth": 375,
+      "heading": "QA 20261116 초보 강사 흐름",
+      "height": 844,
+      "scrollWidth": 375,
+      "width": 390,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:18:33.215250+00:00",
+      "files": [
+        {
+          "path": "after-mobile390-class-start.jpg",
+          "sha256": "3635ac28ba4c11e8c534a61458510a35cfb2f695a5bcae3cdaa51ec4c81de871",
+          "bytes": 59013
+        },
+        {
+          "path": "after-mobile390-class-start.ax.txt",
+          "sha256": "bff0be18f1b8256bc61dcea7c8f1b2c33e45e081809e388d2fa8aad1afa441b2",
+          "bytes": 8048
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-desktop-preview-start",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지Mat Bridge1 구간 재생·큐 확인2 시작·종료 시각 및 큐 메모 수정지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.이전 단계다음 단계매트 · 수파인 (누운 자세)임",
+      "contentWidth": 1265,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 1265,
+      "width": 1280,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:19:28.384642+00:00",
+      "files": [
+        {
+          "path": "after-desktop-preview-start.jpg",
+          "sha256": "7ba1530274beec5d30b916e0b85aa11c1249affbe2d1e89562294c98dd5e8650",
+          "bytes": 68785
+        },
+        {
+          "path": "after-desktop-preview-start.ax.txt",
+          "sha256": "2183ae5f83d1f0209380141331ffcd93e166b1f3c55a6f746a7776e4d95127f5",
+          "bytes": 10175
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-desktop-preview-peak",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지Mat Bridge1 구간 재생·큐 확인2 시작·종료 시각 및 큐 메모 수정지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.이전 단계다음 단계매트 · 수파인 (누운 자세)임",
+      "contentWidth": 1265,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 1265,
+      "width": 1280,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:20:07.086810+00:00",
+      "files": [
+        {
+          "path": "after-desktop-preview-peak.jpg",
+          "sha256": "0ebab687f3955c48cc5c4eb2fdc303e3e8d9b9b73b3e8fad6bea301c6afcff7a",
+          "bytes": 69531
+        },
+        {
+          "path": "after-desktop-preview-peak.ax.txt",
+          "sha256": "94cc1ec21c9051599dee5789b5023ddb209aceefe3e3a18175b3a75fffb30450",
+          "bytes": 10243
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-desktop-preview-end",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "매트 브리지Mat Bridge1 구간 재생·큐 확인2 시작·종료 시각 및 큐 메모 수정지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.이전 단계다음 단계매트 · 수파인 (누운 자세)임",
+      "contentWidth": 1265,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 1265,
+      "width": 1280,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:21:33.146738+00:00",
+      "files": [
+        {
+          "path": "after-desktop-preview-end.jpg",
+          "sha256": "62a7ddeef070f0fbc0dc980d136c8014347f11854d3a8d7269828b1869b6764b",
+          "bytes": 68734
+        },
+        {
+          "path": "after-desktop-preview-end.ax.txt",
+          "sha256": "61bd3435954c5d50397e9e86f2d590990777f3324a4d0255cec44193a44775aa",
+          "bytes": 10135
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-desktop-filter",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": " 필터3",
+      "contentWidth": 1265,
+      "heading": "동작 라이브러리",
+      "height": 844,
+      "scrollWidth": 1265,
+      "width": 1280,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:29:21.220612+00:00",
+      "files": [
+        {
+          "path": "after-desktop-filter.jpg",
+          "sha256": "daa68f041bf73ed6e6c98f54224e608b3cc56a55a7922f8b06a430f17a55c010",
+          "bytes": 76989
+        },
+        {
+          "path": "after-desktop-filter.ax.txt",
+          "sha256": "cb67d29755e395702550fe5bd28ce7670a545249b93d4cf99994e8817ab5f047",
+          "bytes": 5216
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-desktop-class-start",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": "일시정지",
+      "contentWidth": 1265,
+      "heading": "QA 20261116 초보 강사 흐름",
+      "height": 844,
+      "scrollWidth": 1265,
+      "width": 1280,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:25:52.126494+00:00",
+      "files": [
+        {
+          "path": "after-desktop-class-start.jpg",
+          "sha256": "e3364caa7b4bb37c0e9e3d320f2772c00eba966d3ce4c4e7096e4a06d85f79b6",
+          "bytes": 88638
+        },
+        {
+          "path": "after-desktop-class-start.ax.txt",
+          "sha256": "4b6503b244f782e718e24ccca5f1ac781376b6340c41277ecbe616dfb363d7b1",
+          "bytes": 9495
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-mobile360-filter",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": " 필터3",
+      "contentWidth": 345,
+      "heading": "동작 라이브러리",
+      "height": 800,
+      "scrollWidth": 345,
+      "width": 360,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:29:43.931538+00:00",
+      "files": [
+        {
+          "path": "after-mobile360-filter.jpg",
+          "sha256": "33574a6adbb93f12522d92c08b6c0b38b5fbd76cdf36a87ab4b7a5be154c8efa",
+          "bytes": 45159
+        },
+        {
+          "path": "after-mobile360-filter.ax.txt",
+          "sha256": "e02218babd1365f6159df215973e67cf4d54e2935c4842b420f5536159d667d7",
+          "bytes": 4535
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1363,
+        "height": 936
+      },
+      "noDocumentHorizontalOverflow": true
+    },
+    {
+      "name": "after-tablet768-library",
+      "method": "isolated localhost iframe; native CSS viewport; desktop Chromium",
+      "activeElement": " 필터3",
+      "contentWidth": 753,
+      "heading": "동작 라이브러리",
+      "height": 900,
+      "scrollWidth": 753,
+      "width": 768,
+      "version": "candidate",
+      "capturedAt": "2026-11-16T03:29:51.111199+00:00",
+      "files": [
+        {
+          "path": "after-tablet768-library.jpg",
+          "sha256": "a04602c029b7b4ce91dab4ee44454096b111713b1f80fc75c8fada57697ea7bc",
+          "bytes": 52086
+        },
+        {
+          "path": "after-tablet768-library.ax.txt",
+          "sha256": "cda3232a8088df3e41cdc33df7fcc172e199ec1ba01e4e4f44c393f3a00c3767",
+          "bytes": 3835
+        }
+      ],
+      "screenshotPixels": {
+        "width": 1348,
+        "height": 926
+      },
+      "noDocumentHorizontalOverflow": true
+    }
+  ],
+  "excludedExploratoryCaptures": [
+    "before-desktop-bridge-peak",
+    "before-mobile-filter",
+    "before-mobile-filter-viewport"
+  ],
+  "credentialShapeScan": {
+    "files": 18,
+    "matches": 0,
+    "scope": "accessibility text before copying"
+  }
+}

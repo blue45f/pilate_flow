@@ -59,7 +59,9 @@ afterEach(() => {
 
 describe('Atlas reports actual append outcome', () => {
   it('replaces a recent success with an honest duplicate error, preserving steps and cancelling the old dismissal timer', () => {
-    renderAtlas();
+    // The research workspace still supports a deliberate repeat attempt. Catalog cards instead
+    // lead to the class after adding; that path is covered in ExerciseAtlasView.simplified.test.tsx.
+    renderAtlas('tools');
     add(mat.nameKo);
     const success = screen
       .getByText(`${mat.nameKo} · 현재 수업안에 추가했어요.`)
@@ -122,8 +124,8 @@ describe('Atlas reports actual append outcome', () => {
     act(() => vi.advanceTimersByTime(2700));
     expect(screen.queryByText(`${mat.nameKo} · 현재 수업안에 추가했어요.`)).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: `${mat.nameKo} 수업안에 추가` }),
-    ).not.toHaveTextContent('추가됨');
+      screen.getByRole('button', { name: `${mat.nameKo} 담긴 수업안 보기` }),
+    ).toHaveTextContent('수업안 보기');
   });
 
   it('surfaces real target muscle tags, active filter chips, Korean prop/level search, and empty-state recovery', () => {

@@ -1,0 +1,205 @@
+{
+  "baselineCommit": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+  "baselineManifestSha256": "a6511c38f90701ea28fedf969c6b0cbba80930222c848ba25f0bf98ea4826b72",
+  "workingManifestSha256": "391d5c3e06834823b8ae9a0f4852e056807dcb5a63ad4699341a93bde3adc440",
+  "comparisonKind": "committed-baseline-cache-vs-regenerated-working-cache",
+  "phaseOrder": [
+    "start",
+    "middle",
+    "end"
+  ],
+  "rowOrder": [
+    "before",
+    "after"
+  ],
+  "sourceFrameSize": {
+    "width": 640,
+    "height": 400
+  },
+  "originalAtlasUnchanged": true,
+  "practitionerAtlasSha256": "9cc00a49a1ff29846bbd209399cd4bed060f615ff4b6304fb90aa32a2f18b078",
+  "anatomicalAccuracyAssumed": false,
+  "reviewScope": "Rendering and authored-contact regression only; no professional anatomy review.",
+  "exercises": [
+    {
+      "exerciseId": "original-mat-bridge",
+      "title": "Mat bridge",
+      "contactSheet": "original-mat-bridge.before-after.webp",
+      "sha256": "a21a725fe69736c8fc0a56ac72116209f99d1bdc0c0d7d0d0d98f6f46b3fcac6",
+      "bytes": 162950,
+      "phases": {
+        "start": {
+          "before": {
+            "src": "/motion-artwork-v2/original-mat-bridge.start.915ee2997c90.webp",
+            "sha256": "915ee2997c900162de3de977c816b253ec56e3e8e8c3673a8a38add68d5d15a2",
+            "bytes": 7458
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-mat-bridge.start.e64779b2b2c7.webp",
+            "sha256": "e64779b2b2c7e1207ebe2ba06a77abdfc0a6ca5bc85b481fda4ba6dec4a74fdc",
+            "bytes": 7148
+          }
+        },
+        "middle": {
+          "before": {
+            "src": "/motion-artwork-v2/original-mat-bridge.middle.435d245206bf.webp",
+            "sha256": "435d245206bf209764e1224283ee34f24a625b70549123630df5cd61d1b7b74d",
+            "bytes": 8380
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-mat-bridge.middle.8ccaa3adc537.webp",
+            "sha256": "8ccaa3adc5378e5544be17c5f4132e4048b888aec3ccf6411114a9f3bde6ad5a",
+            "bytes": 7888
+          }
+        },
+        "end": {
+          "before": {
+            "src": "/motion-artwork-v2/original-mat-bridge.end.915ee2997c90.webp",
+            "sha256": "915ee2997c900162de3de977c816b253ec56e3e8e8c3673a8a38add68d5d15a2",
+            "bytes": 7458
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-mat-bridge.end.e64779b2b2c7.webp",
+            "sha256": "e64779b2b2c7e1207ebe2ba06a77abdfc0a6ca5bc85b481fda4ba6dec4a74fdc",
+            "bytes": 7148
+          }
+        }
+      }
+    },
+    {
+      "exerciseId": "original-reformer-parallel-footwork",
+      "title": "Parallel footwork",
+      "contactSheet": "original-reformer-parallel-footwork.before-after.webp",
+      "sha256": "f46a086b90903c57224175d7123d30d6dbdf1f323100859d1c74a3e80080baa6",
+      "bytes": 192378,
+      "phases": {
+        "start": {
+          "before": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.start.a60c0e4ab9fc.webp",
+            "sha256": "a60c0e4ab9fc9b5afe7f3e726248ca58d0679aace15aa0a32249634cf38c5395",
+            "bytes": 9944
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.start.f6dfa495f4cd.webp",
+            "sha256": "f6dfa495f4cd40747c3a7088572c9327ee3898859b610cd9c8dc500f657651c5",
+            "bytes": 9550
+          }
+        },
+        "middle": {
+          "before": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.middle.f2dab58f2ca6.webp",
+            "sha256": "f2dab58f2ca60be27791a4246c78ef9782e9ca1f66f379000bb47a5026e79849",
+            "bytes": 10080
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.middle.abfd14511a7d.webp",
+            "sha256": "abfd14511a7dbbfb853305fea4a1ff3fb898c07e5ae7557079c0d63804149b18",
+            "bytes": 9742
+          }
+        },
+        "end": {
+          "before": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.end.a60c0e4ab9fc.webp",
+            "sha256": "a60c0e4ab9fc9b5afe7f3e726248ca58d0679aace15aa0a32249634cf38c5395",
+            "bytes": 9944
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-reformer-parallel-footwork.end.f6dfa495f4cd.webp",
+            "sha256": "f6dfa495f4cd40747c3a7088572c9327ee3898859b610cd9c8dc500f657651c5",
+            "bytes": 9550
+          }
+        }
+      }
+    },
+    {
+      "exerciseId": "original-chair-seated-breath",
+      "title": "Chair seated breath",
+      "contactSheet": "original-chair-seated-breath.before-after.webp",
+      "sha256": "d09cb4f8e86ee990e76ea5d1b85d9049ea803c7d6ed716d27c46738913183089",
+      "bytes": 190822,
+      "phases": {
+        "start": {
+          "before": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.start.3311d550892e.webp",
+            "sha256": "3311d550892ee1737df0e0fb71dbfedcf9edcdf4a286bc45d42a8ee815b0141b",
+            "bytes": 7808
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.start.ba25f705b6d1.webp",
+            "sha256": "ba25f705b6d19024d78eb40f488a10adc02ac336e8118bedbc57d371720986ca",
+            "bytes": 7644
+          }
+        },
+        "middle": {
+          "before": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.middle.30a0b0594b40.webp",
+            "sha256": "30a0b0594b40ef288024b198a9a817e3fe75e02973a3be21ed98964c0484e077",
+            "bytes": 7758
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.middle.c2cd3fdc67f0.webp",
+            "sha256": "c2cd3fdc67f0fc540fb1c849629701d02e61a0a5906b0ad49388f7f39ec848bc",
+            "bytes": 7630
+          }
+        },
+        "end": {
+          "before": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.end.b3eb24de9588.webp",
+            "sha256": "b3eb24de9588eb8c805acef76cc566b4d72e5aff695221e947dc5a2ec4c29ffc",
+            "bytes": 7858
+          },
+          "after": {
+            "src": "/motion-artwork-v2/original-chair-seated-breath.end.a467d447878d.webp",
+            "sha256": "a467d447878dfa3c5d7cca62c2598c927b55da4f1c94a5ae5c6c6027a0111312",
+            "bytes": 7630
+          }
+        }
+      }
+    },
+    {
+      "exerciseId": "ex-lower-03",
+      "title": "Chair standing step-up / pedal",
+      "contactSheet": "ex-lower-03.before-after.webp",
+      "sha256": "a6b7b9e06adeaad441268cd027912dbb253f5b246d573a2c0e007d983d4c1df6",
+      "bytes": 165766,
+      "phases": {
+        "start": {
+          "before": {
+            "src": "/motion-artwork-v2/ex-lower-03.start.71302c937475.webp",
+            "sha256": "71302c937475159059cfb1c21c90886d6f89f016a99fb58b33a04fef29789b50",
+            "bytes": 8336
+          },
+          "after": {
+            "src": "/motion-artwork-v2/ex-lower-03.start.4cd91834bfc1.webp",
+            "sha256": "4cd91834bfc18e20d14ffec33b5598ad4e7a1a6c27ad572d4e208634724016ff",
+            "bytes": 8098
+          }
+        },
+        "middle": {
+          "before": {
+            "src": "/motion-artwork-v2/ex-lower-03.middle.188e7655d02f.webp",
+            "sha256": "188e7655d02fa6c5afac33c3071099892d61fa7c6079d052940ed91caf6c3ba9",
+            "bytes": 8490
+          },
+          "after": {
+            "src": "/motion-artwork-v2/ex-lower-03.middle.6d8b79e23a91.webp",
+            "sha256": "6d8b79e23a918d48ef04f19301b64270313daebedaf5369e55234cf0e28a3995",
+            "bytes": 8360
+          }
+        },
+        "end": {
+          "before": {
+            "src": "/motion-artwork-v2/ex-lower-03.end.71302c937475.webp",
+            "sha256": "71302c937475159059cfb1c21c90886d6f89f016a99fb58b33a04fef29789b50",
+            "bytes": 8336
+          },
+          "after": {
+            "src": "/motion-artwork-v2/ex-lower-03.end.4cd91834bfc1.webp",
+            "sha256": "4cd91834bfc18e20d14ffec33b5598ad4e7a1a6c27ad572d4e208634724016ff",
+            "bytes": 8098
+          }
+        }
+      }
+    }
+  ]
+}

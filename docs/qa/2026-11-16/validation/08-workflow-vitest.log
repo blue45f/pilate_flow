@@ -1,0 +1,321 @@
+
+ RUN  v3.2.7 /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored
+
+ ✓ src/components/LiveStageView.presentation.test.tsx (3 tests) 6049ms
+   ✓ LiveStage presentation without session changes > keeps teaching essentials visible and reapplies either preset after manual disclosure changes  1533ms
+   ✓ LiveStage presentation without session changes > keeps a running timer, current side, voice opt-in, and undo intact across presentation changes  2097ms
+   ✓ LiveStage presentation without session changes > preserves a paused clock and carries the view through a rest without counting paused time  2417ms
+ ✓ src/test/stageGlobalNavigation.test.tsx (17 tests) 27537ms
+   ✓ actual app navigation preserves an unrecorded teaching session > defers loading a saved class until the instructor confirms leaving the running session  2163ms
+   ✓ actual app navigation preserves an unrecorded teaching session > records the original session before committing the saved class replacement  2680ms
+   ✓ actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after close-button, including a later direct finish  1912ms
+   ✓ actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after escape, including a later direct finish  1856ms
+   ✓ actual app navigation preserves an unrecorded teaching session > forgets a cancelled saved-class action after record-cancel, including a later direct finish  3083ms
+   ✓ actual app navigation preserves an unrecorded teaching session > guards the sidebar member-role switch and preserves the clock when cancelled  1255ms
+   ✓ actual app navigation preserves an unrecorded teaching session > guards the palette member-role switch and preserves the clock when cancelled  1338ms
+   ✓ actual app navigation preserves an unrecorded teaching session > announces the mobile timer action for ready, running and paused states  396ms
+   ✓ actual app navigation preserves an unrecorded teaching session > leaves a ready never-started unchanged session without an unnecessary confirmation  340ms
+   ✓ actual app navigation preserves an unrecorded teaching session > still asks before losing a session-only minute added before the timer starts  1390ms
+   ✓ actual app navigation preserves an unrecorded teaching session > asks before 'desktop history' can unmount tracked movement/rest progress  1747ms
+   ✓ actual app navigation preserves an unrecorded teaching session > asks before 'brand workbench' can unmount tracked movement/rest progress  1792ms
+   ✓ actual app navigation preserves an unrecorded teaching session > asks before 'upcoming schedule' can unmount tracked movement/rest progress  1701ms
+   ✓ actual app navigation preserves an unrecorded teaching session > keeps the paused session when a navigation-triggered record form is cancelled  1840ms
+   ✓ actual app navigation preserves an unrecorded teaching session > retains the requested schedule through validation failure and records exact movement/rest time once  1682ms
+   ✓ actual app navigation preserves an unrecorded teaching session > does not navigate or erase the form when the store fails to append a matching record  1617ms
+   ✓ actual app navigation preserves an unrecorded teaching session > allows leaving an idle pending stage without changing review evidence  742ms
+ ✓ src/test/sequenceStudioWorkbench.test.tsx (15 tests) 8072ms
+   ✓ single-canvas sequence studio journeys > adds successive movements after the selected row in chosen order and reveals the new row  364ms
+   ✓ single-canvas sequence studio journeys > returns focus and uses the applied Reformer plan after leaving an unapplied Cadillac draft in advanced tools  1360ms
+   ✓ single-canvas sequence studio journeys > creates, filters, adds, reorders, edits a bilateral budget, undoes, saves and starts the current plan without touching a saved source  841ms
+   ✓ single-canvas sequence studio journeys > keeps new-class decisions reversible and opens a recent saved class as an editable copy  314ms
+ ✓ src/components/LiveStageView.usability.test.tsx (6 tests) 6293ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > guides ready -> start -> pause/resume -> step completion 1-tap start -> final finish while tracking remaining class time and current spring setup  2048ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > recovers accidental single and rapid double-tap step jumps with exact remaining time, running state, and honest elapsed time  1403ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > handles rapid repeated +1분 추가 clicks without stale closures, steps back via undo, and preserves exit confirmation contract  1310ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > supports keyboard Space, ArrowLeft/ArrowRight, and Backspace mistake recovery while ignoring interactive focus and open dialogs  548ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > adapts to 390px mobile viewport with collapsed outline by default and >= 44px touch targets in CSS  370ms
+   ✓ LiveStageView instructor teaching flow & mistake recovery usability > passes an explicit empty taughtStepIds array and exact +1m step snapshot without mutating activeSteps when finishing a paused zero-timer session  613ms
+ ✓ src/components/ExerciseAtlasView.focusRecovery.test.tsx (4 tests) 6895ms
+   ✓ atlas focus recovery without replacing current discovery UI > returns focus to the exact diagram trigger on close without changing exercise data  2049ms
+   ✓ atlas focus recovery without replacing current discovery UI > falls back to search if filtering removes the original preview trigger  1142ms
+   ✓ atlas focus recovery without replacing current discovery UI > unmounts the draft gallery and its preview when collapsed, then resets on returning to the library  1887ms
+   ✓ atlas focus recovery without replacing current discovery UI > restores search focus after each clear, chip removal, reset and empty-result recovery  1814ms
+ ✓ src/components/GeneratedPractitionerFigure.test.tsx (9 tests) 3336ms
+   ✓ generated practitioner art on authored movement geometry > renders one shared atlas and one practitioner for every authored phase without invalid transforms  1758ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored original-mat-bridge frames  357ms
+   ✓ generated practitioner art on authored movement geometry > keeps both painted soles on the authored contacts in static, transitional and mirrored original-reformer-parallel-footwork frames  320ms
+ ✓ src/components/StudioMotionPlayback.lifecycle.test.tsx (15 tests) 2654ms
+   ✓ shared motion playback lifecycle > pauses catalog when offscreen, hidden or reduced-motion, requiring explicit replay  517ms
+   ✓ shared motion playback lifecycle > shows one coherent motion figure, mounts illustrations only on demand, and resets a changed exercise  327ms
+ ✓ src/components/ExerciseAtlasView.addFeedback.test.tsx (5 tests) 4421ms
+   ✓ Atlas reports actual append outcome > replaces a recent success with an honest duplicate error, preserving steps and cancelling the old dismissal timer  1514ms
+   ✓ Atlas reports actual append outcome > returns to success feedback only after a later actual insertion and dismisses that success normally  432ms
+   ✓ Atlas reports actual append outcome > surfaces real target muscle tags, active filter chips, Korean prop/level search, and empty-state recovery  761ms
+   ✓ Atlas reports actual append outcome > reflects persistent sequence selection state, pattern tile selection, and studio thumbnails with precise kinematic previews  1427ms
+ ✓ src/components/ExerciseAtlasView.simplified.test.tsx (10 tests) 3581ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > starts with search, apparatus and concise cards while keeping research tools behind one action  850ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > preserves search and favorite filters through advanced tools and a new catalog mount  596ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > filters in place, restores the trigger on Escape, and keeps browse choices separate from class settings  550ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > scopes recent add feedback to the active class when a different draft replaces it  402ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > recovers an empty owned-only search and returns directly to the existing class builder  326ms
+ ✓ src/components/LiveStageView.voice.test.tsx (13 tests) 8829ms
+   ✓ live-stage device voice guidance > is silent on entry and class start alone, then speaks the chosen local voice after opt-in  725ms
+   ✓ live-stage device voice guidance > handles StrictMode without duplicate speech and reads phases and time only once  930ms
+   ✓ live-stage device voice guidance > supports independent toggles, pauses, resumes, and explicit immediate stop  894ms
+   ✓ live-stage device voice guidance > announces the next step automatically only when timer auto-transition is enabled  619ms
+   ✓ live-stage device voice guidance > never speaks rest exercise notes and cancels on exit and unmount  929ms
+   ✓ live-stage device voice guidance > cancels when hidden, skips stale alerts, and never speaks on a generic page  511ms
+   ✓ live-stage device voice guidance > does not allow a remote-only voice and handles asynchronously loaded local voices  543ms
+   ✓ live-stage device voice guidance > fails quietly for missing speech support and for playback errors  798ms
+   ✓ live-stage device voice guidance > starts a completed step again with its initial phase, not the stale final transition  608ms
+   ✓ live-stage device voice guidance > does not clear a newer utterance when the canceled older one reports an error  598ms
+   ✓ live-stage device voice guidance > keeps the stage usable but cancels stale breath without reading changed content  530ms
+   ✓ live-stage device voice guidance > reads pending exercise title and time only after opt-in, never its unreviewed breath  407ms
+   ✓ live-stage device voice guidance > supports Space and ArrowLeft/ArrowRight keyboard controls on stage body while ignoring focused interactive elements  735ms
+ ✓ src/components/SequenceWorkbench.insertion.test.tsx (4 tests) 9350ms
+   ✓ Workbench contextual insertion > uses a fresh end placement when a different class is loaded into the mounted Workbench  1837ms
+   ✓ Workbench contextual insertion > preserves the chosen position across cancel/reopen and inserts successive choices at 390px  2929ms
+   ✓ Workbench contextual insertion > preserves the chosen position across cancel/reopen and inserts successive choices at 1440px  3105ms
+   ✓ Workbench contextual insertion > opens a blocked contextual position with an explanation instead of silently appending  1476ms
+ ✓ src/test/motionRenderingQualityRegression.test.tsx (12 tests) 2405ms
+   ✓ rendered motion quality regressions > original-cadillac-table-ankle keeps both feet attached to their own ankles in every static view  578ms
+   ✓ rendered motion quality regressions > original-mat-heel-slide keeps both feet attached to their own ankles in every static view  354ms
+   ✓ rendered motion quality regressions > original-cadillac-table-knee-fold keeps both feet attached to their own ankles in every static view  307ms
+   ✓ rendered motion quality regressions > original-mat-knee-fold keeps both feet attached to their own ankles in every static view  356ms
+stderr | src/test/globalBenchmarkMotionAndRepertoire.test.tsx > Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > connects unified 5-apparatus 3D mini previews, difficulty badges, and SpringVisualPills across InstructorScheduleView and MemberBookingView without altering accessible CTA/card names
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+ ✓ src/test/globalBenchmarkMotionAndRepertoire.test.tsx (9 tests) 4224ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > shows multiple thumbnail references beside motion while advanced drawers stay collapsed and playback requires a click  515ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > provides 60 crawled movements + unique YouTube references in ExerciseAtlasView with 1-click library import and direct sequence add  1346ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > elevates LiveStageView (P09) with 3D start↔peak companion, spring delta alert, unilateral side-switch haptic/chime alert after opt-in, and one-handed ±15s thumb dock with undo  493ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > connects unified 5-apparatus 3D mini previews, difficulty badges, and SpringVisualPills across InstructorScheduleView and MemberBookingView without altering accessible CTA/card names  464ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > completes full visual parity & pro elevation across P01 Quick-Start 3D, P04 Flow Coach transition optimizer, P10 30s Log 3D banner & chips, P12 Reusable Block Shelf, P13 Free AI 3D steps, P14 Clipper 3D spring presets, Offline PWA 40-Render Prewarmer, and 1-Page Visual 3D Cue Sheet  658ms
+   ✓ Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge > delivers all 4 v4 parallel tracks: InlineExerciseFinder 3D & spring filter, manufacturer brand spring conversion, zero-server local SVG QR sequence sharing with undo-safe import, and MemberBookingView focus/props bridge  407ms
+ ✓ src/utils/generatedPractitionerArt.test.ts (6 tests) 2062ms
+   ✓ stable practitioner geometry > has no abrupt face reversal across all 98 continuous authored motion cycles  2051ms
+stderr | src/test/stepByStepRedesign.test.tsx > Step-by-step guided flow & design mockup alignment upgrades > provides inline -0.5분 / +0.5분 quick duration steppers on Step 3 exercise rows with undo support
+An update to SequenceOrderCard inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to GroupPrepPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to SequenceWorkbench inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/test/stepByStepRedesign.test.tsx (7 tests) 4382ms
+   ✓ Step-by-step guided flow & design mockup alignment upgrades > renders Step 0 clean 2-card choice frame, interactive 5-tab stepper, and quick duration chips without mutating store on mount  653ms
+   ✓ Step-by-step guided flow & design mockup alignment upgrades > transitions across isolated pages: 시작하기 -> 1. 수업 기본 -> 2. 동작 담기 (inline catalog) -> 3. 순서·시간 확인  841ms
+   ✓ Step-by-step guided flow & design mockup alignment upgrades > provides inline -0.5분 / +0.5분 quick duration steppers on Step 3 exercise rows with undo support  1526ms
+   ✓ Step-by-step guided flow & design mockup alignment upgrades > opens the optional 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView  718ms
+   ✓ Step-by-step guided flow & design mockup alignment upgrades > duplicates and opens a saved sequence in 1 tap from ClassBinderView while keeping original intact  371ms
+ ✓ src/components/ClassBinderView.historyContinuity.test.tsx (4 tests) 3756ms
+   ✓ history browsing and recorded-data honesty > keeps example history available to inspect or copy but excludes it from adaptive analysis and actions  421ms
+   ✓ history browsing and recorded-data honesty > restores search, group, date and expanded result count on return without editing lessons or logs  2465ms
+   ✓ history browsing and recorded-data honesty > falls back to available groups and dates when a recovered filter no longer exists  732ms
+ ✓ src/components/ExerciseAtlasView.conceptLayout.test.tsx (4 tests) 3105ms
+   ✓ library supplied concept layout > puts search and movement results before the collapsed authoring drafts  862ms
+   ✓ library supplied concept layout > selects existing movement information, preserves review state and hands off to full details  547ms
+   ✓ library supplied concept layout > keeps selected information across filtering and safely restores focus if its card disappears  515ms
+   ✓ library supplied concept layout > dismisses the inspector on Escape key, restores focus to the card trigger, and announces added state  1177ms
+ ✓ src/components/ExerciseAtlasView.editorFocus.test.tsx (3 tests) 2478ms
+   ✓ library focused on finding and adding movements > starts with one equipment selector and results before optional reference tools  418ms
+   ✓ library focused on finding and adding movements > keeps optional diagrams available, mounts them on demand and returns to search  819ms
+   ✓ library focused on finding and adding movements > preserves search and filters when adding without implying or changing personal review  1239ms
+ ✓ scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx (13 tests) 3589ms
+   ✓ Track B Audit — 2. Client Bundle Zero-Secret & Server-Boundary Verification (클라이언트 bundle에 비밀 미포함) > 2a. dist/ build artifacts and git-tracked files contain zero API key literals or private keys  643ms
+   ✓ Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 회귀 검사) > 3a. free_quota_exhausted (429) across all 3 tabs renders alert banner, readable renewal timing, hides unavailable external AI button, and keeps local engine button functional  742ms
+   ✓ Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 회귀 검사) > 3b. sensitive_health_blocked (400) across all 3 tabs renders immediate warning banner, disables external AI button, and allows local sanitized execution  781ms
+   ✓ Track B Audit — 4. Regression Prevention for Previously Reproduced Track B Defects (DEFECT-B1, DEFECT-B2, DEFECT-B3) > DEFECT-B3: provider failures stay visible without false readiness, tab feedback is cleared, and paid-model blocking falls back locally  635ms
+ ✓ src/test/uxElevationIteration.test.tsx (8 tests) 3648ms
+   ✓ Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1) > keeps Home focused on 2 primary cards without leaking Step 3 when returning via 시작하기, and supports 1-tap recent 바로 진행  1409ms
+   ✓ Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1) > auto-narrows Step 2 finder to selected equipment, shows live added-steps tray with 1-tap removal, and applies Step 3 quick repetition chips  879ms
+   ✓ Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1) > supports instructor step include/exclude checkboxes, ±0.5m quick duration chips, and actionable AI settings card in FreeAiAssistantPanel  309ms
+   ✓ Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1) > renders LIVE status pill, connected LiveStageKinematicDiagram, 2-second glanceable cues, trims 30s with undo, and reorders upcoming steps mid-class in LiveStageView  432ms
+ ✓ src/components/YouTubePreviewModal.wave2Ux.test.tsx (4 tests) 3200ms
+   ✓ Wave2-3 YouTubePreviewModal step clarity, edit draft recovery & reset > renders the 2-step guided header (yt-preview-step-guide) with live 지금 할 일 guidance and step focus navigation (이전 단계 / 다음 단계)  800ms
+   ✓ Wave2-3 YouTubePreviewModal step clarity, edit draft recovery & reset > preserves unsaved timestamp, cue note, and review edits in sessionStorage (pf_yt_preview_edit_draft_v1) across close/cancel and restores with 수정 초안 복원됨 notice on reopen  941ms
+   ✓ Wave2-3 YouTubePreviewModal step clarity, edit draft recovery & reset > reverts to saved values and clears pf_yt_preview_edit_draft_v1 when 초안 초기화 is clicked  746ms
+   ✓ Wave2-3 YouTubePreviewModal step clarity, edit draft recovery & reset > clears pf_yt_preview_edit_draft_v1 from sessionStorage when changes are saved  712ms
+ ✓ src/test/firstTimeFlowAndRecovery.test.tsx (4 tests) 2344ms
+   ✓ First-Time Instructor Simplification, Empty/Error Recovery & Save/Restore > provides 1-tap starter draft in Step 2 empty state and 1-tap saved-version restore in Step 3  1742ms
+ ✓ src/components/ClassBinderView.reusePreview.test.tsx (7 tests) 2781ms
+   ✓ saved-class preview and deliberate copy reuse > opens the complete plan from a collapsed card and closes by Escape or the close action without a write  716ms
+   ✓ saved-class preview and deliberate copy reuse > keeps the copy decision reachable under the recent filter and creates nothing when cancelled  397ms
+   ✓ saved-class preview and deliberate copy reuse > keeps the copy decision reachable under the group filter and creates nothing when cancelled  337ms
+   ✓ saved-class preview and deliberate copy reuse > commits one independent copy from a filtered preview and restores the complete prior draft with undo  421ms
+   ✓ saved-class preview and deliberate copy reuse > requires reviewing refreshed contents when the current class changes during preview  392ms
+   ✓ saved-class preview and deliberate copy reuse > keeps a removed source read-only and returns focus to search when its card no longer exists  317ms
+ ✓ src/test/editorFocusWorkbench.test.tsx (4 tests) 2789ms
+   ✓ Workbench editing state and time feedback > highlights the visible editor after recovering a stale selection stage  965ms
+   ✓ Workbench editing state and time feedback > shows target fulfillment, preserves half minutes and reports the duration restored by undo  890ms
+   ✓ Workbench editing state and time feedback > keeps practice options available on demand and disables them when the movement is locked  770ms
+ ✓ src/components/InlineExerciseFinder.insertion.test.tsx (7 tests) 1210ms
+ ✓ src/components/MovementMediaGuidancePanel.test.tsx (8 tests) 1545ms
+   ✓ MovementMediaGuidancePanel — reference video/materials & Korean voice explanation > retains narration in voice-only mode and discards a loaded video when modes change  340ms
+   ✓ MovementMediaGuidancePanel — reference video/materials & Korean voice explanation > integrates one video gallery with an on-demand voice-only drawer and resets media on exercise change  809ms
+ ✓ src/test/catalogMotionContinuity.test.ts (6 tests) 1877ms
+   ✓ catalog motion continuity and explicit cycle completion > retains both complete limb chains and stays continuous at every native keyframe and loop boundary  1149ms
+   ✓ catalog motion continuity and explicit cycle completion > does not flip an IK bend branch inside a phase, including clam and long-stretch projections  702ms
+ ✓ src/test/unifiedKinematicMotions.test.tsx (4 tests) 1966ms
+   ✓ Unified Studio Kinematic Motion System with native illustrations and source-only additions > preserves all 98 native models and their 5-phase interpolation while keeping 60 new source-linked movements free of fallback anatomy  925ms
+   ✓ Unified Studio Kinematic Motion System with native illustrations and source-only additions > uses exact cached native frames for 98 badges, source-only apparatus art for 60 additions, and the same live SVG renderer in the showcase  315ms
+   ✓ Unified Studio Kinematic Motion System with native illustrations and source-only additions > supports 1x/2x/3x/continuous loop modes in CatalogMotionInteractivePlayer and dual-mode switching in MotionReferencePlayer  720ms
+ ✓ src/lib/accountStorage.test.ts (10 tests) 1757ms
+   ✓ account-local workspace preservation > isolates savedSequences and historyLogs across refresh, logout/re-entry, and account switching  348ms
+stderr | src/test/uxRedesignAndOpenAi.test.tsx > UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search > supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+stderr | src/test/uxRedesignAndOpenAi.test.tsx > UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search > supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+ ✓ src/test/uxRedesignAndOpenAi.test.tsx (6 tests) 1636ms
+   ✓ UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search > supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore  595ms
+   ✓ UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search > switches cleanly between Instructor Studio and Member Booking views in App without losing state  363ms
+ ✓ src/components/InstructorScheduleView.browseContinuity.test.tsx (4 tests) 1499ms
+   ✓ instructor schedule preparation and browsing continuity > returns to the selected week and preparation filter after opening an occurrence draft  970ms
+ ✓ src/components/MemberBookingView.discovery.test.tsx (4 tests) 1090ms
+   ✓ member schedule discovery > crosses week boundaries with all filters intact and skips cancelled, closed, and moved dates  551ms
+stderr | src/components/MemberBookingView.usability.test.tsx > MemberBookingView usability improvements (discovery, quick-spot, change-spot, direct cancel, keyboard & mobile) > preselects an open spot directly from the slot card, supports Escape cancel recovery, and navigates open spots via arrow keys
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+stderr | src/components/MemberBookingView.usability.test.tsx > MemberBookingView usability improvements (discovery, quick-spot, change-spot, direct cancel, keyboard & mobile) > guards rapid double-clicks, changes booked spot with zero pass deduction while preserving updatedAt, and cancels directly from my-bookings strip across dates
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+stderr | src/components/MemberBookingView.usability.test.tsx > MemberBookingView usability improvements (discovery, quick-spot, change-spot, direct cancel, keyboard & mobile) > guards rapid double-clicks, changes booked spot with zero pass deduction while preserving updatedAt, and cancels directly from my-bookings strip across dates
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored/src/components/StudioInteractive3DViewport.tsx:124:20
+    at Object.react_stack_bottom_frame (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28656:20)
+    at runWithFiberInDEV (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at commitHookEffectListMount (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13748:29)
+    at commitHookPassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:13835:11)
+    at commitPassiveMountOnFiber (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16906:13)
+    at recursivelyTraversePassiveMountEffects (/workspace/scratch/730f2285a0ef/pilates-flow-release/node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:16851:13) undefined
+
+ ✓ src/components/MemberBookingView.usability.test.tsx (5 tests) 1199ms
+   ✓ MemberBookingView usability improvements (discovery, quick-spot, change-spot, direct cancel, keyboard & mobile) > shows per-apparatus class counts and recovers from zero-result filters in one tap  409ms
+   ✓ MemberBookingView usability improvements (discovery, quick-spot, change-spot, direct cancel, keyboard & mobile) > guards rapid double-clicks, changes booked spot with zero pass deduction while preserving updatedAt, and cancels directly from my-bookings strip across dates  355ms
+ ✓ src/data/exerciseYouTubeCatalog.test.tsx (14 tests) 837ms
+ ✓ scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts (7 tests) 1365ms
+   ✓ Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation > Test 4: preserves 100% of synthetic Pilates lesson data across full SW lifecycle (v1 install -> offline revisit -> v2 waiting -> v2 activate -> offline revisit)  909ms
+ ✓ src/components/ExerciseVideoGallery.test.tsx (7 tests) 1158ms
+ ✓ src/utils/exerciseVideoReferences.test.ts (10 tests) 876ms
+   ✓ per-exercise video reference selection > reports every exercise in 0/1/2+ coverage without duplicate references  731ms
+ ✓ src/components/RecoveryPreview.test.tsx (8 tests) 592ms
+ ✓ src/test/previewAndLogParallelTrack.test.tsx (1 test) 664ms
+   ✓ Parallel Track 2 — SequencePlanPreview & LogSessionModal UX > displays spring transition readiness summary in SequencePlanPreview and 1-tap quick reflection chips in LogSessionModal  662ms
+ ✓ src/components/RecoveryPreview.storage.test.tsx (6 tests) 575ms
+ ✓ src/components/ExerciseMotionArtwork.test.tsx (9 tests) 429ms
+ ✓ src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx (4 tests) 662ms
+   ✓ Settings Purpose-Driven Flow UX (First Entry -> Device/Voice -> Data Preservation -> Next Action) > 4. [양방향 초안·선택 보존 및 영역 왕복·재오픈 검증] Preserves both deselection (true->false) and selection (false->true) across pre-click, post-click, section round-trips, and modal reopen  318ms
+ ✓ src/test/memberAndBinderParallelTrack.test.tsx (1 test) 497ms
+   ✓ Parallel Track 3 — MemberBookingView & ClassBinderView UX > renders member quick status strip and preserves ClassBinderView saved sequence surface  495ms
+ ✓ src/components/LibraryMovementInspector.favorite.test.tsx (4 tests) 359ms
+ ✓ src/components/EditedCatalogMotionIdentity.test.tsx (10 tests) 450ms
+ ✓ src/hooks/useWorkspaceBrowseState.test.tsx (6 tests) 364ms
+ ✓ src/components/RecoveryPreview.layout.test.tsx (3 tests) 369ms
+ ✓ src/utils/exerciseArtworkCache.test.ts (2 tests) 302ms
+ ✓ src/utils/backupRecoveryInspection.test.ts (23 tests) 185ms
+ ✓ src/test/motionProvenanceAudit.test.ts (4 tests) 192ms
+ ✓ src/components/ExerciseMotionArtwork.loading.test.tsx (4 tests) 179ms
+ ✓ src/test/pwaServiceWorker.test.ts (47 tests) 186ms
+ ✓ src/test/scheduleUxParallelTrack.test.tsx (1 test) 177ms
+ ✓ src/test/motionSemanticCorrections.test.ts (12 tests) 139ms
+ ✓ src/utils/movementIdeaDraft.insertion.test.ts (7 tests) 138ms
+ ✓ src/test/sequenceInsertionAndReuse.test.ts (11 tests) 170ms
+ ✓ src/utils/videoSemanticMatching.test.ts (6 tests) 109ms
+ ✓ src/test/sequencePlanningActions.test.ts (8 tests) 118ms
+ ✓ src/test/visualMotionParallelTrack.test.tsx (1 test) 68ms
+ ✓ backend/freeAiService.test.ts (25 tests) 72ms
+ ✓ src/test/pwaStartupContinuity.test.tsx (1 test) 47ms
+ ✓ src/data/exerciseVideoBindings.test.ts (4 tests) 45ms
+ ✓ src/test/wave3AdvancementVerification.test.ts (5 tests) 20ms
+ ✓ src/utils/wave3DeploymentRegression.test.ts (2 tests) 18ms
+ ✓ src/utils/wave5DeploymentRegression.test.ts (7 tests) 15ms
+ ✓ src/test/wave7MultiCloudDeployVerification.test.ts (4 tests) 8ms
+ ✓ src/test/wave8SkillsAdvancementVerification.test.ts (3 tests) 8ms
+ ✓ src/test/wave5AdvancementVerification.test.ts (3 tests) 8ms
+ ✓ src/test/wave6AdvancementVerification.test.ts (3 tests) 9ms
+ ✓ src/test/wave4FollowthroughVerification.test.ts (4 tests) 13ms
+
+ Test Files  70 passed (70)
+      Tests  517 passed (517)
+   Start at  12:29:19
+   Duration  295.23s (transform 10.11s, setup 4.70s, collect 79.99s, tests 152.98s, environment 33.71s, prepare 7.02s)
+

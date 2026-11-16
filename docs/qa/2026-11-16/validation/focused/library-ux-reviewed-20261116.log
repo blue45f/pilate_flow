@@ -1,0 +1,29 @@
+
+ RUN  v3.2.7 /workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored
+
+ ✓ src/components/ExerciseAtlasView.simplified.test.tsx (10 tests) 3975ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > starts with search, apparatus and concise cards while keeping research tools behind one action  853ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > preserves search and favorite filters through advanced tools and a new catalog mount  942ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > filters in place, restores the trigger on Escape, and keeps browse choices separate from class settings  544ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > scopes recent add feedback to the active class when a different draft replaces it  370ms
+   ✓ everyday Atlas catalog and preserved advanced workspace > recovers an empty owned-only search and returns directly to the existing class builder  389ms
+ ✓ src/components/ExerciseAtlasView.focusRecovery.test.tsx (4 tests) 5604ms
+   ✓ atlas focus recovery without replacing current discovery UI > returns focus to the exact diagram trigger on close without changing exercise data  1339ms
+   ✓ atlas focus recovery without replacing current discovery UI > falls back to search if filtering removes the original preview trigger  977ms
+   ✓ atlas focus recovery without replacing current discovery UI > unmounts the draft gallery and its preview when collapsed, then resets on returning to the library  1394ms
+   ✓ atlas focus recovery without replacing current discovery UI > restores search focus after each clear, chip removal, reset and empty-result recovery  1893ms
+ ✓ src/components/ExerciseAtlasView.addFeedback.test.tsx (5 tests) 4617ms
+   ✓ Atlas reports actual append outcome > replaces a recent success with an honest duplicate error, preserving steps and cancelling the old dismissal timer  1577ms
+   ✓ Atlas reports actual append outcome > returns to success feedback only after a later actual insertion and dismisses that success normally  387ms
+   ✓ Atlas reports actual append outcome > surfaces real target muscle tags, active filter chips, Korean prop/level search, and empty-state recovery  780ms
+   ✓ Atlas reports actual append outcome > reflects persistent sequence selection state, pattern tile selection, and studio thumbnails with precise kinematic previews  1584ms
+ ✓ src/components/ExerciseAtlasView.editorFocus.test.tsx (3 tests) 1726ms
+   ✓ library focused on finding and adding movements > starts with one equipment selector and results before optional reference tools  439ms
+   ✓ library focused on finding and adding movements > keeps optional diagrams available, mounts them on demand and returns to search  711ms
+   ✓ library focused on finding and adding movements > preserves search and filters when adding without implying or changing personal review  574ms
+
+ Test Files  4 passed (4)
+      Tests  22 passed (22)
+   Start at  12:01:06
+   Duration  31.66s (transform 3.82s, setup 282ms, collect 11.94s, tests 15.92s, environment 1.95s, prepare 376ms)
+

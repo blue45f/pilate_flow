@@ -1,0 +1,284 @@
+{
+  "status": "passed",
+  "startedAt": "2026-11-16T03:26:28.162778+00:00",
+  "workflow": ".github/workflows/deploy-production.yml",
+  "job": "verify-and-build",
+  "workflowSha256": "97a62704597571eeb604e179dcc53ab9a886cb29100ffb728d5bf576dba0341a",
+  "headCommit": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+  "branch": "feat/simple-flow-natural-motion-20261116",
+  "runtime": {
+    "node": "v24.22.1",
+    "pnpm": "11.25.0",
+    "workflowNode": "22.x"
+  },
+  "sourceAtStart": {
+    "sha256": "76fee616f2a1f14842bdc51e5567d76a8110ff7bbb301b2594bba31dd381956d",
+    "files": 1584,
+    "scope": "src, backend, public, scripts, workflow and build/package/config inputs; QA documentation excluded"
+  },
+  "gates": [
+    {
+      "id": "01-check-secrets",
+      "argv": [
+        "pnpm",
+        "check:secrets"
+      ],
+      "startedAt": "2026-11-16T03:26:29.905933+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:26:33.850278+00:00",
+      "durationSeconds": 3.748,
+      "log": "01-check-secrets.log",
+      "rawLogSha256": "67eb6c43f828f2aa2f8baf15c18293a8f768b07a846a2f175f718d0a65c0f446",
+      "logSha256": "67eb6c43f828f2aa2f8baf15c18293a8f768b07a846a2f175f718d0a65c0f446",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "02-check-motion-study",
+      "argv": [
+        "pnpm",
+        "check:motion-study"
+      ],
+      "startedAt": "2026-11-16T03:26:33.850982+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:26:43.220560+00:00",
+      "durationSeconds": 9.057,
+      "log": "02-check-motion-study.log",
+      "rawLogSha256": "0b674a406fcad72d439638fd05dfb739c3203aa5108aeca0fc265d91e652fb47",
+      "logSha256": "0b674a406fcad72d439638fd05dfb739c3203aa5108aeca0fc265d91e652fb47",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "03-test-deploy",
+      "argv": [
+        "pnpm",
+        "test:deploy"
+      ],
+      "startedAt": "2026-11-16T03:26:43.221282+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:26:46.274545+00:00",
+      "durationSeconds": 2.853,
+      "log": "03-test-deploy.log",
+      "rawLogSha256": "960ddc9ada67a0842b3924e50266be1c577497bb5a08ee3b0e93051992791013",
+      "logSha256": "960ddc9ada67a0842b3924e50266be1c577497bb5a08ee3b0e93051992791013",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "04-test-motion-artwork",
+      "argv": [
+        "pnpm",
+        "test:motion-artwork"
+      ],
+      "startedAt": "2026-11-16T03:26:46.275660+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:26:50.808686+00:00",
+      "durationSeconds": 4.339,
+      "log": "04-test-motion-artwork.log",
+      "rawLogSha256": "9c29a69c10010966dc5e5074abe7b63ca2ee32b66fbe8899c0e7e3991161fe43",
+      "logSha256": "9c29a69c10010966dc5e5074abe7b63ca2ee32b66fbe8899c0e7e3991161fe43",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "05-lint",
+      "argv": [
+        "pnpm",
+        "lint"
+      ],
+      "startedAt": "2026-11-16T03:26:50.809461+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:28:14.438793+00:00",
+      "durationSeconds": 83.356,
+      "log": "05-lint.log",
+      "rawLogSha256": "7c25248f5e3a800a6156a4204ae05fb42f77020c1495d23c8ddea2719b7cfa08",
+      "logSha256": "7c25248f5e3a800a6156a4204ae05fb42f77020c1495d23c8ddea2719b7cfa08",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "06-build",
+      "argv": [
+        "pnpm",
+        "build"
+      ],
+      "startedAt": "2026-11-16T03:28:14.440520+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:29:17.392928+00:00",
+      "durationSeconds": 62.746,
+      "log": "06-build.log",
+      "rawLogSha256": "4f76f19cbc1053af848acb44d5f9cee320cea752b8c3e9685f7aab4a67b421b3",
+      "logSha256": "4f76f19cbc1053af848acb44d5f9cee320cea752b8c3e9685f7aab4a67b421b3",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "07-deploy-check-readonly",
+      "argv": [
+        "pnpm",
+        "deploy:check"
+      ],
+      "startedAt": "2026-11-16T03:29:17.394038+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:29:18.448709+00:00",
+      "durationSeconds": 0.837,
+      "log": "07-deploy-check-readonly.log",
+      "rawLogSha256": "f60eec75dc52041e2c62bb1e2ef759ab38acd7faa03754bad4811beb91716925",
+      "logSha256": "f60eec75dc52041e2c62bb1e2ef759ab38acd7faa03754bad4811beb91716925",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    },
+    {
+      "id": "08-workflow-vitest",
+      "argv": [
+        "pnpm",
+        "vitest",
+        "run",
+        "src/test/stepByStepRedesign.test.tsx",
+        "src/test/uxElevationIteration.test.tsx",
+        "src/test/firstTimeFlowAndRecovery.test.tsx",
+        "src/test/scheduleUxParallelTrack.test.tsx",
+        "src/test/previewAndLogParallelTrack.test.tsx",
+        "src/test/memberAndBinderParallelTrack.test.tsx",
+        "src/test/visualMotionParallelTrack.test.tsx",
+        "src/test/unifiedKinematicMotions.test.tsx",
+        "backend/freeAiService.test.ts",
+        "src/test/uxRedesignAndOpenAi.test.tsx",
+        "src/test/wave3AdvancementVerification.test.ts",
+        "src/test/wave4FollowthroughVerification.test.ts",
+        "src/test/wave5AdvancementVerification.test.ts",
+        "src/test/wave6AdvancementVerification.test.ts",
+        "src/test/wave7MultiCloudDeployVerification.test.ts",
+        "src/test/wave8SkillsAdvancementVerification.test.ts",
+        "src/utils/wave3DeploymentRegression.test.ts",
+        "src/utils/wave5DeploymentRegression.test.ts",
+        "src/test/editorFocusWorkbench.test.tsx",
+        "src/components/ExerciseAtlasView.editorFocus.test.tsx",
+        "src/test/stageGlobalNavigation.test.tsx",
+        "src/test/pwaStartupContinuity.test.tsx",
+        "src/test/pwaServiceWorker.test.ts",
+        "src/test/sequenceInsertionAndReuse.test.ts",
+        "src/utils/movementIdeaDraft.insertion.test.ts",
+        "src/components/InlineExerciseFinder.insertion.test.tsx",
+        "src/components/SequenceWorkbench.insertion.test.tsx",
+        "src/components/ClassBinderView.reusePreview.test.tsx",
+        "src/components/LibraryMovementInspector.favorite.test.tsx",
+        "src/components/MemberBookingView.discovery.test.tsx",
+        "src/components/MemberBookingView.usability.test.tsx",
+        "src/components/RecoveryPreview.test.tsx",
+        "src/components/RecoveryPreview.storage.test.tsx",
+        "src/components/RecoveryPreview.layout.test.tsx",
+        "src/utils/backupRecoveryInspection.test.ts",
+        "src/hooks/useWorkspaceBrowseState.test.tsx",
+        "src/lib/accountStorage.test.ts",
+        "src/components/InstructorScheduleView.browseContinuity.test.tsx",
+        "src/components/ClassBinderView.historyContinuity.test.tsx",
+        "src/components/LiveStageView.presentation.test.tsx",
+        "src/components/LiveStageView.usability.test.tsx",
+        "src/components/LiveStageView.voice.test.tsx",
+        "src/test/globalBenchmarkMotionAndRepertoire.test.tsx",
+        "src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx",
+        "src/test/sequenceStudioWorkbench.test.tsx",
+        "src/test/sequencePlanningActions.test.ts",
+        "src/components/ExerciseAtlasView.simplified.test.tsx",
+        "src/components/EditedCatalogMotionIdentity.test.tsx",
+        "src/test/motionRenderingQualityRegression.test.tsx",
+        "src/test/catalogMotionContinuity.test.ts",
+        "src/test/motionSemanticCorrections.test.ts",
+        "src/data/exerciseVideoBindings.test.ts",
+        "src/utils/videoSemanticMatching.test.ts",
+        "src/components/ExerciseVideoGallery.test.tsx",
+        "src/utils/exerciseVideoReferences.test.ts",
+        "src/data/exerciseYouTubeCatalog.test.tsx",
+        "src/test/motionProvenanceAudit.test.ts",
+        "src/components/GeneratedPractitionerFigure.test.tsx",
+        "src/utils/generatedPractitionerArt.test.ts",
+        "src/components/MovementMediaGuidancePanel.test.tsx",
+        "src/components/YouTubePreviewModal.wave2Ux.test.tsx",
+        "src/components/ExerciseMotionArtwork.loading.test.tsx",
+        "src/components/ExerciseAtlasView.addFeedback.test.tsx",
+        "src/components/ExerciseAtlasView.conceptLayout.test.tsx",
+        "src/components/ExerciseAtlasView.focusRecovery.test.tsx",
+        "src/components/ExerciseMotionArtwork.test.tsx",
+        "src/components/StudioMotionPlayback.lifecycle.test.tsx",
+        "src/utils/exerciseArtworkCache.test.ts",
+        "scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts",
+        "scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx"
+      ],
+      "startedAt": "2026-11-16T03:29:18.449523+00:00",
+      "status": "passed",
+      "exitCode": 0,
+      "endedAt": "2026-11-16T03:34:15.561486+00:00",
+      "durationSeconds": 296.896,
+      "log": "08-workflow-vitest.log",
+      "rawLogSha256": "b35586ce617d42505d776075634f95f518574a7cf43110db527400715e5b7a9b",
+      "logSha256": "b35586ce617d42505d776075634f95f518574a7cf43110db527400715e5b7a9b",
+      "credentialShapeScan": {
+        "findings": 0,
+        "redactedLines": [],
+        "publishedFindings": 0
+      }
+    }
+  ],
+  "vitestFileCount": 70,
+  "deploymentPerformed": false,
+  "liveVerificationPerformed": false,
+  "gateOrTimeoutOverrides": false,
+  "sourceAtEnd": {
+    "sha256": "76fee616f2a1f14842bdc51e5567d76a8110ff7bbb301b2594bba31dd381956d",
+    "files": 1584,
+    "scope": "src, backend, public, scripts, workflow and build/package/config inputs; QA documentation excluded"
+  },
+  "sourceInputsUnchanged": true,
+  "endedAt": "2026-11-16T03:34:16.202708+00:00",
+  "build": {
+    "indexSha256": "39cc1599ec6a5d5b41defc60d08c164d87302e7e31a7167c79a2ca33b22bcb62",
+    "entryJs": "/assets/index-Bd9Clluz.js",
+    "entrySha256": "d51655735102ccbb6ed40e95940ec2eb5e15d919089af1ede39ed7bdccb22994",
+    "entryBytes": 2184174
+  },
+  "testSummary": {
+    "workflowVitest": {
+      "files": 70,
+      "passedTests": 517,
+      "failedTests": 0
+    },
+    "nodeGuards": {
+      "checkSecrets": 7,
+      "motionStudy": 6,
+      "deploymentGuards": 55,
+      "motionArtwork": 6
+    }
+  },
+  "focusedEvidence": "focused/focused-evidence.json",
+  "sourceSnapshotAlgorithm": "SHA256 of sorted input path UTF-8, NUL byte, then raw SHA256 digest of file bytes, concatenated; candidates are git ls-files --cached --others --exclude-standard; missing/deleted files omitted; scope in sourceAtStart."
+}

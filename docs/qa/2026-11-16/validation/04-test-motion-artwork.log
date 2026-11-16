@@ -1,0 +1,15 @@
+$ node --test scripts/generate-exercise-artwork.node-test.mjs
+✔ inlines registered bitmap references, preserving internal use and rejecting external input (16.829512ms)
+✔ fingerprints geometry, original and embedded assets, settings and encoder input (3.708329ms)
+✔ renders the embedded PNG through SVG use into deterministic visible 640x400 WebP (1829.102117ms)
+✔ rejects corrupted bytes, wrong dimensions and a non-WebP image (989.586767ms)
+✔ bounds active work to four and allows authored result ordering (1.852302ms)
+✔ drains started writes and stops launching jobs after a worker failure (0.825988ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3531.056622

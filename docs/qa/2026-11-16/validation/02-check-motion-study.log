@@ -1,0 +1,16 @@
+$ node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs
+{"mode":"check","entries":22,"bytes":164222,"sha256":"0ff99f03655d6fae11a70713330185a894fd8e8cc2130dcfaea46b17f3415759"}
+✔ checked ledger fingerprints 22 unique source identities and their actual relative source graph (804.719441ms)
+✔ isolated new authoring preserves every old saved source fingerprint (4.499115ms)
+✔ changing the new model invalidates only the new identity, never old saved selections (762.122549ms)
+✔ check is deterministic and detects changed source bytes without overwriting the ledger (1976.526846ms)
+✔ new relative model dependencies enter the graph; generated-ledger cycles fail closed (686.58629ms)
+✔ invalid phase bounds and source/output symlinks cannot produce a misleading ledger (752.525702ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6765.343203
