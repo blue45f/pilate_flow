@@ -43,49 +43,61 @@ function validationFailure(error) {
 
 test('reads approved regular files with spaces and shell characters in the baseline directory', async (t) => {
   const { root } = await fixture(t, 'baseline ; echo marker $(not-a-command)');
-  for (const [directory, filename] of [
+  const targets = [
     ['src/data', 'exerciseArtworkManifest.json'],
     ['public/images/motion-atlas-v3', 'practitioner.webp'],
     [frameDirectory, 'fixture.webp'],
-  ]) {
-    await put(path.join(root, directory, filename));
-    assert.deepEqual(await readWithin(root, directory, filename), frameBytes);
-  }
+  ];
+  await Promise.all(
+    targets.map(async ([directory, filename]) => {
+      await put(path.join(root, directory, filename));
+      assert.deepEqual(await readWithin(root, directory, filename), frameBytes);
+    }),
+  );
 });
 
 test('rejects leaf-name traversal and unapproved subtrees before reading', async (t) => {
   const { root } = await fixture(t);
   await put(path.join(root, 'src/data', 'manifest.json'));
   await put(path.join(root, 'src', 'escaped.json'));
-  for (const filename of [
+  const invalidFilenames = [
     '../escaped.json',
-    '..\\escaped.json',
+    String.raw`..\escaped.json`,
     path.join(root, 'src', 'escaped.json'),
-    'C:\\outside\\escaped.json',
+    String.raw`C:\outside\escaped.json`,
     '.',
     '..',
     '',
-  ]) {
-    await assert.rejects(readWithin(root, 'src/data', filename), validationFailure);
-  }
-  for (const subtree of ['src', '../outside', 'public/motion-artwork-v2-other']) {
-    await assert.rejects(readWithin(root, subtree, 'manifest.json'), validationFailure);
-  }
+  ];
+  await Promise.all(
+    invalidFilenames.map((filename) =>
+      assert.rejects(readWithin(root, 'src/data', filename), validationFailure),
+    ),
+  );
+  const invalidSubtrees = ['src', '../outside', 'public/motion-artwork-v2-other'];
+  await Promise.all(
+    invalidSubtrees.map((subtree) =>
+      assert.rejects(readWithin(root, subtree, 'manifest.json'), validationFailure),
+    ),
+  );
 });
 
 test('rejects fixed manifest and atlas file symlinks that leave their allowed subtrees', async (t) => {
   const { root, temporary } = await fixture(t);
   const outside = path.join(temporary, 'outside-fixture');
   await put(outside);
-  for (const [subtree, filename] of [
+  const targets = [
     ['src/data', 'exerciseArtworkManifest.json'],
     ['public/images/motion-atlas-v3', 'practitioner.webp'],
-  ]) {
-    const directory = path.join(root, subtree);
-    await mkdir(directory, { recursive: true });
-    await symlink(outside, path.join(directory, filename), 'file');
-    await assert.rejects(readWithin(root, subtree, filename), validationFailure);
-  }
+  ];
+  await Promise.all(
+    targets.map(async ([subtree, filename]) => {
+      const directory = path.join(root, subtree);
+      await mkdir(directory, { recursive: true });
+      await symlink(outside, path.join(directory, filename), 'file');
+      await assert.rejects(readWithin(root, subtree, filename), validationFailure);
+    }),
+  );
 });
 
 test('does not redefine the allowed subtree through an intermediate directory symlink', async (t) => {
@@ -119,13 +131,14 @@ test('rejects missing files and directory inputs', async (t) => {
 
 test('reads all twelve representative id and phase combinations with matching digests', async (t) => {
   const { root } = await fixture(t);
-  for (const id of ids) {
-    for (const phase of ['start', 'middle', 'end']) {
+  const pairs = ids.flatMap((id) => ['start', 'middle', 'end'].map((phase) => [id, phase]));
+  await Promise.all(
+    pairs.map(async ([id, phase]) => {
       const frame = frameFor(id, phase);
       await put(path.join(root, 'public', frame.src));
       assert.deepEqual(await readFrame(root, id, phase, frame), frameBytes);
-    }
-  }
+    }),
+  );
 });
 
 test('rejects traversal, unrelated paths, unsupported identities and malformed frame metadata', async (t) => {
@@ -137,7 +150,7 @@ test('rejects traversal, unrelated paths, unsupported identities and malformed f
   const cases = [
     [ids[0], 'start', { ...frame, src: '../../outside.webp' }],
     [ids[0], 'start', { ...frame, src: outside }],
-    [ids[0], 'start', { ...frame, src: 'C:\\outside\\fixture.webp' }],
+    [ids[0], 'start', { ...frame, src: String.raw`C:\outside\fixture.webp` }],
     [ids[0], 'start', { ...frame, src: frame.src.replace('/motion-artwork-v2/', '/images/') }],
     [ids[1], 'start', frame],
     ['unreviewed-movement', 'start', frame],
@@ -148,9 +161,11 @@ test('rejects traversal, unrelated paths, unsupported identities and malformed f
     [ids[0], 'start', { ...frame, sha256: frame.sha256.slice(0, 12) }],
     [ids[0], 'start', null],
   ];
-  for (const [id, phase, candidate] of cases) {
-    await assert.rejects(readFrame(root, id, phase, candidate), validationFailure);
-  }
+  await Promise.all(
+    cases.map(([id, phase, candidate]) =>
+      assert.rejects(readFrame(root, id, phase, candidate), validationFailure),
+    ),
+  );
 });
 
 test('rejects a frame whose file bytes differ from the declared digest', async (t) => {
@@ -171,28 +186,36 @@ test('rejects an otherwise valid frame file symlink outside the cache directory'
 });
 
 test('rejects cache-directory links outside the root or into a prefix-sharing sibling', async (t) => {
-  for (const targetKind of ['outside', 'prefix-sibling']) {
-    await t.test(targetKind, async (child) => {
-      const { root, temporary } = await fixture(child);
-      const frame = frameFor();
-      const destination = targetKind === 'outside'
-        ? path.join(temporary, 'outside-frames')
-        : path.join(root, 'public/motion-artwork-v2-other');
-      await put(path.join(destination, path.basename(frame.src)));
-      await mkdir(path.join(root, 'public'), { recursive: true });
-      await symlink(destination, path.join(root, frameDirectory), 'dir');
-      await assert.rejects(readFrame(root, ids[0], 'start', frame), validationFailure);
-    });
-  }
+  await Promise.all(
+    ['outside', 'prefix-sibling'].map((targetKind) =>
+      t.test(targetKind, async (child) => {
+        const { root, temporary } = await fixture(child);
+        const frame = frameFor();
+        const destination =
+          targetKind === 'outside'
+            ? path.join(temporary, 'outside-frames')
+            : path.join(root, 'public/motion-artwork-v2-other');
+        await put(path.join(destination, path.basename(frame.src)));
+        await mkdir(path.join(root, 'public'), { recursive: true });
+        await symlink(destination, path.join(root, frameDirectory), 'dir');
+        await assert.rejects(readFrame(root, ids[0], 'start', frame), validationFailure);
+      }),
+    ),
+  );
 });
 
 test('rejects an altered baseline manifest before attempting to parse its JSON', async () => {
-  for (const bytes of [Buffer.from('{invalid JSON'), Buffer.from('{"entries":{}}')]) {
-    await assert.rejects(async () => verifyBaselineManifest(bytes), (error) => {
-      validationFailure(error);
-      assert.match(error.message, /baseline|manifest|sha|hash/i);
-      assert.equal(error instanceof SyntaxError, false);
-      return true;
-    });
-  }
+  await Promise.all(
+    [Buffer.from('{invalid JSON'), Buffer.from('{"entries":{}}')].map((bytes) =>
+      assert.rejects(
+        async () => verifyBaselineManifest(bytes),
+        (error) => {
+          validationFailure(error);
+          assert.match(error.message, /baseline|manifest|sha|hash/i);
+          assert.equal(error instanceof SyntaxError, false);
+          return true;
+        },
+      ),
+    ),
+  );
 });
