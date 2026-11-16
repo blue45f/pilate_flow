@@ -1,0 +1,181 @@
+Browser tab: 5, Title: "Pilates Flow · isolated responsive QA", URL: "http://127.0.0.1:5176/docs/qa/2026-11-16/responsive-harness.html?version=candidate&size=1280".
+0 AXWebArea Pilates Flow · isolated responsive QA, URL: 127.0.0.1:5176/docs/qa/2026-11-16/responsive-harness.html?version=candidate&size=1280
+	1 container
+		2 text 격리된 더미 데이터 · 반응형 QA 버전
+		3 pop up button (collapsed, settable) 버전, Value: 변경 후 작업본, ID: version, Secondary Actions: Expand
+			4 menu
+				5 변경 전 main
+				6 (selected) 변경 후 작업본
+		7 text 화면
+		8 pop up button (collapsed, settable) 화면, Value: 1280 × 844, ID: size, Secondary Actions: Expand
+			9 menu
+				10 390 × 844
+				11 360 × 800
+				12 768 × 900
+				13 (selected) 1280 × 844
+		122 text 1280 × 844 CSS px · 로컬 전용
+	15 container Description: Pilates Flow 격리 테스트 화면, ID: preview
+		17 AXWebArea Flow Atelier · 필라테스 수업 플래너, URL: 127.0.0.1:5176/
+			123 container 매트 브리지
+				124 container
+					125 heading 매트 브리지, Value: 2
+						126 text 매트 브리지
+					127 text Mat Bridge
+					128 button 닫기
+						129 image
+				130 container
+					131 container 영상 구간 확인 및 메모 수정 단계 안내
+						132 content list
+							133 button 1 구간 재생·큐 확인
+								134 text 1
+								135 text 구간 재생·큐 확인
+							136 button 2 시작·종료 시각 및 큐 메모 수정
+								137 text 2
+								138 text 시작·종료 시각 및 큐 메모 수정
+						139 text 지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.
+						140 button (disabled) 이전 단계
+						141 button 다음 단계
+					142 container 매트 브리지 동작 흐름과 자세 프레임
+						143 text 매트  · 수파인 (누운 자세) 임상 각도·개인 적합성은 강사 현장 확인
+						144 container 동작 보기 방식
+							145 checkbox 동작 재생, Value: 1
+							146 checkbox 자세 프레임, Value: 0
+						147 container 매트 브리지 동작 프레임 플레이어
+							148 container
+								149 text MOTION STUDY · 5단계 동작
+								150 heading 매트 브리지, Value: 3
+									151 text 매트 브리지
+								152 text 동작 패턴 참고
+							153 container
+								154 image 매트 브리지 · 기구학 모션 도해 · 천골 매트 안착 및 중립 복귀
+								155 text 천골 매트 안착 및 중립 복귀 목에 체중을 싣지 않고 흉추(124,142)→요추(154,142)→천골(184,144) 순으로 매트 표면에 완전히 내려놓습니다.
+							156 container 기구학 도해 재생 제어
+								157 button 모션 재생
+								158 button 관련 패턴 처음으로
+								159 button 이전 프레임
+								160 button (disabled) 다음 프레임
+								161 container
+									162 text 반복
+									163 pop up button (collapsed, settable) Description: 관련 패턴 도해 반복, Value: 1회, Secondary Actions: Expand
+										164 menu
+											165 (selected) 1회
+											166 2회
+											167 3회
+											168 연속
+								169 container
+									170 text 속도
+									171 pop up button (collapsed, settable) Description: 관련 패턴 도해 속도, Value: 1×, Secondary Actions: Expand
+										172 menu
+											173 0.25×
+											174 0.5×
+											175 0.75×
+											176 (selected) 1×
+											177 1.5×
+							178 container
+								179 text 도해 위치
+								180 slider (settable, integer) 도해 위치, Value: 1000
+							181 container
+								182 text 프레임  552  /  552 9.20  / 9 초
+							183 text 좌우 방향키로 한 프레임씩 이동합니다. 재생 시간은 참고 모션의 길이입니다.
+							184 container 도해 단계 이동
+								185 button 이전 도해 단계
+								186 text 단계  5  /  5  ·  천골 매트 안착 및 중립 복귀
+								187 button (disabled) 다음 도해 단계
+							188 container 관련 패턴 정지 단계
+								189 checkbox Description: 수파인 무릎 굽힘 · 양발 골반 너비 지지, Value: 0
+								190 checkbox Description: 날숨 · 꼬리뼈 말아 요추-흉추 순차 분절 거상, Value: 0
+								191 checkbox Description: 무릎-고관절-어깨 사선 일직선 브리지 정점, Value: 0
+								192 checkbox Description: 윗등부터 천골까지 순차 분절 하강, Value: 0
+								193 checkbox Description: 천골 매트 안착 및 중립 복귀, Value: 1
+							194 checkbox (settable, integer) Description: 정렬·방향 가이드, Value: 0
+							195 checkbox (settable, integer) Description: 근육 표시, Value: 0
+							196 checkbox (settable, integer) Description: 시작 자세 겹쳐 보기, Value: 0
+							197 checkbox (settable, integer) Description: 화면만 좌우 반전, Value: 0
+							198 checkbox (settable, integer) Description: 정지 화면만 보기, Value: 0
+							199 text 한 주기 끝 · 일시정지
+							200 button (collapsed) 시작·정점·종료 한눈에 비교, Secondary Actions: Expand
+							201 button (collapsed) 출처 대조 · 기구 세팅 · 제작 근거 보기, Secondary Actions: Expand
+								202 text 출처 대조 · 기구 세팅 · 제작 근거 보기
+						203 container 수업 직전 3초 핵심 세팅·호흡·타겟 요약
+							204 text 권장 스프링 · 셋업
+							205 text 맨몸
+							206 container
+								207 text 풋바  none  · 헤드레스트  flat
+							208 text 호흡 · 리듬
+							209 text 편안한 호흡을 이어가며 힘을 쓰는 구간의 호흡은 강사와 조정합니다.
+							210 text 수업 계획의 호흡 안내
+							211 text 주동근 · 계획 시간
+							212 text 둔근 · 하체
+							213 container
+								214 text 기본  4 분 · Lv  1.0
+						215 text 즉시 티칭 큐
+						216 content list
+							217 container
+								218 AXListMarker • 
+								219 text 두 발의 압력을 고르게 느끼며 골반을 편한 높이까지 들고 내려옵니다.
+							220 container
+								221 AXListMarker • 
+								222 text 높이와 횟수보다 편안한 범위와 일정한 속도를 먼저 확인합니다.
+						223 text 주의:
+						224 text 강사 검토 전 계획 자료입니다. 매트의 미끄러짐과 주변 공간을 확인하고 개인에게 맞는 지지와 범위를 선택합니다. 목에 체중을 싣지 않고 머리를 돌리지 않습니다.
+					225 container 매트 브리지 참고 영상
+						226 heading 참고 영상 3, Value: 3
+							227 text 참고 영상 
+						228 text 썸네일을 골라 여러 시범을 비교해 보세요.
+						229 container 영상 국가 구분 필터
+							230 checkbox 전체 3, Value: 1
+								231 text 전체
+								232 text 3
+							233 checkbox 국내 (KR) 1, Value: 0
+								234 text 국내 (KR)
+								235 text 1
+							236 checkbox 해외 (Global) 2, Value: 0
+								237 text 해외 (Global)
+								238 text 2
+						239 container 동작별 영상 선택
+							240 checkbox Description: Lesson 3. 브릿지 동작 l 필라테스 코어강화 기본 동작 (Pilates - bridge) (빵느) 영상 선택, Value: 1
+								241 text 국내
+								242 text 선택됨
+								243 text 저장한 영상 · 
+								244 text 동작명 일치
+								245 text Lesson 3. 브릿지 동작 l 필라테스 코어강화 기본 동작 (Pilates - bridge)
+								246 text 빵느
+							247 checkbox Description: How to do a Pilates bridge (Complete Pilates) 영상 선택, Value: 0
+								248 text 해외
+								249 text 동작명 일치
+								250 text How to do a Pilates bridge
+								251 text Complete Pilates
+							252 checkbox Description: PA Archives | Pilates Exercise: Shoulder Bridge (Pilates Anytime) 영상 선택, Value: 0
+								253 text 해외
+								254 text 관련 변형
+								255 text PA Archives | Pilates Exercise: Shoulder Bridge
+								256 text Pilates Anytime
+						257 container
+							258 text 저장한 영상 ·  동작명 일치
+							259 heading Lesson 3. 브릿지 동작 l 필라테스 코어강화 기본 동작 (Pilates - bridge), Value: 4
+								260 text Lesson 3. 브릿지 동작 l 필라테스 코어강화 기본 동작 (Pilates - bridge)
+							261 text 빵느 매트 브릿지 제목의 기존 카탈로그 참조입니다.
+							262 button Lesson 3. 브릿지 동작 l 필라테스 코어강화 기본 동작 (Pilates - bridge) (빵느) 인베드 영상 불러오기
+							263 link Description: YouTube 원본, Value: youtube.com/watch?v=IDu9N1yi4ts
+							264 text 제목·기구를 기준으로 연결한 참고 자료입니다. 전체 시범과 구간의 일치는 직접 확인해 주세요.
+					265 button (collapsed) 내 검토 기록 (선택), Secondary Actions: Expand
+						266 text 내 검토 기록 (선택)
+					267 button (collapsed) 기구학 2D 보조 도해 · 임상 브리프 보기, Secondary Actions: Expand
+						268 text 기구학 2D 보조 도해 · 임상 브리프 보기
+					269 button (collapsed) 자세 정렬 · 주동근 해부학 가이드 펼쳐보기, Secondary Actions: Expand
+						270 text 자세 정렬 · 주동근 해부학 가이드 펼쳐보기
+					271 button (collapsed) 음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기, Secondary Actions: Expand
+						272 text 음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기
+					273 button (collapsed) 교차 검증 모션 설계 예시 · 패턴 참고용, Secondary Actions: Expand
+						274 image
+						275 text 교차 검증 모션 설계 예시 · 패턴 참고용
+						276 image
+					277 button (collapsed) 출처·검토 상태 자세히 보기, Secondary Actions: Expand
+						278 text 출처·검토 상태 자세히 보기
+					279 text 교차 검증 완료 참고 자료 · 수업안에 바로 추가할 수 있으며 수행 전 스프링과 몸 상태를 확인하세요.
+					280 text 현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.
+					281 button (disabled) 수업안에 추가됨
+						282 image
+						283 text 수업안에 추가됨
+
+The focused UI element is 123 container 매트 브리지

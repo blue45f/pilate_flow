@@ -1,0 +1,105 @@
+{
+  "checkedAt": "2026-11-16T03:37:54.995Z",
+  "scanner": "scripts/check-secrets.mjs:scanText",
+  "credentialShapeFindings": 0,
+  "filesScanned": 16,
+  "missingReadmeLinks": [],
+  "files": [
+    {
+      "file": "01-check-secrets.log",
+      "bytes": 813,
+      "sha256": "67eb6c43f828f2aa2f8baf15c18293a8f768b07a846a2f175f718d0a65c0f446",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "02-check-motion-study.log",
+      "bytes": 974,
+      "sha256": "0b674a406fcad72d439638fd05dfb739c3203aa5108aeca0fc265d91e652fb47",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "03-test-deploy.log",
+      "bytes": 5565,
+      "sha256": "960ddc9ada67a0842b3924e50266be1c577497bb5a08ee3b0e93051992791013",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "04-test-motion-artwork.log",
+      "bytes": 734,
+      "sha256": "9c29a69c10010966dc5e5074abe7b63ca2ee32b66fbe8899c0e7e3991161fe43",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "05-lint.log",
+      "bytes": 352,
+      "sha256": "7c25248f5e3a800a6156a4204ae05fb42f77020c1495d23c8ddea2719b7cfa08",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "06-build.log",
+      "bytes": 7386,
+      "sha256": "4f76f19cbc1053af848acb44d5f9cee320cea752b8c3e9685f7aab4a67b421b3",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "07-deploy-check-readonly.log",
+      "bytes": 1224,
+      "sha256": "f60eec75dc52041e2c62bb1e2ef759ab38acd7faa03754bad4811beb91716925",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "08-workflow-vitest.log",
+      "bytes": 44410,
+      "sha256": "b35586ce617d42505d776075634f95f518574a7cf43110db527400715e5b7a9b",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "README.md",
+      "bytes": 5729,
+      "sha256": "4d61466e60ee059bbc65119b71e292be9315488176b8f9f5a792d018fde00fbb",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "focused/focused-evidence.json",
+      "bytes": 1246,
+      "sha256": "76963243537030c462ad879c3412b9f0926e8a0a2a5d41857edf5531aeeece10",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "focused/library-ux-reviewed-20261116.log",
+      "bytes": 3125,
+      "sha256": "6a610323ea4f7f6ab93e602fa1e79987454af741557091ecb5d0d370d337b428",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "focused/schedule-start-recovery-20261116.json",
+      "bytes": 5551,
+      "sha256": "e6ecd4deef3d18ee7631c740df019fdcad4a78f97b2266d4ba69f99aae076e3e",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "focused/schedule-start-recovery-20261116.log",
+      "bytes": 19707,
+      "sha256": "960eb2c96ac36e0126be568ceb694a66f14c414dc32551fff2dfaa7c26d9eadc",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "gate-plan.json",
+      "bytes": 10735,
+      "sha256": "c94e333fabca15cd690f13ff8b0ab1c70b3186805bc505812240a09cf32ea0ff",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "gate-results.json",
+      "bytes": 11157,
+      "sha256": "ca514575029d6dea8afcec2a1de3d205ed2e4b895d8a6c3ae2e1315a8b6df24f",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "vitest-files.txt",
+      "bytes": 3328,
+      "sha256": "80367a689c4686a264407d18e16a22369aa216fdd0262cb00cefbb10ba7ca35a",
+      "credentialShapeFindings": 0
+    }
+  ]
+}

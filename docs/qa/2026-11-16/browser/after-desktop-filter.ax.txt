@@ -1,0 +1,118 @@
+Browser tab: 5, Title: "Pilates Flow · isolated responsive QA", URL: "http://127.0.0.1:5176/docs/qa/2026-11-16/responsive-harness.html?version=candidate&size=1280".
+0 AXWebArea Pilates Flow · isolated responsive QA, URL: 127.0.0.1:5176/docs/qa/2026-11-16/responsive-harness.html?version=candidate&size=1280
+	1 container
+		2 text 격리된 더미 데이터 · 반응형 QA 버전
+		3 pop up button (collapsed, settable) 버전, Value: 변경 후 작업본, ID: version, Secondary Actions: Expand
+			4 menu
+				5 변경 전 main
+				6 (selected) 변경 후 작업본
+		7 text 화면
+		8 pop up button (collapsed, settable) 화면, Value: 1280 × 844, ID: size, Secondary Actions: Expand
+			9 menu
+				10 390 × 844
+				11 360 × 800
+				12 768 × 900
+				13 (selected) 1280 × 844
+		339 text 1280 × 844 CSS px · 로컬 전용
+	15 container Description: Pilates Flow 격리 테스트 화면, ID: preview
+		17 AXWebArea Flow Atelier · 필라테스 수업 플래너, URL: 127.0.0.1:5176/
+			340 container root
+				341 link Description: 본문으로 이동, Value: 127.0.0.1:5176/#main-content
+				342 container 스튜디오 탐색
+					343 link Description: Pilates Flow 수업 만들기로, Value: 127.0.0.1:5176/#
+					344 container 주 메뉴
+						345 button 수업 만들기
+							346 image
+							347 text 수업 만들기
+						348 button 동작 라이브러리 158
+							349 image
+							350 text 동작 라이브러리
+							351 text 158
+						352 button 저장한 수업
+							353 image
+							354 text 저장한 수업
+						355 button 수업 일정
+							356 image
+							357 text 수업 일정
+					358 button 수업 진행하기
+					359 button (collapsed) 기록 · 도구 더보기, Secondary Actions: Expand
+						360 text 기록 · 도구 더보기
+					361 button F 나의 스튜디오 이 기기에 저장
+						362 text F
+						363 text 나의 스튜디오
+						364 text 이 기기에 저장
+						365 image
+				366 container
+					367 text 나의 스튜디오  / 동작 라이브러리
+					368 container 이용자 화면 전환
+						369 checkbox 강사 작업실, Value: 1
+						370 checkbox 회원 예약, Value: 0
+					371 button 빠른 이동 및 동작 검색 열기
+					372 button 새 동작 메모
+					373 button 데이터 백업과 사용 안내
+						374 image
+				572 container main-content
+					573 container 동작 라이브러리
+						574 container
+							575 text PILATES FLOW · LIBRARY
+							576 heading 동작 라이브러리, Value: 1, ID: workspace-main-heading
+								577 text 동작 라이브러리
+							578 text 동작을 찾고, 오늘의 수업에 담으세요.
+							579 button 자료와 고급 도구
+						580 container 동작 검색과 필터
+							581 container 동작 검색창
+								582 text 동작 검색
+								583 search text field (settable) 동작 검색, Value: 매트 브리지, ID: flow-atlas-search
+								584 button 검색어 지우기
+							585 button (expanded) 필터 3, Secondary Actions: Collapse
+								586 text 필터
+								587 text 3
+							588 container 기구 선택
+								589 checkbox 전체, Value: 1
+								590 checkbox 매트, Value: 0
+								591 checkbox 리포머, Value: 0
+								592 checkbox 캐딜락, Value: 0
+								593 checkbox 운다 체어, Value: 0
+								594 checkbox 바렐, Value: 0
+							595 checkbox 즐겨찾기, Value: 0
+							615 container Description: 추가 검색 조건, ID: flow-atlas-filters
+								616 container
+									617 text 난이도
+									618 pop up button (collapsed, settable) 난이도, Value: 기초, Secondary Actions: Expand
+										619 menu
+											620 전체 난이도
+											621 (selected) 기초
+											622 중급
+											623 심화
+								624 container
+									625 text 동작 시간
+									626 pop up button (collapsed, settable) 동작 시간, Value: 3분 초과~5분, Secondary Actions: Expand
+										627 menu
+											628 전체 시간
+											629 3분 이하
+											630 (selected) 3분 초과~5분
+											631 5분 초과
+								632 checkbox (settable, integer) Description: 내 보유 장비로 가능한 동작만, Value: 1
+								633 button 자세·소도구 등 더 자세한 조건
+								634 button 결과 보기
+							596 container 적용된 검색·필터
+								600 button 조건 초기화
+						601 container
+							602 text 1 개 동작  전체  158 개
+						603 button 수업안 1개 · 4분
+						604 container 매트 브리지 동작
+							605 container
+								606 text 수업에 담김 매트 · 기초 · 4 분
+								607 heading 매트 브리지 미리보기, Value: 2
+									608 button 매트 브리지 미리보기
+								609 text 계획용 동작 도해
+								610 checkbox Description: 매트 브리지 즐겨찾기 추가, Value: 0
+							611 button 매트 브리지 담긴 수업안 보기
+					612 container 강사 검토 안내
+						613 button (collapsed) 자료·모션의 검토 상태 안내, Secondary Actions: Expand
+							614 text 자료·모션의 검토 상태 안내
+				569 container
+					570 text PILATES FLOW  ·  나의 수업, 나의 흐름
+					571 button 저장·복구 안내
+
+The focused UI element is 585 button (expanded) 필터 3, Secondary Actions: Collapse

@@ -380,6 +380,24 @@ describe('shared motion playback lifecycle', () => {
     expect(frames.size).toBe(0);
   });
 
+  it('starts reference playback without trails and adds comparisons only when requested', () => {
+    render(<CatalogMotionInteractivePlayer asset={firstAsset} />);
+    const region = screen.getByTestId('catalog-motion-interactive-player');
+    const slider = within(region).getByRole('slider');
+    fireEvent.change(slider, { target: { value: '500' } });
+    const trail = within(region).getByRole('checkbox', { name: '시작 자세 겹쳐 보기' });
+    expect(trail).not.toBeChecked();
+    expect(region.querySelectorAll('[data-layer="pose-delta-ghost"]').length).toBe(0);
+    const pausedProgress = region.getAttribute('data-motion-progress');
+    fireEvent.click(trail);
+    expect(region.querySelectorAll('.mpp-figure [data-layer="pose-delta-ghost"]').length).toBe(1);
+    expect(region.querySelectorAll('.motion-reference-stills [data-layer="pose-delta-ghost"]').length).toBe(2);
+    expect(region.getAttribute('data-motion-progress')).toBe(pausedProgress);
+    expect(frames.size).toBe(0);
+    fireEvent.click(trail);
+    expect(region.querySelectorAll('[data-layer="pose-delta-ghost"]').length).toBe(0);
+  });
+
   it('names a representative pattern instead of presenting it as the selected exercise', () => {
     const custom = { ...first, id: 'custom-reformer-unmodeled-exercise', nameKo: '신규 동작' };
     render(<Studio3DMotionHeroCard exercise={custom} />);
@@ -438,6 +456,7 @@ describe('shared motion playback lifecycle', () => {
       frame();
       frame(48);
       expect(frames.size).toBe(1);
+      if (kind === 'catalog') expect(thumbnail.querySelector('[data-layer="pose-delta-ghost"]')).toBeNull();
       intersection(thumbnail, false);
       expect(frames.size).toBe(0);
       intersection(thumbnail, true);

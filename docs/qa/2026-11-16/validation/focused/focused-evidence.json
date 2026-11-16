@@ -1,0 +1,38 @@
+{
+  "library": {
+    "passedTests": 22,
+    "files": 4
+  },
+  "scheduleStartRecovery": {
+    "passedTests": 98,
+    "files": 8,
+    "exitCode": 0,
+    "commit": "26d5c5f0ab2f120d3d924578695c7203f2c9bb27",
+    "startedAt": "2026-11-16T02:57:22.809783+00:00",
+    "finishedAt": "2026-11-16T02:58:37.665936+00:00",
+    "filesChangedDuringRun": 0
+  },
+  "files": [
+    {
+      "file": "library-ux-reviewed-20261116.log",
+      "source": "/workspace/scratch/43e9d7cc5bc9/library-ux-reviewed-20261116.log",
+      "bytes": 3125,
+      "sha256": "6a610323ea4f7f6ab93e602fa1e79987454af741557091ecb5d0d370d337b428",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "schedule-start-recovery-20261116.log",
+      "source": "/workspace/scratch/43e9d7cc5bc9/schedule-start-recovery-20261116.log",
+      "bytes": 19707,
+      "sha256": "960eb2c96ac36e0126be568ceb694a66f14c414dc32551fff2dfaa7c26d9eadc",
+      "credentialShapeFindings": 0
+    },
+    {
+      "file": "schedule-start-recovery-20261116.json",
+      "source": "/workspace/scratch/43e9d7cc5bc9/schedule-start-recovery-20261116.json",
+      "bytes": 5551,
+      "sha256": "e6ecd4deef3d18ee7631c740df019fdcad4a78f97b2266d4ba69f99aae076e3e",
+      "credentialShapeFindings": 0
+    }
+  ]
+}

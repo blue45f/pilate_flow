@@ -1,0 +1,84 @@
+Browser tab: 1, Title: "Flow Atelier · 필라테스 수업 플래너", URL: "http://127.0.0.1:5175/".
+1 AXWebArea Flow Atelier · 필라테스 수업 플래너, URL: 127.0.0.1:5175/
+	2 container root
+		3 link Description: 본문으로 이동, Value: 127.0.0.1:5175/#main-content
+		4 container 스튜디오 탐색
+			5 link Description: Pilates Flow 수업 만들기로, Value: 127.0.0.1:5175/#
+			6 container 주 메뉴
+				7 button 수업 만들기
+					8 image
+					9 text 수업 만들기
+				10 button 동작 라이브러리 158
+					11 image
+					12 text 동작 라이브러리
+					13 text 158
+				14 button 저장한 수업
+					15 image
+					16 text 저장한 수업
+				17 button 수업 일정
+					18 image
+					19 text 수업 일정
+			20 button 수업 진행하기
+			21 button (collapsed) 기록 · 도구 더보기, Secondary Actions: Expand
+				22 text 기록 · 도구 더보기
+			23 button F 나의 스튜디오 이 기기에 저장
+				24 text F
+				25 text 나의 스튜디오
+				26 text 이 기기에 저장
+				27 image
+		28 container
+			29 text 나의 스튜디오  / 동작 라이브러리
+			30 container 이용자 화면 전환
+				31 checkbox 강사 작업실, Value: 1
+				32 checkbox 회원 예약, Value: 0
+			33 button 빠른 이동 및 동작 검색 열기
+			34 button 새 동작 메모
+			35 button 데이터 백업과 사용 안내
+				36 image
+		232 container main-content
+			237 container 동작 라이브러리
+				238 container
+					239 text PILATES FLOW · LIBRARY
+					240 heading 동작 라이브러리, Value: 1, ID: workspace-main-heading
+						241 text 동작 라이브러리
+					242 text 동작을 찾고, 오늘의 수업에 담으세요.
+					243 button 자료와 고급 도구
+				244 container 동작 검색과 필터
+					245 container 동작 검색창
+						246 text 동작 검색
+						247 search text field (settable) 동작 검색, Value: 매트 브리지, ID: flow-atlas-search
+						248 button 검색어 지우기
+					249 button 필터
+					250 container 기구 선택
+						251 checkbox 전체, Value: 1
+						252 checkbox 매트, Value: 0
+						253 checkbox 리포머, Value: 0
+						254 checkbox 캐딜락, Value: 0
+						255 checkbox 운다 체어, Value: 0
+						256 checkbox 바렐, Value: 0
+					257 checkbox 즐겨찾기, Value: 0
+					258 container 적용된 검색·필터
+						259 button 내 보유 장비 범위
+						260 button 초기화
+				261 container
+					262 text 1 개 동작  전체  158 개
+				263 button 수업안 1개 · 4분
+				275 text 같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.
+				265 container 매트 브리지 동작
+					266 container
+						267 button 매트 브리지 상세 보기
+						268 checkbox Description: 매트 브리지 즐겨찾기 추가, Value: 0
+						269 text 수업에 담김
+					270 text 매트 · 기초 · 4 분
+					271 heading 매트 브리지, Value: 2
+						272 button 매트 브리지
+					273 button 매트 브리지 자세히 보기
+					274 button 매트 브리지 수업안에 추가
+			234 container 강사 검토 안내
+				235 button (collapsed) 자료·모션의 검토 상태 안내, Secondary Actions: Expand
+					236 text 자료·모션의 검토 상태 안내
+		229 container
+			230 text PILATES FLOW  ·  나의 수업, 나의 흐름
+			231 button 저장·복구 안내
+
+The focused UI element is 274 button 매트 브리지 수업안에 추가

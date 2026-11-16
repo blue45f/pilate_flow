@@ -1,0 +1,253 @@
+{
+  "status": "executed-see-gate-results",
+  "workflow": ".github/workflows/deploy-production.yml",
+  "job": "verify-and-build",
+  "workflowSha256": "97a62704597571eeb604e179dcc53ab9a886cb29100ffb728d5bf576dba0341a",
+  "packageSha256": "d39039000eeb95b5b5de03cf9e771d5a62681faac29f9089688440f323b89b0e",
+  "executionPolicy": {
+    "startCondition": "Explicit final cache/source stability notice from root or review_motion",
+    "oneGateAtATime": true,
+    "stopOnFailure": true,
+    "testTimeoutOrGateChanges": false,
+    "deploymentOrAuthActions": false,
+    "liveVerification": false,
+    "fullVitestSuite": false
+  },
+  "preflightCodeReview": {
+    "command": [
+      "pnpm",
+      "deploy:check"
+    ],
+    "resolvedCommand": [
+      "node",
+      "scripts/deploy-universal.mjs",
+      "--check-env"
+    ],
+    "readonly": true,
+    "reason": "runCli exits in isCheckOnly before verifyLiveDeployment, acquireDeployLock, prepareAuthExecutionEnv, or runSpawnStep; status exposes readiness booleans and source labels, not credential contents. Executable discovery uses stat/access without executing Firebase."
+  },
+  "logPolicy": {
+    "rawLocation": "/workspace/scratch/43e9d7cc5bc9/local-workflow-raw-20261116",
+    "publishedLocation": "docs/qa/2026-11-16/validation",
+    "publishAfterSecretShapeScanAndReview": true,
+    "captureEnvironmentValues": false
+  },
+  "vitestFiles": [
+    "src/test/stepByStepRedesign.test.tsx",
+    "src/test/uxElevationIteration.test.tsx",
+    "src/test/firstTimeFlowAndRecovery.test.tsx",
+    "src/test/scheduleUxParallelTrack.test.tsx",
+    "src/test/previewAndLogParallelTrack.test.tsx",
+    "src/test/memberAndBinderParallelTrack.test.tsx",
+    "src/test/visualMotionParallelTrack.test.tsx",
+    "src/test/unifiedKinematicMotions.test.tsx",
+    "backend/freeAiService.test.ts",
+    "src/test/uxRedesignAndOpenAi.test.tsx",
+    "src/test/wave3AdvancementVerification.test.ts",
+    "src/test/wave4FollowthroughVerification.test.ts",
+    "src/test/wave5AdvancementVerification.test.ts",
+    "src/test/wave6AdvancementVerification.test.ts",
+    "src/test/wave7MultiCloudDeployVerification.test.ts",
+    "src/test/wave8SkillsAdvancementVerification.test.ts",
+    "src/utils/wave3DeploymentRegression.test.ts",
+    "src/utils/wave5DeploymentRegression.test.ts",
+    "src/test/editorFocusWorkbench.test.tsx",
+    "src/components/ExerciseAtlasView.editorFocus.test.tsx",
+    "src/test/stageGlobalNavigation.test.tsx",
+    "src/test/pwaStartupContinuity.test.tsx",
+    "src/test/pwaServiceWorker.test.ts",
+    "src/test/sequenceInsertionAndReuse.test.ts",
+    "src/utils/movementIdeaDraft.insertion.test.ts",
+    "src/components/InlineExerciseFinder.insertion.test.tsx",
+    "src/components/SequenceWorkbench.insertion.test.tsx",
+    "src/components/ClassBinderView.reusePreview.test.tsx",
+    "src/components/LibraryMovementInspector.favorite.test.tsx",
+    "src/components/MemberBookingView.discovery.test.tsx",
+    "src/components/MemberBookingView.usability.test.tsx",
+    "src/components/RecoveryPreview.test.tsx",
+    "src/components/RecoveryPreview.storage.test.tsx",
+    "src/components/RecoveryPreview.layout.test.tsx",
+    "src/utils/backupRecoveryInspection.test.ts",
+    "src/hooks/useWorkspaceBrowseState.test.tsx",
+    "src/lib/accountStorage.test.ts",
+    "src/components/InstructorScheduleView.browseContinuity.test.tsx",
+    "src/components/ClassBinderView.historyContinuity.test.tsx",
+    "src/components/LiveStageView.presentation.test.tsx",
+    "src/components/LiveStageView.usability.test.tsx",
+    "src/components/LiveStageView.voice.test.tsx",
+    "src/test/globalBenchmarkMotionAndRepertoire.test.tsx",
+    "src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx",
+    "src/test/sequenceStudioWorkbench.test.tsx",
+    "src/test/sequencePlanningActions.test.ts",
+    "src/components/ExerciseAtlasView.simplified.test.tsx",
+    "src/components/EditedCatalogMotionIdentity.test.tsx",
+    "src/test/motionRenderingQualityRegression.test.tsx",
+    "src/test/catalogMotionContinuity.test.ts",
+    "src/test/motionSemanticCorrections.test.ts",
+    "src/data/exerciseVideoBindings.test.ts",
+    "src/utils/videoSemanticMatching.test.ts",
+    "src/components/ExerciseVideoGallery.test.tsx",
+    "src/utils/exerciseVideoReferences.test.ts",
+    "src/data/exerciseYouTubeCatalog.test.tsx",
+    "src/test/motionProvenanceAudit.test.ts",
+    "src/components/GeneratedPractitionerFigure.test.tsx",
+    "src/utils/generatedPractitionerArt.test.ts",
+    "src/components/MovementMediaGuidancePanel.test.tsx",
+    "src/components/YouTubePreviewModal.wave2Ux.test.tsx",
+    "src/components/ExerciseMotionArtwork.loading.test.tsx",
+    "src/components/ExerciseAtlasView.addFeedback.test.tsx",
+    "src/components/ExerciseAtlasView.conceptLayout.test.tsx",
+    "src/components/ExerciseAtlasView.focusRecovery.test.tsx",
+    "src/components/ExerciseMotionArtwork.test.tsx",
+    "src/components/StudioMotionPlayback.lifecycle.test.tsx",
+    "src/utils/exerciseArtworkCache.test.ts",
+    "scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts",
+    "scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx"
+  ],
+  "gates": [
+    {
+      "id": "01-check-secrets",
+      "argv": [
+        "pnpm",
+        "check:secrets"
+      ],
+      "log": "01-check-secrets.log",
+      "status": "passed"
+    },
+    {
+      "id": "02-check-motion-study",
+      "argv": [
+        "pnpm",
+        "check:motion-study"
+      ],
+      "log": "02-check-motion-study.log",
+      "status": "passed"
+    },
+    {
+      "id": "03-test-deploy",
+      "argv": [
+        "pnpm",
+        "test:deploy"
+      ],
+      "log": "03-test-deploy.log",
+      "status": "passed"
+    },
+    {
+      "id": "04-test-motion-artwork",
+      "argv": [
+        "pnpm",
+        "test:motion-artwork"
+      ],
+      "log": "04-test-motion-artwork.log",
+      "status": "passed"
+    },
+    {
+      "id": "05-lint",
+      "argv": [
+        "pnpm",
+        "lint"
+      ],
+      "log": "05-lint.log",
+      "status": "passed"
+    },
+    {
+      "id": "06-build",
+      "argv": [
+        "pnpm",
+        "build"
+      ],
+      "log": "06-build.log",
+      "status": "passed"
+    },
+    {
+      "id": "07-deploy-check-readonly",
+      "argv": [
+        "pnpm",
+        "deploy:check"
+      ],
+      "log": "07-deploy-check-readonly.log",
+      "status": "passed"
+    },
+    {
+      "id": "08-workflow-vitest",
+      "argv": [
+        "pnpm",
+        "vitest",
+        "run",
+        "src/test/stepByStepRedesign.test.tsx",
+        "src/test/uxElevationIteration.test.tsx",
+        "src/test/firstTimeFlowAndRecovery.test.tsx",
+        "src/test/scheduleUxParallelTrack.test.tsx",
+        "src/test/previewAndLogParallelTrack.test.tsx",
+        "src/test/memberAndBinderParallelTrack.test.tsx",
+        "src/test/visualMotionParallelTrack.test.tsx",
+        "src/test/unifiedKinematicMotions.test.tsx",
+        "backend/freeAiService.test.ts",
+        "src/test/uxRedesignAndOpenAi.test.tsx",
+        "src/test/wave3AdvancementVerification.test.ts",
+        "src/test/wave4FollowthroughVerification.test.ts",
+        "src/test/wave5AdvancementVerification.test.ts",
+        "src/test/wave6AdvancementVerification.test.ts",
+        "src/test/wave7MultiCloudDeployVerification.test.ts",
+        "src/test/wave8SkillsAdvancementVerification.test.ts",
+        "src/utils/wave3DeploymentRegression.test.ts",
+        "src/utils/wave5DeploymentRegression.test.ts",
+        "src/test/editorFocusWorkbench.test.tsx",
+        "src/components/ExerciseAtlasView.editorFocus.test.tsx",
+        "src/test/stageGlobalNavigation.test.tsx",
+        "src/test/pwaStartupContinuity.test.tsx",
+        "src/test/pwaServiceWorker.test.ts",
+        "src/test/sequenceInsertionAndReuse.test.ts",
+        "src/utils/movementIdeaDraft.insertion.test.ts",
+        "src/components/InlineExerciseFinder.insertion.test.tsx",
+        "src/components/SequenceWorkbench.insertion.test.tsx",
+        "src/components/ClassBinderView.reusePreview.test.tsx",
+        "src/components/LibraryMovementInspector.favorite.test.tsx",
+        "src/components/MemberBookingView.discovery.test.tsx",
+        "src/components/MemberBookingView.usability.test.tsx",
+        "src/components/RecoveryPreview.test.tsx",
+        "src/components/RecoveryPreview.storage.test.tsx",
+        "src/components/RecoveryPreview.layout.test.tsx",
+        "src/utils/backupRecoveryInspection.test.ts",
+        "src/hooks/useWorkspaceBrowseState.test.tsx",
+        "src/lib/accountStorage.test.ts",
+        "src/components/InstructorScheduleView.browseContinuity.test.tsx",
+        "src/components/ClassBinderView.historyContinuity.test.tsx",
+        "src/components/LiveStageView.presentation.test.tsx",
+        "src/components/LiveStageView.usability.test.tsx",
+        "src/components/LiveStageView.voice.test.tsx",
+        "src/test/globalBenchmarkMotionAndRepertoire.test.tsx",
+        "src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx",
+        "src/test/sequenceStudioWorkbench.test.tsx",
+        "src/test/sequencePlanningActions.test.ts",
+        "src/components/ExerciseAtlasView.simplified.test.tsx",
+        "src/components/EditedCatalogMotionIdentity.test.tsx",
+        "src/test/motionRenderingQualityRegression.test.tsx",
+        "src/test/catalogMotionContinuity.test.ts",
+        "src/test/motionSemanticCorrections.test.ts",
+        "src/data/exerciseVideoBindings.test.ts",
+        "src/utils/videoSemanticMatching.test.ts",
+        "src/components/ExerciseVideoGallery.test.tsx",
+        "src/utils/exerciseVideoReferences.test.ts",
+        "src/data/exerciseYouTubeCatalog.test.tsx",
+        "src/test/motionProvenanceAudit.test.ts",
+        "src/components/GeneratedPractitionerFigure.test.tsx",
+        "src/utils/generatedPractitionerArt.test.ts",
+        "src/components/MovementMediaGuidancePanel.test.tsx",
+        "src/components/YouTubePreviewModal.wave2Ux.test.tsx",
+        "src/components/ExerciseMotionArtwork.loading.test.tsx",
+        "src/components/ExerciseAtlasView.addFeedback.test.tsx",
+        "src/components/ExerciseAtlasView.conceptLayout.test.tsx",
+        "src/components/ExerciseAtlasView.focusRecovery.test.tsx",
+        "src/components/ExerciseMotionArtwork.test.tsx",
+        "src/components/StudioMotionPlayback.lifecycle.test.tsx",
+        "src/utils/exerciseArtworkCache.test.ts",
+        "scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts",
+        "scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx"
+      ],
+      "log": "08-workflow-vitest.log",
+      "status": "passed"
+    }
+  ],
+  "result": "gate-results.json"
+}

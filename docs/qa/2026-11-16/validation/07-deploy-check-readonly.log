@@ -1,0 +1,30 @@
+$ node scripts/deploy-universal.mjs --check-env
+{
+  "canonicalTarget": "firebase-hosting",
+  "site": "pilates-flow-atelier",
+  "publicDir": "dist",
+  "projectId": "deskcloud-fleet-auth",
+  "productionUrl": "https://pilates-flow-atelier.web.app",
+  "gitAvailable": true,
+  "branch": "feat/simple-flow-natural-motion-20261116",
+  "headCommit": "26d5c5f",
+  "onCanonicalBranch": false,
+  "workingTreeClean": false,
+  "configValid": true,
+  "nodeExecutable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+  "distBuilt": true,
+  "distEntryJs": "/assets/index-Bd9Clluz.js",
+  "distHasAtelierV2Assets": true,
+  "distReadyForDeploy": true,
+  "staleDistReason": null,
+  "firebaseCliInstalled": false,
+  "firebaseExecutable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/npx --yes firebase-tools@13.29.1",
+  "firebaseAuthReady": false,
+  "firebaseAuthSource": "none",
+  "supportedLocalAuthPaths": [
+    ".firebase/service-account.json",
+    ".env.deploy.local (GOOGLE_APPLICATION_CREDENTIALS | FIREBASE_SERVICE_ACCOUNT | FIREBASE_TOKEN)",
+    ".env.local (GOOGLE_APPLICATION_CREDENTIALS | FIREBASE_SERVICE_ACCOUNT | FIREBASE_TOKEN)"
+  ],
+  "recommendedNextCommand": "git checkout main"
+}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pilates Flow · isolated responsive QA</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #e7ece7; color: #213c32; font: 14px/1.4 system-ui, sans-serif; }
+      header { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px; flex-wrap: wrap; }
+      label { display: flex; align-items: center; gap: 5px; }
+      select { min-height: 30px; border: 1px solid #9baea2; border-radius: 5px; padding: 3px 8px; background: white; color: inherit; }
+      main { width: max-content; margin: 0 auto 16px; padding: 2px; background: #456553; border-radius: 4px; }
+      iframe { display: block; border: 0; background: #f6f8f2; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>격리된 더미 데이터 · 반응형 QA</strong>
+      <label>버전 <select id="version"><option value="baseline">변경 전 main</option><option value="candidate">변경 후 작업본</option></select></label>
+      <label>화면 <select id="size"><option value="390">390 × 844</option><option value="360">360 × 800</option><option value="768">768 × 900</option><option value="1280">1280 × 844</option></select></label>
+      <span id="description"></span>
+    </header>
+    <main><iframe title="Pilates Flow 격리 테스트 화면" id="preview"></iframe></main>
+    <script>
+      // A normal iframe gives the app a genuine CSS viewport without developer
+      // tools or injected application state. It does not emulate a mobile OS.
+      const targets = { baseline: 'http://127.0.0.1:5175/', candidate: 'http://127.0.0.1:5176/' };
+      const sizes = { 390: [390, 844], 360: [360, 800], 768: [768, 900], 1280: [1280, 844] };
+      const query = new URLSearchParams(location.search);
+      const version = document.querySelector('#version');
+      const size = document.querySelector('#size');
+      const preview = document.querySelector('#preview');
+      if (Object.hasOwn(targets, query.get('version'))) version.value = query.get('version');
+      if (Object.hasOwn(sizes, query.get('size'))) size.value = query.get('size');
+      function render() {
+        const [width, height] = sizes[size.value];
+        preview.width = width;
+        preview.height = height;
+        if (preview.getAttribute('src') !== targets[version.value]) preview.src = targets[version.value];
+        document.querySelector('#description').textContent = `${width} × ${height} CSS px · 로컬 전용`;
+        history.replaceState(null, '', `?version=${version.value}&size=${size.value}`);
+      }
+      version.addEventListener('change', render);
+      size.addEventListener('change', render);
+      render();
+    </script>
+  </body>
+</html>

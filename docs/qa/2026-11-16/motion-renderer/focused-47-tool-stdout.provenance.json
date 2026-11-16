@@ -1,0 +1,31 @@
+{
+  "log": "focused-47-tool-stdout.log",
+  "sourceKind": "verbatim output field from the existing exec tool result",
+  "sourceExecSessionId": 39492,
+  "sourceCompletionChunkId": "de595a",
+  "originalRedirectFile": null,
+  "sourceAvailability": "The original test command was not redirected to a file. The complete untruncated output field remained visible in the conversation tool result and was copied literally.",
+  "excerpt": false,
+  "captureLimit": "This preserves the tool-captured stdout text. It is not an independently recovered original shell-output file or terminal byte stream.",
+  "testRerunForPreservation": false,
+  "command": "pnpm exec vitest run src/utils/generatedPractitionerArt.test.ts src/components/GeneratedPractitionerFigure.test.tsx src/components/StudioMotionPlayback.lifecycle.test.tsx src/test/motionImageQualityCorrections.test.tsx src/test/motionRenderingQualityRegression.test.tsx",
+  "workingDirectory": "/workspace/scratch/43e9d7cc5bc9/pilates-flow-release-restored",
+  "exitCode": 0,
+  "reportedStartAt": "12:17:16",
+  "reportedDuration": "33.59s",
+  "reportedTestFilesPassed": 5,
+  "reportedTestsPassed": 47,
+  "encoding": "UTF-8",
+  "bytes": 3548,
+  "sourceToolStdoutSha256": "bc4fff8537367d63ce632077a1f787f90871bbfd9678b4cf428ce0a45aa66070",
+  "preservedFileSha256": "bc4fff8537367d63ce632077a1f787f90871bbfd9678b4cf428ce0a45aa66070",
+  "redactionsApplied": false,
+  "credentialShapeScan": {
+    "scanner": "scripts/check-secrets.mjs#scanText",
+    "scannerSha256": "f0470d6f07a32f0649c7ede960cf0b32de5137c863d686fac610d98d0b9c28a1",
+    "scope": "complete captured stdout before saving",
+    "findings": [],
+    "status": "passed",
+    "limitation": "Credential-shape pattern check only; it is not a proof that arbitrary secret formats are absent."
+  }
+}

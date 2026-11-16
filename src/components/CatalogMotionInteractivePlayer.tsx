@@ -148,7 +148,7 @@ function CatalogMotionThumbnailContent({
         asset={effectiveAsset}
         phase={sampledHover ? sampledHover.visualPhaseId : 'middle'}
         compact
-        showGhostStartPose
+        showGhostStartPose={false}
         label={`${asset.titleKo} · 정점 단계 도해`}
       />
     </div>
@@ -230,7 +230,7 @@ function CatalogMotionInteractivePlayerContent({
   const [staticOnly, setStaticOnly] = useState(false);
   const [showGuides, setShowGuides] = useState(presentation !== 'studio');
   const [showMuscles, setShowMuscles] = useState(presentation !== 'studio');
-  const [showTrail, setShowTrail] = useState(presentation !== 'studio');
+  const [showTrail, setShowTrail] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const isStudio = presentation === 'studio';
   const frameCount = Math.round((asset.durationMs / 1000) * PREVIEW_FRAME_RATE);
@@ -814,7 +814,7 @@ function CatalogMotionInteractivePlayerContent({
                 phase={stage.phaseId}
                 activeSide={side}
                 mirrored={mirrored}
-                showGhostStartPose={stage.ghost}
+                showGhostStartPose={showTrail && stage.ghost}
                 compact
               />
             </div>

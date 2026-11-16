@@ -1275,7 +1275,7 @@ function renderKinematicFigureLayer(
   showStructure = true,
   figureScale = 1,
   referenceJoints?: RigJointMap,
-  showNativeHead = true,
+  showNativeFigure = true,
 ): React.JSX.Element {
   const { joints } = phaseSpec;
   const nearSide = activeSide;
@@ -1437,7 +1437,13 @@ function renderKinematicFigureLayer(
   );
 
   return (
-    <g data-layer="kinematic-figure" strokeLinecap="round" strokeLinejoin="round">
+    <g
+      data-layer="kinematic-figure"
+      data-figure-role="vector-fallback"
+      opacity={showNativeFigure ? 1 : 0}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       {/* Contralateral / Far Side Limbs (soft depth perspective) */}
       <g
         data-anatomical-side={farSide}
@@ -1545,7 +1551,7 @@ function renderKinematicFigureLayer(
         />
 
         {/* Studio low-bun & warm-skin head silhouette */}
-        <g data-segment="native-head" opacity={showNativeHead ? 1 : 0}>
+        <g data-segment="native-head" opacity={showNativeFigure ? 1 : 0}>
         <circle
           cx={bunPt.x}
           cy={bunPt.y}
