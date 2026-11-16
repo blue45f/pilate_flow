@@ -123,21 +123,26 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(scripts['deploy:check']).toBe('node scripts/deploy-universal.mjs --check-env');
     expect(scripts['deploy:verify']).toBe('node scripts/deploy-universal.mjs --verify-live');
     expect(scripts['deploy:rollback']).toBe('node scripts/deploy-universal.mjs --rollback');
+    expect(scripts['deploy:cloud']).toBe('node scripts/deploy-cloud.mjs');
+    expect(scripts['deploy:cloud:status']).toBe('node scripts/deploy-cloud.mjs --status');
 
     // Safe local env template exists without raw secrets
     expect(envExample).toContain('GOOGLE_APPLICATION_CREDENTIALS=');
     expect(envExample).toContain('FIREBASE_SERVICE_ACCOUNT=');
     expect(envExample).toContain('FIREBASE_TOKEN=');
+    expect(envExample).toContain('GCP_WORKLOAD_IDENTITY_PROVIDER=');
 
     // Removed race-prone / sandbox-bypassing scripts
     expect(scripts['deploy:parallel']).toBeUndefined();
     expect(scripts['deploy:bootstrap']).toBeUndefined();
 
-    // Workflow invariants + multi-secret support
+    // Workflow invariants + keyless OIDC WIF + multi-secret fallback + cloud auto-deploy
     expect(workflowYaml).toContain('verify-and-build:');
     expect(workflowYaml).toContain('deploy-hosting:');
     expect(workflowYaml).toContain('needs: verify-and-build');
     expect(workflowYaml).toContain('cancel-in-progress: false');
+    expect(workflowYaml).toContain('google-github-actions/auth@v2');
+    expect(workflowYaml).toContain('AUTO_DEPLOY_ON_MAIN_PUSH');
     expect(workflowYaml).toContain(
       `firebase-tools@${CANONICAL_PRODUCTION_DEPLOY_SPEC.firebaseToolsVersion}`,
     );
@@ -157,6 +162,7 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
       'pnpm deploy:verify',
       'pnpm run deploy',
       'pnpm deploy:rollback',
+      'pnpm deploy:cloud',
     ]) {
       expect(deploymentDoc).toContain(cmd);
     }

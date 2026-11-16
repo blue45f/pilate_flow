@@ -107,14 +107,27 @@ Git 커밋 SHA와 Vite 파일명 해시는 서로 다릅니다. 테스트만 바
 
 네트워크 차단으로 운영 검증을 완료하지 못했다면 `pnpm run deploy`의 종료 코드나 빌드 성공만으로 운영 반영 완료를 보고하지 않습니다. 네트워크가 가능한 환경에서 독립 `deploy:verify` 결과까지 확인합니다. 롤백도 실제 업로드이므로 승인된 경우에만 `pnpm deploy:rollback`을 사용합니다.
 
-## 6. GitHub Actions 인증은 별도 설정
+## 6. 로컬 `.env` 없는 클라우드 환경(GitHub Actions · 원격 에이전트) 자동 배포
 
-로컬 env는 GitHub Actions에 자동 전달되지 않습니다. 현재 workflow는 다음 순서로 Secret을 읽습니다.
+로컬 `.env.deploy.local`이 없는 클라우드 환경(GitHub 웹·모바일 PR 병합, 클라우드 에이전트, Codespaces, 새 Git 워크트리)에서도 별도 로컬 인증 파일 없이 즉시 운영 배포할 수 있도록 **3중 인증 체인(Keyless OIDC WIF → 서비스 계정 시크릿 → Firebase 토큰 시크릿)** 과 **`main` 자동 배포**가 구성되어 있습니다.
 
-`FIREBASE_SERVICE_ACCOUNT` → `FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER` → `FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH` → `GCP_SA_KEY` → `FIREBASE_TOKEN`
+### 클라우드 인증 탐색 순서 (`.github/workflows/deploy-production.yml`)
 
-앞의 네 값은 서비스 계정 JSON 원문 또는 Base64이고, 모두 비었을 때만 토큰을 사용합니다. 상위 값이 잘못된 JSON이면 하위 인증으로 넘어가지 않습니다. 현재 job에 `environment:`가 없어 Environment 전용 Secret은 전달되지 않으며 `GOOGLE_APPLICATION_CREDENTIALS`라는 Secret도 직접 읽지 않습니다.
+1. **Keyless Google Cloud OIDC (Workload Identity Federation — 최우선 · 만료 없음)**:
+   `vars.GCP_WORKLOAD_IDENTITY_PROVIDER` + `vars.GCP_SERVICE_ACCOUNT_EMAIL`이 설정된 경우 `google-github-actions/auth@v2`로 단기 OIDC 자격 증명을 발급받아 배포합니다.
+2. **서비스 계정 시크릿 폴백**:
+   `FIREBASE_SERVICE_ACCOUNT` → `FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER` → `FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH` → `GCP_SA_KEY` (JSON 원문 또는 Base64)
+3. **토큰 시크릿 폴백**:
+   `FIREBASE_TOKEN`
 
-main 대상 PR과 main 푸시·병합은 품질 검사와 운영용 빌드 산출물 생성까지만 실행합니다. CI 운영 업로드는 **Production Checks & Manual Deployment → Run workflow → main → Firebase 운영 배포 실행**을 별도로 선택합니다. 기본값은 꺼짐이며 main 이외의 브랜치는 업로드하지 않습니다.
+### 클라우드 환경에서의 배포 방법
 
-기존 Secret의 이름·범위와 보관된 인증을 먼저 대조합니다. 사용자 ADC(`authorized_user`)는 로컬 전용이며 서비스 계정 Secret으로 동기화할 수 없습니다. 기존 서비스 계정 재사용 시 대상 프로젝트의 Hosting Admin 및 API Keys Viewer 권한, 계정·키 활성 상태를 확인합니다. GitHub Secrets 변경이나 workflow 변경, 배포 재실행은 변경 내용을 제시하고 승인받은 뒤 수행합니다. 과거 Actions의 초록색 결과 중에는 인증 없이 업로드를 생략한 실행이 있으므로 실제 업로드 로그와 Firebase 출시 이력을 함께 확인합니다.
+- **PR 생성 (`pull_request` → `main`)**: 품질 게이트와 프로덕션 번들 빌드(`verify-and-build`)만 실행하며 운영 사이트는 변경하지 않습니다.
+- **`main` 브랜치 푸시 또는 PR 병합 (`push` → `main`)**: 전체 품질 검증 통과 직후 `deploy-hosting` 잡이 **자동으로 실행**되어 Firebase Hosting 업로드 및 `--verify-live --wait-cdn` 라이브 검증까지 완료합니다. (수동 전용으로 전환하려면 GitHub Repository Variables에서 `AUTO_DEPLOY_ON_MAIN_PUSH=false`로 설정합니다.)
+- **수동 원클릭 실행 (`workflow_dispatch`)**: GitHub Actions에서 **Production Checks & Cloud Deployment → Run workflow (`main`)** 를 누르면 기본값(`deploy_to_production=true`)으로 즉시 배포 및 라이브 검증이 실행됩니다.
+- **클라우드 터미널 명령 (`pnpm deploy:cloud`)**: 로컬 `.env.deploy.local`이 없는 환경에서도 `gh` CLI만 연결되어 있으면 아래 명령으로 원격 배포·상태 조회가 가능합니다.
+  ```bash
+  pnpm deploy:cloud:status     # 원격 WIF/시크릿 상태 및 최근 CI 실행 이력 확인
+  pnpm deploy:cloud --watch    # 원격 배포 실행 후 완료 대기 및 운영 URL 라이브 검증
+  ```
+- **로컬 → GitHub 시크릿·변수 동기화**: 로컬 인증 갱신 후 원격에도 반영할 때는 `pnpm deploy:auth` 또는 `pnpm deploy:auth --sync-github` 한 줄만 실행하면 시크릿과 배포 참고 변수가 동시에 동기화됩니다. 사용자 ADC(`authorized_user`)는 로컬 전용이므로 서비스 계정으로 동기화하지 않습니다.

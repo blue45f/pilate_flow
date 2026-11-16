@@ -1,4 +1,4 @@
-name: Production Checks & Manual Deployment (Firebase Hosting · pilates-flow-atelier)
+name: Production Checks & Cloud Deployment (Firebase Hosting · pilates-flow-atelier)
 
 on:
   pull_request:
@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       deploy_to_production:
-        description: 'Firebase 운영 배포 실행 (main 브랜치에서만 가능)'
+        description: 'Firebase 운영 배포 실행 (기본값 true · false 선택 시 품질 검증/빌드만 실행)'
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions:
@@ -136,9 +136,17 @@ jobs:
 
   deploy-hosting:
     name: Deploy to Firebase Hosting (pilates-flow-atelier) & Verify Live Hash
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_production == true }}
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'push' && vars.AUTO_DEPLOY_ON_MAIN_PUSH != 'false') ||
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_to_production != false)
+      )
     needs: verify-and-build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: "production-hosting-deploy-${{ github.ref }}"
       cancel-in-progress: false
@@ -168,7 +176,19 @@ jobs:
       - name: Re-verify downloaded dist artifact integrity
         run: node scripts/check-pwa-build.mjs
 
+      - name: Authenticate via Keyless Google Cloud OIDC (Workload Identity Federation)
+        id: gcp-wif-auth
+        if: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GCP_SERVICE_ACCOUNT_EMAIL != '' }}
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+          create_credentials_file: true
+
       - name: Deploy to Firebase Hosting & strictly verify live bundle hash + 4 V2 assets
+        env:
+          WIF_CRED_FILE: ${{ steps.gcp-wif-auth.outputs.credentials_file_path }}
         run: |
           set -euo pipefail
           GAC_FILE=""
@@ -179,9 +199,25 @@ jobs:
           }
           trap cleanup EXIT
 
+          DEPLOYED="false"
+          AUTH_MODE="none"
           RESOLVED_SA="${FIREBASE_SERVICE_ACCOUNT:-${FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER:-${FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH:-${GCP_SA_KEY:-}}}}"
 
-          if [ -n "$RESOLVED_SA" ]; then
+          if [ -n "${WIF_CRED_FILE:-}" ] && [ -f "$WIF_CRED_FILE" ]; then
+            echo "🔐 Deploying via Keyless Google Cloud OIDC (Workload Identity Federation)..."
+            if (
+              export GOOGLE_APPLICATION_CREDENTIALS="$WIF_CRED_FILE"
+              unset FIREBASE_TOKEN
+              npx --yes firebase-tools@13.29.1 deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --non-interactive
+            ); then
+              DEPLOYED="true"
+              AUTH_MODE="keyless-oidc-wif"
+            else
+              echo "::warning::Keyless OIDC deploy did not succeed; falling back to configured Firebase secret."
+            fi
+          fi
+
+          if [ "$DEPLOYED" != "true" ] && [ -n "$RESOLVED_SA" ]; then
             GAC_FILE="$(mktemp)"
             chmod 600 "$GAC_FILE"
             RESOLVED_SA="$RESOLVED_SA" GAC_FILE="$GAC_FILE" node --input-type=module -e '
@@ -197,14 +233,21 @@ jobs:
             export GOOGLE_APPLICATION_CREDENTIALS="$GAC_FILE"
             unset FIREBASE_TOKEN
             npx --yes firebase-tools@13.29.1 deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --non-interactive
-          elif [ -n "${FIREBASE_TOKEN:-}" ]; then
+            DEPLOYED="true"
+            AUTH_MODE="service-account-secret"
+          elif [ "$DEPLOYED" != "true" ] && [ -n "${FIREBASE_TOKEN:-}" ]; then
+            unset GOOGLE_APPLICATION_CREDENTIALS
             npx --yes firebase-tools@13.29.1 deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --non-interactive
-          else
-            echo "::error::Missing Firebase deployment credentials. Run 'pnpm deploy:auth' locally or configure FIREBASE_SERVICE_ACCOUNT / FIREBASE_TOKEN in GitHub Actions Secrets."
+            DEPLOYED="true"
+            AUTH_MODE="firebase-token-secret"
+          fi
+
+          if [ "$DEPLOYED" != "true" ]; then
+            echo "::error::Missing Firebase deployment credentials. Run 'pnpm deploy:auth' locally or configure GCP_WORKLOAD_IDENTITY_PROVIDER / FIREBASE_SERVICE_ACCOUNT / FIREBASE_TOKEN in GitHub Actions."
             {
-              echo "### ❌ Live Firebase Upload Failed (Missing GitHub Actions Secret)"
+              echo "### ❌ Live Firebase Upload Failed (Missing GitHub Actions Credentials)"
               echo ""
-              echo "로컬 터미널에서 아래 명령 **한 줄**만 실행하면 로컬 \`.env.deploy.local\`과 GitHub Actions 시크릿이 동시에 등록됩니다:"
+              echo "로컬 터미널에서 아래 명령 **한 줄**만 실행하면 로컬 \`.env.deploy.local\`과 GitHub Actions 시크릿·변수가 동시에 동기화됩니다:"
               echo "\`\`\`bash"
               echo "pnpm deploy:auth"
               echo "\`\`\`"
@@ -214,4 +257,10 @@ jobs:
           fi
 
           node scripts/deploy-universal.mjs --verify-live --wait-cdn
-          echo "### ✅ Deployed & Verified on Firebase Hosting (\`https://pilates-flow-atelier.web.app\`)" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### ✅ Deployed & Verified on Firebase Hosting (\`https://pilates-flow-atelier.web.app\`)"
+            echo ""
+            echo "- **Commit**: \`${GITHUB_SHA}\`"
+            echo "- **Trigger**: \`${GITHUB_EVENT_NAME}\`"
+            echo "- **Auth Mode**: \`${AUTH_MODE}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

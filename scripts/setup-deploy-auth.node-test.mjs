@@ -221,7 +221,7 @@ test('GitHub sync normalizes a valid service account before uploading its secret
   assert.equal(`${result.stdout}${result.stderr}`.includes(serviceAccount.private_key), false);
 });
 
-test('bare setup reuses saved authentication instead of starting login or uploading it', (t) => {
+test('bare setup reuses saved authentication instead of starting login or uploading it when --local-only is set', (t) => {
   const fixture = isolatedAuthCli(t);
   const envPath = path.join(fixture.root, '.env.deploy.local');
   writeFileSync(envPath, 'FIREBASE_TOKEN=already-saved-session\n');
@@ -233,4 +233,29 @@ test('bare setup reuses saved authentication instead of starting login or upload
     true,
   );
   assert.equal(result.stdout.includes('already-saved-session'), false);
+});
+
+test('bare setup without --local-only reuses saved authentication AND syncs it to GitHub Actions Secrets', (t) => {
+  const fixture = isolatedAuthCli(t);
+  const envPath = path.join(fixture.root, '.env.deploy.local');
+  const savedToken = 'already-saved-ci-session-for-github-sync';
+  writeFileSync(envPath, `FIREBASE_TOKEN=${savedToken}\n`);
+
+  const ghBin = path.join(fixture.root, 'bin', 'gh');
+  writeFileSync(
+    ghBin,
+    '#!/bin/sh\n' +
+      'if [ "$1" = auth ] && [ "$2" = status ]; then exit 0; fi\n' +
+      'if [ "$1" = secret ] && [ "$2" = list ]; then exit 0; fi\n' +
+      'if [ "$1" = secret ] && [ "$2" = set ] && [ "$3" = FIREBASE_TOKEN ]; then\n' +
+      `  cat > '${fixture.ghMarker}'\n` +
+      '  exit 0\n' +
+      'fi\nexit 1\n',
+  );
+  chmodSync(ghBin, 0o755);
+
+  const result = fixture.run([]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(fixture.ghMarker, 'utf8'), savedToken);
+  assert.equal(`${result.stdout}${result.stderr}`.includes(savedToken), false);
 });

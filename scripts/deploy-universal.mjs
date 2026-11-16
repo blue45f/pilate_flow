@@ -706,7 +706,7 @@ export function formatDeployDoctorReport(status) {
       '   • [방법 A — 기존 로그인 재사용] `pnpm deploy:auth:local`로 로컬 인증만 저장',
       '   • [방법 B — 기존 서비스 계정 파일] `pnpm deploy:auth ./service-account.json --local-only`로 등록',
       '   • [CI 연결 — 별도 작업] 필요할 때 `pnpm deploy:auth --sync-github`로 GitHub Secret 연결',
-      '   • [운영 업로드] Actions → Run workflow → main → Firebase 운영 배포 실행을 선택하세요. main 푸시는 검사·빌드만 실행합니다.',
+      '   • [클라우드 무환경 배포] 로컬 `.env`가 없는 환경에서는 `main` 푸시/PR 병합 시 자동 배포되거나 `pnpm deploy:cloud`로 원격 실행합니다.',
     );
   }
   return lines.join('\n');

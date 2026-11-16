@@ -234,7 +234,12 @@ export function importServiceAccountFile(sourceFilePath, rootDir = ROOT) {
 function inspectGitHubSecretsStatus(execEnv, rootDir = ROOT) {
   const ghBin = resolveExecutable('gh', execEnv);
   if (!ghBin) {
-    return { ghInstalled: false, ghAuthenticated: false, configuredSecrets: [] };
+    return {
+      ghInstalled: false,
+      ghAuthenticated: false,
+      configuredSecrets: [],
+      configuredVariables: {},
+    };
   }
   try {
     execFileSync(ghBin, ['auth', 'status'], {
@@ -243,9 +248,15 @@ function inspectGitHubSecretsStatus(execEnv, rootDir = ROOT) {
       stdio: 'ignore',
     });
   } catch {
-    return { ghInstalled: true, ghAuthenticated: false, configuredSecrets: [] };
+    return {
+      ghInstalled: true,
+      ghAuthenticated: false,
+      configuredSecrets: [],
+      configuredVariables: {},
+    };
   }
 
+  let configuredSecrets = [];
   try {
     const out = execFileSync(ghBin, ['secret', 'list', '--repo', GITHUB_REPO_SLUG], {
       cwd: rootDir,
@@ -253,14 +264,39 @@ function inspectGitHubSecretsStatus(execEnv, rootDir = ROOT) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     });
-    const names = out
+    configuredSecrets = out
       .split(/\r?\n/)
       .map((line) => line.trim().split(/\s+/)[0])
       .filter(Boolean);
-    return { ghInstalled: true, ghAuthenticated: true, configuredSecrets: names };
   } catch {
-    return { ghInstalled: true, ghAuthenticated: true, configuredSecrets: [] };
+    configuredSecrets = [];
   }
+
+  const configuredVariables = {};
+  try {
+    const varOut = execFileSync(
+      ghBin,
+      ['variable', 'list', '--repo', GITHUB_REPO_SLUG, '--json', 'name,value'],
+      {
+        cwd: rootDir,
+        env: execEnv,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    );
+    for (const entry of JSON.parse(varOut)) {
+      if (entry?.name) configuredVariables[entry.name] = String(entry.value ?? '');
+    }
+  } catch {
+    // Best-effort variable inspection
+  }
+
+  return {
+    ghInstalled: true,
+    ghAuthenticated: true,
+    configuredSecrets,
+    configuredVariables,
+  };
 }
 
 function pushGitHubSecret(ghBin, secretName, secretValue, execEnv, rootDir = ROOT) {
@@ -272,8 +308,92 @@ function pushGitHubSecret(ghBin, secretName, secretValue, execEnv, rootDir = ROO
   });
 }
 
+function tryPushGitHubSecret(ghBin, secretName, secretValue, execEnv, rootDir = ROOT) {
+  try {
+    execFileSync(ghBin, ['secret', 'set', secretName, '--repo', GITHUB_REPO_SLUG], {
+      cwd: rootDir,
+      env: execEnv,
+      input: secretValue,
+      stdio: ['pipe', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryPushGitHubVariable(ghBin, varName, varValue, execEnv, rootDir = ROOT) {
+  try {
+    execFileSync(ghBin, ['variable', 'set', varName, '--repo', GITHUB_REPO_SLUG, '--body', varValue], {
+      cwd: rootDir,
+      env: execEnv,
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function syncAuxiliaryEnvToGitHubActions(
+  ghBin,
+  { fallbackFirebaseToken = '' } = {},
+  execEnv,
+  rootDir = ROOT,
+) {
+  const localEnv = loadLocalDeployEnvMap(rootDir);
+  if (fallbackFirebaseToken && !isPlaceholderCredentialValue(fallbackFirebaseToken)) {
+    if (tryPushGitHubSecret(ghBin, 'FIREBASE_TOKEN', fallbackFirebaseToken, execEnv, rootDir)) {
+      console.log(`✅ 보조 백업 시크릿 동기화 완료: FIREBASE_TOKEN (${GITHUB_REPO_SLUG})`);
+    }
+  }
+
+  for (const optionalSecretKey of [
+    'USER_OPENAI_API_KEY',
+    'OPENAI_USER_API_KEYS_JSON',
+    'OPENAI_API_KEY',
+  ]) {
+    const val = localEnv.values[optionalSecretKey];
+    if (val && !isPlaceholderCredentialValue(val)) {
+      if (tryPushGitHubSecret(ghBin, optionalSecretKey, val, execEnv, rootDir)) {
+        console.log(`✅ 선택 서버 시크릿 동기화 완료: ${optionalSecretKey} (${GITHUB_REPO_SLUG})`);
+      }
+    }
+  }
+
+  const variableEntries = {
+    FIREBASE_PROJECT_ID: FIREBASE_PROJECT,
+    FIREBASE_HOSTING_SITE: FIREBASE_SITE,
+    FIREBASE_HOSTING_URL: LIVE_ORIGIN,
+    DEPLOY_BRANCH: 'main',
+    DEPLOY_FIREBASE_TOOLS_PACKAGE: FIREBASE_TOOLS_PACKAGE,
+  };
+  for (const optionalVarKey of [
+    'GCP_WORKLOAD_IDENTITY_PROVIDER',
+    'GCP_SERVICE_ACCOUNT_EMAIL',
+    'AUTO_DEPLOY_ON_MAIN_PUSH',
+  ]) {
+    const val = localEnv.values[optionalVarKey];
+    if (val && !isPlaceholderCredentialValue(val)) {
+      variableEntries[optionalVarKey] = val;
+    }
+  }
+
+  const syncedVars = [];
+  for (const [varName, varValue] of Object.entries(variableEntries)) {
+    if (varValue && tryPushGitHubVariable(ghBin, varName, String(varValue), execEnv, rootDir)) {
+      syncedVars.push(varName);
+    }
+  }
+  if (syncedVars.length > 0) {
+    console.log(
+      `✅ GitHub Actions 배포 환경변수(Variables) 동기화 완료: ${syncedVars.join(', ')}`,
+    );
+  }
+}
+
 function syncCredentialsToGitHubActions(
-  { serviceAccountJson = '', firebaseToken = '' },
+  { serviceAccountJson = '', firebaseToken = '', syncAuxiliary = false },
   execEnv,
   rootDir = ROOT,
 ) {
@@ -318,11 +438,22 @@ function syncCredentialsToGitHubActions(
     console.log(
       `✅ GitHub Actions 시크릿 등록 완료: FIREBASE_SERVICE_ACCOUNT (${GITHUB_REPO_SLUG})`,
     );
+    if (syncAuxiliary) {
+      syncAuxiliaryEnvToGitHubActions(
+        ghBin,
+        { fallbackFirebaseToken: firebaseToken },
+        execEnv,
+        rootDir,
+      );
+    }
     return true;
   }
   if (firebaseToken) {
     pushGitHubSecret(ghBin, 'FIREBASE_TOKEN', firebaseToken, execEnv, rootDir);
     console.log(`✅ GitHub Actions 시크릿 등록 완료: FIREBASE_TOKEN (${GITHUB_REPO_SLUG})`);
+    if (syncAuxiliary) {
+      syncAuxiliaryEnvToGitHubActions(ghBin, {}, execEnv, rootDir);
+    }
     return true;
   }
   return false;
@@ -395,7 +526,7 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
   const localEnv = loadLocalDeployEnvMap(rootDir);
   const autoSaExists = existsSync(join(rootDir, '.firebase', 'service-account.json'));
   const ghStatus = localOnly
-    ? { skipped: true, configuredSecrets: [] }
+    ? { skipped: true, configuredSecrets: [], configuredVariables: {} }
     : inspectGitHubSecretsStatus(execEnv, rootDir);
   const firebaseSecretNames = [
     'FIREBASE_SERVICE_ACCOUNT',
@@ -406,6 +537,10 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
   ];
   const matchedGhSecrets = ghStatus.configuredSecrets.filter((name) =>
     firebaseSecretNames.includes(name),
+  );
+  const ghVars = ghStatus.configuredVariables ?? {};
+  const wifReady = Boolean(
+    ghVars.GCP_WORKLOAD_IDENTITY_PROVIDER && ghVars.GCP_SERVICE_ACCOUNT_EMAIL,
   );
 
   console.log('=== Pilates Flow 배포 인증 점검 (비밀값 미출력) ===');
@@ -430,6 +565,12 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
     console.log(
       `• GitHub Actions 시크릿(${GITHUB_REPO_SLUG}): ${matchedGhSecrets.length > 0 ? `등록됨 ✅ (${matchedGhSecrets.join(', ')})` : '미등록 ⚠️'}`,
     );
+    console.log(
+      `• GitHub Actions Keyless OIDC(WIF): ${wifReady ? '활성화됨 ✅ (만료 없는 OIDC 연동)' : '미설정 (시크릿 인증 사용)'}`,
+    );
+    console.log(
+      `• 클라우드 자동 배포(main 푸시/병합): ${ghVars.AUTO_DEPLOY_ON_MAIN_PUSH === 'false' ? '수동 전용' : '활성화됨 ✅'}`,
+    );
   }
   console.log('');
   if (!nonInteractiveReadiness.firebaseAuthReady) {
@@ -441,7 +582,9 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
       '   pnpm deploy:auth ./service-account.json --local-only  # 기존 JSON 파일을 로컬에만 등록',
     );
   } else {
-    console.log('👉 이제 어떤 터미널이나 AI 에이전트에서도 `pnpm run deploy` 한 줄로 즉시 배포됩니다.');
+    console.log(
+      '👉 로컬(`pnpm run deploy`) 및 클라우드(`main` 푸시 · `pnpm deploy:cloud`) 배포가 모두 준비되었습니다.',
+    );
   }
 }
 
@@ -485,7 +628,9 @@ async function runAuthCli() {
   }
   const execEnv = buildAugmentedEnv({}, ROOT);
   const syncIfRequested = (credentials) =>
-    localOnly ? false : syncCredentialsToGitHubActions(credentials, execEnv, ROOT);
+    localOnly
+      ? false
+      : syncCredentialsToGitHubActions({ ...credentials, syncAuxiliary: true }, execEnv, ROOT);
   const showStatus = () => printAuthStatus(ROOT, { localOnly });
 
   if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
@@ -497,8 +642,8 @@ async function runAuthCli() {
         '  --reuse-login                  기존 Firebase CLI 로그인 재사용 (새 토큰 발급 없음)',
         '  <path/to/service-account.json> 서비스 계정 JSON을 .firebase/service-account.json 및 .env.deploy.local에 등록',
         '  --from-env                     현재 셸의 FIREBASE_TOKEN / GOOGLE_APPLICATION_CREDENTIALS를 .env.deploy.local에 저장',
-        '  --sync-github                  로컬에 저장된 배포 인증을 GitHub Actions 시크릿에도 동기화',
-        '  (인자 없음)                     저장된 인증이 있으면 재사용; 없을 때만 대화형 로그인',
+        '  --sync-github                  로컬에 저장된 배포 인증 및 참고 변수를 GitHub Actions에도 동기화',
+        '  (인자 없음)                     저장된 인증을 재사용하고 GitHub Actions 시크릿·변수까지 함께 동기화',
       ].join('\n'),
     );
     return;
@@ -576,12 +721,24 @@ async function runAuthCli() {
 
     if (configuredGac && existsSync(configuredGac)) {
       const rawJson = readFileSync(configuredGac, 'utf8');
-      syncCredentialsToGitHubActions({ serviceAccountJson: rawJson }, execEnv, ROOT);
+      syncCredentialsToGitHubActions(
+        {
+          serviceAccountJson: rawJson,
+          firebaseToken: localEnv.values.FIREBASE_TOKEN ?? '',
+          syncAuxiliary: true,
+        },
+        execEnv,
+        ROOT,
+      );
       return;
     }
     if (localEnv.values.FIREBASE_SERVICE_ACCOUNT) {
       syncCredentialsToGitHubActions(
-        { serviceAccountJson: localEnv.values.FIREBASE_SERVICE_ACCOUNT },
+        {
+          serviceAccountJson: localEnv.values.FIREBASE_SERVICE_ACCOUNT,
+          firebaseToken: localEnv.values.FIREBASE_TOKEN ?? '',
+          syncAuxiliary: true,
+        },
         execEnv,
         ROOT,
       );
@@ -589,7 +746,7 @@ async function runAuthCli() {
     }
     if (localEnv.values.FIREBASE_TOKEN) {
       syncCredentialsToGitHubActions(
-        { firebaseToken: localEnv.values.FIREBASE_TOKEN },
+        { firebaseToken: localEnv.values.FIREBASE_TOKEN, syncAuxiliary: true },
         execEnv,
         ROOT,
       );
@@ -603,7 +760,43 @@ async function runAuthCli() {
   const currentAuth = resolveFirebaseAuth({ rootDir: ROOT, env: execEnv, allowAmbientAuth: true });
   if (currentAuth.ready) {
     reuseLocalDeploymentAuth(ROOT, execEnv);
-    console.log('✅ 기존 로컬 인증을 재사용합니다. 새 로그인이나 GitHub 변경은 없습니다.');
+    if (localOnly) {
+      console.log('✅ 기존 로컬 인증을 재사용합니다. 새 로그인이나 GitHub 변경은 없습니다.');
+      showStatus();
+      return;
+    }
+    const localEnv = loadLocalDeployEnvMap(ROOT);
+    const autoSaPath = join(ROOT, '.firebase', 'service-account.json');
+    const configuredGac = localEnv.values.GOOGLE_APPLICATION_CREDENTIALS
+      ? resolve(ROOT, localEnv.values.GOOGLE_APPLICATION_CREDENTIALS)
+      : existsSync(autoSaPath)
+        ? autoSaPath
+        : '';
+    const gacRaw = configuredGac && existsSync(configuredGac) ? readFileSync(configuredGac, 'utf8') : '';
+    const validSa =
+      (gacRaw && parseServiceAccountJsonString(gacRaw) ? gacRaw : '') ||
+      (localEnv.values.FIREBASE_SERVICE_ACCOUNT &&
+      parseServiceAccountJsonString(localEnv.values.FIREBASE_SERVICE_ACCOUNT)
+        ? localEnv.values.FIREBASE_SERVICE_ACCOUNT
+        : '');
+    const savedToken = localEnv.values.FIREBASE_TOKEN ?? '';
+
+    if (validSa || savedToken) {
+      console.log('✅ 기존 로컬 인증을 재사용하여 GitHub Actions 시크릿·변수와 동기화합니다.');
+      syncCredentialsToGitHubActions(
+        {
+          serviceAccountJson: validSa,
+          firebaseToken: savedToken,
+          syncAuxiliary: true,
+        },
+        execEnv,
+        ROOT,
+      );
+    } else {
+      console.log(
+        '✅ 기존 로컬 인증(사용자 ADC)을 재사용합니다. GitHub Actions 연결에는 서비스 계정 JSON 또는 Firebase 토큰이 필요합니다.',
+      );
+    }
     showStatus();
     return;
   }
@@ -628,7 +821,7 @@ async function runAuthCli() {
   console.log(
     '\n✅ `.env.deploy.local` (권한 0600, Git 제외)에 FIREBASE_TOKEN이 영구 저장되었습니다.',
   );
-  syncCredentialsToGitHubActions({ firebaseToken: token }, execEnv, ROOT);
+  syncCredentialsToGitHubActions({ firebaseToken: token, syncAuxiliary: true }, execEnv, ROOT);
   printAuthStatus(ROOT);
 }
 

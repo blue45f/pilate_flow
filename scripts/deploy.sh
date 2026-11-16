@@ -73,6 +73,10 @@ if NODE_BIN="$(find_node_bin)"; then
     shift
     exec "$NODE_BIN" "$ROOT_DIR/scripts/firebase-local.mjs" "$@"
   fi
+  if [[ "${1:-}" == "--cloud" ]]; then
+    shift
+    exec "$NODE_BIN" "$ROOT_DIR/scripts/deploy-cloud.mjs" "$@"
+  fi
   exec "$NODE_BIN" "$ROOT_DIR/scripts/deploy-universal.mjs" "$@"
 fi
 
