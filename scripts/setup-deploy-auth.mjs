@@ -371,7 +371,6 @@ function syncAuxiliaryEnvToGitHubActions(
   for (const optionalVarKey of [
     'GCP_WORKLOAD_IDENTITY_PROVIDER',
     'GCP_SERVICE_ACCOUNT_EMAIL',
-    'AUTO_DEPLOY_ON_MAIN_PUSH',
   ]) {
     const val = localEnv.values[optionalVarKey];
     if (val && !isPlaceholderCredentialValue(val)) {
@@ -566,10 +565,10 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
       `• GitHub Actions 시크릿(${GITHUB_REPO_SLUG}): ${matchedGhSecrets.length > 0 ? `등록됨 ✅ (${matchedGhSecrets.join(', ')})` : '미등록 ⚠️'}`,
     );
     console.log(
-      `• GitHub Actions Keyless OIDC(WIF): ${wifReady ? '활성화됨 ✅ (만료 없는 OIDC 연동)' : '미설정 (시크릿 인증 사용)'}`,
+      `• GitHub Actions Keyless OIDC(WIF): ${wifReady ? '변수 등록됨 (유효성은 별도 확인)' : '미설정 (시크릿 인증 사용)'}`,
     );
     console.log(
-      `• 클라우드 자동 배포(main 푸시/병합): ${ghVars.AUTO_DEPLOY_ON_MAIN_PUSH === 'false' ? '수동 전용' : '활성화됨 ✅'}`,
+      '• 이 코드의 배포 정책: 수동 명시 요청 (원격 workflow 적용 여부는 별도 확인)',
     );
   }
   console.log('');
@@ -583,7 +582,7 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
     );
   } else {
     console.log(
-      '👉 로컬(`pnpm run deploy`) 및 클라우드(`main` 푸시 · `pnpm deploy:cloud`) 배포가 모두 준비되었습니다.',
+      '👉 인증 정보가 등록되어 있습니다. 이 코드의 클라우드 기본 동작은 검증/빌드이며, 운영 배포는 별도 승인 후 `pnpm deploy:cloud --deploy-to-production`으로 요청하세요. 원격 workflow 적용 여부와 인증 유효성은 별도로 확인하세요.',
     );
   }
 }

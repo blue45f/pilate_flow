@@ -12,13 +12,13 @@ test('parseCloudDeployArgs validates supported flags and rejects conflicting or 
     help: false,
     statusOnly: false,
     watch: false,
-    deployToProduction: true,
+    deployToProduction: false,
   });
   assert.deepEqual(parseCloudDeployArgs(['--watch']), {
     help: false,
     statusOnly: false,
     watch: true,
-    deployToProduction: true,
+    deployToProduction: false,
   });
   assert.deepEqual(parseCloudDeployArgs(['--build-only']), {
     help: false,
@@ -30,9 +30,19 @@ test('parseCloudDeployArgs validates supported flags and rejects conflicting or 
     help: false,
     statusOnly: true,
     watch: false,
-    deployToProduction: true,
+    deployToProduction: false,
   });
+  assert.equal(parseCloudDeployArgs(['--deploy-to-production']).deployToProduction, true);
+  assert.equal(parseCloudDeployArgs(['--deploy-to-production', '--watch']).deployToProduction, true);
   assert.throws(() => parseCloudDeployArgs(['--unknown']), /지원하지 않는 옵션/);
+  assert.throws(
+    () => parseCloudDeployArgs(['--status', '--deploy-to-production']),
+    /단독으로 실행/,
+  );
+  assert.throws(
+    () => parseCloudDeployArgs(['--build-only', '--deploy-to-production']),
+    /함께 사용할 수 없습니다/,
+  );
   assert.throws(() => parseCloudDeployArgs(['--status', '--watch']), /단독으로 실행/);
 });
 
@@ -78,7 +88,7 @@ test('inspectCloudDeployReadiness detects both Keyless OIDC WIF and Firebase Sec
 
   assert.equal(status.cloudAuthReady, true);
   assert.equal(status.wifConfigured, true);
-  assert.equal(status.autoDeployOnMainPush, true);
+  assert.equal(status.autoDeployOnMainPush, null);
   assert.deepEqual(status.configuredFirebaseSecrets, [
     'FIREBASE_SERVICE_ACCOUNT',
     'FIREBASE_TOKEN',
@@ -138,4 +148,32 @@ test('triggerCloudDeployment blocks live dispatch when neither WIF nor Firebase 
     ),
     /Firebase 배포 인증이 아직 설정되지 않았습니다/,
   );
+});
+
+test('default dispatch requests checks/build only even without Firebase credentials', async () => {
+  const calls = [];
+  await triggerCloudDeployment(undefined, {
+    env: { PATH: '/usr/bin' },
+    resolveBin: (name) => (name === 'gh' ? '/mock/gh' : null),
+    execFile: (_bin, args) => {
+      calls.push(args);
+      if (args[0] === 'auth' || args[0] === 'secret' || args[0] === 'workflow') return '';
+      if (args[0] === 'variable' || args[0] === 'run') return '[]';
+      throw new Error(`Unexpected gh args: ${args.join(' ')}`);
+    },
+  });
+  const dispatch = calls.find((args) => args[0] === 'workflow');
+  assert.ok(dispatch);
+  assert.equal(dispatch.at(-1), 'deploy_to_production=false');
+});
+
+test('non-boolean production requests fail before any external command', async () => {
+  let called = false;
+  await assert.rejects(
+    triggerCloudDeployment({ deployToProduction: 'false' }, {
+      execFile: () => { called = true; throw new Error('must not run'); },
+    }),
+    /boolean이어야 합니다/,
+  );
+  assert.equal(called, false);
 });

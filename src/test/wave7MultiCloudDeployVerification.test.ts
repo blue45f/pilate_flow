@@ -34,6 +34,104 @@ function readRepoText(relativePath: string): string {
   return readFileSync(resolveRepoPath(relativePath), 'utf8');
 }
 
+// Read only the plain mapping/scalar syntax used by this workflow. Unsupported
+// YAML at a policy path fails instead of falling back to a guessed safe value.
+function readWorkflowScalar(source: string, path: string[]): string {
+  let lines = source.split(/\r?\n/);
+  let value = '';
+  for (const [depth, key] of path.entries()) {
+    const content = lines.filter((line) => line.trim() && !line.trimStart().startsWith('#'));
+    const indent = Math.min(...content.map((line) => line.length - line.trimStart().length));
+    const matches = lines.flatMap((line, index) => {
+      const match = /^( *)([A-Za-z_][\w-]*):(?:\s+(.*))?$/.exec(line);
+      return match && match[1].length === indent && match[2] === key
+        ? [{ index, value: match[3]?.trim() ?? '' }]
+        : [];
+    });
+    if (matches.length !== 1) {
+      throw new Error(`Missing, duplicate or unsupported workflow key: ${path.join('.')}`);
+    }
+    const entry = matches[0];
+    const following = lines.slice(entry.index + 1);
+    const boundary = following.findIndex(
+      (line) => line.trim() && !line.trimStart().startsWith('#') &&
+        line.length - line.trimStart().length <= indent,
+    );
+    lines = following.slice(0, boundary < 0 ? following.length : boundary);
+    value = entry.value;
+    if (depth < path.length - 1 && value !== '') {
+      throw new Error(`Unsupported workflow mapping: ${path.slice(0, depth + 1).join('.')}`);
+    }
+  }
+  return ['>', '>-', '|', '|-'].includes(value)
+    ? lines.map((line) => line.trim()).join(' ').trim()
+    : value;
+}
+
+type ConditionValue = string | boolean;
+type ConditionContext = Readonly<Record<string, ConditionValue>>;
+
+// This is deliberately not a general GitHub expression engine. It accepts only
+// scalar equality clauses joined by &&; OR, calls and any unconsumed syntax fail.
+function parseDeploymentCondition(source: string): Array<[string, string]> {
+  let expression = source.trim();
+  if (expression.startsWith('${{') && expression.endsWith('}}')) {
+    expression = expression.slice(3, -2).trim();
+  }
+  const tokenPattern = /\s*(==|&&|'(?:[^']|'')*'|true\b|false\b|(?:github|inputs|needs|vars)(?:\.[A-Za-z_][\w-]*|\['[A-Za-z_][\w-]*'\])+)/y;
+  const tokens: string[] = [];
+  let position = 0;
+  while (position < expression.length) {
+    tokenPattern.lastIndex = position;
+    const token = tokenPattern.exec(expression);
+    if (!token) throw new Error('Unsupported deployment condition syntax');
+    tokens.push(token[1]);
+    position = tokenPattern.lastIndex;
+  }
+  if (tokens.length === 0 || (tokens.length + 1) % 4 !== 0) {
+    throw new Error('Unsupported deployment condition syntax');
+  }
+  const clauses: Array<[string, string]> = [];
+  for (let index = 0; index < tokens.length; index += 4) {
+    const [left, operator, right, conjunction] = tokens.slice(index, index + 4);
+    if (operator !== '==' || (conjunction !== undefined && conjunction !== '&&') ||
+        [left, right].some((token) => token === '==' || token === '&&')) {
+      throw new Error('Unsupported deployment condition syntax');
+    }
+    clauses.push([left, right]);
+  }
+  return clauses;
+}
+
+function conditionValue(token: string, context: ConditionContext): ConditionValue {
+  if (token === 'true' || token === 'false') return token === 'true';
+  if (token.startsWith("'")) return token.slice(1, -1).replace(/''/g, "'");
+  const key = token.replace(/\['([A-Za-z_][\w-]*)'\]/g, '.$1');
+  return Object.hasOwn(context, key) ? context[key] : '';
+}
+
+function expressionNumber(value: ConditionValue): number {
+  if (typeof value === 'boolean' || value === '') return Number(value);
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return typeof parsed === 'number' ? parsed : Number.NaN;
+  } catch {
+    return Number.NaN;
+  }
+}
+
+function evaluateDeploymentCondition(source: string, context: ConditionContext): boolean {
+  // Parse everything first: a false early clause must not hide unsupported syntax.
+  return parseDeploymentCondition(source).every(([left, right]) => {
+    const a = conditionValue(left, context);
+    const b = conditionValue(right, context);
+    if (typeof a === 'string' && typeof b === 'string') return a.toLowerCase() === b.toLowerCase();
+    if (typeof a === typeof b) return a === b;
+    // GitHub equality coerces mixed scalar types to numbers; missing properties are ''.
+    return expressionNumber(a) === expressionNumber(b);
+  });
+}
+
 describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', () => {
   it('verifies actual firebase.json and .firebaserc against the canonical production spec', () => {
     const firebaseJson = JSON.parse(readRepoText('firebase.json')) as FirebaseJsonInput;
@@ -94,6 +192,55 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     ).toBe(false);
   });
 
+  it('evaluates the actual workflow input and deployment condition against the approval matrix', () => {
+    const workflow = readRepoText('.github/workflows/deploy-production.yml');
+    const inputPath = ['on', 'workflow_dispatch', 'inputs', 'deploy_to_production'];
+    expect(readWorkflowScalar(workflow, [...inputPath, 'type'])).toBe('boolean');
+    const defaultScalar = readWorkflowScalar(workflow, [...inputPath, 'default']);
+    expect(defaultScalar).toBe('false');
+    const defaultInput = defaultScalar === 'true';
+    const jobPath = ['jobs', 'deploy-hosting'];
+    expect(readWorkflowScalar(workflow, [...jobPath, 'needs'])).toBe('verify-and-build');
+    const condition = readWorkflowScalar(workflow, [...jobPath, 'if']);
+    const cases: Array<[string, string, string, boolean | undefined, string, boolean]> = [
+      ['main push with legacy opt-in', 'push', 'refs/heads/main', true, 'success', false],
+      ['PR with an apparent approval', 'pull_request', 'refs/heads/main', true, 'success', false],
+      ['non-manual completion event', 'workflow_run', 'refs/heads/main', true, 'success', false],
+      ['feature branch', 'workflow_dispatch', 'refs/heads/feature/test', true, 'success', false],
+      ['tag named main', 'workflow_dispatch', 'refs/tags/main', true, 'success', false],
+      ['omitted input uses YAML default', 'workflow_dispatch', 'refs/heads/main', undefined, 'success', false],
+      ['explicit checks only', 'workflow_dispatch', 'refs/heads/main', false, 'success', false],
+      ['failed verification', 'workflow_dispatch', 'refs/heads/main', true, 'failure', false],
+      ['cancelled verification', 'workflow_dispatch', 'refs/heads/main', true, 'cancelled', false],
+      ['skipped verification', 'workflow_dispatch', 'refs/heads/main', true, 'skipped', false],
+      ['missing verification result', 'workflow_dispatch', 'refs/heads/main', true, '', false],
+      ['approved and verified main', 'workflow_dispatch', 'refs/heads/main', true, 'success', true],
+    ];
+    for (const [name, event, ref, input, result, permitted] of cases) {
+      const context: ConditionContext = {
+        'github.event_name': event,
+        'github.ref': ref,
+        'inputs.deploy_to_production': input ?? defaultInput,
+        'needs.verify-and-build.result': result,
+        'vars.AUTO_DEPLOY_ON_MAIN_PUSH': 'true',
+      };
+      expect(evaluateDeploymentCondition(condition, context), name).toBe(permitted);
+    }
+  });
+
+  it('fails closed when the actual deployment condition gains unsupported syntax', () => {
+    const condition = readWorkflowScalar(
+      readRepoText('.github/workflows/deploy-production.yml'),
+      ['jobs', 'deploy-hosting', 'if'],
+    );
+    // An empty context makes the first clause false, exercising full parsing before evaluation.
+    for (const suffix of [' || true', ' && always()', ' && inputs.deploy_to_production != false']) {
+      expect(() => evaluateDeploymentCondition(`${condition}${suffix}`, {})).toThrow(
+        'Unsupported deployment condition syntax',
+      );
+    }
+  });
+
   it('enforces simplified package.json scripts, portable auth setup helpers, CI job separation, and canonical DEPLOYMENT.md guide', () => {
     const workflowYaml = readRepoText('.github/workflows/deploy-production.yml');
     const deploymentDoc = readRepoText('DEPLOYMENT.md');
@@ -136,13 +283,12 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(scripts['deploy:parallel']).toBeUndefined();
     expect(scripts['deploy:bootstrap']).toBeUndefined();
 
-    // Workflow invariants + keyless OIDC WIF + multi-secret fallback + cloud auto-deploy
+    // Workflow invariants + keyless OIDC WIF + multi-secret fallback + explicit manual deployment
     expect(workflowYaml).toContain('verify-and-build:');
     expect(workflowYaml).toContain('deploy-hosting:');
     expect(workflowYaml).toContain('needs: verify-and-build');
     expect(workflowYaml).toContain('cancel-in-progress: false');
     expect(workflowYaml).toContain('google-github-actions/auth@v2');
-    expect(workflowYaml).toContain('AUTO_DEPLOY_ON_MAIN_PUSH');
     expect(workflowYaml).toContain(
       `firebase-tools@${CANONICAL_PRODUCTION_DEPLOY_SPEC.firebaseToolsVersion}`,
     );
