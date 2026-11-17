@@ -351,11 +351,11 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const card = screen.getByTestId('studio-3d-motion-hero-card');
     expect(card).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
     expect(card).toHaveAttribute('data-motion-mode', 'motion');
-    expect(card).toHaveTextContent('임상 각도·개인 적합성은 강사 현장 확인');
-    expect(within(card).getByTestId('studio-motion-study-player')).toBeVisible();
+    expect(card).toHaveTextContent('임상 각도는 강사 현장 확인');
+    expect(within(card).getByTestId('studio-interactive-3d-viewport')).toBeVisible();
 
     const modeGroup = within(card).getByRole('group', { name: '동작 보기 방식' });
-    fireEvent.click(within(modeGroup).getByRole('button', { name: '자세 프레임' }));
+    fireEvent.click(within(modeGroup).getByRole('button', { name: '3D 자세 프레임' }));
     expect(card).toHaveAttribute('data-motion-mode', 'start');
     fireEvent.click(within(card).getByRole('button', { name: '세 자세 나란히 보기' }));
     expect(card).toHaveAttribute('data-motion-mode', 'compare');

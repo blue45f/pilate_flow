@@ -114,8 +114,8 @@ describe('Unified Studio Kinematic Motion System with native illustrations and s
     expect(hPump.hand.y).not.toBe(hExactPeak.hand.y);
   });
 
-  it('uses exact cached native frames for 98 badges, source-only apparatus art for 60 additions, and the same live SVG renderer in the showcase', () => {
-    for (const ex of nativeExercises) {
+  it('uses exact cached 3D WebP frames and 3-phase strips for all 158 INITIAL_EXERCISES (including all 60 reconstructed expanded movements), and preserves the live SVG renderer in the showcase', () => {
+    for (const ex of INITIAL_EXERCISES) {
       const frame = getExerciseArtworkFrame(ex, 'middle');
       expect(frame, ex.id).toBeDefined();
       const badgeMarkup = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={ex} size="md" />);
@@ -129,18 +129,21 @@ describe('Unified Studio Kinematic Motion System with native illustrations and s
     }
 
     for (const ex of sourceOnlyExercises) {
-      const badgeMarkup = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={ex} showPhaseStrip />);
-      expect(badgeMarkup).toContain('data-artwork-renderer="apparatus-reference"');
-      expect(badgeMarkup).toContain('data-native-motion-available="false"');
-      expect(badgeMarkup).toContain('data-match-scope="source-video-only"');
-      expect(badgeMarkup).not.toContain('data-layer="kinematic-figure"');
-      expect(badgeMarkup).not.toContain('data-motion-phase=');
-      expect(badgeMarkup).not.toContain('exercise-thumbnail-phase-strip');
+      const stripMarkup = renderToStaticMarkup(
+        <ExerciseThumbnailBadge exercise={ex} showPhaseStrip />,
+      );
+      expect(stripMarkup).toContain('exercise-thumbnail-phase-strip');
+      for (const phase of ['start', 'middle', 'end'] as const) {
+        const frame = getExerciseArtworkFrame(ex, phase)!;
+        expect(stripMarkup).toContain(`src="${frame.src}"`);
+      }
     }
 
     // A pattern-linked movement uses its own three cached poses, not a family placeholder.
     const singleLegEx = INITIAL_EXERCISES.find((e) => e.id === 'original-mat-single-leg-stretch')!;
-    const singleLegStrip = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={singleLegEx} showPhaseStrip />);
+    const singleLegStrip = renderToStaticMarkup(
+      <ExerciseThumbnailBadge exercise={singleLegEx} showPhaseStrip />,
+    );
     for (const phase of ['start', 'middle', 'end'] as const) {
       const frame = getExerciseArtworkFrame(singleLegEx, phase)!;
       expect(singleLegStrip).toContain(`src="${frame.src}"`);
@@ -157,9 +160,7 @@ describe('Unified Studio Kinematic Motion System with native illustrations and s
     const swanAsset = getCatalogContinuousMotionAsset('ex-extension-01')!;
     const { unmount } = render(<CatalogMotionInteractivePlayer asset={swanAsset} />);
 
-    expect(
-      screen.getByText('기구학 5단계 연속·3단계 도해 · 출처 대조 확인'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('기구학 5단계 연속·3단계 도해 · 출처 대조 확인')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
     fireEvent.change(screen.getByLabelText('관련 패턴 도해 반복'), {
       target: { value: 'loop' },

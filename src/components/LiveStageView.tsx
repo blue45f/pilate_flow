@@ -1330,7 +1330,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         title="수업 진행을 마칠까요?"
         subtitle="기록하기 전에 실제 진행 내용을 확인해 주세요."
       >
-        <div ref={reviewContentRef} className="teaching-finish-summary">
+        <div
+          ref={reviewContentRef}
+          className="teaching-finish-summary"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        >
           <span>타이머가 진행된 시간</span>
           <strong>{formatSecondsToMMSS(clock.elapsedMs / 1000)}</strong>
           <p className="muted">
@@ -1365,7 +1369,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               else onOpenLogModal(targetSequenceId, logContext);
             }}
           >
-            <Check size={17} /> 검토하고 기록하기
+            <Check size={16} strokeWidth={1.5} /> 검토하고 기록하기
           </button>
         </div>
         <button
@@ -1530,23 +1534,25 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       <header className="teaching-stage-header">
         <div>
           <button type="button" className="teaching-back" onClick={pauseForExit}>
-            <ArrowLeft size={16} />
+            <ArrowLeft size={16} strokeWidth={1.5} />
             계획으로
           </button>
           <div className="teaching-stage-kicker-row">
-            <span className="eyebrow">수업 진행</span>
+            <span className="eyebrow" style={{ letterSpacing: '0.01em' }}>
+              수업 진행
+            </span>
             <span
               className={`teaching-live-pill ${clock.running ? 'is-live' : ''}`.trim()}
               data-testid="live-stage-status-pill"
             >
               <i aria-hidden="true" />
-              {clock.running ? 'LIVE 진행 중' : isPausedMidStep ? '일시정지' : '진행 대기'}
+              {clock.running ? '진행 중' : isPausedMidStep ? '일시정지' : '진행 대기'}
             </span>
           </div>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {session.title}
           </h1>
-          <p className="muted">
+          <p className="muted" style={{ fontVariantNumeric: 'tabular-nums' }}>
             계획 {Number(totalMin.toFixed(2))}분 · 타이머 진행{' '}
             <strong>{formatSecondsToMMSS(clock.elapsedMs / 1000)}</strong>{' '}
             <span>일시정지 시간 제외</span>
@@ -1557,7 +1563,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               남은 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
             </span>
           </p>
-          <details className="teaching-time-details">
+          <details className="teaching-time-details" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <summary>운동·휴식 시간 상세</summary>
             <p className="muted">
               계획 운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
@@ -1578,7 +1584,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             aria-pressed={highContrast}
             onClick={() => setHighContrast((value) => !value)}
           >
-            <Contrast size={19} />
+            <Contrast size={18} strokeWidth={1.5} />
           </button>
           <button
             type="button"
@@ -1589,7 +1595,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               else void boardRef.current?.requestFullscreen?.().catch(() => undefined);
             }}
           >
-            <Expand size={19} />
+            <Expand size={18} strokeWidth={1.5} />
           </button>
           <button
             type="button"
@@ -1600,7 +1606,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             {showCueSheet ? '큐시트 닫기' : '큐시트 보기'}
           </button>
           <button type="button" className="btn-secondary" onClick={pauseForReview}>
-            <Flag size={17} />
+            <Flag size={16} strokeWidth={1.5} />
             종료 / 기록
           </button>
         </div>
@@ -1626,6 +1632,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         className="teaching-step-progress-banner"
         data-testid="live-stage-step-progress"
         aria-label="현재 동작 진행 및 다음 할 일"
+        style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         <strong className="teaching-step-progress-count">
           현재 동작 {clock.index + 1} / 전체 {steps.length}
@@ -1712,9 +1719,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 isPausedMidStep ? 'paused' : ''
               } ${isStepCompleted ? 'completed' : ''}`.trim()}
               role="status"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
             >
-              ● LIVE · {String(clock.index + 1).padStart(2, '0')}/
-              {String(steps.length).padStart(2, '0')}단계 ·{' '}
+              ● {String(clock.index + 1).padStart(2, '0')}/{String(steps.length).padStart(2, '0')}
+              단계 ·{' '}
               {clock.running
                 ? '진행 중'
                 : clock.remainingMs === 0
@@ -1732,10 +1740,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               role="timer"
               aria-live="off"
               aria-label={`${currentIsRest ? '현재 휴식' : '현재 동작'} 남은 시간`}
+              style={{ fontVariantNumeric: 'tabular-nums' }}
             >
               {formatSecondsToMMSS(Math.ceil(clock.remainingMs / 1000))}
             </div>
-            <p className="teaching-timer-sub">
+            <p className="teaching-timer-sub" style={{ fontVariantNumeric: 'tabular-nums' }}>
               남은 전체 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
               {currentSpringRaw ? ` · ${currentSpringRaw}` : ''}
               {!currentIsRest && exercise?.breathPattern ? ` · ${exercise.breathPattern}` : ''}
@@ -1744,6 +1753,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               className="teaching-presentation-details teaching-secondary-timing"
               data-presentation-disclosure
               open={presentationMode === 'reference'}
+              style={{ fontVariantNumeric: 'tabular-nums' }}
             >
               <summary>이 동작 시간 구성</summary>
               <div className="teaching-timing-breakdown">
@@ -1782,7 +1792,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span style={{ width: `${progress}%` }} />
             </div>
           </div>
-          <div className="teaching-current-meta">
+          <div className="teaching-current-meta" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <span>
               {String(clock.index + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
               <span className="teaching-meta-dot">·</span>
@@ -1873,10 +1883,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           )}
           <div className="pf-p09-cue-summary-card">
             <div className="pf-p09-cue-summary-card__head">
-              <strong>핵심 티칭 큐 &amp; 다음 순서 요약</strong>
+              <strong>핵심 티칭 큐 · 다음 순서 요약</strong>
               {!currentIsRest && exercise && (
                 <div
-                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}
+                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}
                 >
                   <ApparatusIconBadge
                     apparatus={exercise.apparatus}
@@ -1985,7 +1995,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   aria-label="다음 동작 기구 세팅 안내"
                 >
                   <div className="teaching-transition-setup-header">
-                    <span className="teaching-transition-setup-badge">NEXT SETUP</span>
+                    <span
+                      className="teaching-transition-setup-badge"
+                      style={{ letterSpacing: '0.01em' }}
+                    >
+                      다음 세팅
+                    </span>
                     <ExerciseThumbnailBadge exercise={nextExercise} size="xs" decorative />
                     <strong className="teaching-transition-setup-title">
                       다음: {nextExercise.nameKo}
@@ -2053,7 +2068,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               disabled={clock.index === 0}
               onClick={() => selectStep(clockRef.current.index - 1)}
             >
-              <ChevronLeft size={22} />
+              <ChevronLeft size={18} strokeWidth={1.5} />
               <span>이전</span>
             </button>
             <button
@@ -2065,12 +2080,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             >
               {clock.running ? (
                 <>
-                  <Pause size={23} />
+                  <Pause size={18} strokeWidth={1.5} />
                   일시정지
                 </>
               ) : (
                 <>
-                  <Play size={23} />
+                  <Play size={18} strokeWidth={1.5} />
                   {clock.elapsedMs === 0
                     ? currentIsRest
                       ? '휴식 시작'
@@ -2093,7 +2108,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               }
             >
               <span>{currentIsRest ? '휴식 건너뛰기' : '다음'}</span>
-              <ChevronRight size={22} />
+              <ChevronRight size={18} strokeWidth={1.5} />
             </button>
           </div>
           <div
@@ -2282,7 +2297,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </div>
             </div>
           )}
-          <div className="teaching-timer-options">
+          <div className="teaching-timer-options" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <button
               type="button"
               className="btn-ghost"
@@ -2290,7 +2305,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               disabled={(current?.durationMin ?? 0) <= 0.5 || clock.remainingMs <= 30000}
               onClick={trimHalfMinute}
             >
-              <Minus size={16} />
+              <Minus size={16} strokeWidth={1.5} />
               {currentIsRest ? '현재 휴식 30초 줄이기' : '현재 동작 30초 줄이기'}
             </button>
             <button
@@ -2299,7 +2314,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               data-testid="live-stage-extend-15s-btn"
               onClick={() => extendStepBySeconds(15)}
             >
-              <Plus size={16} /> +15초
+              <Plus size={16} strokeWidth={1.5} /> +15초
             </button>
             <button
               type="button"
@@ -2307,10 +2322,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               data-testid="live-stage-extend-30s-btn"
               onClick={() => extendStepBySeconds(30)}
             >
-              <Plus size={16} /> +30초
+              <Plus size={16} strokeWidth={1.5} /> +30초
             </button>
             <button type="button" className="btn-ghost" onClick={addMinute}>
-              <Plus size={16} />
+              <Plus size={16} strokeWidth={1.5} />
               {currentIsRest ? '현재 휴식 1분 추가' : '현재 동작 1분 추가'}
             </button>
             <label className="teaching-switch">
@@ -2423,7 +2438,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     }
                   }}
                 >
-                  <Bell size={15} aria-hidden="true" />{' '}
+                  <Bell size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
                   {sensoryCueEnabled ? '진동·차임 전환 알림 끄기' : '진동·차임 전환 알림 켜기'}
                 </button>
                 <button
@@ -2444,9 +2459,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   aria-pressed={voiceCommandEnabled}
                   onClick={toggleVoiceCommand}
                 >
-                  <Volume2 size={15} aria-hidden="true" />{' '}
+                  <Volume2 size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
                   {voiceCommandEnabled
-                    ? '음성 명령으로 타이머 제어 끄기 (핸즈프리 ON)'
+                    ? '음성 명령으로 타이머 제어 끄기'
                     : '음성 명령으로 타이머 제어 (핸즈프리)'}
                 </button>
               </div>
@@ -2636,7 +2651,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             <div className="teaching-outline-heading">
               <span className="muted">선택하면 해당 동작의 타이머가 다시 시작됩니다.</span>
             </div>
-            <ol>
+            <ol style={{ fontVariantNumeric: 'tabular-nums' }}>
               {steps.map((step, index) => {
                 const isTaughtStep = index !== clock.index && (clock.elapsedByStep[index] ?? 0) > 0;
                 const isUpcomingStep = index > clock.index;
@@ -2651,7 +2666,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       aria-current={index === clock.index ? 'step' : undefined}
                       onClick={() => selectStep(index)}
                     >
-                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
                       {!isRestStep(step) && exerciseMap.get(step.exerciseId) && (
                         <ExerciseThumbnailBadge
                           exercise={exerciseMap.get(step.exerciseId)!}
@@ -2666,12 +2683,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       </strong>
                       {isTaughtStep && (
                         <Check
-                          size={14}
+                          size={16}
+                          strokeWidth={1.5}
                           className="teaching-outline-done-icon"
                           aria-hidden="true"
                         />
                       )}
-                      <small>
+                      <small style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {formatSecondsToMMSS(
                           getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
                         )}
@@ -2690,7 +2708,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                           disabled={index <= clock.index + 1}
                           onClick={() => moveUpcomingStep(index, 'up')}
                         >
-                          <ArrowUp size={14} aria-hidden="true" />
+                          <ArrowUp size={16} strokeWidth={1.5} aria-hidden="true" />
                         </button>
                         <button
                           type="button"
@@ -2699,7 +2717,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                           disabled={index >= steps.length - 1}
                           onClick={() => moveUpcomingStep(index, 'down')}
                         >
-                          <ArrowDown size={14} aria-hidden="true" />
+                          <ArrowDown size={16} strokeWidth={1.5} aria-hidden="true" />
                         </button>
                       </span>
                     )}
@@ -2714,6 +2732,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         className="pf-live-thumb-dock"
         data-testid="live-stage-thumb-dock"
         aria-label="모바일 한 손 엄지 조작 도크"
+        style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         <div className="pf-live-thumb-dock__primary">
           <button
@@ -2741,11 +2760,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           >
             {clock.running ? (
               <>
-                <Pause size={16} aria-hidden="true" /> 일시정지
+                <Pause size={16} strokeWidth={1.5} aria-hidden="true" /> 일시정지
               </>
             ) : (
               <>
-                <Play size={16} aria-hidden="true" />{' '}
+                <Play size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
                 {clock.elapsedMs > 0 ? '이어서 진행' : '수업 시작'}
               </>
             )}
@@ -2786,8 +2805,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             disabled={!classVoice.available}
             onClick={classVoice.toggleEnabled}
           >
-            <Volume2 size={14} aria-hidden="true" />
-            <span>{classVoice.enabled ? '음성 ON' : '음성 OFF'}</span>
+            <Volume2 size={16} strokeWidth={1.5} aria-hidden="true" />
+            <span>{classVoice.enabled ? '음성 켜짐' : '음성 꺼짐'}</span>
           </button>
           <button
             type="button"
@@ -2803,8 +2822,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               if (!nextEnabled) silenceLiveSensoryCue();
             }}
           >
-            <Bell size={14} aria-hidden="true" />
-            <span>{sensoryCueEnabled ? '벨·진동 ON' : '벨·진동 OFF'}</span>
+            <Bell size={16} strokeWidth={1.5} aria-hidden="true" />
+            <span>{sensoryCueEnabled ? '벨·진동 켜짐' : '벨·진동 꺼짐'}</span>
           </button>
           {undoState && (
             <button
@@ -2814,7 +2833,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               aria-label="한 손 도크 직전 조작 복구"
               onClick={undoLastStageAction}
             >
-              <RotateCcw size={14} aria-hidden="true" />
+              <RotateCcw size={16} strokeWidth={1.5} aria-hidden="true" />
               <span>직전 복구</span>
             </button>
           )}

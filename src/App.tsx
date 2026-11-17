@@ -11,9 +11,9 @@ import {
   Library,
   Menu,
   Play,
+  Plus,
   Search,
   Settings2,
-  Sparkles,
   Ticket,
   X,
 } from 'lucide-react';
@@ -53,6 +53,7 @@ import './styles/atelier-luxury-v2.css';
 import './styles/mobile-first-atelier-v3.css';
 import './styles/atelier-clean-declutter-v5.css';
 import './styles/mobile-subpages-user-first-v6.css';
+import './styles/atelier-unslop-system.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
@@ -302,12 +303,12 @@ export function App() {
     setMemberSection(section);
     setMenuOpen(false);
     requestAnimationFrame(() => {
+      if (section === 'schedule') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        return;
+      }
       const targetId =
-        section === 'wallet'
-          ? 'member-wallet-section'
-          : section === 'bookings'
-            ? 'member-bookings-section'
-            : 'member-schedule-section';
+        section === 'wallet' ? 'member-wallet-section' : 'member-bookings-section';
       const el =
         document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
       el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
@@ -459,10 +460,12 @@ export function App() {
             portalRole === 'member' ? 'Pilates Flow 회원 예약으로' : 'Pilates Flow 수업 만들기로'
           }
         >
-          <Leaf size={30} strokeWidth={1.3} />
+          <Leaf size={20} strokeWidth={1.5} aria-hidden="true" />
           <span>
             Pilates Flow
-            <small className="brand-tagline-deco" aria-hidden="true" />
+            <small className="brand-tagline-deco" aria-hidden="true">
+              수업 설계 · 3D 스튜디오
+            </small>
           </span>
         </a>
         <button
@@ -470,11 +473,11 @@ export function App() {
           onClick={() => setMenuOpen(false)}
           aria-label="메뉴 닫기"
         >
-          <X size={20} />
+          <X size={18} strokeWidth={1.5} aria-hidden="true" />
         </button>
         {portalRole === 'member' ? (
           <>
-            <p className="sidebar-label">MEMBER PORTAL</p>
+            <p className="sidebar-label">회원 공간</p>
             <nav className="desktop-nav" aria-label="회원 메뉴" data-testid="member-desktop-nav">
               <button
                 type="button"
@@ -482,7 +485,7 @@ export function App() {
                 aria-current={memberSection === 'schedule' ? 'page' : undefined}
                 className={memberSection === 'schedule' ? 'active' : ''}
               >
-                <CalendarDays size={20} strokeWidth={1.6} />
+                <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" />
                 시간표 · 수업 예약
               </button>
               <button
@@ -491,7 +494,7 @@ export function App() {
                 aria-current={memberSection === 'bookings' ? 'page' : undefined}
                 className={memberSection === 'bookings' ? 'active' : ''}
               >
-                <Bookmark size={20} strokeWidth={1.6} />내 예약 현황
+                <Bookmark size={16} strokeWidth={1.5} aria-hidden="true" />내 예약 현황
               </button>
               <button
                 type="button"
@@ -499,7 +502,7 @@ export function App() {
                 aria-current={memberSection === 'wallet' ? 'page' : undefined}
                 className={memberSection === 'wallet' ? 'active' : ''}
               >
-                <Ticket size={20} strokeWidth={1.6} />내 수강권 지갑
+                <Ticket size={16} strokeWidth={1.5} aria-hidden="true" />내 수강권 지갑
               </button>
             </nav>
           </>
@@ -514,7 +517,7 @@ export function App() {
                   aria-current={state.activeTab === id ? 'page' : undefined}
                   className={state.activeTab === id ? 'active' : ''}
                 >
-                  <Icon size={20} strokeWidth={1.6} />
+                  <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
                   {detail}
                   {id === 'atlas' && <small>{state.exercises.length}</small>}
                 </button>
@@ -529,7 +532,7 @@ export function App() {
               aria-current={state.activeTab === 'stage' ? 'page' : undefined}
               onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
             >
-              <Play size={17} aria-hidden="true" />
+              <Play size={16} strokeWidth={1.5} aria-hidden="true" />
               <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
               <small>{canStartLiveStage ? `동작 ${nonRestStepCount}개` : '동작 추가'}</small>
             </button>
@@ -541,7 +544,7 @@ export function App() {
                   className="sidebar-study-link"
                   onClick={() => changeTab('history')}
                 >
-                  <Clock3 size={18} /> 수업 기록
+                  <Clock3 size={16} strokeWidth={1.5} aria-hidden="true" /> 수업 기록
                 </button>
                 <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
                   <h2>다가오는 수업</h2>
@@ -568,7 +571,7 @@ export function App() {
                     <p>등록된 가까운 수업이 없습니다.</p>
                   )}
                   <button className="text-button" onClick={() => changeTab('schedule')}>
-                    일정 전체 보기 <CalendarRange size={15} />
+                    일정 전체 보기 <CalendarRange size={16} strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </section>
                 <button
@@ -580,7 +583,7 @@ export function App() {
                     setStudyOpen({ mode: 'guide' });
                   }}
                 >
-                  <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
+                  <BookOpen size={16} strokeWidth={1.5} aria-hidden="true" /> 사용법·연습실
                 </button>
                 <button
                   type="button"
@@ -590,14 +593,15 @@ export function App() {
                     focusMemberSection('schedule');
                   }}
                 >
-                  <CalendarDays size={18} aria-hidden="true" /> 회원 예약 화면 보기
+                  <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 회원 예약 화면
+                  보기
                 </button>
                 <button
                   className="pwa-sidebar-button"
                   type="button"
                   onClick={() => setInstallOpen(true)}
                 >
-                  <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
+                  <ArrowDownToLine size={16} strokeWidth={1.5} aria-hidden="true" /> 앱 설치
                 </button>
               </div>
             </details>
@@ -613,14 +617,14 @@ export function App() {
                 setPortalRole('instructor');
               }}
             >
-              <CalendarDays size={18} aria-hidden="true" /> 강사 작업실로 전환
+              <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 강사 작업실로 전환
             </button>
             <button
               className="pwa-sidebar-button"
               type="button"
               onClick={() => setInstallOpen(true)}
             >
-              <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
+              <ArrowDownToLine size={16} strokeWidth={1.5} aria-hidden="true" /> 앱 설치
             </button>
           </>
         )}
@@ -632,7 +636,7 @@ export function App() {
               {state.persistenceError ? '기기 저장 확인 · 백업 권장' : '이 기기에 저장'}
             </small>
           </span>
-          <Settings2 size={17} />
+          <Settings2 size={16} strokeWidth={1.5} aria-hidden="true" />
         </button>
       </aside>
       {menuOpen && (
@@ -648,10 +652,10 @@ export function App() {
               aria-label="메뉴 열기"
               aria-expanded={menuOpen}
             >
-              <Menu size={21} />
+              <Menu size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
             <span className="vnext-wordmark">
-              Pilates Flow<small>PLAN. FLOW. TEACH.</small>
+              Pilates Flow<small aria-hidden="true">수업 설계 · 3D 스튜디오</small>
             </span>
           </div>
           <div className="breadcrumb">
@@ -702,7 +706,7 @@ export function App() {
                 aria-label="빠른 이동 및 동작 검색 열기"
                 onClick={() => setCommandPaletteOpen(true)}
               >
-                <Search size={15} aria-hidden="true" />
+                <Search size={16} strokeWidth={1.5} aria-hidden="true" />
                 <span>동작 검색</span>
                 <kbd className="pf-topbar-cmdk-kbd" aria-hidden="true" />
               </button>
@@ -714,7 +718,7 @@ export function App() {
                 aria-label="새 동작 메모"
                 onClick={() => setIdeaSheetState({ open: true, exercise: null })}
               >
-                <Sparkles size={18} aria-hidden="true" />
+                <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
                 <span>새 동작</span>
               </button>
             )}
@@ -723,7 +727,7 @@ export function App() {
               onClick={() => setSettingsOpen(true)}
               aria-label="데이터 백업과 사용 안내"
             >
-              <CircleHelp size={20} strokeWidth={1.6} />
+              <CircleHelp size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -845,7 +849,7 @@ export function App() {
         </main>
         <footer className="app-footer">
           <span>
-            PILATES FLOW <span>·</span> 나의 수업, 나의 흐름
+            Pilates Flow <span>·</span> 나의 수업, 나의 흐름
           </span>
           <button onClick={() => setSettingsOpen(true)}>저장·복구 안내</button>
         </footer>
@@ -863,7 +867,7 @@ export function App() {
             className={memberSection === 'schedule' ? 'active' : ''}
             aria-current={memberSection === 'schedule' ? 'page' : undefined}
           >
-            <CalendarDays size={21} strokeWidth={1.7} />
+            <CalendarDays size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>시간표</span>
           </button>
           <button
@@ -872,7 +876,7 @@ export function App() {
             className={memberSection === 'bookings' ? 'active' : ''}
             aria-current={memberSection === 'bookings' ? 'page' : undefined}
           >
-            <Bookmark size={21} strokeWidth={1.7} />
+            <Bookmark size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>내 예약</span>
           </button>
           <button
@@ -881,7 +885,7 @@ export function App() {
             className={memberSection === 'wallet' ? 'active' : ''}
             aria-current={memberSection === 'wallet' ? 'page' : undefined}
           >
-            <Ticket size={21} strokeWidth={1.7} />
+            <Ticket size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>수강권</span>
           </button>
         </nav>
@@ -899,7 +903,7 @@ export function App() {
                 className={state.activeTab === id ? 'active' : ''}
                 aria-current={state.activeTab === id ? 'page' : undefined}
               >
-                <Icon size={21} strokeWidth={1.7} />
+                <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
                 <span>{label}</span>
               </button>
             ))}
@@ -1054,7 +1058,7 @@ export function App() {
         )}
         <InventoryPanel />
         <section className="settings-section">
-          <span className="eyebrow">PRIVATE BY DEFAULT</span>
+          <span className="eyebrow">브라우저 기본 보관</span>
           <h3>이 브라우저에 보관됩니다</h3>
           <p>
             시퀀스, 동작, 수업 기록은 이 브라우저에 자동 보관됩니다. Google 로그인만으로 자료가
@@ -1063,7 +1067,7 @@ export function App() {
           </p>
           <div className="button-row">
             <button className="btn-primary" onClick={exportData}>
-              <ArrowDownToLine size={17} />
+              <ArrowDownToLine size={16} strokeWidth={1.5} aria-hidden="true" />
               전체 백업
             </button>
           </div>
@@ -1147,7 +1151,7 @@ export function App() {
         </details>
         {(import.meta.env.DEV || import.meta.env.MODE === 'test') && (
           <section className="settings-section" aria-label="개발용 내부 검수">
-            <span className="eyebrow">INTERNAL DEV ONLY</span>
+            <span className="eyebrow">개발·테스트 전용</span>
             <h3>디자인 시스템 내부 검수</h3>
             <p>
               개발·테스트 환경에서만 표시되는 내부 검수 도구입니다. 토큰·공통 컴포넌트 상태·반응형

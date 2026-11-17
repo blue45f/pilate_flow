@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BLENDER_STUDIO_GLB_MANIFEST } from '../data/blenderStudioGlbManifest';
+import { ALL_STUDIO_GLB_ASSETS } from '../data/blenderStudioGlbManifest';
 import coreAbdominalLedger from '../data/coreAbdominalSourceLedger.json';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
@@ -13,6 +13,7 @@ import {
   getRelatedYouTubeVideosForMotion,
   VERIFIED_YOUTUBE_VIDEO_POOL,
 } from '../data/exerciseYouTubeCatalog';
+import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from '../data/globalCrawledRepertoirePack';
 import hipLegSources from '../data/hip-leg-diagram-sources.json';
 import apparatusLedger from '../data/motionApparatusSourceLedger.json';
 import { BATCH_SOURCE_FACTS, BATCH_VARIANTS } from '../data/motionAuthoringBatch';
@@ -61,6 +62,12 @@ import shoulderSupportLedger from '../data/shoulderSupportSourceLedger.json';
 import { SPINE_TRUTHFULNESS_METADATA } from '../data/spineArticulationDiagramData';
 import { SUPINE_REACH_DEFINITION } from '../data/supineReach';
 import supineReachSource from '../data/supineReachSource.json';
+import {
+  DEDICATED_3D_EXERCISE_IDS,
+  hasDedicated3DExerciseRig,
+  PHASE_3D_RAW_T,
+  sampleUniversal3DExerciseRig,
+} from '../data/universal3dExerciseRigs';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { runMotionCoverageCatalogSweep } from '../features/motionCoverage/catalogSweep';
 import { getMotionCoverageSummary, resolveMotionCoverage } from '../features/motionCoverage/index';
@@ -187,16 +194,25 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       '.usdz',
     ]);
     const registeredStudioGlbPaths = new Set(
-      Object.values(BLENDER_STUDIO_GLB_MANIFEST).map((meta) =>
+      ALL_STUDIO_GLB_ASSETS.map((meta) =>
         path.join(rootDir, 'public', meta.url.replace(/^\//, '')),
       ),
     );
-    for (const meta of Object.values(BLENDER_STUDIO_GLB_MANIFEST)) {
+    expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
+    for (const meta of ALL_STUDIO_GLB_ASSETS) {
       const fullGlbPath = path.join(rootDir, 'public', meta.url.replace(/^\//, ''));
-      expect(existsSync(fullGlbPath)).toBe(true);
+      expect(existsSync(fullGlbPath), meta.fileName).toBe(true);
       const buf = readFileSync(fullGlbPath);
-      expect(buf.byteLength).toBe(meta.fileBytes);
-      expect(createHash('sha256').update(buf).digest('hex')).toBe(meta.sha256);
+      expect(buf.readUInt32LE(0), meta.fileName).toBe(0x46546c67);
+      expect(buf.subarray(0, 4).toString('ascii'), meta.fileName).toBe('glTF');
+      expect(buf.readUInt32LE(8), meta.fileName).toBe(meta.fileBytes);
+      expect(buf.byteLength, meta.fileName).toBe(meta.fileBytes);
+      expect(createHash('sha256').update(buf).digest('hex'), meta.fileName).toBe(meta.sha256);
+      expect(meta.triangles, meta.fileName).toBeGreaterThanOrEqual(25000);
+      expect(meta.drawCalls, meta.fileName).toBe(2);
+      expect(meta.glbForgeScore, meta.fileName).toBe(100);
+      expect(meta.mobileHeroScore, meta.fileName).toBe(100);
+      expect(meta.arkitCompatible, meta.fileName).toBe(true);
     }
     const foundUnregisteredBinaryAssets = scannedFiles.filter(
       (filePath) =>
@@ -494,5 +510,88 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     expect(
       getMotionDraftReviewWorksheet(getMotionDraft('supine-chest-lift')!).unavailableReason,
     ).toBeNull();
+  });
+
+  it('5. verifies Flagship Precision 3D .glb studio assets and all 218 dedicated 3D exercise rigs (non-degenerate poles, grounded z >= 0.03, distinct start/middle/end poses)', () => {
+    const rootDir = process.cwd();
+    expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
+    for (const meta of ALL_STUDIO_GLB_ASSETS) {
+      const fullGlbPath = path.join(rootDir, 'public', meta.url.replace(/^\//, ''));
+      expect(existsSync(fullGlbPath), meta.fileName).toBe(true);
+      const buf = readFileSync(fullGlbPath);
+      expect(buf.readUInt32LE(0), meta.fileName).toBe(0x46546c67);
+      expect(buf.subarray(0, 4).toString('ascii'), meta.fileName).toBe('glTF');
+      expect(buf.byteLength, meta.fileName).toBe(meta.fileBytes);
+      expect(createHash('sha256').update(buf).digest('hex'), meta.fileName).toBe(meta.sha256);
+      expect(meta.triangles, meta.fileName).toBeGreaterThanOrEqual(25000);
+      expect(meta.drawCalls, meta.fileName).toBe(2);
+      expect(meta.glbForgeScore, meta.fileName).toBe(100);
+      expect(meta.mobileHeroScore, meta.fileName).toBe(100);
+      expect(meta.summaryKo.length, meta.fileName).toBeGreaterThan(20);
+    }
+
+    const all218 = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+    expect(all218).toHaveLength(218);
+    expect(DEDICATED_3D_EXERCISE_IDS).toHaveLength(218);
+
+    const serializeRig = (rig: ReturnType<typeof sampleUniversal3DExerciseRig>): string =>
+      JSON.stringify([
+        rig.pelvis,
+        rig.spineMid,
+        rig.chest,
+        rig.antHint,
+        rig.lFoot,
+        rig.rFoot,
+        rig.lKneePole,
+        rig.rKneePole,
+        rig.lHand,
+        rig.rHand,
+        rig.lElbowPole,
+        rig.rElbowPole,
+        rig.carriageX,
+        rig.pedalDeg,
+        rig.pushthroughDeg,
+      ]);
+
+    for (const ex of all218) {
+      expect(hasDedicated3DExerciseRig(ex), ex.id).toBe(true);
+      const s = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T.start);
+      const m = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T.middle);
+      const e = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T.end);
+
+      for (const [phaseLabel, rig] of [
+        ['start', s],
+        ['middle', m],
+        ['end', e],
+      ] as const) {
+        expect(rig.rigScope, `${ex.id}/${phaseLabel}`).toBe('dedicated-3d-rig');
+        for (const [poleName, pole] of [
+          ['lKneePole', rig.lKneePole],
+          ['rKneePole', rig.rKneePole],
+          ['lElbowPole', rig.lElbowPole],
+          ['rElbowPole', rig.rElbowPole],
+        ] as const) {
+          expect(
+            Math.hypot(pole[0], pole[1], pole[2]),
+            `${ex.id}/${phaseLabel}/${poleName}`,
+          ).toBeGreaterThanOrEqual(0.1);
+        }
+        for (const [jointName, joint] of [
+          ['pelvis', rig.pelvis],
+          ['spineMid', rig.spineMid],
+          ['chest', rig.chest],
+          ['lFoot', rig.lFoot],
+          ['rFoot', rig.rFoot],
+          ['lHand', rig.lHand],
+          ['rHand', rig.rHand],
+        ] as const) {
+          expect(joint[2], `${ex.id}/${phaseLabel}/${jointName}.z`).toBeGreaterThanOrEqual(0.03);
+        }
+      }
+
+      expect(serializeRig(s), `${ex.id} start!==middle`).not.toBe(serializeRig(m));
+      expect(serializeRig(e), `${ex.id} end!==middle`).not.toBe(serializeRig(m));
+      expect(serializeRig(s), `${ex.id} start!==end`).not.toBe(serializeRig(e));
+    }
   });
 });

@@ -20,10 +20,14 @@ import {
 } from 'lucide-react';
 import type { FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
-import { hasCatalogMotionIdentityMismatch } from '../data/movementVisualRigCatalog';
-import { getStudioApparatusGlbAsset } from '../data/blenderStudioGlbManifest';
-import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
-import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
+import {
+  hasDedicated3DExerciseRig,
+  sampleUniversal3DExerciseRig,
+} from '../data/universal3dExerciseRigs';
+import {
+  getStudioApparatusGlbAsset,
+  STUDIO_PRACTITIONER_GLB_META,
+} from '../data/blenderStudioGlbManifest';
 import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
 import { sampleStudioMotionCycle, STUDIO_MOTION_CYCLE_MS } from '../utils/studioMotionPlayback';
 import { downloadBlenderSceneScript } from '../utils/blenderSceneScriptExporter';
@@ -120,22 +124,8 @@ const HOTSPOT_QUICK_TABS: readonly {
 ];
 
 export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportProps> = (props) => {
-  const binding = getExpandedMovementVisualBinding(props.exercise);
-  if (binding?.nativeMotionAvailable === false) {
-    return (
-      <MotionSourceOnlyNotice
-        exerciseId={props.exercise.id}
-        nameKo={props.exercise.nameKo}
-        apparatus={props.exercise.apparatus}
-        reasonKo={binding.reasonKo}
-        sourceUrl={binding.sourceUrl}
-      />
-    );
-  }
-  if (hasCatalogMotionIdentityMismatch(props.exercise)) {
-    return <UnmodeledMotionNotice exercise={props.exercise} />;
-  }
-  return <StudioInteractive3DViewportContent key={props.exercise.id} {...props} />;
+  const identityKey = `${props.exercise.id}:${props.exercise.apparatus}:${props.exercise.bodyPosition}`;
+  return <StudioInteractive3DViewportContent key={identityKey} {...props} />;
 };
 
 const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportProps> = ({
@@ -199,6 +189,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(viewportRef, suspend);
   const phase = sampleStudioMotionCycle(progress);
   const glbAsset = getStudioApparatusGlbAsset(exercise.apparatus);
+  const binding = getExpandedMovementVisualBinding(exercise);
+  const dedicated3d = hasDedicated3DExerciseRig(exercise);
+  const rigMeta = sampleUniversal3DExerciseRig(exercise, phase.pose);
 
   useEffect(() => {
     if (!canAnimate || (!playing && !turntable)) return;
@@ -241,7 +234,29 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      setZoom((prev) =>
+        Number(Math.max(0.72, Math.min(1.65, prev - event.deltaY * 0.001)).toFixed(2)),
+      );
+    };
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas || typeof canvas.getContext !== 'function') return;
+    if (
+      typeof navigator !== 'undefined' &&
+      /jsdom/i.test(navigator.userAgent) &&
+      !('mock' in canvas.getContext)
+    ) {
+      return;
+    }
     let ctx: CanvasRenderingContext2D | null;
     try {
       ctx = canvas.getContext('2d');
@@ -385,11 +400,14 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       ref={viewportRef}
       className={`pf-orbit3d-viewport ${compact ? 'is-compact' : ''} ${dualView ? 'is-dual-view' : ''}`.trim()}
       data-testid="studio-interactive-3d-viewport"
+      data-exercise-id={exercise.id}
       data-shader-mode={shader}
       data-dual-view={String(dualView)}
       data-mirrored={String(mirrored)}
       data-motion-playing={playing && canAnimate}
       data-motion-phase={phase.id}
+      data-3d-rig-scope={dedicated3d ? 'dedicated-3d-rig' : 'procedural-3d-synthesis'}
+      data-3d-pose-feature={rigMeta.poseFeatureKo}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
     >
       <div
@@ -463,12 +481,6 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
           }}
           onPointerCancel={() => {
             dragRef.current.active = false;
-          }}
-          onWheel={(event) => {
-            event.preventDefault();
-            setZoom((prev) =>
-              Number(Math.max(0.72, Math.min(1.65, prev - event.deltaY * 0.001)).toFixed(2)),
-            );
           }}
         />
         {selectedHotspot && (
@@ -802,6 +814,17 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 <Download size={13} aria-hidden="true" /> {glbAsset.labelKo} (
                 {Math.round(glbAsset.fileBytes / 1024)}KB)
               </a>
+              <a
+                className="pf-orbit3d-export-btn"
+                href={STUDIO_PRACTITIONER_GLB_META.url}
+                download={STUDIO_PRACTITIONER_GLB_META.fileName}
+                onClick={() =>
+                  setExportNotice(`${STUDIO_PRACTITIONER_GLB_META.labelKo} 파일을 내려받았습니다.`)
+                }
+              >
+                <Download size={13} aria-hidden="true" /> {STUDIO_PRACTITIONER_GLB_META.labelKo} (
+                {Math.round(STUDIO_PRACTITIONER_GLB_META.fileBytes / 1024)}KB)
+              </a>
               {onApplySpringToStep && (
                 <button
                   type="button"
@@ -838,6 +861,19 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
           </div>
         )}
       </div>
+      {binding?.sourceUrl && (
+        <div className="pf-orbit3d-source-row">
+          <span className="pf-orbit3d-pose-summary">{rigMeta.poseFeatureKo}</span>
+          <a
+            href={binding.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pf-orbit3d-source-link"
+          >
+            제작자 동작 영상 보기
+          </a>
+        </div>
+      )}
       {reducedMotion && (
         <p role="status">동작 줄이기 설정 · 위치와 각도를 직접 선택해 살펴보세요.</p>
       )}

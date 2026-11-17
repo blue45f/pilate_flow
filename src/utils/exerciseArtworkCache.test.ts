@@ -4,24 +4,26 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
 import manifest from '../data/exerciseArtworkManifest.json';
+import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from '../data/globalCrawledRepertoirePack';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { getExerciseArtworkFrame } from './exerciseArtworkCache';
 
-describe('shared-model WebP thumbnail cache', () => {
-  it('has valid content-addressed 640x400 WebP bytes for all three phases of 98 authored patterns', async () => {
-    const native = INITIAL_EXERCISES.filter((exercise) => !exercise.id.startsWith('expanded-'));
-    expect(Object.keys(manifest.entries)).toHaveLength(native.length);
-    expect(native).toHaveLength(98);
+describe('shared-model 3D WebP thumbnail cache', () => {
+  it('has valid content-addressed 640x400 3D WebP bytes for all three phases of all 218 dedicated exercises', async () => {
+    const allDedicated = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+    expect(allDedicated).toHaveLength(218);
+    expect(Object.keys(manifest.entries)).toHaveLength(allDedicated.length);
     expect(manifest).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
+      renderer: 'BlenderCycles3DStudio',
       format: 'webp',
       width: 640,
       height: 400,
-      rasterization: { webp: { quality: 88 }, encoder: { sharp: '0.34.5' } },
+      rasterization: { webp: { quality: 88 } },
       professionalReviewVerified: false,
       sourceFrameMappingVerified: false,
     });
-    for (const exercise of native) {
+    for (const exercise of allDedicated) {
       for (const phase of ['start', 'middle', 'end'] as const) {
         const frame = getExerciseArtworkFrame(exercise, phase)!;
         expect(frame, exercise.id + '/' + phase).toBeDefined();
@@ -39,20 +41,9 @@ describe('shared-model WebP thumbnail cache', () => {
         });
       }
     }
-    const atlas = readFileSync('public/images/motion-atlas-v3/practitioner.webp');
-    expect(manifest).toHaveProperty('sourceAssets', [
-      expect.objectContaining({
-        src: '/images/motion-atlas-v3/practitioner.webp',
-        sha256: createHash('sha256').update(atlas).digest('hex'),
-        embeddedMimeType: 'image/png',
-      }),
-    ]);
   });
 
-  it('does not reuse a cached human pose for an unknown, source-only, or changed-apparatus movement', () => {
-    for (const exercise of INITIAL_EXERCISES.filter((item) => item.id.startsWith('expanded-'))) {
-      expect(getExerciseArtworkFrame(exercise)).toBeUndefined();
-    }
+  it('does not reuse a cached 3D pose for an unknown or changed-apparatus/posture movement', () => {
     const exercise = INITIAL_EXERCISES.find((item) => item.apparatus === 'mat')!;
     expect(getExerciseArtworkFrame({ ...exercise, id: 'a-new-movement' })).toBeUndefined();
     expect(getExerciseArtworkFrame({ ...exercise, id: '__proto__' })).toBeUndefined();

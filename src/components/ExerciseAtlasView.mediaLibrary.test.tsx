@@ -35,7 +35,11 @@ afterEach(() => {
 describe('Atlas artwork and complete video collection', () => {
   it('opens the complete video collection by tab and unloads its player when returning to notes with the keyboard', () => {
     const { container } = render(
-      <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
     );
     const before = usePilatesStore.getState();
     const videoTab = screen.getByRole('tab', {
@@ -59,7 +63,13 @@ describe('Atlas artwork and complete video collection', () => {
 
   it('shows the same authored frame for native cards and a real video action instead of an unrelated pose for new movements', () => {
     const onOpen = vi.fn();
-    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={onOpen} onOpenClipper={vi.fn()} />);
+    render(
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={onOpen}
+        onOpenClipper={vi.fn()}
+      />,
+    );
     const nativeCard = screen
       .getByRole('button', { name: `${native.nameKo} 상세 보기` })
       .closest('.movement-card')!;
@@ -72,12 +82,12 @@ describe('Atlas artwork and complete video collection', () => {
       .closest('.movement-card')!;
     expect(sourceCard.querySelector('.exercise-motion-artwork')).toHaveAttribute(
       'data-match-scope',
-      'source-video-only',
+      'catalog-authored-pattern',
     );
-    expect(sourceCard.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
-    expect(
-      within(sourceCard as HTMLElement).queryByRole('button', { name: /기구학 도해 보기/ }),
-    ).toBeNull();
+    expect(sourceCard.querySelector('.exercise-motion-artwork img')).toHaveAttribute(
+      'src',
+      getExerciseArtworkFrame(sourceOnly)!.src,
+    );
     fireEvent.click(
       within(sourceCard as HTMLElement).getByRole('button', {
         name: `${sourceOnly.nameKo} 영상 보기`,
@@ -88,9 +98,7 @@ describe('Atlas artwork and complete video collection', () => {
     fireEvent.click(screen.getByRole('button', { name: `${sourceOnly.nameKo} 비교 담기` }));
     fireEvent.click(screen.getByRole('button', { name: `${native.nameKo} 비교 담기` }));
     const sourceComparison = screen.getByTestId(`atlas-compare-card-${sourceOnly.id}`);
-    expect(sourceComparison.querySelectorAll('.atlas-compare-3d-frame')).toHaveLength(1);
-    expect(sourceComparison).toHaveTextContent('제작자 영상으로 동작 확인');
-    expect(sourceComparison.querySelector('[data-motion-phase]')).toBeNull();
+    expect(sourceComparison.querySelectorAll('.atlas-compare-3d-frame')).toHaveLength(3);
     fireEvent.click(
       within(sourceComparison).getByRole('button', {
         name: `비교함에서 ${sourceOnly.nameKo} 영상 보기`,

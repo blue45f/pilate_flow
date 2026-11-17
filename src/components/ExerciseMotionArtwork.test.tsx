@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import { PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } from '../data/universal3dExerciseRigs';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import type { SequenceStep } from '../types/pilates';
@@ -91,7 +91,7 @@ describe('shared exercise artwork across planning surfaces', () => {
     );
   });
 
-  it('keeps decorative artwork silent and identifies an unmodeled exercise as a representative pattern', async () => {
+  it('keeps decorative artwork silent and identifies an unmodeled exercise as a procedural 3D pattern', async () => {
     const custom = { ...footwork, id: 'custom-reformer-pattern', nameKo: '새 수업 동작' };
     const view = render(<ExerciseMotionArtwork exercise={custom} />);
     expect(screen.queryByRole('img')).toBeNull();
@@ -103,30 +103,35 @@ describe('shared exercise artwork across planning surfaces', () => {
     );
     expect(screen.getByText('대표 패턴')).toBeVisible();
     expect(
-      screen.getByText(getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo),
+      screen.getByText(sampleUniversal3DExerciseRig(custom, PHASE_3D_RAW_T.middle).poseFeatureKo),
     ).toBeVisible();
     view.rerender(<ExerciseMotionArtwork exercise={custom} decorative={false} />);
     expect(screen.getByRole('img')).toHaveAccessibleName(
-      `${getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo} · 정점 자세 · 대표 패턴 참고`,
+      `${custom.nameKo} · 정점 자세 · 절차적 3D 동작 재구성`,
     );
   });
 
-  it('shows a neutral apparatus and visible video label when an expanded movement has no authored pose', () => {
+  it('renders dedicated 3D WebP cache frames for reconstructed expanded movements', () => {
     const expanded = INITIAL_EXERCISES.find(
       (exercise) => exercise.id === 'expanded-mat-leg-pull-front',
     )!;
     const view = render(<ExerciseMotionArtwork exercise={expanded} decorative={false} />);
     expect(screen.getByRole('img')).toHaveAccessibleName(
-      `${expanded.nameKo} · 영상으로 동작 확인 · 기구 안내 이미지`,
+      `${expanded.nameKo} · 정점 자세 · 3D 동작 도해`,
     );
     expect(view.container.firstElementChild).toHaveAttribute(
       'data-match-scope',
-      'source-video-only',
+      'catalog-authored-pattern',
     );
-    expect(view.container.firstElementChild).not.toHaveAttribute('data-motion-phase');
-    expect(screen.getByText('영상 참고')).toBeVisible();
-    expect(view.container.querySelector('.pf-apparatus-illustration-svg')).not.toBeNull();
-    expect(view.container.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
+    expect(view.container.firstElementChild).toHaveAttribute('data-motion-phase', 'middle');
+    expect(view.container.firstElementChild).toHaveAttribute(
+      'data-artwork-renderer',
+      'cached-native-image',
+    );
+    expect(screen.getByRole('img')).toHaveAttribute(
+      'src',
+      getExerciseArtworkFrame(expanded, 'middle')!.src,
+    );
   });
 
   it('renders distinct exercise identities in the class filmstrip using one static figure per step', () => {
@@ -140,7 +145,7 @@ describe('shared exercise artwork across planning surfaces', () => {
     expect(view.container.querySelectorAll('img[src^="/motion-artwork-v2/"]')).toHaveLength(2);
   });
 
-  it('uses the same cached mini badge and does not invent a phase strip for source-only movements', () => {
+  it('uses the same cached 3D mini badge and 3-phase strip for both native and reconstructed expanded movements', () => {
     const view = render(<ExerciseThumbnailBadge exercise={bridge} showPhaseStrip />);
     expect(view.container.querySelectorAll('.exercise-motion-artwork')).toHaveLength(3);
     expect(view.container.querySelectorAll('img[src^="/motion-artwork-v2/"]')).toHaveLength(3);
@@ -150,10 +155,9 @@ describe('shared exercise artwork across planning surfaces', () => {
     view.rerender(<ExerciseThumbnailBadge exercise={expanded} showPhaseStrip />);
     expect(
       view.container.querySelector('[data-testid="exercise-thumbnail-phase-strip"]'),
-    ).toBeNull();
-    expect(view.container.querySelectorAll('.exercise-motion-artwork')).toHaveLength(1);
-    expect(screen.getByText('영상 참고')).toBeVisible();
-    expect(view.container.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
+    ).not.toBeNull();
+    expect(view.container.querySelectorAll('.exercise-motion-artwork')).toHaveLength(3);
+    expect(view.container.querySelectorAll('img[src^="/motion-artwork-v2/"]')).toHaveLength(3);
   });
 
   it('prints each cue-sheet row with the same exercise art instead of an apparatus-family image', () => {

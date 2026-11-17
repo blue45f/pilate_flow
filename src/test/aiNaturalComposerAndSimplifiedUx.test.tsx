@@ -177,11 +177,11 @@ describe('Natural-Language AI Sequence Composer & In-Place Studio UX', () => {
     fireEvent.click(within(layerSwitcher).getByRole('button', { name: '완화' }));
     expect(layerSwitcher).toHaveTextContent(sample.layers.easy);
 
-    // Studio player hides raw engineering frame readout while preserving visual guide checkboxes
-    const studioPlayer = within(hero).getByTestId('studio-motion-study-player');
-    expect(studioPlayer).not.toHaveTextContent(/프레임 \d+ \//);
+    // Primary 3D hero mounts interactive 360° 3D viewport directly without engineering frame jargon
+    const viewport3d = within(hero).getByTestId('studio-interactive-3d-viewport');
+    expect(viewport3d).not.toHaveTextContent(/프레임 \d+ \//);
     expect(
-      within(studioPlayer).getByRole('checkbox', { name: '정렬·방향 가이드' }),
+      within(viewport3d).getByRole('slider', { name: '3D 동작 진행 구간 스크러버' }),
     ).toBeInTheDocument();
   });
 

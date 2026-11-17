@@ -1,14 +1,15 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Activity, Box, Image, Layers, ShieldAlert, Sparkles, Wind } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Box, ExternalLink, Image, Layers, ShieldAlert, Target, Wind } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
-import { getMovementVisualAsset, type VisualPhaseId } from '../data/movementVisualRigCatalog';
+import type { VisualPhaseId } from '../data/movementVisualRigCatalog';
+import {
+  hasDedicated3DExerciseRig,
+  sampleUniversal3DExerciseRig,
+} from '../data/universal3dExerciseRigs';
 import type { BoxState, FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
-import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
-import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
-import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 import '../styles/studio-motion-study.css';
@@ -74,15 +75,340 @@ export function formatExerciseSetupSummaryKo(exercise: PilatesExercise): string 
   return hasProps ? `매트 수평 정렬 · 소도구 위치 확인 (${posKo})` : `매트 수평 정렬 · ${posKo}`;
 }
 
-export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = (props) => (
-  <Studio3DMotionHeroContent key={props.exercise.id} {...props} />
-);
+export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = (props) => {
+  const identityKey = `${props.exercise.id}:${props.exercise.apparatus}:${props.exercise.bodyPosition}`;
+  return <Studio3DMotionHeroContent key={identityKey} {...props} />;
+};
 
 const POSTURE_FRAMES = [
   { phase: 'start' as const, stepNo: '01', label: '시작 자세' },
   { phase: 'middle' as const, stepNo: '02', label: '정점 자세' },
   { phase: 'end' as const, stepNo: '03', label: '종료 자세' },
 ];
+
+const STUDIO_3D_HERO_UNSLOP_CSS = `
+.pf-p07-clean-detail {
+  gap: 10px !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide.pf-p07-top-tabs {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 4px 6px !important;
+  margin: 0 0 6px !important;
+  border-radius: 12px !important;
+  background: #f4f2ec !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+  box-shadow: none !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-list {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 2px !important;
+  border-radius: 9px !important;
+  background: rgba(31, 68, 53, 0.05) !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip {
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 4px 10px !important;
+  border-radius: 7px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #5b6961 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip[aria-current='step'],
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip.is-active {
+  background: #ffffff !important;
+  color: #1f4435 !important;
+  font-weight: 600 !important;
+  border-color: rgba(31, 68, 53, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-Subrow {
+  display: inline-flex !important;
+  flex: 1 1 0 !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-focus {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  color: #6b766f !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-nav {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  gap: 4px !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-nav-btn {
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 4px 9px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+@media (max-width: 719px) {
+  .pf-p07-clean-detail .yt-preview-step-guide.pf-p07-top-tabs {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip {
+    min-height: 38px !important;
+    padding: 4px 6px !important;
+    font-size: 11.5px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-Subrow {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-focus {
+    flex: 1 1 0 !important;
+    font-size: 11px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-nav-btn {
+    min-height: 36px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+.pf-studio3d-hero-card.pf-unslop-hero3d {
+  display: grid;
+  gap: 10px !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(31, 68, 53, 0.10) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+.pf-studio3d-hero-card.pf-unslop-hero3d.is-compact {
+  padding: 10px !important;
+  gap: 8px !important;
+}
+.pf-unslop-hero3d .pf-studio3d-hero-card__top {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px !important;
+  margin-bottom: 0 !important;
+}
+.pf-unslop-hero3d .pf-studio3d-hero-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.pf-unslop-hero3d .pf-studio3d-scope-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  background: #f4f2ec !important;
+  color: #1f2d27 !important;
+  border: 1px solid rgba(31, 68, 53, 0.10) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-decoration: none;
+  box-shadow: none !important;
+}
+.pf-unslop-hero3d a.pf-studio3d-scope-pill:hover {
+  background: #ebe7dd !important;
+}
+.pf-unslop-hero3d .pf-studio3d-honest-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 4px !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #6b766f !important;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+}
+.pf-unslop-hero3d .pf-studio3d-mode-tabs {
+  width: auto !important;
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  padding: 3px !important;
+  gap: 2px !important;
+  border-radius: 10px !important;
+  background: #f2f0e9 !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+}
+.pf-unslop-hero3d .pf-studio3d-mode-btn {
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 4px 10px !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #5b6961 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pf-unslop-hero3d .pf-studio3d-mode-btn.is-active {
+  background: #ffffff !important;
+  color: #1f4435 !important;
+  font-weight: 600 !important;
+  border-color: rgba(31, 68, 53, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+.pf-unslop-hero3d .pf-hero-3d-modeler-panel {
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+}
+.pf-unslop-hero3d .pf-orbit3d-canvas-wrap {
+  border-radius: 10px !important;
+  border: 1px solid rgba(31, 68, 53, 0.10) !important;
+}
+@media (min-width: 1024px) {
+  .pf-unslop-hero3d:not(.is-compact) .pf-orbit3d-canvas-wrap {
+    aspect-ratio: 16 / 9;
+    max-height: min(40vh, 344px);
+  }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .pf-unslop-hero3d:not(.is-compact) .pf-orbit3d-canvas-wrap {
+    aspect-ratio: 16 / 9.5;
+    max-height: min(38vh, 356px);
+  }
+}
+@media (max-width: 639px) {
+  .pf-unslop-hero3d:not(.is-compact) .pf-orbit3d-canvas-wrap {
+    aspect-ratio: 16 / 10;
+    max-height: min(36vh, 236px);
+  }
+  .pf-unslop-hero3d .pf-studio3d-honest-pill {
+    display: none;
+  }
+}
+.pf-unslop-hero3d .pf-native-posture-stage,
+.pf-unslop-hero3d .pf-studio3d-frame-thumb,
+.pf-unslop-hero3d .pf-motion-image-compare,
+.pf-unslop-hero3d .pf-detail-essential-pill,
+.pf-unslop-hero3d .pf-detail-quick-cue-box {
+  border-radius: 10px !important;
+}
+.pf-unslop-hero3d .pf-detail-essential-pill {
+  padding: 10px 12px !important;
+  gap: 4px !important;
+  background: #faf9f5 !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+}
+.pf-unslop-hero3d .pf-detail-essential-pill__label {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: #6b766f !important;
+  gap: 6px !important;
+}
+.pf-unslop-hero3d .pf-detail-essential-pill__label svg {
+  color: #6b766f;
+  flex-shrink: 0;
+}
+.pf-unslop-hero3d .pf-detail-essential-pill__val strong {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #1b2822 !important;
+}
+.pf-unslop-hero3d .pf-detail-essential-pill__val small {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: #6b766f !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.pf-unslop-hero3d .pf-spring-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.pf-unslop-hero3d .pf-spring-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(31, 68, 53, 0.15) !important;
+  box-shadow: 0 1px 0 rgba(31, 68, 53, 0.08) !important;
+  color: #1b2822 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.pf-unslop-hero3d .pf-studio3d-frame-thumb__num,
+.pf-unslop-hero3d .pf-native-posture-frame > figcaption {
+  font-variant-numeric: tabular-nums !important;
+}
+.pf-unslop-hero3d .pf-detail-quick-cue-box {
+  padding: 12px !important;
+  gap: 8px !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+}
+.pf-unslop-hero3d .pf-detail-quick-cue-box__cues strong {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #1f4435 !important;
+}
+.pf-unslop-hero3d .pf-detail-layer-tab {
+  border-radius: 7px !important;
+  font-weight: 500 !important;
+}
+.pf-unslop-hero3d .pf-detail-quick-cue-box__caution {
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-weight: 400 !important;
+}
+`;
 
 const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   exercise,
@@ -91,43 +417,32 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
 }) => {
   const motionAsset = useMemo(() => getCatalogContinuousMotionAsset(exercise), [exercise]);
   const binding = getExpandedMovementVisualBinding(exercise);
-  const sourceOnly = binding?.nativeMotionAvailable === false;
-  const unmodeled = !sourceOnly && !motionAsset;
-  const hasNativeMotion = !sourceOnly && !unmodeled;
-  // A source-backed exercise entry is not evidence that a dedicated motion was authored.
-  const representative =
-    /^expanded-|^crawled-/.test(exercise.id) || !getMovementVisualAsset(exercise.id);
+  const dedicated3d = hasDedicated3DExerciseRig(exercise);
+  const rigSample = useMemo(() => sampleUniversal3DExerciseRig(exercise, 1), [exercise]);
   const [mode, setMode] = useState<Studio3DViewMode>('motion');
-  const [modeler3dOpen, setModeler3dOpen] = useState(false);
   const [previewLayer, setPreviewLayer] = useState<'easy' | 'standard' | 'hard'>('standard');
-  const modelerPanelRef = useRef<HTMLDivElement>(null);
   const postureMode = mode !== 'motion';
   const activePhase: VisualPhaseId = mode === 'start' ? 'start' : mode === 'end' ? 'end' : 'middle';
-  const patternTitle = representative ? motionAsset?.visualAsset.archetypeTitleKo : exercise.nameKo;
   const muscleLabel = exercise.targetMuscles.slice(0, 2).join(' · ') || '동작별 안내 확인';
   const topCues = exercise.cues.filter((cue) => cue.trim().length > 0).slice(0, 2);
   const setupSummaryKo = useMemo(() => formatExerciseSetupSummaryKo(exercise), [exercise]);
   const postureFrames = POSTURE_FRAMES.map((item) =>
-    item.phase === 'end' ? { ...item, label: motionAsset?.endPoseLabelKo ?? item.label } : item,
+    item.phase === 'end' && dedicated3d && motionAsset?.endPoseLabelKo
+      ? { ...item, label: motionAsset.endPoseLabelKo }
+      : item,
   );
 
   return (
     <section
-      className={`pf-studio3d-hero-card pf-unified-motion-hero ${compact ? 'is-compact' : ''}`.trim()}
+      className={`pf-studio3d-hero-card pf-unified-motion-hero pf-unslop-hero3d ${compact ? 'is-compact' : ''}`.trim()}
       data-testid="studio-3d-motion-hero-card"
-      data-motion-mode={sourceOnly ? 'source-video' : unmodeled ? 'apparatus-reference' : mode}
-      data-match-scope={
-        sourceOnly
-          ? 'source-video-only'
-          : unmodeled
-            ? 'unmodeled-exercise'
-            : representative
-              ? 'representative-pattern'
-              : 'catalog-authored-pattern'
-      }
+      data-motion-mode={mode}
+      data-match-scope={dedicated3d ? 'catalog-authored-pattern' : 'representative-pattern'}
+      data-3d-rig-scope={rigSample.rigScope}
       data-anatomical-accuracy-assumed="false"
-      aria-label={`${exercise.nameKo} 동작 흐름과 자세 프레임`}
+      aria-label={`${exercise.nameKo} 3D 동작 흐름과 자세 프레임`}
     >
+      <style>{STUDIO_3D_HERO_UNSLOP_CSS}</style>
       <div className="pf-studio3d-hero-card__top">
         <div className="pf-studio3d-hero-card__badges">
           <span className="pf-studio3d-scope-pill">
@@ -137,70 +452,69 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               exercise.bodyPosition}
           </span>
           <span className="pf-studio3d-honest-pill">
-            {sourceOnly
-              ? '제작자 영상으로 동작 확인'
-              : unmodeled
-                ? '수정한 동작 · 전용 도해 없음'
-                : '임상 각도·개인 적합성은 강사 현장 확인'}
+            {dedicated3d
+              ? '전용 3D 모션 재구성 · 임상 각도는 강사 현장 확인'
+              : '절차적 3D 모션 재구성 · 세부 수행은 큐·연결 영상 확인'}
           </span>
+          {binding?.sourceUrl && (
+            <a
+              href={binding.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pf-studio3d-scope-pill"
+            >
+              제작자 동작 영상 보기 <ExternalLink size={14} strokeWidth={1.5} aria-hidden="true" />
+            </a>
+          )}
         </div>
-        {hasNativeMotion && (
-          <div
-            className="pf-studio3d-mode-tabs pf-motion-view-tabs"
-            role="group"
-            aria-label="동작 보기 방식"
+        <div
+          className="pf-studio3d-mode-tabs pf-motion-view-tabs"
+          role="group"
+          aria-label="동작 보기 방식"
+        >
+          <button
+            type="button"
+            className={`pf-studio3d-mode-btn ${mode === 'motion' ? 'is-active' : ''}`}
+            aria-pressed={mode === 'motion'}
+            onClick={() => setMode('motion')}
           >
-            <button
-              type="button"
-              className={`pf-studio3d-mode-btn ${mode === 'motion' ? 'is-active' : ''}`}
-              aria-pressed={mode === 'motion'}
-              onClick={() => setMode('motion')}
-            >
-              <Activity size={14} aria-hidden="true" /> 동작 재생
-            </button>
-            <button
-              type="button"
-              className={`pf-studio3d-mode-btn ${postureMode ? 'is-active' : ''}`}
-              aria-pressed={postureMode}
-              onClick={() => setMode('start')}
-            >
-              <Image size={14} aria-hidden="true" /> 자세 프레임
-            </button>
-          </div>
-        )}
+            <Box size={15} strokeWidth={1.5} aria-hidden="true" /> 3D 모션
+          </button>
+          <button
+            type="button"
+            className={`pf-studio3d-mode-btn ${postureMode ? 'is-active' : ''}`}
+            aria-pressed={postureMode}
+            onClick={() => setMode('start')}
+          >
+            <Image size={15} strokeWidth={1.5} aria-hidden="true" /> 3D 자세 프레임
+          </button>
+        </div>
       </div>
 
-      {sourceOnly && binding && (
-        <MotionSourceOnlyNotice
-          exerciseId={exercise.id}
-          nameKo={exercise.nameKo}
-          apparatus={exercise.apparatus}
-          reasonKo={binding.reasonKo}
-          sourceUrl={binding.sourceUrl}
-        />
+      {!dedicated3d && (
+        <div
+          className="pf-motion-illustration-note"
+          data-testid="studio-motion-study-player"
+          data-match-scope="representative-pattern"
+        >
+          <h4 style={{ margin: 0, fontSize: '0.84rem', fontWeight: 500 }}>
+            {rigSample.poseFeatureKo}
+          </h4>
+          <span>절차적 3D 재구성 · 이 동작의 세부 수행은 연결 영상에서 확인하세요.</span>
+        </div>
       )}
 
-      {unmodeled && <UnmodeledMotionNotice exercise={exercise} />}
-
-      {hasNativeMotion && mode === 'motion' && motionAsset && (
-        <CatalogMotionInteractivePlayer
-          asset={motionAsset}
-          active={active}
-          presentation="studio"
-          compact={compact}
-          representative={representative}
-        />
+      {mode === 'motion' && (
+        <div className="pf-hero-3d-modeler-panel" data-testid="interactive-3d-modeler-panel">
+          <StudioInteractive3DViewport exercise={exercise} compact={compact} active={active} />
+        </div>
       )}
 
-      {hasNativeMotion && postureMode && (
+      {postureMode && (
         <div className="pf-motion-illustration-view">
           <p className="pf-motion-illustration-note">
-            <strong>{patternTitle}</strong>
-            <span>
-              {representative
-                ? '대표 패턴의 시작·정점·종료 자세입니다.'
-                : '재생 중인 동작과 같은 모델의 시작·정점·종료 자세입니다.'}
-            </span>
+            <strong>{dedicated3d ? exercise.nameKo : rigSample.poseFeatureKo}</strong>
+            <span>{rigSample.poseFeatureKo} · 3D 시작·정점·종료 자세</span>
           </p>
           <div
             className={`pf-native-posture-stage ${mode === 'compare' ? 'is-comparing' : ''}`}
@@ -249,52 +563,8 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             aria-pressed={mode === 'compare'}
             onClick={() => setMode((previous) => (previous === 'compare' ? 'start' : 'compare'))}
           >
-            <Layers size={14} aria-hidden="true" /> 세 자세 나란히 보기
+            <Layers size={15} strokeWidth={1.5} aria-hidden="true" /> 세 자세 나란히 보기
           </button>
-        </div>
-      )}
-
-      {hasNativeMotion && (
-        <div className="pf-hero-3d-modeler-bar" data-testid="hero-3d-modeler-bar">
-          <div className="pf-hero-3d-modeler-bar__copy">
-            <strong>3D 입체 자세 · 기구 모델러</strong>
-            <span>마우스로 360° 돌려 보고, 측면 비교와 스프링·기구 세팅을 한눈에 확인하세요</span>
-          </div>
-          <button
-            type="button"
-            className={`pf-hero-3d-modeler-toggle ${modeler3dOpen ? 'is-open' : ''}`}
-            data-testid="toggle-interactive-3d-modeler"
-            aria-expanded={modeler3dOpen}
-            onClick={() => {
-              const next = !modeler3dOpen;
-              setModeler3dOpen(next);
-              if (next) {
-                requestAnimationFrame(() =>
-                  modelerPanelRef.current?.scrollIntoView?.({
-                    behavior: 'smooth',
-                    block: 'center',
-                  }),
-                );
-              }
-            }}
-          >
-            <Box size={14} aria-hidden="true" />
-            <span>{modeler3dOpen ? '3D 모델러 닫기' : '3D 모델러 열기'}</span>
-          </button>
-        </div>
-      )}
-
-      {hasNativeMotion && modeler3dOpen && (
-        <div
-          ref={modelerPanelRef}
-          className="pf-hero-3d-modeler-panel"
-          data-testid="interactive-3d-modeler-panel"
-        >
-          <StudioInteractive3DViewport
-            exercise={exercise}
-            compact={compact}
-            active={active && modeler3dOpen}
-          />
         </div>
       )}
 
@@ -308,7 +578,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
           >
             <div className="pf-detail-essential-pill">
               <span className="pf-detail-essential-pill__label">
-                <Layers size={13} aria-hidden="true" /> 권장 스프링 · 셋업
+                <Layers size={15} strokeWidth={1.5} aria-hidden="true" /> 권장 스프링 · 셋업
               </span>
               <div className="pf-detail-essential-pill__val">
                 {exercise.springs ? (
@@ -321,7 +591,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             </div>
             <div className="pf-detail-essential-pill">
               <span className="pf-detail-essential-pill__label">
-                <Wind size={13} aria-hidden="true" /> 호흡 · 리듬
+                <Wind size={15} strokeWidth={1.5} aria-hidden="true" /> 호흡 · 리듬
               </span>
               <div className="pf-detail-essential-pill__val">
                 <strong>{exercise.breathPattern || '자연스러운 흉곽 호흡 유지'}</strong>
@@ -330,7 +600,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             </div>
             <div className="pf-detail-essential-pill">
               <span className="pf-detail-essential-pill__label">
-                <Sparkles size={13} aria-hidden="true" /> 주동근 · 계획 시간
+                <Target size={15} strokeWidth={1.5} aria-hidden="true" /> 주동근 · 계획 시간
               </span>
               <div className="pf-detail-essential-pill__val">
                 <strong>{muscleLabel}</strong>
@@ -342,7 +612,11 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             </div>
           </div>
 
-          {(topCues.length > 0 || exercise.precautions?.trim()) && (
+          {(topCues.length > 0 ||
+            exercise.layers.easy ||
+            exercise.layers.standard ||
+            exercise.layers.hard ||
+            exercise.precautions?.trim()) && (
             <div className="pf-detail-quick-cue-box" data-testid="detail-quick-cue-box">
               {topCues.length > 0 && (
                 <div className="pf-detail-quick-cue-box__cues">
@@ -382,13 +656,13 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                     ))}
                   </div>
                   <p className="pf-detail-layer-switcher__text">
-                    {exercise.layers[previewLayer] || '기본 동작 안내에 따라 진행합니다.'}
+                    {exercise.layers[previewLayer] || '기본 동작 안내에 따라 진행합니다'}
                   </p>
                 </div>
               )}
               {exercise.precautions?.trim() && (
                 <p className="pf-detail-quick-cue-box__caution">
-                  <ShieldAlert size={14} aria-hidden="true" />
+                  <ShieldAlert size={15} strokeWidth={1.5} aria-hidden="true" />
                   <span>
                     <strong>주의 포인트:</strong> {exercise.precautions}
                   </span>

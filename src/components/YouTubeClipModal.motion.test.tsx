@@ -75,7 +75,7 @@ describe('movement detail motion reference boundary', () => {
     const hero = screen.getByTestId('studio-3d-motion-hero-card');
     expect(hero).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
     expect(hero).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
-    expect(await within(hero).findByTestId('studio-motion-study-player')).toHaveAttribute(
+    expect(await within(hero).findByTestId('studio-interactive-3d-viewport')).toHaveAttribute(
       'data-exercise-id',
       INITIAL_EXERCISES[0].id,
     );

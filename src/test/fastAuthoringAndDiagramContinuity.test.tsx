@@ -474,15 +474,16 @@ describe('Fast Instructor Sequence Authoring, Mobile/A11y Controls & Start-to-En
     const motionAsset = getCatalogContinuousMotionAsset(reformerEx.id)!;
     expect(motionAsset).toBeTruthy();
 
-    // The authored return phase is sought by its actual per-exercise label.
+    // The primary 3D hero switches cleanly to 3D posture frames with the exercise's authored return label.
     render(<Studio3DMotionHeroCard exercise={reformerEx} />);
-    const returnKeyframeBtn = screen.getByRole('button', { name: motionAsset.phases[3].labelKo });
-    expect(returnKeyframeBtn).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(returnKeyframeBtn);
-    expect(returnKeyframeBtn).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('slider', { name: /도해 위치/ })).toHaveValue(
-      String(Math.round(motionAsset.phases[3].sample * 1000)),
-    );
+    const heroCard = screen.getByTestId('studio-3d-motion-hero-card');
+    expect(within(heroCard).getByTestId('studio-interactive-3d-viewport')).toBeVisible();
+    fireEvent.click(within(heroCard).getByRole('button', { name: '3D 자세 프레임' }));
+    const returnThumbBtn = within(heroCard).getByRole('button', {
+      name: new RegExp(motionAsset.endPoseLabelKo),
+    });
+    fireEvent.click(returnThumbBtn);
+    expect(returnThumbBtn).toHaveAttribute('aria-pressed', 'true');
     cleanup();
 
     // CatalogMotionInteractivePlayer: explicit cycle continuity readout & 3-stage connected cards

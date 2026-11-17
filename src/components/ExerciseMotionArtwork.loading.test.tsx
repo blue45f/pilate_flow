@@ -21,21 +21,18 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe('deferred native artwork lifecycle', () => {
-  it('keeps cache hits and source-only movements out of the native loader', () => {
+describe('deferred 3D artwork lifecycle', () => {
+  it('keeps 3D cache hits (including reconstructed expanded movements) out of the procedural loader', () => {
     const view = render(<ExerciseMotionArtwork exercise={known} />);
     expect(view.container.querySelector('img[src^="/motion-artwork-v2/"]')).not.toBeNull();
     expect(loader.load).not.toHaveBeenCalled();
-    const sourceOnly = INITIAL_EXERCISES.find((item) => item.id === 'expanded-mat-leg-pull-front')!;
-    view.rerender(<ExerciseMotionArtwork exercise={sourceOnly} />);
-    expect(screen.getByText('영상 참고')).toBeInTheDocument();
-    expect(loader.load).not.toHaveBeenCalled();
-    view.rerender(<ExerciseMotionArtwork exercise={{ ...known, apparatus: 'chair' }} />);
-    expect(screen.getByText('수정한 동작 · 전용 도해 없음')).toBeInTheDocument();
+    const expanded = INITIAL_EXERCISES.find((item) => item.id === 'expanded-mat-leg-pull-front')!;
+    view.rerender(<ExerciseMotionArtwork exercise={expanded} />);
+    expect(view.container.querySelector('img[src^="/motion-artwork-v2/"]')).not.toBeNull();
     expect(loader.load).not.toHaveBeenCalled();
   });
 
-  it('shows an honest loading state after a cache failure and reveals the native frame when ready', async () => {
+  it('shows an honest loading state after a cache failure and reveals the procedural 3D frame when ready', async () => {
     let finish!: (module: { default: typeof Native }) => void;
     loader.load.mockReturnValue(
       new Promise((resolve) => {

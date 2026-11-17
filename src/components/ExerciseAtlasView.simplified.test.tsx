@@ -97,15 +97,17 @@ describe('everyday Atlas catalog and preserved advanced workspace', () => {
     const sourceCard = screen.getByRole('article', { name: `${sourceOnly.nameKo} 동작` });
     expect(sourceCard.querySelector('.exercise-motion-artwork')).toHaveAttribute(
       'data-match-scope',
-      'source-video-only',
+      'catalog-authored-pattern',
     );
-    expect(sourceCard.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
+    expect(sourceCard.querySelector('.exercise-motion-artwork img')).toHaveAttribute(
+      'src',
+      getExerciseArtworkFrame(sourceOnly)!.src,
+    );
     fireEvent.click(
       within(sourceCard).getByRole('button', { name: `${sourceOnly.nameKo} 미리보기` }),
     );
     expect(onOpen).toHaveBeenLastCalledWith(sourceOnly);
-    expect(within(sourceCard).getByText('원본 영상 참고')).toBeInTheDocument();
-    expect(within(sourceCard).queryByText('계획용 동작 도해')).not.toBeInTheDocument();
+    expect(within(sourceCard).getByText('계획용 동작 도해')).toBeInTheDocument();
     expect(document.querySelector('iframe')).toBeNull();
   });
 
