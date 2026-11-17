@@ -1,18 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  CheckCircle2,
-  FileText,
-  Info,
-  ListPlus,
-  Plus,
-  Youtube,
-} from 'lucide-react';
+import { CheckCircle2, FileText, Info, ListPlus, Plus, Youtube } from 'lucide-react';
 import { CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
-import {
-  EQUIPMENT_OPTIONS,
-  PROP_OPTIONS,
-  getEquipmentFamily,
-} from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getEquipmentFamily } from '../data/equipmentCatalog';
 import {
   parseManualChapters,
   parseReferenceTime,
@@ -35,14 +24,214 @@ import '../styles/library.css';
 import '../styles/review-usability.css';
 import './YouTubeClipModal.css';
 
-export {
-  YouTubePreviewModal,
+import {
+  YouTubePreviewModal as BaseYouTubePreviewModal,
   YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY,
+  type YouTubePreviewModalProps,
+  type YtPreviewEditDraftEntry,
 } from './YouTubePreviewModal';
-export type {
-  YouTubePreviewModalProps,
-  YtPreviewEditDraftEntry,
-} from './YouTubePreviewModal';
+
+export { YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY };
+export type { YouTubePreviewModalProps, YtPreviewEditDraftEntry };
+
+const YT_MODAL_UNSLOP_CSS = `
+.pf-p07-clean-detail {
+  gap: 10px !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide.pf-p07-top-tabs,
+.clipper-layout .pf-step-guide-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 4px 6px !important;
+  margin: 0 0 8px !important;
+  border-radius: 12px !important;
+  background: #f4f2ec !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+  box-shadow: none !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-list,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-list {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 2px !important;
+  list-style: none !important;
+  border-radius: 9px !important;
+  background: rgba(31, 68, 53, 0.05) !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-list button {
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 4px 10px !important;
+  border-radius: 7px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #5b6961 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip[aria-current='step'],
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip.is-active,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-list button[aria-current='step'] {
+  background: #ffffff !important;
+  color: #1f4435 !important;
+  font-weight: 600 !important;
+  border-color: rgba(31, 68, 53, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-Subrow,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-Subrow {
+  display: inline-flex !important;
+  flex: 1 1 0 !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-focus,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-focus {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  color: #6b766f !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-nav,
+.clipper-layout .pf-step-guide-bar .pf-step-guide-nav {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  gap: 4px !important;
+}
+.pf-p07-clean-detail .yt-preview-step-guide .pf-step-nav-btn,
+.clipper-layout .pf-step-guide-bar .pf-step-nav-btn {
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 4px 9px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+@media (max-width: 719px) {
+  .pf-p07-clean-detail .yt-preview-step-guide.pf-p07-top-tabs,
+  .clipper-layout .pf-step-guide-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+  .clipper-layout .pf-step-guide-bar .pf-step-guide-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip,
+  .clipper-layout .pf-step-guide-bar .pf-step-guide-list button {
+    min-height: 38px !important;
+    padding: 4px 6px !important;
+    font-size: 11.5px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: normal !important;
+    width: 100% !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-Subrow,
+  .clipper-layout .pf-step-guide-bar .pf-step-guide-Subrow {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-focus,
+  .clipper-layout .pf-step-guide-bar .pf-step-guide-focus {
+    flex: 1 1 0 !important;
+    font-size: 11px !important;
+  }
+  .pf-p07-clean-detail .yt-preview-step-guide .pf-step-nav-btn,
+  .clipper-layout .pf-step-guide-bar .pf-step-nav-btn {
+    min-height: 36px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+.pf-p07-clean-detail .pf-detail-progressive-drawer,
+.pf-p07-clean-detail .optional-source-details,
+.pf-p07-clean-detail .pending-instruction-notes,
+.pf-p07-clean-detail .optional-review-details {
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+}
+.pf-p07-clean-detail .pf-detail-progressive-drawer > summary,
+.pf-p07-clean-detail .optional-source-details > summary,
+.pf-p07-clean-detail .pending-instruction-notes > summary,
+.pf-p07-clean-detail .optional-review-details > summary {
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+.pf-p07-clean-detail .library-modal-footer .btn-primary,
+.clipper-layout .library-modal-footer .btn-primary,
+.clipper-layout .library-modal-footer .btn-secondary {
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  font-weight: 500 !important;
+}
+.clipper-layout .clipper-honest-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+  background: #f7f6f1 !important;
+  border: 1px solid rgba(31, 68, 53, 0.09) !important;
+  font-size: 12px !important;
+  color: #5b6961 !important;
+}
+.clipper-layout .pf-clipper-spring-chips .log-quick-note-chip {
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  min-height: 34px !important;
+  min-width: 0 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+`;
+
+export const YouTubePreviewModal: React.FC<YouTubePreviewModalProps> = (props) => (
+  <>
+    {props.exercise ? <style>{YT_MODAL_UNSLOP_CSS}</style> : null}
+    <BaseYouTubePreviewModal {...props} />
+  </>
+);
 
 interface YouTubeClipperModalProps {
   open: boolean;
@@ -99,7 +288,9 @@ function readClipperDraft(): ClipperWorkingDraft | null {
           : {},
       level: (parsed.level as DifficultyLevel) || '1.0',
       bodyPosition: (parsed.bodyPosition as BodyPosition) || 'supine',
-      selectedProps: Array.isArray(parsed.selectedProps) ? (parsed.selectedProps as PropType[]) : [],
+      selectedProps: Array.isArray(parsed.selectedProps)
+        ? (parsed.selectedProps as PropType[])
+        : [],
       duration: typeof parsed.duration === 'number' ? parsed.duration : 3,
       unilateral: Boolean(parsed.unilateral),
       springs: typeof parsed.springs === 'string' ? parsed.springs : '',
@@ -157,15 +348,15 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
     if (saved) return;
     const hasInput = Boolean(
       youtubeUrl.trim() ||
-        channelName.trim() ||
-        title.trim() ||
-        nameEn.trim() ||
-        chaptersText.trim() ||
-        selectedEquipment.length ||
-        selectedProps.length ||
-        springs.trim() ||
-        breathPattern.trim() ||
-        cueText.trim(),
+      channelName.trim() ||
+      title.trim() ||
+      nameEn.trim() ||
+      chaptersText.trim() ||
+      selectedEquipment.length ||
+      selectedProps.length ||
+      springs.trim() ||
+      breathPattern.trim() ||
+      cueText.trim(),
     );
     try {
       if (!hasInput && clipperStep === 1) {
@@ -369,18 +560,16 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
       open={open}
       onClose={onClose}
       title="내 유튜브 레퍼런스"
-      subtitle="좋은 움직임을 발견한 순간, 원본 링크와 시간을 함께 보관하세요."
+      subtitle="원본 영상 링크와 시간을 내 계획 노트로 보관하세요"
       maxWidth="850px"
     >
+      {open ? <style>{YT_MODAL_UNSLOP_CSS}</style> : null}
       <div className="clipper-layout">
         <div className="clipper-honest-note">
-          <Youtube size={20} />
-          <p>
-            <strong>링크와 메모를 직접 등록합니다.</strong>
-            <span>
-              영상을 가져오거나 분석하지 않아요. 공개된 영상도 재사용 허가와 동작 정확성을 따로
-              확인해야 합니다.
-            </span>
+          <Youtube size={16} strokeWidth={1.5} aria-hidden="true" />
+          <p style={{ margin: 0 }}>
+            링크와 메모를 직접 보관합니다 · 영상을 가져오지 않으며 재사용 허가와 동작 정확성은
+            별도로 확인하세요
           </p>
         </div>
         {saved ? (
@@ -459,7 +648,12 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
                 </div>
               </div>
             </nav>
-            <div ref={step1Ref} className="clipper-mode-tabs" role="group" aria-label="참조 입력 방식">
+            <div
+              ref={step1Ref}
+              className="clipper-mode-tabs"
+              role="group"
+              aria-label="참조 입력 방식"
+            >
               <button
                 type="button"
                 aria-pressed={mode === 'batch'}
@@ -696,7 +890,14 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
             >
               <span className="pf-class-spring-source">빠른 스프링 입력:</span>
               {(
-                ['2R 1B', '1R 1B', '1R', '1R 1Y (페달)', '1B (푸쉬스루)', '스프링 사용 없음'] as const
+                [
+                  '2R 1B',
+                  '1R 1B',
+                  '1R',
+                  '1R 1Y (페달)',
+                  '1B (푸쉬스루)',
+                  '스프링 사용 없음',
+                ] as const
               ).map((presetSpring) => (
                 <button
                   key={presetSpring}
@@ -758,7 +959,9 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
                     className="pf-spot-dialog-3d-banner__img"
                   />
                   <div className="pf-spot-dialog-3d-banner__info">
-                    <strong>선택 기구 3D 프리뷰 · Lv {level} · 구간당 {duration}분</strong>
+                    <strong>
+                      선택 기구 3D 프리뷰 · Lv {level} · 구간당 {duration}분
+                    </strong>
                     {springs.trim() && <SpringVisualPills springs={springs} />}
                   </div>
                 </div>

@@ -89,7 +89,6 @@ import * as teachingHistorySnapshot from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MobileSubPageBar } from './MobileSubPageBar';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
-import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
 import { SequenceQrShareDialog } from './SequenceQrShareDialog';
@@ -1166,7 +1165,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           </span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
-            <PfBadge tone="sage" className="teaching-count">
+            <PfBadge
+              tone="neutral"
+              shape="rect"
+              className="teaching-count"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
               {view === 'saved' ? savedSequences.length : totalActualLogsCount}
             </PfBadge>
           </h1>
@@ -1501,21 +1505,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                                 minWidth: 0,
                               }}
                             >
-                              <ApparatusIconBadge
-                                apparatus={sequence.apparatus}
-                                size="xs"
-                                decorative
-                              />
                               <h2>{sequence.title}</h2>
                             </div>
                             {(!isPersistedOnDisk || isLoadedInWorkbench) && (
                               <div
                                 className="teaching-saved-card-badges"
-                                style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}
+                                style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}
                               >
                                 {!isPersistedOnDisk && (
                                   <PfBadge
                                     tone="warning"
+                                    shape="rect"
                                     className="teaching-unsaved-ram-badge"
                                     data-testid="binder-card-unsaved-ram-badge"
                                   >
@@ -1527,8 +1527,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                                     tone={
                                       hasUnsavedWorkbenchDraft || !isPersistedOnDisk
                                         ? 'warning'
-                                        : 'sage'
+                                        : 'neutral'
                                     }
+                                    shape="rect"
                                     className="teaching-active-plan-badge"
                                   >
                                     {hasUnsavedWorkbenchDraft
@@ -1541,19 +1542,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                               </div>
                             )}
                           </div>
-                          <div className="pf-class-badges-strip">
-                            <span className="pf-class-apparatus-pill">
+                          <div className="pf-class-badges-strip" style={{ gap: '4px' }}>
+                            <PfBadge tone="neutral" shape="rect">
                               {savedVisualMeta.apparatusLabelKo}
-                            </span>
-                            <PfBadge
-                              tone={
-                                sequence.level === '2.0'
-                                  ? 'warning'
-                                  : sequence.level === '1.5'
-                                    ? 'brand'
-                                    : 'sage'
-                              }
-                            >
+                            </PfBadge>
+                            <PfBadge tone="neutral" shape="rect">
                               {savedVisualMeta.levelBadgeKo}
                             </PfBadge>
                           </div>
@@ -1562,9 +1555,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       <p className="muted teaching-sequence-subtitle">
                         {sequence.subtitle || '내가 만든 수업 흐름'}
                       </p>
-                      <p className="teaching-saved-glance">
+                      <p
+                        className="teaching-saved-glance"
+                        style={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
                         <span className="flow-binder-time">
-                          <Clock3 size={16} aria-hidden="true" /> 총{' '}
+                          <Clock3 size={16} strokeWidth={1.5} aria-hidden="true" /> 총{' '}
                           {minutesLabel(durations.totalSec)}분
                         </span>
                         <span className="flow-binder-moves">
@@ -1695,7 +1691,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                             {String(index + 1).padStart(2, '0')} · {apparatusLabel}
                             {sampleSequenceIds.has(sequence.id) && ' · 예시'}
                           </span>
-                          <PfBadge tone="sage" shape="rect" className="teaching-level">
+                          <PfBadge tone="neutral" shape="rect" className="teaching-level">
                             Lv {sequence.level}
                           </PfBadge>
                         </div>
@@ -1710,9 +1706,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           <span>첫 동작 셋업</span>
                           <SpringVisualPills springs={savedVisualMeta.springs} />
                         </div>
-                        <div className="teaching-card-stats">
+                        <div
+                          className="teaching-card-stats"
+                          style={{ fontVariantNumeric: 'tabular-nums' }}
+                        >
                           <span>
-                            <Clock3 size={15} />
+                            <Clock3 size={16} strokeWidth={1.5} />
                             {minutesLabel(durations.totalSec)}분
                           </span>
                           <span>{exerciseCount}개 동작</span>
@@ -1891,7 +1890,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 <span className="eyebrow">반복해서 쓰는 흐름</span>
                 <h2 className="section-heading">
                   재사용 모듈 블록 묶음{' '}
-                  <PfBadge tone="sage">
+                  <PfBadge
+                    tone="neutral"
+                    shape="rect"
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
                     {reusableBlocks.length + OFFLINE_BLOCK_PRESETS.slice(0, 6).length}
                   </PfBadge>
                 </h2>
@@ -1929,8 +1932,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       />
                     )}
                     <div className="pf-binder-block-card__body">
-                      <div className="pf-class-badges-strip">
-                        <PfBadge tone="brand">내 저장 블록 v{block.version}</PfBadge>
+                      <div className="pf-class-badges-strip" style={{ gap: '4px' }}>
+                        <PfBadge tone="neutral" shape="rect">
+                          내 저장 블록 v{block.version}
+                        </PfBadge>
                         <SpringVisualPills springs={blockSprings} />
                       </div>
                       <strong>{block.title}</strong>
@@ -1980,11 +1985,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       />
                     )}
                     <div className="pf-binder-block-card__body">
-                      <div className="pf-class-badges-strip">
-                        <span className="pf-class-apparatus-pill">
+                      <div className="pf-class-badges-strip" style={{ gap: '4px' }}>
+                        <PfBadge tone="neutral" shape="rect">
                           {getApparatusLabelKo(preset.apparatus)}
-                        </span>
-                        <PfBadge tone="sage">{formatDifficultyBadgeKo(preset.level)}</PfBadge>
+                        </PfBadge>
+                        <PfBadge tone="neutral" shape="rect">
+                          {formatDifficultyBadgeKo(preset.level)}
+                        </PfBadge>
                         <SpringVisualPills springs={presetSprings} />
                       </div>
                       <strong>{preset.title}</strong>
@@ -2467,12 +2474,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               >
                 <div className="pf-v70-adaptive-main">
                   <div className="pf-v70-adaptive-badges">
-                    <span className="pf-studio-kicker-pill">
-                      ADAPTIVE NEXT CLASS · 피드백 자동 보정
-                    </span>
-                    <PfBadge tone="sage">권장 Lv {adaptiveDraft.signal.recommendedLevel}</PfBadge>
+                    <PfBadge tone="neutral" shape="rect">
+                      다음 수업 제안 · 피드백 보정
+                    </PfBadge>
+                    <PfBadge tone="neutral" shape="rect">
+                      권장 Lv {adaptiveDraft.signal.recommendedLevel}
+                    </PfBadge>
                     {adaptiveDraft.signal.cautionLabelsKo.map((lbl) => (
-                      <PfBadge key={lbl} tone="warning">
+                      <PfBadge key={lbl} tone="warning" shape="rect">
                         {lbl}
                       </PfBadge>
                     ))}
@@ -2628,11 +2637,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           )}
                           <div className="pf-binder-card-3d-meta">
                             <h2>{resolved.sequenceTitle}</h2>
-                            <div className="pf-class-badges-strip">
-                              <span className="pf-class-apparatus-pill">
-                                {getApparatusLabelKo(snapshotMeta.apparatus)} 3D
-                              </span>
-                              <PfBadge tone="sage">
+                            <div className="pf-class-badges-strip" style={{ gap: '4px' }}>
+                              <PfBadge tone="neutral" shape="rect">
+                                {getApparatusLabelKo(snapshotMeta.apparatus)}
+                              </PfBadge>
+                              <PfBadge tone="neutral" shape="rect">
                                 {formatDifficultyBadgeKo(snapshotMeta.level)}
                               </PfBadge>
                               {logPrimarySprings && (

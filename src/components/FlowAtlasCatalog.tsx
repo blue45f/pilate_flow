@@ -12,7 +12,6 @@ import {
 import { useRef, useState, type RefObject } from 'react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
-import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
 import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import type { ApparatusType, PilatesExercise } from '../types/pilates';
@@ -352,8 +351,6 @@ export function FlowAtlasCatalog({
           {exercises.map((exercise) => {
             const state = getCardState(exercise);
             const favorite = exercise.favoriteTag !== 'none';
-            const sourceOnly =
-              getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false;
             const idea = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
             const photo =
               idea?.photoDataUrl && !brokenPhotoIds[exercise.id] ? idea.photoDataUrl : null;
@@ -361,11 +358,9 @@ export function FlowAtlasCatalog({
               ? photo
                 ? '내 사진과 메모'
                 : '내 동작 메모'
-              : sourceOnly
-                ? '원본 영상 참고'
-                : getExerciseArtworkFrame(exercise)
-                  ? '계획용 동작 도해'
-                  : '동작 설명';
+              : getExerciseArtworkFrame(exercise)
+                ? '계획용 동작 도해'
+                : '3D 동작 설명';
             const previewHintId = `flow-atlas-preview-${exercise.id}`;
             return (
               <article

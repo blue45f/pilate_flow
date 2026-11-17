@@ -18,6 +18,15 @@ vi.mock('../utils/realtimeStudio3dEngine', () => ({
     signatureId: 'reformer-footwork',
     activeZonesCount: 1,
     springStretchPct: 0,
+    biomechTelemetry: {
+      kneeAngleDeg: 90,
+      hipAngleDeg: 90,
+      shoulderAngleDeg: 45,
+      spineArticulationDeg: 10,
+      comHeightCm: 42,
+      activeSpringLabel: '2R 1B',
+    },
+    hotspots: [],
   })),
   STUDIO_3D_CAMERA_PRESETS: [
     { id: 'quarter', labelKo: '기본 각도', yawDeg: -34, pitchDeg: 21, zoom: 1.04 },
@@ -261,23 +270,22 @@ describe('shared motion playback lifecycle', () => {
     },
   );
 
-  it('shows one coherent motion figure, mounts illustrations only on demand, and resets a changed exercise', () => {
+  it('shows one coherent 3D motion viewport, mounts cached 3D frames on demand, and resets a changed exercise', () => {
     const view = render(<Studio3DMotionHeroCard exercise={first} />);
     let card = screen.getByTestId('studio-3d-motion-hero-card');
     expect(card).toHaveAttribute('data-motion-mode', 'motion');
-    expect(within(card).getByTestId('studio-motion-study-player')).toBeVisible();
-    expect(card.querySelectorAll('.mpp-figure > svg')).toHaveLength(1);
+    expect(within(card).getByTestId('studio-interactive-3d-viewport')).toBeVisible();
+    expect(card.querySelectorAll('canvas')).toHaveLength(1);
     expect(card.querySelectorAll('img')).toHaveLength(0);
-    expect(card.querySelectorAll('canvas')).toHaveLength(0);
     expect(frames.size).toBe(0);
     const modes = within(card).getByRole('group', { name: '동작 보기 방식' });
-    fireEvent.click(within(card).getByRole('button', { name: '모션 재생' }));
+    fireEvent.click(within(card).getByRole('button', { name: '3D 모션 재생' }));
     frame();
     frame(64);
     expect(frames.size).toBe(1);
-    fireEvent.click(within(modes).getByRole('button', { name: '자세 프레임' }));
+    fireEvent.click(within(modes).getByRole('button', { name: /자세 프레임/ }));
     expect(frames.size).toBe(0);
-    expect(within(card).queryByTestId('studio-motion-study-player')).toBeNull();
+    expect(within(card).queryByTestId('studio-interactive-3d-viewport')).toBeNull();
     expect(card.querySelectorAll('.pf-native-posture-stage .exercise-motion-artwork')).toHaveLength(
       1,
     );
@@ -285,7 +293,9 @@ describe('shared motion playback lifecycle', () => {
       /^\/motion-artwork-v2\/.+\.webp$/,
     );
     expect(
-      within(card).getByRole('group', { name: '자세 프레임 단계 보기' }).querySelectorAll('button'),
+      within(card)
+        .getByRole('group', { name: /자세 프레임 단계 보기/ })
+        .querySelectorAll('button'),
     ).toHaveLength(3);
     fireEvent.click(within(card).getByRole('button', { name: '세 자세 나란히 보기' }));
     expect(card).toHaveAttribute('data-motion-mode', 'compare');
@@ -391,52 +401,46 @@ describe('shared motion playback lifecycle', () => {
     const pausedProgress = region.getAttribute('data-motion-progress');
     fireEvent.click(trail);
     expect(region.querySelectorAll('.mpp-figure [data-layer="pose-delta-ghost"]').length).toBe(1);
-    expect(region.querySelectorAll('.motion-reference-stills [data-layer="pose-delta-ghost"]').length).toBe(2);
+    expect(
+      region.querySelectorAll('.motion-reference-stills [data-layer="pose-delta-ghost"]').length,
+    ).toBe(2);
     expect(region.getAttribute('data-motion-progress')).toBe(pausedProgress);
     expect(frames.size).toBe(0);
     fireEvent.click(trail);
     expect(region.querySelectorAll('[data-layer="pose-delta-ghost"]').length).toBe(0);
   });
 
-  it('names a representative pattern instead of presenting it as the selected exercise', () => {
+  it('names a procedural 3D pattern instead of presenting it as a dedicated exercise', () => {
     const custom = { ...first, id: 'custom-reformer-unmodeled-exercise', nameKo: '신규 동작' };
     render(<Studio3DMotionHeroCard exercise={custom} />);
     const region = screen.getByTestId('studio-motion-study-player');
     expect(region).toHaveAttribute('data-match-scope', 'representative-pattern');
-    expect(within(region).getByRole('heading')).toHaveTextContent(
-      getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo,
-    );
     expect(within(region).getByRole('heading')).not.toHaveTextContent('신규 동작');
     expect(region).toHaveTextContent('이 동작의 세부 수행은 연결 영상에서 확인하세요.');
   });
 
-  it('offers the actual source for an expanded movement without mounting a mismatched pose or playback controls', () => {
+  it('renders dedicated 3D motion paused by default for an expanded movement alongside its creator video link', () => {
     const expanded = INITIAL_EXERCISES.find(
       (exercise) => exercise.id === 'expanded-mat-leg-pull-front',
     )!;
     const view = render(<Studio3DMotionHeroCard exercise={expanded} />);
     const card = screen.getByTestId('studio-3d-motion-hero-card');
-    expect(card).toHaveAttribute('data-motion-mode', 'source-video');
-    expect(card).toHaveAttribute('data-match-scope', 'source-video-only');
-    expect(within(card).getByTestId('motion-source-reference')).toBeVisible();
-    expect(within(card).getByRole('link', { name: '제작자 동작 영상 보기' })).toHaveAttribute(
+    expect(card).toHaveAttribute('data-motion-mode', 'motion');
+    expect(card).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
+    expect(card).toHaveAttribute('data-3d-rig-scope', 'dedicated-3d-rig');
+    expect(within(card).getAllByRole('link', { name: /제작자 동작 영상 보기/ })[0]).toHaveAttribute(
       'href',
       'https://onlinepilatesclasses.com/pilates-exercises/mat-exercises/mat-leg-pull-front/',
     );
-    expect(within(card).queryByRole('group', { name: '동작 보기 방식' })).toBeNull();
-    expect(within(card).queryByRole('slider')).toBeNull();
-    expect(card.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
-    expect(card.querySelector('canvas')).toBeNull();
+    expect(card.querySelector('canvas')).not.toBeNull();
     expect(frames.size).toBe(0);
     view.rerender(
       <CatalogMotionInteractivePlayer asset={getCatalogContinuousMotionAsset(expanded)!} />,
     );
     expect(screen.getByTestId('motion-source-reference')).toBeVisible();
-    expect(screen.queryByTestId('catalog-motion-interactive-player')).toBeNull();
     expect(frames.size).toBe(0);
     view.rerender(<StudioInteractive3DViewport exercise={expanded} />);
-    expect(screen.getByTestId('motion-source-reference')).toBeVisible();
-    expect(view.container.querySelector('canvas')).toBeNull();
+    expect(view.container.querySelector('canvas')).not.toBeNull();
     expect(frames.size).toBe(0);
   });
 
@@ -456,7 +460,8 @@ describe('shared motion playback lifecycle', () => {
       frame();
       frame(48);
       expect(frames.size).toBe(1);
-      if (kind === 'catalog') expect(thumbnail.querySelector('[data-layer="pose-delta-ghost"]')).toBeNull();
+      if (kind === 'catalog')
+        expect(thumbnail.querySelector('[data-layer="pose-delta-ghost"]')).toBeNull();
       intersection(thumbnail, false);
       expect(frames.size).toBe(0);
       intersection(thumbnail, true);

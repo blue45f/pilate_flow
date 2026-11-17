@@ -274,7 +274,12 @@ describe('inline exercise finder', () => {
     expect(within(emptyCard).queryByRole('button', { name: /초안 보기/ })).not.toBeInTheDocument();
 
     const customCard = screen.getByRole('article', { name: `${custom.nameKo} 동작 노트` });
-    await waitFor(() => expect(within(customCard).getByTestId('ief-card-3d-thumb')).toHaveAttribute('data-match-scope', 'representative-pattern'));
+    await waitFor(() =>
+      expect(within(customCard).getByTestId('ief-card-3d-thumb')).toHaveAttribute(
+        'data-match-scope',
+        'representative-pattern',
+      ),
+    );
     const representativeArtwork = within(customCard).getByTestId('ief-card-3d-thumb');
     expect(representativeArtwork).toHaveAttribute('data-artwork-renderer', 'inline-native-svg');
     expect(within(customCard).getByText('대표 패턴')).toBeInTheDocument();
@@ -283,14 +288,12 @@ describe('inline exercise finder', () => {
 
     const sourceCard = screen.getByRole('article', { name: `${sourceOnly.nameKo} 동작 노트` });
     const sourceArtwork = within(sourceCard).getByTestId('ief-card-3d-thumb');
-    expect(sourceArtwork).toHaveAttribute('data-match-scope', 'source-video-only');
-    expect(sourceArtwork).toHaveAttribute('data-native-motion-available', 'false');
-    expect(sourceArtwork).toHaveAttribute('data-artwork-renderer', 'apparatus-reference');
-    expect(sourceArtwork).not.toHaveAttribute('data-motion-phase');
-    expect(sourceArtwork.querySelector('img')).toBeNull();
-    expect(sourceArtwork.querySelector('.pf-apparatus-illustration-svg')).not.toBeNull();
-    expect(sourceArtwork.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
-    expect(within(sourceCard).getByText('영상 참고')).toBeInTheDocument();
+    expect(sourceArtwork).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
+    expect(sourceArtwork).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
+    expect(sourceArtwork.querySelector('img')).toHaveAttribute(
+      'src',
+      getExerciseArtworkFrame(sourceOnly, 'middle')!.src,
+    );
     expect(within(sourceCard).queryByRole('button', { name: /초안 보기/ })).not.toBeInTheDocument();
     for (const artwork of [nativeArtwork, representativeArtwork, sourceArtwork]) {
       expect(artwork).toHaveAttribute('data-professional-review', 'unreviewed');

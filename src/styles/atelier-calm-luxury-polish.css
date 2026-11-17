@@ -82,16 +82,119 @@ html #root .flow-app .desktop-nav > button.active {
   transform: none !important;
 }
 
-/* 3. Sequence Studio Workbench — Concentric Radii & Sticky Actionbar Clearance */
-.flow-picker-list {
-  padding-bottom: 92px;
-  scroll-padding-bottom: 96px;
+/* 3. Sequence Studio Workbench — Unslop Calm Proportions, Concentric Radii & Non-Overlapping Flow */
+.flow-studio {
+  padding-bottom: 24px;
 }
 
-.flow-class-brief {
-  border-radius: 16px;
-  border-color: #dce5d7;
-  box-shadow: 0 4px 18px rgba(33, 62, 50, 0.035);
+.flow-studio .flow-studio__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.flow-studio .flow-studio__title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.flow-studio .flow-studio__heading h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #193c33;
+}
+
+.flow-studio .flow-studio__heading p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: #5b6b60;
+}
+
+.flow-studio .flow-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.flow-studio .flow-heading-actions > .flow-button {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+}
+
+.flow-studio .flow-tools > summary {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.flow-studio .flow-tools > div {
+  top: 42px;
+  border-radius: 10px;
+}
+
+.flow-studio .flow-class-brief {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) 128px 104px 88px auto;
+  align-items: end;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(33, 62, 50, 0.1);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.flow-studio .flow-class-brief .flow-field {
+  gap: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #5b6b60;
+}
+
+.flow-studio .flow-class-brief .flow-field input,
+.flow-studio .flow-class-brief .flow-field select {
+  min-height: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(33, 62, 50, 0.14);
+  background: #fafaf8;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1c3128;
+}
+
+.flow-studio .flow-class-brief .flow-class-title input {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.flow-studio .flow-class-brief .flow-condition-button {
+  min-height: 38px;
+  height: 38px;
+  padding: 0 12px;
+  margin-bottom: 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
 }
 
 .flow-field input:focus-visible,
@@ -105,57 +208,285 @@ html #root .flow-app .desktop-nav > button.active {
   box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.14);
 }
 
-.flow-picker,
-.flow-plan {
-  border-radius: 16px;
-  border-color: #dce5d7;
-  box-shadow: 0 6px 24px rgba(33, 62, 50, 0.04);
+.flow-studio .flow-studio-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.44fr) minmax(0, 0.56fr);
+  gap: 16px;
+  align-items: start;
 }
 
-/* Concentric inner card radius: 16px outer container - 4px optical inset -> 10px-12px inner card */
-.flow-pick-card {
-  border-radius: 10px;
+.flow-studio .flow-plan-column {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+}
+
+.flow-studio .flow-picker,
+.flow-studio .flow-plan {
+  border-radius: 12px;
+  border: 1px solid rgba(33, 62, 50, 0.1);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.flow-studio .flow-panel-heading {
+  padding: 12px 16px;
+}
+
+.flow-studio .flow-panel-heading h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.flow-studio .flow-step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-studio .flow-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-studio .flow-search {
+  margin: 0 12px;
+  padding: 0 10px;
+  min-height: 38px;
+  border-radius: 8px;
+  border-color: rgba(33, 62, 50, 0.14);
+  background: #fafaf8;
+}
+
+.flow-studio .flow-search input {
+  min-height: 36px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.flow-studio .flow-search button {
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.flow-studio .flow-chips {
+  padding: 8px 12px 0;
+  gap: 4px;
+}
+
+.flow-studio .flow-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(33, 62, 50, 0.08);
+  background: #fafaf8;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4f6358;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.flow-pick-card:hover {
-  background: #fbfdf9;
-  border-color: #9eb994;
-  box-shadow: 0 3px 12px rgba(33, 62, 50, 0.06);
+.flow-studio .flow-chips button[aria-pressed='true'] {
+  background: #e8f0e4;
+  border-color: rgba(31, 68, 53, 0.22);
+  color: #1f4435;
+  font-weight: 600;
 }
 
-.flow-add-button {
+.flow-studio .flow-picker-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(33, 62, 50, 0.07);
+}
+
+.flow-studio .flow-picker-controls .flow-checkbox {
+  min-height: 32px;
+  padding: 0;
+  margin: 0;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.flow-studio .flow-picker-controls .flow-insertion-control {
+  margin: 0;
+  gap: 6px;
+  flex: 1 1 156px;
+  justify-content: flex-end;
+}
+
+.flow-studio .flow-picker-controls .flow-insertion-control > select {
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 26px 4px 8px;
+  border-radius: 8px;
+  border-color: rgba(33, 62, 50, 0.14);
+  background: #fafaf8;
+  font-size: 12px;
+}
+
+.flow-studio .flow-insertion-error,
+.flow-studio .flow-added-receipt {
+  margin: 8px 12px 0;
+}
+
+.flow-studio .flow-picker-list {
+  padding: 4px 8px 8px;
+  scroll-padding-bottom: 12px;
+  max-height: clamp(380px, calc(100vh - 360px), 680px);
+}
+
+.flow-studio .flow-pick-card {
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flow-studio .flow-pick-card:hover {
+  background: #fafbf8;
+  border-color: rgba(33, 62, 50, 0.16);
+  box-shadow: none;
+}
+
+.flow-studio .flow-pick-card .flow-name-button {
+  min-height: 24px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.flow-studio .flow-add-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   background: #f5f9f2;
   border-color: #cce0c3;
   color: #1f4435;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.flow-add-button:hover:not(:disabled) {
+.flow-studio .flow-add-button:hover:not(:disabled) {
   background: #1f4435;
   border-color: #1f4435;
   color: #ffffff;
 }
 
-.flow-pick-card.is-added .flow-add-button {
+.flow-studio .flow-pick-card.is-added .flow-add-button {
   background: #e5efe0;
   border-color: #b7ceb0;
   color: #1f4435;
 }
 
-.flow-actionbar {
-  background: rgba(255, 254, 251, 0.92);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(34, 62, 48, 0.14);
-  border-radius: 16px;
-  box-shadow: 0 12px 34px rgba(24, 48, 35, 0.11);
+.flow-studio .flow-time-overview {
+  padding: 0 16px 12px;
+}
+
+.flow-studio .flow-time-overview strong {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-studio .flow-time-overview .flow-text-button {
+  min-height: 32px;
+  padding: 4px 8px;
+}
+
+.flow-studio .flow-time-bar {
+  height: 8px;
+  margin: 8px 0;
+}
+
+.flow-studio .flow-section-legend b {
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-studio .flow-time-overview p {
+  margin: 8px 0 0;
+}
+
+.flow-studio .flow-sequence-list {
+  padding: 8px 12px 12px;
+  min-height: 180px;
+}
+
+.flow-studio .flow-empty-plan {
+  padding: 24px 16px 20px;
+}
+
+.flow-studio .flow-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.flow-studio .flow-empty-plan h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.flow-studio .flow-empty-plan p {
+  margin: 6px 0 14px;
+  line-height: 1.55;
+}
+
+.flow-studio .flow-actionbar {
+  position: static !important;
+  bottom: auto !important;
+  z-index: auto;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(33, 62, 50, 0.12);
+  background: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.flow-studio .flow-actionbar strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-studio .flow-actionbar .flow-button {
+  min-height: 38px;
+  height: 38px;
+  min-width: 84px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.flow-studio .flow-studio-status {
+  min-height: 0;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.flow-studio .flow-studio-status:empty {
+  display: none;
 }
 
 /* 4. StepEditor On-Demand 3D Pose & Spring Preview Disclosure */
@@ -367,153 +698,97 @@ html #root .flow-app .desktop-nav > button.active {
   box-shadow: 0 8px 24px rgba(24, 46, 35, 0.065);
 }
 
-/* 9. AI Smart Sequence Bar (Effortless 1-Tap & Natural-Language Composer) */
+/* 9. AI Smart Sequence Bar (Calm Single-Band Quick Composer) */
 .pf-ai-quick-bar {
   display: grid;
-  gap: 10px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #fcfbf7 0%, #f1f5ec 100%);
-  border: 1px solid rgba(31, 68, 53, 0.14);
-  box-shadow: 0 4px 18px rgba(24, 46, 35, 0.04);
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(33, 62, 50, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.pf-ai-quick-bar__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-
-.pf-ai-quick-bar__title-wrap {
+.pf-ai-quick-bar__top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-}
-
-.pf-ai-quick-bar__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #1f4435;
-  color: #ffffff;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.pf-ai-quick-bar__title-wrap strong {
-  font-size: 0.85rem;
-  font-weight: 650;
-  color: #20372d;
-  word-break: keep-all;
-}
-
-.pf-ai-caution-disclosure {
-  position: relative;
-}
-
-.pf-ai-caution-disclosure > summary {
-  list-style: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 34px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid rgba(31, 68, 53, 0.18);
-  color: #27483b;
-  font-size: 0.76rem;
-  font-weight: 650;
-  cursor: pointer;
-  user-select: none;
-}
-
-.pf-ai-caution-disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-
-.pf-ai-caution-popover {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(31, 68, 53, 0.14);
-}
-
-.pf-ai-caution-chip {
-  min-height: 34px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(31, 68, 53, 0.16);
-  background: #f8f7f2;
-  color: #2e453b;
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
-}
-
-.pf-ai-caution-chip.is-active {
-  background: #bf5a41;
-  border-color: #bf5a41;
-  color: #ffffff;
 }
 
 .pf-ai-quick-bar__form {
+  flex: 1 1 280px;
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  align-items: stretch;
 }
 
-.pf-ai-quick-bar__input {
-  flex: 1 1 260px;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(31, 68, 53, 0.18);
-  background: #ffffff;
-  color: #1c3128;
-  font-size: 0.92rem;
+.pf-ai-quick-bar__field {
+  flex: 1 1 180px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(33, 62, 50, 0.14);
+  background: #fafaf8;
+  transition:
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.pf-ai-quick-bar__input:focus-visible {
-  outline: none;
+.pf-ai-quick-bar__field:focus-within {
   border-color: #1f4435;
-  box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.13);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.12);
+}
+
+.pf-ai-quick-bar__lead-icon {
+  flex: none;
+  color: #6c7c73;
+}
+
+.pf-ai-quick-bar__input,
+.pf-ai-quick-bar__input:focus,
+.pf-ai-quick-bar__input:focus-visible {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #1c3128;
+  font-size: 13px;
 }
 
 .pf-ai-quick-bar__submit,
 .pf-ai-quick-bar__shuffle {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 10px;
-  font-size: 0.84rem;
-  font-weight: 700;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    transform 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-ai-quick-bar__submit {
@@ -526,42 +801,109 @@ html #root .flow-app .desktop-nav > button.active {
   background: #173529;
 }
 
-.pf-ai-quick-bar__submit:active,
-.pf-ai-quick-bar__shuffle:active {
-  transform: scale(0.98);
-}
-
 .pf-ai-quick-bar__shuffle {
-  border: 1px solid rgba(31, 68, 53, 0.22);
+  padding: 0 12px;
+  border: 1px solid rgba(33, 62, 50, 0.18);
   background: #ffffff;
   color: #1f4435;
+}
+
+.pf-ai-caution-disclosure {
+  position: relative;
+  flex: none;
+}
+
+.pf-ai-caution-disclosure > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fafaf8;
+  border: 1px solid rgba(33, 62, 50, 0.14);
+  color: #344e41;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pf-ai-caution-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-ai-caution-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 248px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(33, 62, 50, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.pf-ai-caution-chip {
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(33, 62, 50, 0.14);
+  background: #fafaf8;
+  color: #2e453b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-ai-caution-chip.is-active {
+  background: #bf5a41;
+  border-color: #bf5a41;
+  color: #ffffff;
 }
 
 .pf-ai-quick-bar__recipes {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .pf-ai-recipe-chip {
-  min-height: 34px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(31, 68, 53, 0.14);
-  background: rgba(255, 255, 255, 0.88);
-  color: #284237;
-  font-size: 0.78rem;
-  font-weight: 600;
+  flex: none;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(33, 62, 50, 0.12);
+  background: #fafaf8;
+  color: #344e41;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   word-break: keep-all;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-ai-recipe-chip:hover {
-  border-color: #1f4435;
+  border-color: rgba(31, 68, 53, 0.3);
   background: #ffffff;
 }
 
@@ -574,11 +916,11 @@ html #root .flow-app .desktop-nav > button.active {
 .pf-ai-quick-bar__summary {
   margin: 0;
   padding: 8px 12px;
-  border-radius: 9px;
-  background: rgba(31, 68, 53, 0.07);
+  border-radius: 8px;
+  background: #f4f7f1;
   color: #1d3c2f;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   word-break: keep-all;
 }
 
@@ -593,17 +935,17 @@ html #root .flow-app .desktop-nav > button.active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1px solid rgba(34, 62, 48, 0.12);
   background: #ffffff;
   color: #6c7c73;
   cursor: pointer;
   transition:
-    color 150ms ease,
-    border-color 150ms ease,
-    background-color 150ms ease;
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .flow-fav-button.is-favorited {
@@ -614,10 +956,10 @@ html #root .flow-app .desktop-nav > button.active {
 
 .flow-row-spring-pill {
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: 6px;
   background: #edf3ea;
   color: #214536;
-  font-weight: 650;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -631,17 +973,17 @@ html #root .flow-app .desktop-nav > button.active {
 .flow-layer-pill {
   min-height: 24px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   border: 1px solid rgba(34, 62, 48, 0.14);
   background: #faf9f5;
   color: #4f6358;
   font-size: 0.71rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
   transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    border-color 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .flow-layer-pill.is-active {
@@ -653,11 +995,19 @@ html #root .flow-app .desktop-nav > button.active {
 .flow-row-layer-cue {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   margin: 4px 0 0;
   font-size: 0.75rem;
   color: #2b5444;
   word-break: keep-all;
+}
+
+.flow-row-layer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #275e43;
+  flex: none;
 }
 
 .flow-row-time-group {
@@ -916,18 +1266,17 @@ html #root .flow-app .desktop-nav > button.active {
 .pf-ai-refine-chip {
   min-height: 28px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   border: 1px solid rgba(34, 62, 48, 0.18);
   background: #ffffff;
   color: #214536;
-  font-size: 0.74rem;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease,
-    transform 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-ai-refine-chip:hover {
@@ -935,18 +1284,248 @@ html #root .flow-app .desktop-nav > button.active {
   border-color: rgba(31, 68, 53, 0.34);
 }
 
-.pf-ai-refine-chip:active {
-  transform: scale(0.98);
+/* Tablet (768px–1099px): Balanced 2-Column 46% / 54% Grid with Zero Horizontal Overflow */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .flow-studio .flow-mobile-panes {
+    display: none;
+  }
+
+  .flow-studio[data-mobile-pane='plan'] .flow-picker,
+  .flow-studio[data-mobile-pane='library'] .flow-plan {
+    display: block;
+  }
+
+  .flow-studio .flow-class-brief {
+    grid-template-columns: minmax(132px, 1fr) 106px 88px 76px auto;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .flow-studio .flow-class-brief .flow-class-title {
+    grid-column: auto;
+  }
+
+  .flow-studio .flow-class-brief .flow-condition-button {
+    grid-column: auto;
+    justify-self: auto;
+  }
+
+  .flow-studio .flow-class-brief .flow-field input,
+  .flow-studio .flow-class-brief .flow-field select,
+  .flow-studio .flow-search input {
+    font-size: 13px;
+  }
+
+  .flow-studio .flow-studio-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .flow-studio .flow-picker-list {
+    max-height: clamp(380px, calc(100vh - 340px), 680px);
+  }
+
+  .flow-studio .flow-pick-card {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px 6px;
+  }
+
+  .flow-studio .flow-actionbar small {
+    display: block;
+  }
 }
 
-@media (max-width: 800px) {
-  .flow-picker-list {
+/* Mobile (<= 767px, including 390px): Tight Compact Chrome & Non-Overlapping Flow */
+@media (max-width: 767px) {
+  .flow-studio {
     padding-bottom: 16px;
   }
 
-  .pf-hero-3d-modeler-toggle,
+  .flow-studio .flow-studio__heading {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .flow-studio .flow-studio__heading h1 {
+    font-size: 20px;
+    white-space: nowrap;
+  }
+
+  .flow-studio .flow-studio__heading p {
+    display: none;
+  }
+
+  .flow-studio .flow-heading-actions {
+    width: auto;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .flow-studio .flow-heading-actions > .flow-button {
+    min-height: 36px;
+    height: 36px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .flow-studio .flow-heading-actions > .flow-button svg {
+    display: none;
+  }
+
+  .flow-studio .flow-class-brief {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .flow-studio .flow-class-brief .flow-class-title {
+    grid-column: 1 / 5;
+  }
+
+  .flow-studio .flow-class-brief .flow-condition-button {
+    grid-column: 5 / 7;
+    grid-row: 1;
+    align-self: end;
+    justify-self: stretch;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .flow-studio .flow-class-brief > .flow-field:nth-of-type(2) {
+    grid-column: 1 / 3;
+  }
+
+  .flow-studio .flow-class-brief > .flow-field:nth-of-type(3) {
+    grid-column: 3 / 5;
+  }
+
+  .flow-studio .flow-class-brief > .flow-field:nth-of-type(4) {
+    grid-column: 5 / 7;
+  }
+
+  .flow-studio .flow-class-brief .flow-field input,
+  .flow-studio .flow-class-brief .flow-field select {
+    font-size: 16px;
+    padding: 0 8px;
+  }
+
+  .pf-ai-quick-bar {
+    padding: 12px;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .pf-ai-quick-bar__form {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pf-ai-quick-bar__field {
+    flex: 1 1 160px;
+    padding: 0 10px;
+  }
+
+  .pf-ai-quick-bar__input,
+  .pf-ai-quick-bar__input:focus,
+  .pf-ai-quick-bar__input:focus-visible {
+    font-size: 16px;
+  }
+
   .pf-ai-quick-bar__submit,
   .pf-ai-quick-bar__shuffle {
+    width: auto;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .pf-ai-caution-disclosure {
+    width: 100%;
+  }
+
+  .pf-ai-caution-disclosure > summary {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 10px;
+  }
+
+  .pf-ai-caution-popover {
+    position: static;
+    min-width: 0;
+    width: 100%;
+    margin-top: 6px;
+    box-shadow: none;
+  }
+
+  .pf-ai-quick-bar__recipes {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .pf-ai-quick-bar__recipes::-webkit-scrollbar {
+    display: none;
+  }
+
+  .flow-studio .flow-mobile-panes {
+    margin-bottom: 10px;
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .flow-studio .flow-mobile-panes button {
+    min-height: 36px;
+    height: 36px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .flow-studio .flow-studio-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .flow-studio .flow-picker-list {
+    max-height: none;
+    padding-bottom: 8px;
+  }
+
+  .flow-studio .flow-pick-card {
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .flow-studio .flow-actionbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .flow-studio .flow-actionbar > div {
+    flex: 1 1 120px;
+  }
+
+  .flow-studio .flow-actionbar .flow-button {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .pf-hero-3d-modeler-toggle {
     width: 100%;
     justify-content: center;
   }

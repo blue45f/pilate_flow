@@ -9,6 +9,7 @@ import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowRight,
   ArrowUpRight,
   Check,
   ChevronDown,
@@ -78,7 +79,7 @@ import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
-import { FlowAtlasCatalog } from './FlowAtlasCatalog';
+import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import { PilatesVideoLibrary } from './PilatesVideoLibrary';
 import { VERIFIED_YOUTUBE_VIDEO_POOL } from '../data/exerciseYouTubeCatalog';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
@@ -90,6 +91,7 @@ import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
 import '../styles/design-tokens.css';
+import '../styles/flow-atlas.css';
 import '../styles/library.css';
 import '../styles/library-learning.css';
 import '../styles/motion-library.css';
@@ -635,7 +637,12 @@ const VerifiedReferencesSection: React.FC<{
     <section className="verified-reference-section" aria-labelledby="verified-reference-heading">
       <header className="verified-reference-header">
         <div>
-          <span className="eyebrow">PUBLIC SOURCE COLLECTION</span>
+          <span
+            className="eyebrow"
+            style={{ letterSpacing: '0.01em', textTransform: 'none', fontWeight: 500 }}
+          >
+            공개 참고 모음
+          </span>
           <h2 id="verified-reference-heading">
             공개 참고 자료와 국내 후보 <span>{VERIFIED_REFERENCES.length}</span>
           </h2>
@@ -877,6 +884,987 @@ const VerifiedReferencesSection: React.FC<{
   );
 };
 
+const CATALOG_APPARATUS_ORDER: readonly ApparatusType[] = [
+  'mat',
+  'reformer',
+  'cadillac',
+  'chair',
+  'barrel',
+];
+
+const CATALOG_APPARATUS_FILTERS = CATALOG_APPARATUS_ORDER.map((apparatus) => ({
+  apparatus,
+  ids: EQUIPMENT_OPTIONS.filter((item) => item.apparatusFamily === apparatus).map(
+    (item) => item.id,
+  ),
+}));
+
+interface AtlasCatalogCardState {
+  inSequence: boolean;
+  orderNumber?: number;
+  note?: string;
+}
+
+interface AtlasEverydayCatalogProps {
+  exercises: readonly PilatesExercise[];
+  resultCount: number;
+  totalCount: number;
+  search: string;
+  equipment: readonly string[];
+  level: string;
+  duration: string;
+  favoritesOnly: boolean;
+  filterCount: number;
+  activeFilters: readonly { key: string; label: string; onClear: () => void }[];
+  ownedOnly: boolean;
+  selectedCount: number;
+  plannedMinutes: number;
+  addedId: string | null;
+  feedback: { success: boolean; message: string } | null;
+  brokenPhotoIds: Readonly<Record<string, boolean>>;
+  searchRef: React.RefObject<HTMLInputElement | null>;
+  gridRef: React.RefObject<HTMLDivElement | null>;
+  onSearch: (value: string) => void;
+  onSelectEquipment: (ids: string[]) => void;
+  onSelectLevel: (level: string) => void;
+  onSelectDuration: (duration: string) => void;
+  onToggleOwned: () => void;
+  onToggleFavorites: () => void;
+  onClearSearch: () => void;
+  onReset: () => void;
+  onShowAll: () => void;
+  onOpenTools: (filters?: boolean) => void;
+  onReturnToClass: () => void;
+  onOpenDetails: (exercise: PilatesExercise) => void;
+  onAdd: (exercise: PilatesExercise) => void;
+  onToggleFavorite: (exercise: PilatesExercise) => void;
+  onPhotoError: (id: string) => void;
+  onLoadMore: () => void;
+  getCardState: (exercise: PilatesExercise) => AtlasCatalogCardState;
+}
+
+const ATLAS_UNSLOP_CSS = `
+.flow-atlas.flow-atlas--unslop {
+  --atlas-ink: #1b2822;
+  --atlas-secondary: #4e5c55;
+  --atlas-muted: #6e7a73;
+  --atlas-line: rgba(31, 68, 53, 0.10);
+  --atlas-green: #1f4435;
+  --atlas-soft: #f3f1ea;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  max-width: 1320px;
+  margin: 0 auto;
+  color: var(--atlas-ink);
+}
+.flow-atlas--unslop .flow-atlas__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-height: 36px;
+}
+.flow-atlas--unslop .flow-atlas__intro {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  min-width: 0;
+}
+.flow-atlas--unslop h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--atlas-ink);
+  word-break: keep-all;
+}
+.flow-atlas--unslop .flow-atlas__subcopy {
+  color: var(--atlas-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+.flow-atlas--unslop .flow-atlas__button,
+.flow-atlas__tools-return {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--atlas-line);
+  background: #ffffff;
+  color: var(--atlas-ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__button:enabled:active {
+  transform: scale(0.98);
+}
+.flow-atlas--unslop .flow-atlas__button--quiet:hover {
+  background: #f5f4ee;
+  border-color: rgba(31, 68, 53, 0.18);
+}
+.flow-atlas--unslop .flow-atlas__button--add {
+  background: var(--atlas-green);
+  border-color: var(--atlas-green);
+  color: #ffffff;
+}
+.flow-atlas--unslop .flow-atlas__button--add:hover {
+  background: #173529;
+  border-color: #173529;
+}
+.flow-atlas--unslop .flow-atlas__button--add.is-added {
+  background: #eef3ed;
+  border-color: rgba(31, 68, 53, 0.16);
+  color: var(--atlas-green);
+}
+.flow-atlas--unslop .flow-atlas__search-panel {
+  padding: 8px 10px;
+  border: 1px solid var(--atlas-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.flow-atlas--unslop .flow-atlas__toolbar-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 300px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(31, 68, 53, 0.12);
+  border-radius: 10px;
+  background: #faf9f5;
+  color: var(--atlas-muted);
+}
+.flow-atlas--unslop .flow-atlas__search input {
+  height: 36px;
+  font-size: 14px;
+  color: var(--atlas-ink);
+}
+.flow-atlas--unslop .flow-atlas__icon-button {
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  margin-right: -6px;
+  border-radius: 8px;
+}
+.flow-atlas--unslop .flow-atlas__browse-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__chips button,
+.flow-atlas--unslop .flow-atlas__favorites {
+  min-height: 36px;
+  padding: 6px 11px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--atlas-secondary);
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__chips button[aria-pressed='true'] {
+  background: var(--atlas-green);
+  color: #ffffff;
+}
+.flow-atlas--unslop .flow-atlas__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--atlas-soft);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__inline-filters {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.flow-atlas--unslop .flow-atlas__active-filters {
+  margin-top: 8px;
+  gap: 6px;
+}
+.flow-atlas--unslop .flow-atlas__active-filters button {
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.flow-atlas--unslop .flow-atlas__results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 0;
+  min-height: 32px;
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__results-bar > p {
+  font-size: 13px;
+  color: var(--atlas-secondary);
+}
+.flow-atlas--unslop .flow-atlas__results-bar strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--atlas-ink);
+}
+.flow-atlas--unslop .flow-atlas__results-bar p > span {
+  margin-left: 8px;
+  color: var(--atlas-muted);
+  font-size: 12px;
+}
+.flow-atlas--unslop .flow-atlas__class-link {
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 68, 53, 0.14);
+  background: #f2f5f0;
+  color: var(--atlas-green);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--atlas-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__card:hover {
+  border-color: rgba(31, 68, 53, 0.22);
+}
+.flow-atlas--unslop .flow-atlas__card.is-in-sequence {
+  border-color: rgba(31, 68, 53, 0.36);
+}
+.flow-atlas--unslop .flow-atlas__art-wrap {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 16 / 9.5;
+  background: #f4f2ea;
+  border-bottom: 1px solid rgba(31, 68, 53, 0.08);
+}
+.flow-atlas--unslop .flow-atlas__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+.flow-atlas--unslop .flow-atlas__art > img,
+.flow-atlas--unslop .flow-atlas__art .exercise-motion-artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.flow-atlas--unslop .flow-atlas__art .exercise-motion-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.flow-atlas--unslop .flow-atlas__favorite-button {
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 68, 53, 0.10);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--atlas-muted);
+}
+.flow-atlas--unslop .flow-atlas__favorite-button[aria-pressed='true'] {
+  color: #a8553a;
+  border-color: rgba(168, 85, 58, 0.24);
+  background: #ffffff;
+}
+.flow-atlas--unslop .flow-atlas__added-marker {
+  bottom: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(31, 68, 53, 0.14);
+  color: var(--atlas-green);
+  font-size: 11px;
+  font-weight: 500;
+}
+.flow-atlas--unslop .flow-atlas__card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px 8px;
+}
+.flow-atlas--unslop .flow-atlas__card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--atlas-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__card-meta > span + span::before {
+  content: '·';
+  margin-right: 5px;
+  color: #b0b8b2;
+}
+.flow-atlas--unslop .flow-atlas__preview-affordance {
+  flex: 0 0 auto;
+  color: var(--atlas-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  transition: color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__preview:hover .flow-atlas__preview-affordance {
+  color: var(--atlas-green);
+}
+.flow-atlas--unslop .flow-atlas__card h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: var(--atlas-ink);
+}
+.flow-atlas--unslop .flow-atlas__card h2 button {
+  min-height: 20px;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flow-atlas--unslop .flow-atlas__quiet-caption {
+  margin: 0;
+  height: 16px;
+  color: var(--atlas-muted);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__quiet-note {
+  color: var(--atlas-muted);
+}
+.flow-atlas--unslop .flow-atlas__card-footer {
+  margin-top: auto;
+  padding: 0 12px 12px;
+}
+.flow-atlas--unslop .flow-atlas__card-actions button {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 1119px) {
+  .flow-atlas--unslop .flow-atlas__toolbar-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .flow-atlas--unslop .flow-atlas__search-row {
+    flex: 1 1 auto;
+  }
+  .flow-atlas--unslop .flow-atlas__browse-row {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .flow-atlas--unslop .flow-atlas__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .flow-atlas--unslop .flow-atlas__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 959px) {
+  .flow-atlas--unslop .flow-atlas__button,
+  .flow-atlas--unslop .flow-atlas__chips button,
+  .flow-atlas--unslop .flow-atlas__favorites,
+  .flow-atlas--unslop .flow-atlas__class-link,
+  .flow-atlas--unslop .flow-atlas__card-actions button {
+    min-height: 44px;
+  }
+  .flow-atlas--unslop .flow-atlas__search {
+    min-height: 44px;
+  }
+  .flow-atlas--unslop .flow-atlas__search input {
+    height: 42px;
+    font-size: 16px;
+  }
+  .flow-atlas--unslop .flow-atlas__icon-button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .flow-atlas--unslop .flow-atlas__favorite-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 599px) {
+  .flow-atlas.flow-atlas--unslop {
+    gap: 12px;
+  }
+  .flow-atlas--unslop .flow-atlas__heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .flow-atlas--unslop .flow-atlas__subcopy {
+    display: none;
+  }
+  .flow-atlas--unslop .flow-atlas__search-panel {
+    padding: 10px;
+  }
+  .flow-atlas--unslop .flow-atlas__search-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .flow-atlas--unslop .flow-atlas__search {
+    flex: 1 1 0;
+    width: auto;
+    padding-inline: 10px;
+  }
+  .flow-atlas--unslop .flow-atlas__filter-toggle {
+    flex: 0 0 auto;
+    padding-inline: 10px;
+  }
+  .flow-atlas--unslop .flow-atlas__browse-row {
+    gap: 6px;
+  }
+  .flow-atlas--unslop .flow-atlas__chips {
+    flex: 1 1 100%;
+    gap: 4px;
+  }
+  .flow-atlas--unslop .flow-atlas__chips button {
+    flex: 1 1 auto;
+    padding-inline: 8px;
+    font-size: 12.5px;
+  }
+  .flow-atlas--unslop .flow-atlas__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .flow-atlas--unslop .flow-atlas__card h2 button {
+    white-space: normal;
+  }
+}
+`;
+
+const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
+  exercises,
+  resultCount,
+  totalCount,
+  search,
+  equipment,
+  level,
+  duration,
+  favoritesOnly,
+  filterCount,
+  activeFilters,
+  ownedOnly,
+  selectedCount,
+  plannedMinutes,
+  addedId,
+  feedback,
+  brokenPhotoIds,
+  searchRef,
+  gridRef,
+  onSearch,
+  onSelectEquipment,
+  onSelectLevel,
+  onSelectDuration,
+  onToggleOwned,
+  onToggleFavorites,
+  onClearSearch,
+  onReset,
+  onShowAll,
+  onOpenTools,
+  onReturnToClass,
+  onOpenDetails,
+  onAdd,
+  onToggleFavorite,
+  onPhotoError,
+  onLoadMore,
+  getCardState,
+}) => {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const selectedApparatus = CATALOG_APPARATUS_FILTERS.find(
+    ({ ids }) => ids.length === equipment.length && ids.every((id) => equipment.includes(id)),
+  );
+  const extraFilters = activeFilters.filter(
+    (chip) =>
+      chip.key !== 'search' &&
+      !(selectedApparatus && chip.key.startsWith('eq-')) &&
+      !(filtersOpen && (chip.key === 'level' || chip.key === 'duration')),
+  );
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    filterButtonRef.current?.focus();
+  };
+
+  return (
+    <section className="flow-atlas flow-atlas--unslop" aria-labelledby="workspace-main-heading">
+      <style>{ATLAS_UNSLOP_CSS}</style>
+      <header className="flow-atlas__heading">
+        <div className="flow-atlas__intro">
+          <h1 id="workspace-main-heading" tabIndex={-1}>
+            동작 라이브러리
+          </h1>
+          <span className="flow-atlas__subcopy">기구와 부위로 동작을 찾아 수업에 담으세요</span>
+        </div>
+        <button
+          className="flow-atlas__button flow-atlas__button--quiet"
+          type="button"
+          onClick={() => onOpenTools()}
+        >
+          <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 자료와 고급 도구
+        </button>
+      </header>
+
+      <section className="flow-atlas__search-panel" aria-label="동작 검색과 필터">
+        <div className="flow-atlas__toolbar-main">
+          <div className="flow-atlas__search-row">
+            <div className="flow-atlas__search" role="search" aria-label="동작 검색창">
+              <Search size={16} strokeWidth={1.5} aria-hidden="true" />
+              <label className="sr-only" htmlFor="flow-atlas-search">
+                동작 검색
+              </label>
+              <input
+                id="flow-atlas-search"
+                ref={searchRef}
+                type="search"
+                autoComplete="off"
+                value={search}
+                onChange={(event) => onSearch(event.target.value)}
+                placeholder="동작 이름·부위 검색"
+              />
+              {search ? (
+                <button
+                  type="button"
+                  className="flow-atlas__icon-button"
+                  onClick={onClearSearch}
+                  aria-label="검색어 지우기"
+                >
+                  <X size={16} strokeWidth={1.5} aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+            <button
+              className="flow-atlas__button flow-atlas__button--quiet flow-atlas__filter-toggle"
+              type="button"
+              ref={filterButtonRef}
+              aria-expanded={filtersOpen}
+              aria-controls="flow-atlas-filters"
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 필터
+              {filterCount > 0 || ownedOnly ? (
+                <span className="flow-atlas__count">{filterCount + Number(ownedOnly)}</span>
+              ) : null}
+              <ChevronDown size={15} strokeWidth={1.5} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="flow-atlas__browse-row">
+            <div className="flow-atlas__chips" role="group" aria-label="기구 선택">
+              <button
+                type="button"
+                aria-pressed={equipment.length === 0}
+                onClick={() => onSelectEquipment([])}
+              >
+                전체
+              </button>
+              {CATALOG_APPARATUS_FILTERS.map(({ apparatus, ids }) => {
+                const selected = selectedApparatus?.apparatus === apparatus;
+                return (
+                  <button
+                    key={apparatus}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => onSelectEquipment(selected ? [] : ids)}
+                  >
+                    {APPARATUS_LABELS[apparatus].ko}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="flow-atlas__favorites"
+              type="button"
+              aria-pressed={favoritesOnly}
+              onClick={onToggleFavorites}
+            >
+              <Heart
+                size={15}
+                strokeWidth={1.5}
+                aria-hidden="true"
+                fill={favoritesOnly ? 'currentColor' : 'none'}
+              />{' '}
+              즐겨찾기
+            </button>
+          </div>
+        </div>
+        <div
+          id="flow-atlas-filters"
+          className="flow-atlas__inline-filters"
+          role="group"
+          aria-label="추가 검색 조건"
+          hidden={!filtersOpen}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.stopPropagation();
+            closeFilters();
+          }}
+        >
+          <div className="flow-atlas__filter-fields">
+            <label>
+              난이도
+              <select value={level} onChange={(event) => onSelectLevel(event.target.value)}>
+                <option value="all">전체 난이도</option>
+                {Object.entries(LEVEL_NAMES).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              동작 시간
+              <select value={duration} onChange={(event) => onSelectDuration(event.target.value)}>
+                <option value="all">전체 시간</option>
+                <option value="short">3분 이하</option>
+                <option value="medium">3분 초과~5분</option>
+                <option value="long">5분 초과</option>
+              </select>
+            </label>
+            <label className="flow-atlas__owned-filter">
+              <input type="checkbox" checked={ownedOnly} onChange={onToggleOwned} />내 보유 장비로
+              가능한 동작만
+            </label>
+          </div>
+          <div className="flow-atlas__filter-footer">
+            <button
+              type="button"
+              className="flow-atlas__text-button"
+              onClick={() => onOpenTools(true)}
+            >
+              자세·소도구 등 더 자세한 조건
+              <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="flow-atlas__button flow-atlas__button--quiet"
+              onClick={closeFilters}
+            >
+              결과 보기
+            </button>
+          </div>
+        </div>
+        {activeFilters.length > 0 || ownedOnly ? (
+          <div className="flow-atlas__active-filters" role="group" aria-label="적용된 검색·필터">
+            {ownedOnly && !filtersOpen ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleOwned();
+                  searchRef.current?.focus();
+                }}
+                aria-label="내 보유 장비 범위 필터 해제"
+              >
+                내 보유 장비 범위
+                <X size={12} strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            ) : null}
+            {extraFilters.map((chip) => (
+              <button
+                type="button"
+                key={chip.key}
+                onClick={chip.onClear}
+                aria-label={`${chip.label} 필터 해제`}
+              >
+                {chip.label}
+                <X size={12} strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            ))}
+            <button
+              type="button"
+              className="flow-atlas__reset"
+              onClick={ownedOnly ? onShowAll : onReset}
+            >
+              조건 초기화
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      <div className="flow-atlas__results-bar">
+        <p aria-live="polite">
+          <strong>{resultCount}</strong>개 동작 <span>전체 {totalCount}개</span>
+        </p>
+        <button type="button" className="flow-atlas__class-link" onClick={onReturnToClass}>
+          {selectedCount > 0 ? `수업안 ${selectedCount}개 · ${plannedMinutes}분` : '수업 만들기'}
+          <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div
+        className={`flow-atlas__feedback ${feedback?.success === false ? 'is-error' : ''}`}
+        role={feedback?.success === false ? 'alert' : 'status'}
+        aria-live={feedback?.success === false ? 'assertive' : 'polite'}
+      >
+        {feedback ? (
+          <>
+            {feedback.success ? (
+              <Check size={16} strokeWidth={1.5} aria-hidden="true" />
+            ) : (
+              <Info size={16} strokeWidth={1.5} aria-hidden="true" />
+            )}
+            <span>{feedback.message}</span>
+          </>
+        ) : null}
+      </div>
+
+      {exercises.length > 0 ? (
+        <div className="flow-atlas__grid" ref={gridRef}>
+          {exercises.map((exercise) => {
+            const state = getCardState(exercise);
+            const favorite = exercise.favoriteTag !== 'none';
+            const idea = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
+            const photo =
+              idea?.photoDataUrl && !brokenPhotoIds[exercise.id] ? idea.photoDataUrl : null;
+            const previewLabel = idea
+              ? photo
+                ? '내 사진과 메모'
+                : '내 동작 메모'
+              : getExerciseArtworkFrame(exercise)
+                ? '계획용 동작 도해'
+                : '3D 동작 설명';
+            const previewHintId = `flow-atlas-preview-${exercise.id}`;
+            return (
+              <article
+                className={`flow-atlas__card ${state.inSequence ? 'is-in-sequence' : ''}`}
+                key={exercise.id}
+                aria-label={`${exercise.nameKo} 동작`}
+                data-exercise-id={exercise.id}
+              >
+                <div className="flow-atlas__preview">
+                  <div className="flow-atlas__art-wrap">
+                    <div className="flow-atlas__art">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt=""
+                          loading="lazy"
+                          onError={() => onPhotoError(exercise.id)}
+                        />
+                      ) : (
+                        <ExerciseMotionArtwork exercise={exercise} />
+                      )}
+                    </div>
+                    {state.inSequence ? (
+                      <span className="flow-atlas__added-marker">
+                        <Check size={12} strokeWidth={1.5} aria-hidden="true" /> 수업에 담김
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flow-atlas__card-content">
+                    <div className="flow-atlas__card-meta-row">
+                      <p className="flow-atlas__card-meta">
+                        <span>{APPARATUS_LABELS[exercise.apparatus].ko}</span>
+                        <span>{LEVEL_NAMES[exercise.level]}</span>
+                        <span>{exercise.defaultDurationMin}분</span>
+                      </p>
+                      <span className="flow-atlas__preview-affordance" aria-hidden="true">
+                        미리보기
+                      </span>
+                    </div>
+                    <h2>
+                      <button
+                        type="button"
+                        className="flow-atlas__preview-button"
+                        onClick={() => onOpenDetails(exercise)}
+                        aria-label={`${exercise.nameKo} 미리보기`}
+                        aria-describedby={previewHintId}
+                      >
+                        {exercise.nameKo}
+                      </button>
+                    </h2>
+                    <p className="flow-atlas__quiet-caption">
+                      <span id={previewHintId}>{previewLabel}</span>
+                      {state.note ? (
+                        <span className="flow-atlas__quiet-note"> · {state.note}</span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="flow-atlas__favorite-button"
+                    aria-pressed={favorite}
+                    aria-label={`${exercise.nameKo} 즐겨찾기 ${favorite ? '해제' : '추가'}`}
+                    onClick={() => {
+                      onToggleFavorite(exercise);
+                      if (favoritesOnly && favorite) searchRef.current?.focus();
+                    }}
+                  >
+                    <Heart
+                      size={16}
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                      fill={favorite ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                </div>
+                <div className="flow-atlas__card-footer">
+                  <div className="flow-atlas__card-actions">
+                    <button
+                      type="button"
+                      className={`flow-atlas__button flow-atlas__button--add ${state.inSequence ? 'is-added' : ''}`}
+                      onClick={() => (state.inSequence ? onReturnToClass() : onAdd(exercise))}
+                      aria-label={
+                        state.inSequence
+                          ? `${exercise.nameKo} 담긴 수업안 보기`
+                          : `${exercise.nameKo} 수업안에 추가`
+                      }
+                    >
+                      {addedId === exercise.id || state.inSequence ? (
+                        <Check size={16} strokeWidth={1.5} aria-hidden="true" />
+                      ) : (
+                        <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
+                      )}
+                      {state.inSequence
+                        ? '수업안 보기'
+                        : addedId === exercise.id
+                          ? '추가됨'
+                          : '수업에 담기'}
+                      {state.inSequence ? (
+                        <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
+                      ) : null}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flow-atlas__empty" role="status">
+          <Search size={28} strokeWidth={1.5} aria-hidden="true" />
+          <h2>조건에 맞는 동작이 없어요.</h2>
+          <p>
+            {search.trim() ? `‘${search.trim()}’ 검색어` : '선택한 기구·필터'}
+            {ownedOnly ? '와 내 보유 장비 범위' : ''}를 확인해 보세요
+          </p>
+          <div>
+            {search ? (
+              <button
+                className="flow-atlas__button flow-atlas__button--quiet"
+                type="button"
+                onClick={onClearSearch}
+              >
+                검색어 지우기
+              </button>
+            ) : null}
+            <button
+              className="flow-atlas__button flow-atlas__button--add"
+              type="button"
+              onClick={onShowAll}
+            >
+              전체 동작 보기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {resultCount > exercises.length ? (
+        <div className="flow-atlas__more">
+          <p style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {exercises.length} / {resultCount}개
+          </p>
+          <button
+            type="button"
+            className="flow-atlas__button flow-atlas__button--quiet"
+            onClick={onLoadMore}
+          >
+            동작 더 보기 <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   onOpenYouTubePreview,
   onOpenIdeaSheet,
@@ -940,7 +1928,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       ? recentAddedId
       : null;
   // A restored/replaced class or a removed step must not inherit the previous add's success.
-  const toast = additionIsCurrent && (!recentToast?.success || addedId !== null) ? recentToast : null;
+  const toast =
+    additionIsCurrent && (!recentToast?.success || addedId !== null) ? recentToast : null;
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
   const [previewReference, setPreviewReference] = useState<MotionPatternReference | null>(null);
   const [previewCatalogMotionId, setPreviewCatalogMotionId] = useState<string | null>(null);
@@ -1231,7 +2220,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
 
   if (!showAdvancedTools) {
     return (
-      <FlowAtlasCatalog
+      <AtlasEverydayCatalog
         exercises={filtered.slice(0, notesVisibleCount)}
         resultCount={filtered.length}
         totalCount={exercises.length}
@@ -1260,7 +2249,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         onSelectEquipment={(ids) => update('equipment', ids)}
         onSelectLevel={(value) => update('level', value)}
         onSelectDuration={(value) => update('duration', value)}
-        onToggleOwned={() => setExerciseBrowseScope(exerciseBrowseScope === 'owned' ? 'all' : 'owned')}
+        onToggleOwned={() =>
+          setExerciseBrowseScope(exerciseBrowseScope === 'owned' ? 'all' : 'owned')
+        }
         onToggleFavorites={() => update('favorite', filters.favorite === 'all' ? 'saved' : 'all')}
         onClearSearch={clearSearch}
         onReset={resetFilters}
@@ -1350,7 +2341,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           <h1 id="workspace-main-heading" tabIndex={-1}>
             자료와 고급 도구
           </h1>
-          <p className="muted">수집 자료와 검토 기록, 제작 중인 패턴 도해를 살펴보세요.</p>
+          <p className="muted">수집 자료와 검토 기록, 제작 중인 패턴 도해를 살펴보세요</p>
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
@@ -2019,27 +3010,20 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             <div
                               className="atlas-compare-3d-strip"
                               data-testid={`atlas-compare-3d-strip-${item.id}`}
-                              aria-label={`${item.nameKo} ${itemSourceOnly ? '영상 참고' : '3단계 동작 도해'}`}
+                              aria-label={`${item.nameKo} 3단계 3D 동작 도해`}
                             >
-                              {itemSourceOnly ? (
-                                <figure className="atlas-compare-3d-frame atlas-compare-video-reference">
-                                  <ExerciseMotionArtwork exercise={item} />
-                                  <figcaption>제작자 영상으로 동작 확인</figcaption>
+                              {(
+                                [
+                                  { key: 'start', label: '시작' },
+                                  { key: 'middle', label: '전환·정점' },
+                                  { key: 'end', label: '복귀' },
+                                ] as const
+                              ).map((frame) => (
+                                <figure key={frame.key} className="atlas-compare-3d-frame">
+                                  <ExerciseMotionArtwork exercise={item} phase={frame.key} />
+                                  <figcaption>{frame.label}</figcaption>
                                 </figure>
-                              ) : (
-                                (
-                                  [
-                                    { key: 'start', label: '시작' },
-                                    { key: 'middle', label: '전환·정점' },
-                                    { key: 'end', label: '복귀' },
-                                  ] as const
-                                ).map((frame) => (
-                                  <figure key={frame.key} className="atlas-compare-3d-frame">
-                                    <ExerciseMotionArtwork exercise={item} phase={frame.key} />
-                                    <figcaption>{frame.label}</figcaption>
-                                  </figure>
-                                ))
-                              )}
+                              ))}
                             </div>
 
                             <div className="atlas-compare-visual-bar">

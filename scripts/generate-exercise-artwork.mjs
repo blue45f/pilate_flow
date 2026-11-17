@@ -1,11 +1,9 @@
-/** Cache authored poses as self-contained images; interactive SVGs retain their shared atlas URL. */
+/** Cache 3D rendered poses as self-contained WebP images; preserves SVG/atlas helpers for unit tests. */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import sharp from 'sharp';
 import { createServer } from 'vite';
 
@@ -17,7 +15,7 @@ const PHASES = ['start', 'middle', 'end'];
 const LABELS = { start: '시작 자세', middle: '정점 자세', end: '종료 자세' };
 export const PRACTITIONER_ATLAS_URL = '/images/motion-atlas-v3/practitioner.webp';
 export const RASTER_SETTINGS = Object.freeze({
-  pipeline: 'sharp-svg-atlas-webp-v1',
+  pipeline: 'blender-cycles-3d-flagship-v4',
   width: 640,
   height: 400,
   density: 144,
@@ -132,9 +130,8 @@ export async function runArtworkJobs(jobs, concurrency = 4) {
   if (failed) throw failure;
 }
 
-export async function generateExerciseArtwork({ checkOnly = false } = {}) {
+export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '' } = {}) {
   const atlasBuffer = await readFile(path.join(ROOT, 'public', PRACTITIONER_ATLAS_URL));
-  // The pinned librsvg cannot reliably decode embedded WebP. Convert once for bake only.
   const embeddedAtlas = await sharp(atlasBuffer).png({ compressionLevel: 9 }).toBuffer();
   const sourceAssets = new Map([
     [
@@ -147,12 +144,14 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
     ],
   ]);
   const sourceAssetManifest = [...sourceAssets].map(([src, asset]) => assetMetadata(src, asset));
+
   let previous;
   try {
     previous = JSON.parse(await readFile(MANIFEST, 'utf8'));
   } catch (error) {
     if (checkOnly || error.code !== 'ENOENT') throw error;
   }
+
   const server = await createServer({
     root: ROOT,
     configFile: false,
@@ -161,20 +160,20 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
     esbuild: { jsx: 'automatic' },
     logLevel: 'error',
   });
+
   try {
     const { INITIAL_EXERCISES } = await server.ssrLoadModule('/src/data/pilatesCatalog.ts');
-    const { getMovementVisualAsset } = await server.ssrLoadModule(
-      '/src/data/movementVisualRigCatalog.ts',
+    const { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } = await server.ssrLoadModule(
+      '/src/data/globalCrawledRepertoirePack.ts',
     );
     const { getCatalogContinuousMotionAsset } = await server.ssrLoadModule(
       '/src/data/catalogMotionAssets/index.ts',
     );
-    const { getExpandedMovementVisualBinding } = await server.ssrLoadModule(
-      '/src/data/expandedMovementVisualBindings.ts',
+    const { PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule(
+      '/src/data/universal3dExerciseRigs.ts',
     );
-    const { MovementPhaseDiagramSvg } = await server.ssrLoadModule(
-      '/src/components/MovementPhaseDiagramSvg.tsx',
-    );
+
+    const allExercises = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
     const entries = {};
     const jobs = [];
     const outputFiles = new Set();
@@ -182,48 +181,54 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
     let frames = 0;
     let rasterizedFrames = 0;
     if (!checkOnly) await mkdir(OUTPUT, { recursive: true });
-    for (const exercise of INITIAL_EXERCISES) {
-      // Source videos alone never establish authored geometry.
-      if (getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false) continue;
+
+    for (const exercise of allExercises) {
       assert.match(exercise.id, /^[a-zA-Z0-9_-]+$/);
-      const asset = getMovementVisualAsset(exercise.id);
-      assert(asset, 'Missing authored pattern for ' + exercise.id);
-      const motion = getCatalogContinuousMotionAsset(exercise);
-      // Reserve authored ordering before asynchronous completion.
+      const isExpandedOrCrawled =
+        exercise.id.startsWith('expanded-') || exercise.id.startsWith('crawled-');
+      const motion = isExpandedOrCrawled ? null : getCatalogContinuousMotionAsset(exercise);
+      const startRig = sampleUniversal3DExerciseRig(exercise, 0);
       const phases = Object.fromEntries(PHASES.map((phase) => [phase, null]));
+
       for (const phase of PHASES) {
         const labelKo = phase === 'end' ? (motion?.endPoseLabelKo ?? LABELS.end) : LABELS[phase];
-        const svg = renderToStaticMarkup(
-          createElement(MovementPhaseDiagramSvg, {
-            asset,
-            phase,
-            compact: true,
-            showAlignment: false,
-            showDirection: false,
-            showMuscles: false,
-            showGhostStartPose: false,
-            label: exercise.nameKo + ' · ' + labelKo + ' · 계획용 동작 도해',
+        const rigSample = sampleUniversal3DExerciseRig(exercise, PHASE_3D_RAW_T[phase]);
+        const rigSpecJson = JSON.stringify({
+          id: exercise.id,
+          apparatus: exercise.apparatus,
+          bodyPosition: exercise.bodyPosition,
+          footbar: exercise.footbar,
+          headrest: exercise.headrest,
+          box: exercise.box,
+          props: exercise.props,
+          phase,
+          rigSample,
+        });
+        const svgSha256 = sha256(rigSpecJson);
+        const inputSha256 = sha256(
+          JSON.stringify({
+            renderer: 'BlenderCycles3DStudio-v3',
+            svgSha256,
+            settings: RASTER_SETTINGS,
+            encoder: ENCODER_VERSIONS,
           }),
         );
-        assert(
-          svg.includes(PRACTITIONER_ATLAS_URL),
-          'Complete the practitioner renderer before caching ' + exercise.id + '/' + phase,
-        );
+
         jobs.push(async () => {
-          embedLocalArtworkAssets(svg, sourceAssets);
-          const fingerprint = getArtworkInputFingerprint(svg, sourceAssets);
           const priorFrame = previous?.entries?.[exercise.id]?.phases?.[phase];
           const matchingInput =
-            previous?.schemaVersion === 2 &&
-            priorFrame?.inputSha256 === fingerprint.inputSha256 &&
-            priorFrame?.svgSha256 === fingerprint.svgSha256;
+            previous?.schemaVersion === 3 &&
+            priorFrame?.inputSha256 === inputSha256 &&
+            priorFrame?.svgSha256 === svgSha256 &&
+            !rawPngDir;
           let buffer;
           let reused = false;
+
           if (checkOnly || matchingInput) {
             try {
               assert(
                 matchingInput,
-                'Stale artwork input: ' +
+                'Stale 3D artwork input: ' +
                   exercise.id +
                   '/' +
                   phase +
@@ -245,10 +250,21 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
               buffer = undefined;
             }
           }
+
           if (!buffer) {
-            buffer = await rasterizeArtwork(svg, sourceAssets);
+            assert(
+              rawPngDir,
+              `Missing raw 3D PNG directory (--raw-png-dir) to encode ${exercise.id}/${phase}`,
+            );
+            const pngPath = path.join(rawPngDir, `${exercise.id}.${phase}.png`);
+            const pngBuf = await readFile(pngPath);
+            buffer = await sharp(pngBuf)
+              .resize(RASTER_SETTINGS.width, RASTER_SETTINGS.height, RASTER_SETTINGS.resize)
+              .webp(RASTER_SETTINGS.webp)
+              .toBuffer();
             rasterizedFrames++;
           }
+
           const hash = sha256(buffer);
           const file = exercise.id + '.' + phase + '.' + hash.slice(0, 12) + '.webp';
           outputFiles.add(file);
@@ -261,31 +277,30 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
             sha256: hash,
             bytes: buffer.length,
             labelKo,
-            ...fingerprint,
+            svgSha256,
+            inputSha256,
           };
           totalBytes += buffer.length;
           frames++;
-          if (!checkOnly && frames % 25 === 0) {
-            console.log(JSON.stringify({ status: 'rendering', frames, totalFrames: jobs.length, rasterizedFrames, totalBytes }));
-          }
         });
       }
+
       entries[exercise.id] = {
         apparatus: exercise.apparatus,
         bodyPosition: exercise.bodyPosition,
-        archetypeId: asset.archetypeId,
+        archetypeId: startRig.rigId,
         phases,
       };
     }
-    // Keep the active manifest and its files until every job has succeeded.
+
     await runArtworkJobs(jobs);
     const manifest = {
-      schemaVersion: 2,
-      renderer: 'MovementPhaseDiagramSvg',
+      schemaVersion: 3,
+      renderer: 'BlenderCycles3DStudio',
       width: RASTER_SETTINGS.width,
       height: RASTER_SETTINGS.height,
       format: 'webp',
-      purpose: 'same-model-static-thumbnail-cache',
+      purpose: 'same-model-3d-studio-thumbnail-cache',
       professionalReviewVerified: false,
       sourceFrameMappingVerified: false,
       rasterization: { ...RASTER_SETTINGS, encoder: ENCODER_VERSIONS },
@@ -293,21 +308,23 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
       entries,
     };
     const serialized = JSON.stringify(manifest, null, 2) + '\n';
-    if (checkOnly)
+    if (checkOnly) {
       assert.equal(
         await readFile(MANIFEST, 'utf8'),
         serialized,
         'Stale artwork manifest; run pnpm generate:motion-artwork',
       );
-    else {
+    } else {
       await writeFile(MANIFEST + '.tmp', serialized);
       await rename(MANIFEST + '.tmp', MANIFEST);
-      for (const file of await readdir(OUTPUT))
+      for (const file of await readdir(OUTPUT)) {
         if (
           /^[a-zA-Z0-9_-]+\.(start|middle|end)\.[a-f0-9]{12}\.(?:svg|webp)(?:\.tmp)?$/.test(file) &&
           !outputFiles.has(file)
-        )
+        ) {
           await unlink(path.join(OUTPUT, file));
+        }
+      }
     }
     console.log(
       JSON.stringify({
@@ -327,9 +344,9 @@ export async function generateExerciseArtwork({ checkOnly = false } = {}) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === SCRIPT) {
-  assert(
-    process.argv.slice(2).every((arg) => arg === '--check'),
-    'Use --check or no arguments.',
-  );
-  await generateExerciseArtwork({ checkOnly: process.argv.includes('--check') });
+  const args = process.argv.slice(2);
+  const checkOnly = args.includes('--check');
+  const rawIdx = args.indexOf('--raw-png-dir');
+  const rawPngDir = rawIdx >= 0 ? args[rawIdx + 1] : '';
+  await generateExerciseArtwork({ checkOnly, rawPngDir });
 }

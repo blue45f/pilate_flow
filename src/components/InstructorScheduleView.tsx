@@ -998,7 +998,11 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     : null;
 
   return (
-    <section className="instructor-schedule flow-schedule" aria-label="강사 일정">
+    <section
+      className="instructor-schedule flow-schedule"
+      aria-label="강사 일정"
+      style={{ minWidth: 0, paddingBottom: '24px' }}
+    >
       <header className="schedule-page-header">
         <div>
           <span className="eyebrow">오늘부터 다음 수업까지</span>
@@ -1009,7 +1013,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         </div>
         <div className="schedule-actions">
           <button type="button" className="btn-primary" onClick={() => openClass()}>
-            <Plus size={16} /> 수업 추가
+            <Plus size={16} strokeWidth={1.5} /> 수업 추가
           </button>
           <details
             className="flow-schedule-manage"
@@ -1022,7 +1026,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             }}
           >
             <summary>
-              일정 관리 <ChevronDown size={15} aria-hidden="true" />
+              일정 관리 <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
             </summary>
             <div className="flow-schedule-manage-menu">
               <button type="button" className="btn-secondary" onClick={() => openLocations()}>
@@ -1040,9 +1044,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           className="flow-schedule-next"
           aria-label="다가오는 수업"
           data-testid="schedule-next-class"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           <span className="flow-schedule-next-label">
-            <CalendarDays size={16} aria-hidden="true" /> 다음 수업
+            <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 다음 수업
           </span>
           {nextScheduledRow ? (
             <>
@@ -1062,7 +1067,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 </span>
                 <button
                   type="button"
-                  className="btn-primary"
+                  className="btn-secondary"
                   onClick={() =>
                     setPlanningTarget({
                       date: nextScheduledRow.date,
@@ -1073,7 +1078,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                     })
                   }
                 >
-                  이 수업 준비하기 <ChevronRight size={16} aria-hidden="true" />
+                  이 수업 준비하기 <ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" />
                 </button>
               </div>
             </>
@@ -1081,8 +1086,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             <>
               <h2>다음 수업을 계획해 보세요</h2>
               <p>앞으로 6주 안에 예정된 수업이 없습니다.</p>
-              <button type="button" className="btn-primary" onClick={() => openClass(today)}>
-                새 일정 만들기 <Plus size={16} aria-hidden="true" />
+              <button type="button" className="btn-secondary" onClick={() => openClass(today)}>
+                새 일정 만들기 <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
               </button>
             </>
           )}
@@ -1092,8 +1097,14 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           data-testid="schedule-today-glance-strip"
           role="region"
           aria-label="오늘 수업 준비 요약"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
         >
-          <span className="flow-schedule-today-label">TODAY</span>
+          <span
+            className="flow-schedule-today-label"
+            style={{ letterSpacing: '0.01em', fontSize: '12px', fontWeight: 500 }}
+          >
+            오늘 요약
+          </span>
           <strong>오늘 예정 수업 {todayRows.length}건</strong>
           <span>시퀀스 연결 {linkedTodayCount}건</span>
           <button
@@ -1104,7 +1115,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               setMode('day');
             }}
           >
-            오늘 일정 보기 <ChevronRight size={15} aria-hidden="true" />
+            오늘 일정 보기 <ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -1151,7 +1162,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           >
             <button
               type="button"
-              className={mode === 'day' ? 'btn-primary' : 'btn-secondary'}
               aria-pressed={mode === 'day'}
               onClick={() => setModeWithReset('day')}
             >
@@ -1159,14 +1169,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             </button>
             <button
               type="button"
-              className={mode === 'week' ? 'btn-primary' : 'btn-secondary'}
               aria-pressed={mode === 'week'}
               onClick={() => setModeWithReset('week')}
             >
               주간 보기
             </button>
           </div>
-          <div className="schedule-date-nav">
+          <div className="schedule-date-nav" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <button
               type="button"
               className="icon-button"
@@ -1175,7 +1184,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               disabled={!isScheduleDate(previousDate)}
               onClick={() => selectDate(previousDate)}
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} strokeWidth={1.5} />
             </button>
             <label>
               기준 날짜
@@ -1184,6 +1193,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 min="1900-01-01"
                 max="2199-12-31"
                 value={selectedDate}
+                style={{ fontVariantNumeric: 'tabular-nums' }}
                 onChange={(e) => {
                   if (e.target.value) selectDate(e.target.value);
                 }}
@@ -1197,7 +1207,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               disabled={!isScheduleDate(nextDate)}
               onClick={() => selectDate(nextDate)}
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} strokeWidth={1.5} />
             </button>
             <button
               type="button"
@@ -1212,10 +1222,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </div>
         </div>
         <div className="schedule-week-selector">
-          <div className="schedule-week-caption">
+          <div className="schedule-week-caption" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <strong>
-              <CalendarDays size={18} aria-hidden="true" /> {Number(selectedDate.slice(0, 4))}년{' '}
-              {Number(selectedDate.slice(5, 7))}월
+              <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
+              {Number(selectedDate.slice(0, 4))}년 {Number(selectedDate.slice(5, 7))}월
             </strong>
             <span>
               날짜를 선택해 수업을 확인하세요
@@ -1227,6 +1237,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             role="group"
             aria-label="한 주 날짜 선택"
             ref={weekStripRef}
+            style={{ gap: '8px', padding: '4px 0 8px', fontVariantNumeric: 'tabular-nums' }}
           >
             {stripDates.map((date) => {
               const count = stripRows.filter(
@@ -1244,6 +1255,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                   data-prep-day-state={
                     count === 0 ? 'empty' : needsPrepOnDate > 0 ? 'needs-prep' : 'ready'
                   }
+                  style={{
+                    minHeight: '64px',
+                    padding: '8px 4px',
+                    gap: '4px',
+                    borderRadius: '8px',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
                   onClick={() => selectStripDate(date)}
                   onKeyDown={(event) => handleStripKey(event, date)}
                 >
@@ -1264,7 +1282,12 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             })}
           </div>
         </div>
-        <p className="schedule-summary" aria-live="polite" aria-atomic="true">
+        <p
+          className="schedule-summary"
+          aria-live="polite"
+          aria-atomic="true"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        >
           <span className="schedule-summary-period">
             {mode === 'day' ? '선택한 날' : '선택한 주'}
           </span>
@@ -1273,7 +1296,11 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           {conflicts.length > 0 && <strong role="status"> · 시간 겹침 {conflicts.length}건</strong>}
         </p>
         {scheduledRows.length > 0 && (
-          <div className="schedule-prep-bar" data-testid="schedule-prep-bar">
+          <div
+            className="schedule-prep-bar"
+            data-testid="schedule-prep-bar"
+            style={{ fontVariantNumeric: 'tabular-nums' }}
+          >
             <div className="schedule-prep-counts">
               <strong>수업 준비 현황</strong>
               <span>
@@ -1285,6 +1312,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 className="schedule-prep-filter"
                 role="group"
                 aria-label="수업 준비 상태 필터"
+                style={{
+                  display: 'inline-flex',
+                  gap: '4px',
+                  padding: '4px',
+                  borderRadius: '10px',
+                  background: '#eae8df',
+                }}
                 onKeyDown={(event) => {
                   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
                     return;
@@ -1316,8 +1350,24 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               >
                 <button
                   type="button"
-                  className={prepFilter === 'all' ? 'btn-primary' : 'btn-secondary'}
+                  className="btn-secondary"
                   aria-pressed={prepFilter === 'all'}
+                  style={
+                    prepFilter === 'all'
+                      ? {
+                          background: '#ffffff',
+                          borderColor: 'rgba(23, 61, 52, 0.18)',
+                          color: '#173d34',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                        }
+                      : {
+                          background: 'transparent',
+                          borderColor: 'transparent',
+                          color: '#586962',
+                          borderRadius: '8px',
+                        }
+                  }
                   onClick={() => {
                     setPrepFilter('all');
                     setHighlightedRowId(null);
@@ -1327,8 +1377,24 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 </button>
                 <button
                   type="button"
-                  className={prepFilter === 'needs-prep' ? 'btn-primary' : 'btn-secondary'}
+                  className="btn-secondary"
                   aria-pressed={prepFilter === 'needs-prep'}
+                  style={
+                    prepFilter === 'needs-prep'
+                      ? {
+                          background: '#ffffff',
+                          borderColor: 'rgba(23, 61, 52, 0.18)',
+                          color: '#173d34',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                        }
+                      : {
+                          background: 'transparent',
+                          borderColor: 'transparent',
+                          color: '#586962',
+                          borderRadius: '8px',
+                        }
+                  }
                   onClick={() => {
                     setPrepFilter('needs-prep');
                     setHighlightedRowId(null);
@@ -1352,7 +1418,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         )}
         {!data.locations.length && (
           <div className="schedule-empty">
-            <MapPin size={25} />
+            <MapPin size={20} strokeWidth={1.5} />
             <h2>수업할 장소를 먼저 등록해 주세요</h2>
             <p>
               장소 별칭과 그곳에 있는 정확한 기구·소도구를 저장하면 연결한 계획의 준비물을 확인할 수
@@ -1360,7 +1426,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             </p>
             <button
               type="button"
-              className="btn-primary"
+              className="btn-secondary"
               onClick={() => {
                 setFormError('');
                 setLocationsOpen(true);
@@ -1552,14 +1618,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                       title: row.title,
                       fallbackLevel: null,
                     });
-                    const levelBadgeTone =
-                      visualMeta.level === '2.0'
-                        ? 'warning'
-                        : visualMeta.level === '1.5'
-                          ? 'brand'
-                          : visualMeta.level === '1.0'
-                            ? 'sage'
-                            : 'neutral';
+                    const levelBadgeTone = visualMeta.level === '2.0' ? 'warning' : 'neutral';
                     const isHighlighted = highlightedRowId === row.id;
                     const openOccurrencePlanning = () =>
                       setPlanningTarget({
@@ -1581,10 +1640,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         key={row.id}
                         aria-label={`${row.title} ${formatScheduleTime(row.startTime)}`}
                       >
-                        <div className="schedule-class-top">
+                        <div
+                          className="schedule-class-top"
+                          style={{ fontVariantNumeric: 'tabular-nums' }}
+                        >
                           <span className="schedule-class-time">
-                            <Clock3 size={15} /> {formatScheduleTime(row.startTime)} –{' '}
-                            {formatScheduleTime(row.endTime)}
+                            <Clock3 size={16} strokeWidth={1.5} />{' '}
+                            {formatScheduleTime(row.startTime)} – {formatScheduleTime(row.endTime)}
                           </span>
                           <div className="schedule-class-badges">
                             {row.status === 'scheduled' && prepInfo && (
@@ -1618,22 +1680,28 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                           />
                           <div className="pf-schedule-card-3d-body">
                             <h3>{row.title}</h3>
-                            <p className="schedule-class-meta">
-                              <MapPin size={14} aria-hidden="true" /> {locationName(row.locationId)}
+                            <p
+                              className="schedule-class-meta"
+                              style={{ fontVariantNumeric: 'tabular-nums' }}
+                            >
+                              <MapPin size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
+                              {locationName(row.locationId)}
                               {row.participantAlias && <span> · {row.participantAlias}</span>}
                               <span className="schedule-duration">
                                 {scheduleMinutes(row.endTime) - scheduleMinutes(row.startTime)}분
                               </span>
                             </p>
-                            <div className="pf-class-badges-strip">
-                              <span
-                                className="pf-class-apparatus-pill"
+                            <div className="pf-class-badges-strip" style={{ gap: '4px' }}>
+                              <PfBadge
+                                tone="neutral"
+                                shape="rect"
                                 data-testid="schedule-card-apparatus-badge"
                               >
                                 {visualMeta.apparatusLabelKo}
-                              </span>
+                              </PfBadge>
                               <PfBadge
                                 tone={levelBadgeTone}
+                                shape="rect"
                                 data-testid="schedule-card-level-badge"
                               >
                                 {visualMeta.levelBadgeKo}
@@ -1641,6 +1709,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                               <span
                                 className="pf-class-spring-wrap"
                                 data-testid="schedule-card-spring-pills"
+                                style={{ borderRadius: '6px' }}
                               >
                                 <small className="pf-class-spring-source">
                                   {visualMeta.springSourceLabelKo}

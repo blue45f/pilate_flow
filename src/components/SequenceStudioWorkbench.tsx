@@ -17,7 +17,6 @@ import {
   Plus,
   Search,
   Settings2,
-  Sparkles,
   Trash2,
   Undo2,
   UnlockKeyhole,
@@ -91,7 +90,7 @@ const SECTIONS: { id: ClassSectionRole; label: string }[] = [
 ];
 const CATEGORY_FILTERS = [
   { id: 'all', label: '전체' },
-  { id: 'favorites', label: '♥ 즐겨찾기' },
+  { id: 'favorites', label: '즐겨찾기' },
   { id: 'warmup', label: '준비' },
   { id: 'core', label: '코어' },
   { id: 'lower-body', label: '하체' },
@@ -197,7 +196,7 @@ function StepEditor({
       open
       onClose={onClose}
       title={rest ? '휴식 시간' : (exercise?.nameKo ?? '동작 편집')}
-      subtitle="시간과 수업 메모를 한곳에서 조정하세요."
+      subtitle="시간과 수업 메모를 한곳에서 조정하세요"
       maxWidth="600px"
       variant="sheet"
     >
@@ -255,7 +254,7 @@ function StepEditor({
         </label>
         {!rest && (
           <>
-            <p className="flow-hint">양쪽 수행, 설명, 기구 전환을 모두 포함한 시간입니다.</p>
+            <p className="flow-hint">양쪽 수행, 설명, 기구 전환을 모두 포함한 시간입니다</p>
             <div className="flow-form-grid">
               <label className="flow-field">
                 설명 · 초
@@ -618,7 +617,7 @@ export function SequenceStudioWorkbench(props: Props) {
             requestAnimationFrame(() => toolsSummaryRef.current?.focus());
           }}
         >
-          <ArrowLeft size={17} /> 간편 작성으로 돌아가기
+          <ArrowLeft size={16} strokeWidth={1.5} /> 간편 작성으로 돌아가기
         </button>
         <Suspense fallback={<p role="status">고급 작성 도구를 여는 중…</p>}>
           <AdvancedWorkbench {...props} />
@@ -629,16 +628,15 @@ export function SequenceStudioWorkbench(props: Props) {
   return (
     <section className="flow-studio" data-testid="sequence-studio" data-mobile-pane={mobilePane}>
       <header className="flow-studio__heading">
-        <div>
-          <p className="flow-eyebrow">CLASS PLANNER</p>
+        <div className="flow-studio__title-group">
           <h1 id="workspace-main-heading" tabIndex={-1}>
             수업 만들기
           </h1>
-          <p>동작을 고르고, 나만의 흐름을 완성하세요.</p>
+          <p>동작을 고르고 나만의 흐름을 완성하세요</p>
         </div>
         <div className="flow-heading-actions">
           <button className="flow-button" onClick={() => setPresetsOpen(true)}>
-            <LayoutTemplate size={17} /> 템플릿
+            <LayoutTemplate size={16} strokeWidth={1.5} /> 템플릿
           </button>
           <button
             className="flow-button"
@@ -648,7 +646,7 @@ export function SequenceStudioWorkbench(props: Props) {
                 : setNotice(s.startBlankSequence().message)
             }
           >
-            <Plus size={17} /> 새 수업
+            <Plus size={16} strokeWidth={1.5} /> 새 수업
           </button>
           <details
             className="flow-tools"
@@ -661,7 +659,7 @@ export function SequenceStudioWorkbench(props: Props) {
             }}
           >
             <summary ref={toolsSummaryRef} aria-label="수업 작성 도구 더보기">
-              <MoreHorizontal size={21} />
+              <MoreHorizontal size={18} strokeWidth={1.5} />
             </summary>
             <div>
               <button
@@ -747,7 +745,7 @@ export function SequenceStudioWorkbench(props: Props) {
           className="flow-button flow-condition-button"
           onClick={() => setConditionsOpen(true)}
         >
-          <Settings2 size={17} />
+          <Settings2 size={16} strokeWidth={1.5} />
           <span>수업 조건</span>
         </button>
       </div>
@@ -802,7 +800,7 @@ export function SequenceStudioWorkbench(props: Props) {
           내 시퀀스 <span>{exerciseCount}</span>
         </button>
         <button aria-pressed={mobilePane === 'library'} onClick={showLibrary}>
-          <Plus size={17} /> 동작 찾기
+          <Plus size={16} strokeWidth={1.5} /> 동작 찾기
         </button>
       </div>
 
@@ -820,7 +818,7 @@ export function SequenceStudioWorkbench(props: Props) {
             <span className="flow-count">{results.length}개</span>
           </div>
           <label className="flow-search">
-            <Search size={18} aria-hidden="true" />
+            <Search size={16} strokeWidth={1.5} aria-hidden="true" />
             <input
               ref={searchRef}
               aria-label="수업 동작 검색"
@@ -830,7 +828,7 @@ export function SequenceStudioWorkbench(props: Props) {
             />
             {query && (
               <button onClick={() => setQuery('')} aria-label="동작 검색 지우기">
-                <X size={16} />
+                <X size={15} strokeWidth={1.5} />
               </button>
             )}
           </label>
@@ -838,50 +836,56 @@ export function SequenceStudioWorkbench(props: Props) {
             {CATEGORY_FILTERS.map((item) => (
               <button
                 key={item.id}
+                aria-label={item.id === 'favorites' ? '♥ 즐겨찾기' : undefined}
                 aria-pressed={category === item.id}
                 onClick={() => setCategory(item.id)}
               >
+                {item.id === 'favorites' && (
+                  <Heart size={14} strokeWidth={1.5} aria-hidden="true" />
+                )}
                 {item.label}
               </button>
             ))}
           </div>
-          <label className="flow-checkbox">
-            <input
-              type="checkbox"
-              checked={eligibleOnly}
-              onChange={(e) => setEligibleOnly(e.target.checked)}
-            />{' '}
-            수업 조건에 맞는 동작만
-          </label>
-          <div className="flow-insertion-control">
-            <label htmlFor="flow-insertion-position">추가 위치</label>
-            <select
-              id="flow-insertion-position"
-              value={insertionValue}
-              aria-describedby={!insertionResolution.success ? 'flow-insertion-error' : undefined}
-              onChange={(event) => {
-                const selected = insertionOptions.find(
-                  (option) => option.value === event.target.value,
-                );
-                if (selected)
-                  setInsertion({ sequenceId: s.activeSequenceId, placement: selected.placement });
-              }}
-            >
-              {!insertionOptions.some((option) => option.value === insertionValue) && (
-                <option value={insertionValue} disabled>
-                  기준 항목 없음 · 위치를 다시 선택하세요
-                </option>
-              )}
-              {insertionOptions.map((option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
-                  disabled={!resolveSequenceInsertion(s.activeSteps, option.placement).success}
-                >
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <div className="flow-picker-controls">
+            <label className="flow-checkbox">
+              <input
+                type="checkbox"
+                checked={eligibleOnly}
+                onChange={(e) => setEligibleOnly(e.target.checked)}
+              />{' '}
+              수업 조건에 맞는 동작만
+            </label>
+            <div className="flow-insertion-control">
+              <label htmlFor="flow-insertion-position">추가 위치</label>
+              <select
+                id="flow-insertion-position"
+                value={insertionValue}
+                aria-describedby={!insertionResolution.success ? 'flow-insertion-error' : undefined}
+                onChange={(event) => {
+                  const selected = insertionOptions.find(
+                    (option) => option.value === event.target.value,
+                  );
+                  if (selected)
+                    setInsertion({ sequenceId: s.activeSequenceId, placement: selected.placement });
+                }}
+              >
+                {!insertionOptions.some((option) => option.value === insertionValue) && (
+                  <option value={insertionValue} disabled>
+                    기준 항목 없음 · 위치를 다시 선택하세요
+                  </option>
+                )}
+                {insertionOptions.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                    disabled={!resolveSequenceInsertion(s.activeSteps, option.placement).success}
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           {!insertionResolution.success && (
             <p id="flow-insertion-error" className="flow-insertion-error" role="alert">
@@ -891,7 +895,8 @@ export function SequenceStudioWorkbench(props: Props) {
           {recentStep && (
             <div className="flow-added-receipt" aria-live="polite">
               <span>
-                <Check size={16} aria-hidden="true" /> {recentIndex + 1}번 · {recentName} 추가됨
+                <Check size={15} strokeWidth={1.5} aria-hidden="true" /> {recentIndex + 1}번 ·{' '}
+                {recentName} 추가됨
               </span>
               <button type="button" onClick={() => revealStep(recentStep.stepId)}>
                 시퀀스에서 보기
@@ -948,6 +953,7 @@ export function SequenceStudioWorkbench(props: Props) {
                     >
                       <Heart
                         size={15}
+                        strokeWidth={1.5}
                         fill={exercise.favoriteTag !== 'none' ? 'currentColor' : 'none'}
                       />
                     </button>
@@ -960,16 +966,20 @@ export function SequenceStudioWorkbench(props: Props) {
                       }
                       onClick={() => addExercise(exercise)}
                     >
-                      {included.has(exercise.id) ? <Check size={19} /> : <Plus size={19} />}
+                      {included.has(exercise.id) ? (
+                        <Check size={17} strokeWidth={1.5} />
+                      ) : (
+                        <Plus size={17} strokeWidth={1.5} />
+                      )}
                     </button>
                   </div>
                 </article>
               ))
             ) : (
               <div className="flow-no-results">
-                <Search size={26} />
+                <Search size={24} strokeWidth={1.5} />
                 <strong>조건에 맞는 동작이 없어요</strong>
-                <p>검색어를 줄이거나 수업 조건을 확인해 주세요.</p>
+                <p>검색어를 줄이거나 수업 조건을 확인해 주세요</p>
                 <button
                   className="flow-button"
                   onClick={() => {
@@ -988,467 +998,484 @@ export function SequenceStudioWorkbench(props: Props) {
           </div>
         </aside>
 
-        <div className="flow-plan" aria-label="내 수업 시퀀스">
-          <div className="flow-panel-heading">
-            <div>
-              <span className="flow-step-number">02</span>
-              <h2 ref={planHeadingRef} tabIndex={-1}>
-                내 시퀀스
-              </h2>
-              <span className="flow-count">동작 {exerciseCount}개</span>
-            </div>
-            <button
-              className="flow-icon-button"
-              disabled={!s.undoStack.length}
-              onClick={() => {
-                s.undoSequence();
-                setNotice('마지막 편집을 되돌렸습니다.');
-              }}
-              aria-label="마지막 편집 되돌리기"
-            >
-              <Undo2 size={19} />
-            </button>
-          </div>
-          <div className="flow-time-overview">
-            <div>
-              <strong>{minutes(total)}</strong>
-              <span> / 목표 {s.activeTargetMinutes}분</span>
+        <div className="flow-plan-column">
+          <div className="flow-plan" aria-label="내 수업 시퀀스">
+            <div className="flow-panel-heading">
+              <div>
+                <span className="flow-step-number">02</span>
+                <h2 ref={planHeadingRef} tabIndex={-1}>
+                  내 시퀀스
+                </h2>
+                <span className="flow-count">동작 {exerciseCount}개</span>
+              </div>
               <button
-                className="flow-text-button"
-                disabled={!exerciseCount}
+                className="flow-icon-button"
+                disabled={!s.undoStack.length}
                 onClick={() => {
-                  try {
-                    setFitPreview({
-                      steps: s.activeSteps,
-                      target: s.activeTargetMinutes,
-                      fitted: fitSequenceDuration(s.activeSteps, s.activeTargetMinutes),
-                    });
-                  } catch (error) {
-                    setNotice(error instanceof Error ? error.message : '시간을 맞출 수 없습니다.');
-                  }
+                  s.undoSequence();
+                  setNotice('마지막 편집을 되돌렸습니다.');
                 }}
+                aria-label="마지막 편집 되돌리기"
               >
-                시간 맞추기
+                <Undo2 size={17} strokeWidth={1.5} />
               </button>
+            </div>
+            <div className="flow-time-overview">
+              <div>
+                <strong>{minutes(total)}</strong>
+                <span> / 목표 {s.activeTargetMinutes}분</span>
+                <button
+                  className="flow-text-button"
+                  disabled={!exerciseCount}
+                  onClick={() => {
+                    try {
+                      setFitPreview({
+                        steps: s.activeSteps,
+                        target: s.activeTargetMinutes,
+                        fitted: fitSequenceDuration(s.activeSteps, s.activeTargetMinutes),
+                      });
+                    } catch (error) {
+                      setNotice(
+                        error instanceof Error ? error.message : '시간을 맞출 수 없습니다.',
+                      );
+                    }
+                  }}
+                >
+                  시간 맞추기
+                </button>
+              </div>
+              <div
+                className="flow-time-bar"
+                role="img"
+                aria-label={`현재 ${minutes(total)}, 목표 ${s.activeTargetMinutes}분`}
+              >
+                {SECTIONS.map((section) => (
+                  <span
+                    key={section.id}
+                    data-section={section.id}
+                    style={{
+                      width: `${target ? Math.min(100, (sectionTotals[section.id] / Math.max(total, target)) * 100) : 0}%`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flow-section-legend">
+                {SECTIONS.map((section) => (
+                  <span key={section.id} data-section={section.id}>
+                    <i />
+                    {section.label} <b>{minutes(sectionTotals[section.id])}</b>
+                  </span>
+                ))}
+              </div>
+              <p>
+                {!total
+                  ? '동작을 추가하면 수업 시간이 채워집니다'
+                  : difference > 0
+                    ? `목표까지 ${minutes(difference)} 남았어요`
+                    : difference < 0
+                      ? `목표보다 ${minutes(-difference)} 길어요 · 시간을 조정하거나 그대로 진행할 수 있어요`
+                      : '목표 시간에 맞게 구성했어요'}
+              </p>
             </div>
             <div
-              className="flow-time-bar"
-              role="img"
-              aria-label={`현재 ${minutes(total)}, 목표 ${s.activeTargetMinutes}분`}
+              className="flow-sequence-list"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => drop(e)}
             >
-              {SECTIONS.map((section) => (
-                <span
-                  key={section.id}
-                  data-section={section.id}
-                  style={{
-                    width: `${target ? Math.min(100, (sectionTotals[section.id] / Math.max(total, target)) * 100) : 0}%`,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="flow-section-legend">
-              {SECTIONS.map((section) => (
-                <span key={section.id} data-section={section.id}>
-                  <i />
-                  {section.label} <b>{minutes(sectionTotals[section.id])}</b>
-                </span>
-              ))}
-            </div>
-            <p>
-              {!total
-                ? '동작을 추가하면 수업 시간이 채워집니다.'
-                : difference > 0
-                  ? `목표까지 ${minutes(difference)} 남았어요.`
-                  : difference < 0
-                    ? `목표보다 ${minutes(-difference)} 길어요. 시간을 조정하거나 그대로 진행할 수 있어요.`
-                    : '목표 시간에 맞게 구성했어요.'}
-            </p>
-          </div>
-          <div
-            className="flow-sequence-list"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => drop(e)}
-          >
-            {!s.activeSteps.length ? (
-              <div className="flow-empty-plan">
-                <span className="flow-empty-icon">
-                  <Plus size={30} strokeWidth={1.5} />
-                </span>
-                <h3>첫 동작부터 시작해 볼까요?</h3>
-                <p>
-                  동작 목록에서 원하는 동작을 추가하세요.
-                  <br />
-                  추가한 동작은 끌어서 순서를 바꿀 수 있어요.
-                </p>
-                <button className="flow-button flow-button--primary" onClick={showLibrary}>
-                  <Plus size={17} /> 동작 고르기
-                </button>
-                <button className="flow-text-button" onClick={() => setPresetsOpen(true)}>
-                  <LayoutTemplate size={16} /> 템플릿으로 시작하기 <ChevronRight size={15} />
-                </button>
-                {s.savedSequences.length > 0 && (
-                  <div className="flow-recent-plans">
-                    <span>최근 수업에서 이어가기</span>
-                    {s.savedSequences.slice(0, 2).map((sequence) => (
-                      <button
-                        key={sequence.id}
-                        onClick={() => {
-                          const current = usePilatesStore.getState();
-                          const result = current.openSavedSequenceCopy(sequence.id, current);
-                          setNotice(result.message);
-                        }}
-                      >
-                        <Copy size={15} />
-                        <strong>{sequence.title}</strong>
-                        <small>{sequence.targetMinutes}분</small>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              s.activeSteps.map((step, index) => {
-                const exercise = byId.get(step.exerciseId);
-                const section = getSequenceStepClassSection(step, s.activeSteps);
-                const previousSection = index
-                  ? getSequenceStepClassSection(s.activeSteps[index - 1], s.activeSteps)
-                  : null;
-                const title = isRestStep(step)
-                  ? '휴식'
-                  : (exercise?.nameKo ?? '동작을 찾을 수 없음');
-                const previousExercise = index
-                  ? byId.get(s.activeSteps[index - 1].exerciseId)
-                  : undefined;
-                const springChanged =
-                  exercise &&
-                  previousExercise &&
-                  !isRestStep(step) &&
-                  (step.customSpringOverride ?? exercise.springs) !==
-                    (s.activeSteps[index - 1].customSpringOverride ?? previousExercise.springs);
-                return (
-                  <Fragment key={step.stepId}>
-                    {section !== previousSection && (
-                      <div className="flow-section-heading" data-section={section}>
-                        <i />
-                        <h3>{SECTIONS.find((item) => item.id === section)?.label}</h3>
-                        <span>{minutes(sectionTotals[section])}</span>
-                      </div>
-                    )}
-                    <article
-                      className={`flow-sequence-row ${step.locked ? 'is-locked' : ''} ${recentStep?.stepId === step.stepId ? 'is-recently-added' : ''}`}
-                      data-testid="sequence-studio-row"
-                      data-step-id={step.stepId}
-                      draggable={!step.locked}
-                      onDragStart={(event) => {
-                        dragStep.current = step.stepId;
-                        event.dataTransfer.setData('application/x-pilates-step', step.stepId);
-                        event.dataTransfer.effectAllowed = 'move';
-                      }}
-                      onDragEnd={() => {
-                        dragStep.current = null;
-                      }}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => drop(e, step.stepId)}
-                    >
-                      <span className="flow-drag-handle" aria-hidden="true">
-                        <GripVertical size={16} />
-                      </span>
-                      <span className="flow-row-number">{index + 1}</span>
-                      {exercise ? (
+              {!s.activeSteps.length ? (
+                <div className="flow-empty-plan">
+                  <span className="flow-empty-icon">
+                    <Plus size={24} strokeWidth={1.5} />
+                  </span>
+                  <h3>첫 동작부터 시작해 볼까요?</h3>
+                  <p>
+                    동작 목록에서 원하는 동작을 추가하거나
+                    <br />
+                    끌어서 순서를 바꿀 수 있어요
+                  </p>
+                  <button className="flow-button flow-button--primary" onClick={showLibrary}>
+                    <Plus size={16} strokeWidth={1.5} /> 동작 고르기
+                  </button>
+                  <button className="flow-text-button" onClick={() => setPresetsOpen(true)}>
+                    <LayoutTemplate size={15} strokeWidth={1.5} /> 템플릿으로 시작하기{' '}
+                    <ChevronRight size={15} strokeWidth={1.5} />
+                  </button>
+                  {s.savedSequences.length > 0 && (
+                    <div className="flow-recent-plans">
+                      <span>최근 수업에서 이어가기</span>
+                      {s.savedSequences.slice(0, 2).map((sequence) => (
                         <button
-                          className="flow-row-art"
-                          aria-label={`${title} 자세와 자료 보기`}
-                          onClick={() => props.onOpenYouTubePreview(exercise)}
+                          key={sequence.id}
+                          onClick={() => {
+                            const current = usePilatesStore.getState();
+                            const result = current.openSavedSequenceCopy(sequence.id, current);
+                            setNotice(result.message);
+                          }}
                         >
-                          <ExerciseMotionArtwork exercise={exercise} />
+                          <Copy size={15} strokeWidth={1.5} />
+                          <strong>{sequence.title}</strong>
+                          <small>{sequence.targetMinutes}분</small>
                         </button>
-                      ) : (
-                        <span className="flow-row-rest">
-                          <Clock3 size={24} />
-                        </span>
-                      )}
-                      <div className="flow-row-content">
-                        <button
-                          id={`flow-step-${step.stepId}`}
-                          className="flow-name-button"
-                          disabled={step.locked}
-                          onClick={() => setEditingId(step.stepId)}
-                        >
-                          {title}
-                        </button>
-                        <div className="flow-row-meta">
-                          {exercise && <span>{APPARATUS_LABELS[exercise.apparatus].short}</span>}
-                          {exercise && (step.customSpringOverride ?? exercise.springs) && (
-                            <span
-                              className="flow-row-spring-pill"
-                              title={`스튜디오 스프링 기준 (${s.reformerBrand})`}
-                            >
-                              {step.customSpringOverride
-                                ? step.customSpringOverride
-                                : formatBrandSpringEquivalent(
-                                    exercise.springs,
-                                    s.reformerBrand,
-                                    exercise.apparatus,
-                                  ).equivalentLabelKo}
-                            </span>
-                          )}
-                          {getStepSideLabels(step, exercise).length > 1 && <span>양쪽 수행</span>}
-                          {step.repetitions && <span>{step.repetitions}회</span>}
-                          {step.locked && (
-                            <span>
-                              <LockKeyhole size={12} /> 잠김
-                            </span>
-                          )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                s.activeSteps.map((step, index) => {
+                  const exercise = byId.get(step.exerciseId);
+                  const section = getSequenceStepClassSection(step, s.activeSteps);
+                  const previousSection = index
+                    ? getSequenceStepClassSection(s.activeSteps[index - 1], s.activeSteps)
+                    : null;
+                  const title = isRestStep(step)
+                    ? '휴식'
+                    : (exercise?.nameKo ?? '동작을 찾을 수 없음');
+                  const previousExercise = index
+                    ? byId.get(s.activeSteps[index - 1].exerciseId)
+                    : undefined;
+                  const springChanged =
+                    exercise &&
+                    previousExercise &&
+                    !isRestStep(step) &&
+                    (step.customSpringOverride ?? exercise.springs) !==
+                      (s.activeSteps[index - 1].customSpringOverride ?? previousExercise.springs);
+                  return (
+                    <Fragment key={step.stepId}>
+                      {section !== previousSection && (
+                        <div className="flow-section-heading" data-section={section}>
+                          <i />
+                          <h3>{SECTIONS.find((item) => item.id === section)?.label}</h3>
+                          <span>{minutes(sectionTotals[section])}</span>
                         </div>
-                        {exercise && !isRestStep(step) && (
-                          <div
-                            className="flow-row-layers"
-                            role="group"
-                            aria-label={`${title} 난이도 레이어 선택`}
+                      )}
+                      <article
+                        className={`flow-sequence-row ${step.locked ? 'is-locked' : ''} ${recentStep?.stepId === step.stepId ? 'is-recently-added' : ''}`}
+                        data-testid="sequence-studio-row"
+                        data-step-id={step.stepId}
+                        draggable={!step.locked}
+                        onDragStart={(event) => {
+                          dragStep.current = step.stepId;
+                          event.dataTransfer.setData('application/x-pilates-step', step.stepId);
+                          event.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragEnd={() => {
+                          dragStep.current = null;
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => drop(e, step.stepId)}
+                      >
+                        <span className="flow-drag-handle" aria-hidden="true">
+                          <GripVertical size={15} strokeWidth={1.5} />
+                        </span>
+                        <span className="flow-row-number">{index + 1}</span>
+                        {exercise ? (
+                          <button
+                            className="flow-row-art"
+                            aria-label={`${title} 자세와 자료 보기`}
+                            onClick={() => props.onOpenYouTubePreview(exercise)}
                           >
-                            {LAYER_OPTIONS.map((opt) => {
-                              const currentLayer = step.selectedLayer ?? 'standard';
-                              const isActiveLayer = currentLayer === opt.id;
-                              return (
-                                <button
-                                  key={opt.id}
-                                  type="button"
-                                  className={`flow-layer-pill ${isActiveLayer ? 'is-active' : ''}`}
-                                  aria-pressed={isActiveLayer}
-                                  disabled={step.locked}
-                                  onClick={() => {
-                                    s.setStepLayer(index, opt.id);
-                                    setNotice(`${title} 레이어를 ‘${opt.label}’으로 변경했습니다.`);
-                                  }}
-                                >
-                                  {opt.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {exercise &&
-                          step.selectedLayer &&
-                          step.selectedLayer !== 'standard' &&
-                          exercise.layers[step.selectedLayer] && (
-                            <p className="flow-row-layer-cue">
-                              <Sparkles size={12} aria-hidden="true" />{' '}
-                              {exercise.layers[step.selectedLayer]}
-                            </p>
-                          )}
-                        {springChanged && (
-                          <span className="flow-setup-change">
-                            스프링 변경 · {step.customSpringOverride ?? exercise.springs}
+                            <ExerciseMotionArtwork exercise={exercise} />
+                          </button>
+                        ) : (
+                          <span className="flow-row-rest">
+                            <Clock3 size={20} strokeWidth={1.5} />
                           </span>
                         )}
-                        {step.instructorNote && (
-                          <p className="flow-row-note">{step.instructorNote}</p>
-                        )}
-                      </div>
-                      <div className="flow-row-time-group">
-                        <button
-                          type="button"
-                          className="flow-time-nudge"
-                          disabled={step.locked || step.durationMin <= 1}
-                          aria-label={`${title} 30초 줄이기`}
-                          onClick={() => s.adjustStepDuration(index, -0.5)}
-                        >
-                          -0.5
-                        </button>
-                        <button
-                          className="flow-row-time"
-                          disabled={step.locked}
-                          onClick={() => setEditingId(step.stepId)}
-                          aria-label={`${title} 시간과 메모 편집`}
-                        >
-                          <Clock3 size={14} />
-                          {minutes(getStepTiming(step).totalSec)}
-                        </button>
-                        <button
-                          type="button"
-                          className="flow-time-nudge"
-                          disabled={step.locked || step.durationMin >= 20}
-                          aria-label={`${title} 30초 늘리기`}
-                          onClick={() => s.adjustStepDuration(index, 0.5)}
-                        >
-                          +0.5
-                        </button>
-                      </div>
-                      <div className="flow-row-actions">
-                        <button
-                          className="flow-icon-button"
-                          aria-label={`${index + 1}번 ${title} 위로`}
-                          disabled={index === 0 || step.locked || s.activeSteps[index - 1]?.locked}
-                          onClick={() => {
-                            s.moveStep(index, 'up');
-                            setNotice(`${title}을 위로 이동했습니다.`);
-                          }}
-                        >
-                          <ArrowUp size={16} />
-                        </button>
-                        <button
-                          className="flow-icon-button"
-                          aria-label={`${index + 1}번 ${title} 아래로`}
-                          disabled={
-                            index === s.activeSteps.length - 1 ||
-                            step.locked ||
-                            s.activeSteps[index + 1]?.locked
-                          }
-                          onClick={() => {
-                            s.moveStep(index, 'down');
-                            setNotice(`${title}을 아래로 이동했습니다.`);
-                          }}
-                        >
-                          <ArrowDown size={16} />
-                        </button>
-                        <button
-                          className="flow-icon-button"
-                          aria-label={`${title} ${step.locked ? '잠금 해제' : '잠그기'}`}
-                          onClick={() => s.toggleStepLock(index)}
-                        >
-                          {step.locked ? <UnlockKeyhole size={16} /> : <LockKeyhole size={16} />}
-                        </button>
-                        <button
-                          className="flow-icon-button"
-                          aria-label={`${index + 1}번 ${title} 삭제`}
-                          disabled={step.locked}
-                          onClick={() => {
-                            const nextId =
-                              s.activeSteps[index + 1]?.stepId ?? s.activeSteps[index - 1]?.stepId;
-                            s.removeStep(index);
-                            setNotice(`${title}을 삭제했습니다. 되돌리기로 복원할 수 있어요.`);
-                            requestAnimationFrame(() => {
-                              const titleButton = nextId
-                                ? document.getElementById(`flow-step-${nextId}`)
-                                : null;
-                              const focusTarget = titleButton?.matches(':disabled')
-                                ? titleButton
-                                    .closest('article')
-                                    ?.querySelector<HTMLElement>('button:not(:disabled)')
-                                : titleButton;
-                              (focusTarget ?? planHeadingRef.current)?.focus();
-                            });
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </article>
-                  </Fragment>
-                );
-              })
-            )}
-          </div>
-          {s.activeSteps.length > 0 && (
-            <div className="flow-plan-additions">
-              <button className="flow-button" onClick={showLibrary}>
-                <Plus size={16} /> 동작 추가
-              </button>
-              <button
-                className="flow-text-button"
-                onClick={() => setNotice(s.addRestStep(1).message)}
-              >
-                <Clock3 size={15} /> 휴식 1분 추가
-              </button>
-            </div>
-          )}
-          <div className="flow-plan-footer">
-            <span>
-              <i />
-              {s.persistenceError
-                ? '이 브라우저 미저장 · 현재 화면(메모리)에만 임시 보관 중'
-                : '작성 중인 수업은 이 기기에 자동 보관'}
-            </span>
-            {s.persistenceError ? (
-              <button
-                type="button"
-                className="flow-text-button"
-                data-testid="flow-footer-backup-btn"
-                onClick={() => {
-                  const ok = downloadEmergencyBackupJson();
-                  setNotice(
-                    ok
-                      ? '메모리 작업본을 포함한 JSON 백업 파일을 내려받았습니다. 저장 공간 확보 후 저장을 다시 눌러 주세요.'
-                      : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
+                        <div className="flow-row-content">
+                          <button
+                            id={`flow-step-${step.stepId}`}
+                            className="flow-name-button"
+                            disabled={step.locked}
+                            onClick={() => setEditingId(step.stepId)}
+                          >
+                            {title}
+                          </button>
+                          <div className="flow-row-meta">
+                            {exercise && <span>{APPARATUS_LABELS[exercise.apparatus].short}</span>}
+                            {exercise && (step.customSpringOverride ?? exercise.springs) && (
+                              <span
+                                className="flow-row-spring-pill"
+                                title={`스튜디오 스프링 기준 (${s.reformerBrand})`}
+                              >
+                                {step.customSpringOverride
+                                  ? step.customSpringOverride
+                                  : formatBrandSpringEquivalent(
+                                      exercise.springs,
+                                      s.reformerBrand,
+                                      exercise.apparatus,
+                                    ).equivalentLabelKo}
+                              </span>
+                            )}
+                            {getStepSideLabels(step, exercise).length > 1 && <span>양쪽 수행</span>}
+                            {step.repetitions && <span>{step.repetitions}회</span>}
+                            {step.locked && (
+                              <span>
+                                <LockKeyhole size={12} strokeWidth={1.5} /> 잠김
+                              </span>
+                            )}
+                          </div>
+                          {exercise && !isRestStep(step) && (
+                            <div
+                              className="flow-row-layers"
+                              role="group"
+                              aria-label={`${title} 난이도 레이어 선택`}
+                            >
+                              {LAYER_OPTIONS.map((opt) => {
+                                const currentLayer = step.selectedLayer ?? 'standard';
+                                const isActiveLayer = currentLayer === opt.id;
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    className={`flow-layer-pill ${isActiveLayer ? 'is-active' : ''}`}
+                                    aria-pressed={isActiveLayer}
+                                    disabled={step.locked}
+                                    onClick={() => {
+                                      s.setStepLayer(index, opt.id);
+                                      setNotice(
+                                        `${title} 레이어를 ‘${opt.label}’으로 변경했습니다.`,
+                                      );
+                                    }}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {exercise &&
+                            step.selectedLayer &&
+                            step.selectedLayer !== 'standard' &&
+                            exercise.layers[step.selectedLayer] && (
+                              <p className="flow-row-layer-cue">
+                                <i className="flow-row-layer-dot" aria-hidden="true" />
+                                {exercise.layers[step.selectedLayer]}
+                              </p>
+                            )}
+                          {springChanged && (
+                            <span className="flow-setup-change">
+                              스프링 변경 · {step.customSpringOverride ?? exercise.springs}
+                            </span>
+                          )}
+                          {step.instructorNote && (
+                            <p className="flow-row-note">{step.instructorNote}</p>
+                          )}
+                        </div>
+                        <div className="flow-row-time-group">
+                          <button
+                            type="button"
+                            className="flow-time-nudge"
+                            disabled={step.locked || step.durationMin <= 1}
+                            aria-label={`${title} 30초 줄이기`}
+                            onClick={() => s.adjustStepDuration(index, -0.5)}
+                          >
+                            -0.5
+                          </button>
+                          <button
+                            className="flow-row-time"
+                            disabled={step.locked}
+                            onClick={() => setEditingId(step.stepId)}
+                            aria-label={`${title} 시간과 메모 편집`}
+                          >
+                            <Clock3 size={14} strokeWidth={1.5} />
+                            {minutes(getStepTiming(step).totalSec)}
+                          </button>
+                          <button
+                            type="button"
+                            className="flow-time-nudge"
+                            disabled={step.locked || step.durationMin >= 20}
+                            aria-label={`${title} 30초 늘리기`}
+                            onClick={() => s.adjustStepDuration(index, 0.5)}
+                          >
+                            +0.5
+                          </button>
+                        </div>
+                        <div className="flow-row-actions">
+                          <button
+                            className="flow-icon-button"
+                            aria-label={`${index + 1}번 ${title} 위로`}
+                            disabled={
+                              index === 0 || step.locked || s.activeSteps[index - 1]?.locked
+                            }
+                            onClick={() => {
+                              s.moveStep(index, 'up');
+                              setNotice(`${title}을 위로 이동했습니다.`);
+                            }}
+                          >
+                            <ArrowUp size={16} strokeWidth={1.5} />
+                          </button>
+                          <button
+                            className="flow-icon-button"
+                            aria-label={`${index + 1}번 ${title} 아래로`}
+                            disabled={
+                              index === s.activeSteps.length - 1 ||
+                              step.locked ||
+                              s.activeSteps[index + 1]?.locked
+                            }
+                            onClick={() => {
+                              s.moveStep(index, 'down');
+                              setNotice(`${title}을 아래로 이동했습니다.`);
+                            }}
+                          >
+                            <ArrowDown size={16} strokeWidth={1.5} />
+                          </button>
+                          <button
+                            className="flow-icon-button"
+                            aria-label={`${title} ${step.locked ? '잠금 해제' : '잠그기'}`}
+                            onClick={() => s.toggleStepLock(index)}
+                          >
+                            {step.locked ? (
+                              <UnlockKeyhole size={16} strokeWidth={1.5} />
+                            ) : (
+                              <LockKeyhole size={16} strokeWidth={1.5} />
+                            )}
+                          </button>
+                          <button
+                            className="flow-icon-button"
+                            aria-label={`${index + 1}번 ${title} 삭제`}
+                            disabled={step.locked}
+                            onClick={() => {
+                              const nextId =
+                                s.activeSteps[index + 1]?.stepId ??
+                                s.activeSteps[index - 1]?.stepId;
+                              s.removeStep(index);
+                              setNotice(`${title}을 삭제했습니다. 되돌리기로 복원할 수 있어요.`);
+                              requestAnimationFrame(() => {
+                                const titleButton = nextId
+                                  ? document.getElementById(`flow-step-${nextId}`)
+                                  : null;
+                                const focusTarget = titleButton?.matches(':disabled')
+                                  ? titleButton
+                                      .closest('article')
+                                      ?.querySelector<HTMLElement>('button:not(:disabled)')
+                                  : titleButton;
+                                (focusTarget ?? planHeadingRef.current)?.focus();
+                              });
+                            }}
+                          >
+                            <Trash2 size={16} strokeWidth={1.5} />
+                          </button>
+                        </div>
+                      </article>
+                    </Fragment>
                   );
-                }}
-              >
-                JSON 백업 내보내기
-              </button>
-            ) : (
-              <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
+                })
+              )}
+            </div>
+            {s.activeSteps.length > 0 && (
+              <div className="flow-plan-additions">
+                <button className="flow-button" onClick={showLibrary}>
+                  <Plus size={16} strokeWidth={1.5} /> 동작 추가
+                </button>
+                <button
+                  className="flow-text-button"
+                  onClick={() => setNotice(s.addRestStep(1).message)}
+                >
+                  <Clock3 size={15} strokeWidth={1.5} /> 휴식 1분 추가
+                </button>
+              </div>
             )}
+            <div className="flow-plan-footer">
+              <span>
+                <i />
+                {s.persistenceError
+                  ? '이 브라우저 미저장 · 현재 화면(메모리)에만 임시 보관 중'
+                  : '작성 중인 수업은 이 기기에 자동 보관'}
+              </span>
+              {s.persistenceError ? (
+                <button
+                  type="button"
+                  className="flow-text-button"
+                  data-testid="flow-footer-backup-btn"
+                  onClick={() => {
+                    const ok = downloadEmergencyBackupJson();
+                    setNotice(
+                      ok
+                        ? '메모리 작업본을 포함한 JSON 백업 파일을 내려받았습니다. 저장 공간 확보 후 저장을 다시 눌러 주세요.'
+                        : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
+                    );
+                  }}
+                >
+                  JSON 백업 내보내기
+                </button>
+              ) : (
+                <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flow-actionbar">
+            <div>
+              <strong>
+                {exerciseCount}개 동작 · {minutes(total)}
+              </strong>
+              {startBlockers.length ? (
+                <ul
+                  id="sequence-studio-start-blockers"
+                  className="flow-start-blockers"
+                  aria-label="수업 시작 전 확인"
+                >
+                  {startBlockers.map((reason) => (
+                    <li key={reason.code}>
+                      {reason.stepIndices.length > 0 && (
+                        <span>
+                          {reason.stepIndices.map((index) => index + 1).join(', ')}번 항목 ·{' '}
+                        </span>
+                      )}
+                      {reason.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <small
+                  data-testid="flow-actionbar-save-hint"
+                  className={s.persistenceError ? 'is-persistence-warning' : undefined}
+                >
+                  {s.persistenceError
+                    ? '기기 저장 미완료 · 메모리 작업본 유지 중 (JSON 백업 후 여유 공간을 확보해 다시 저장하세요)'
+                    : s.saveFeedback &&
+                        (() => {
+                          const activeSaved = s.savedSequences.find(
+                            (item) => item.id === s.activeSequenceId,
+                          );
+                          return (
+                            !activeSaved ||
+                            isSavedSequencePersistedOnDisk(activeSaved, s.persistenceError)
+                          );
+                        })()
+                      ? s.saveFeedback
+                      : exerciseCount === 0
+                        ? '왼쪽 목록에서 첫 동작을 담아 수업을 시작해 보세요'
+                        : '시퀀스를 저장하고 수업을 시작하세요'}
+                </small>
+              )}
+            </div>
+            <button
+              className="flow-button"
+              disabled={!exerciseCount}
+              onClick={() => {
+                void save();
+              }}
+            >
+              <Bookmark size={16} strokeWidth={1.5} /> 저장
+            </button>
+            <button
+              className="flow-button flow-button--primary"
+              disabled={!simulation.gate.canRehearse}
+              aria-describedby={startBlockers.length ? 'sequence-studio-start-blockers' : undefined}
+              onClick={start}
+            >
+              <Play size={16} strokeWidth={1.5} fill="currentColor" /> 수업 시작
+            </button>
+          </div>
+
+          <div className="flow-studio-status" role="status" aria-live="polite">
+            {s.persistenceError &&
+            (notice.includes('저장한 수업에 보관했습니다') || notice.includes('저장했습니다'))
+              ? s.persistenceError
+              : notice || s.persistenceError || ''}
           </div>
         </div>
-      </div>
-
-      <div className="flow-studio-status" role="status" aria-live="polite">
-        {s.persistenceError &&
-        (notice.includes('저장한 수업에 보관했습니다') || notice.includes('저장했습니다'))
-          ? s.persistenceError
-          : notice || s.persistenceError || ''}
-      </div>
-      <div className="flow-actionbar">
-        <div>
-          <strong>
-            {exerciseCount}개 동작 · {minutes(total)}
-          </strong>
-          {startBlockers.length ? (
-            <ul
-              id="sequence-studio-start-blockers"
-              className="flow-start-blockers"
-              aria-label="수업 시작 전 확인"
-            >
-              {startBlockers.map((reason) => (
-                <li key={reason.code}>
-                  {reason.stepIndices.length > 0 && (
-                    <span>{reason.stepIndices.map((index) => index + 1).join(', ')}번 항목 · </span>
-                  )}
-                  {reason.message}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <small
-              data-testid="flow-actionbar-save-hint"
-              className={s.persistenceError ? 'is-persistence-warning' : undefined}
-            >
-              {s.persistenceError
-                ? '기기 저장 미완료 · 메모리 작업본 유지 중 (JSON 백업 후 여유 공간을 확보해 다시 저장하세요)'
-                : s.saveFeedback &&
-                    (() => {
-                      const activeSaved = s.savedSequences.find(
-                        (item) => item.id === s.activeSequenceId,
-                      );
-                      return (
-                        !activeSaved ||
-                        isSavedSequencePersistedOnDisk(activeSaved, s.persistenceError)
-                      );
-                    })()
-                  ? s.saveFeedback
-                  : exerciseCount === 0
-                    ? '왼쪽 목록에서 첫 동작을 담아 나만의 수업을 시작해 보세요.'
-                    : '시퀀스를 저장하고 수업을 시작하세요.'}
-            </small>
-          )}
-        </div>
-        <button
-          className="flow-button"
-          disabled={!exerciseCount}
-          onClick={() => {
-            void save();
-          }}
-        >
-          <Bookmark size={17} /> 저장
-        </button>
-        <button
-          className="flow-button flow-button--primary"
-          disabled={!simulation.gate.canRehearse}
-          aria-describedby={startBlockers.length ? 'sequence-studio-start-blockers' : undefined}
-          onClick={start}
-        >
-          <Play size={17} fill="currentColor" /> 수업 시작
-        </button>
       </div>
 
       {editingStep && (
@@ -1465,7 +1492,7 @@ export function SequenceStudioWorkbench(props: Props) {
           open
           onClose={() => setPresetsOpen(false)}
           title="템플릿으로 시작"
-          subtitle="수업 전체 또는 필요한 구간을 골라 수정할 수 있어요."
+          subtitle="수업 전체 또는 필요한 구간을 골라 수정할 수 있어요"
           maxWidth="1080px"
         >
           <Suspense fallback={<p role="status">템플릿을 불러오는 중…</p>}>
@@ -1484,7 +1511,7 @@ export function SequenceStudioWorkbench(props: Props) {
           open
           onClose={() => setConditionsOpen(false)}
           title="수업 조건"
-          subtitle="기구와 소도구를 선택하면 추가할 수 있는 동작에 반영됩니다."
+          subtitle="기구와 소도구를 선택하면 추가할 수 있는 동작에 반영됩니다"
           maxWidth="600px"
           variant="sheet"
         >
@@ -1563,7 +1590,7 @@ export function SequenceStudioWorkbench(props: Props) {
                 ))}
               </div>
             </fieldset>
-            <p className="flow-hint">기존에 담은 동작은 조건을 바꿔도 유지됩니다.</p>
+            <p className="flow-hint">기존에 담은 동작은 조건을 바꿔도 유지됩니다</p>
             <button
               className="flow-text-button"
               onClick={() => {
@@ -1589,7 +1616,7 @@ export function SequenceStudioWorkbench(props: Props) {
           open
           onClose={() => setNewClassOpen(false)}
           title="새 수업을 만들까요?"
-          subtitle="지금 작성한 수업을 저장해 두면 언제든 다시 사용할 수 있어요."
+          subtitle="지금 작성한 수업을 저장해 두면 언제든 다시 사용할 수 있어요"
         >
           <div className="flow-dialog-actions">
             <button className="flow-button" onClick={() => setNewClassOpen(false)}>
@@ -1623,7 +1650,7 @@ export function SequenceStudioWorkbench(props: Props) {
           open
           onClose={() => setFitPreview(null)}
           title={`목표 ${fitPreview.target}분에 맞추기`}
-          subtitle="잠긴 동작과 휴식은 유지하고, 나머지 동작 시간을 조정합니다."
+          subtitle="잠긴 동작과 휴식은 유지하고 나머지 동작 시간을 조정합니다"
         >
           <div className="flow-fit-preview">
             {fitPreview.fitted.map((step, index) => (

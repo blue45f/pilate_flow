@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { APPARATUS_LABELS, INITIAL_EXERCISES, POSITION_LABELS } from '../data/pilatesCatalog';
-import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import type { PilatesExercise } from '../types/pilates';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
@@ -14,7 +13,10 @@ export interface ExerciseThumbnailBadgeProps {
   className?: string;
 }
 
-const SIZE_DIMENSIONS: Record<NonNullable<ExerciseThumbnailBadgeProps['size']>, { width: string; minWidth: string }> = {
+const SIZE_DIMENSIONS: Record<
+  NonNullable<ExerciseThumbnailBadgeProps['size']>,
+  { width: string; minWidth: string }
+> = {
   xs: { width: '44px', minWidth: '44px' },
   sm: { width: '64px', minWidth: '64px' },
   md: { width: '96px', minWidth: '96px' },
@@ -41,13 +43,13 @@ export function ExerciseThumbnailBadge({
   }, [resolvedExercise]);
 
   if (!resolvedExercise) return null;
-  const sourceOnly = getExpandedMovementVisualBinding(resolvedExercise)?.nativeMotionAvailable === false;
 
   const dims = SIZE_DIMENSIONS[size];
-  const appShort = APPARATUS_LABELS[resolvedExercise.apparatus]?.short ?? resolvedExercise.apparatus;
+  const appShort =
+    APPARATUS_LABELS[resolvedExercise.apparatus]?.short ?? resolvedExercise.apparatus;
   const posKo = POSITION_LABELS[resolvedExercise.bodyPosition]?.ko ?? resolvedExercise.bodyPosition;
 
-  if (showPhaseStrip && !sourceOnly) {
+  if (showPhaseStrip) {
     return (
       <div
         className={`pf-exercise-thumbnail-strip ${className}`.trim()}

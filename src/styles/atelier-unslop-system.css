@@ -1,0 +1,1282 @@
+/* Adapted with unslop by Damir Sokolovsky (@heydamir), CC BY 4.0 */
+
+/* ==========================================================================
+   Pilates Flow Atelier — Unslop Design System Layer (9-Pass Redline)
+   Direction:
+   - Product: 50분 필라테스 기구·매트 수업 시퀀스 작성, 3D 동작 확인, 현장 수업 진행을 위한 강사 작업실
+   - Character: 고요한, 정돈된, 손에 익은 (calm, exact, tactile)
+   - World: 오전 자연광 화이트오크 기구, 따뜻한 린넨 큐시트, 매트 보타니컬 세이지 가죽
+   - Moments: 각 화면의 3D 기구·동작 도해 1개가 주인공이 되고 주변 크롬은 조용히 물러남
+   - Signature: 고정폭(tabular-nums) 키캡 형태의 기구 스프링 코드 및 시간 숫자
+   ========================================================================== */
+
+:root {
+  /* Pass 2: Warm Light Neutral Ramp & Single Botanical Accent (>= 4.5:1) */
+  --pf-unslop-bg: #f7f4ee;
+  --pf-unslop-sidebar: #f3efe7;
+  --pf-unslop-card: #ffffff;
+  --pf-unslop-subtle: #faf8f4;
+  --pf-unslop-raised: #efe9df;
+  --pf-unslop-hairline: rgba(31, 27, 22, 0.08);
+  --pf-unslop-border-control: rgba(31, 27, 22, 0.14);
+  --pf-unslop-border-hover: rgba(31, 27, 22, 0.24);
+
+  /* Three Text Roles */
+  --pf-unslop-text-primary: #1f1b16;
+  --pf-unslop-text-secondary: #5e554a;
+  --pf-unslop-text-muted: #7b7266;
+  --pf-unslop-text-muted-on-linen: #6b6257;
+
+  /* Single Primary Accent */
+  --pf-unslop-accent: #1f4435;
+  --pf-unslop-accent-hover: #18362a;
+  --pf-unslop-accent-soft: rgba(31, 68, 53, 0.08);
+
+  /* Pass 1 & 7: 4px Scale, Concentric Radii & Neutral Light Depth */
+  --pf-unslop-radius-keycap: 6px;
+  --pf-unslop-radius-row: 8px;
+  --pf-unslop-radius-control: 10px;
+  --pf-unslop-radius-segment: 12px;
+  --pf-unslop-radius-card: 16px;
+  --pf-unslop-radius-panel: 20px;
+
+  --pf-unslop-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --pf-unslop-shadow-step: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --pf-unslop-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+  /* Pass 9: Single Easing Curve & Explicit Durations */
+  --pf-unslop-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pf-unslop-fast: 150ms;
+  --pf-unslop-menu: 200ms;
+
+  /* Sync Semantic System Variables to Unslop Ramp */
+  --flow-canvas: var(--pf-unslop-bg);
+  --flow-surface: var(--pf-unslop-card);
+  --flow-ink: var(--pf-unslop-text-primary);
+  --flow-muted: var(--pf-unslop-text-secondary);
+  --flow-line: var(--pf-unslop-hairline);
+  --flow-accent: var(--pf-unslop-accent);
+
+  --pf-v6-bg: var(--pf-unslop-bg);
+  --pf-v6-sidebar: var(--pf-unslop-sidebar);
+  --pf-v6-surface: var(--pf-unslop-card);
+  --pf-v6-surface-subtle: var(--pf-unslop-subtle);
+  --pf-v6-track: var(--pf-unslop-raised);
+  --pf-v6-emerald: var(--pf-unslop-accent);
+  --pf-v6-emerald-dark: var(--pf-unslop-accent-hover);
+  --pf-v6-ink: var(--pf-unslop-text-primary);
+  --pf-v6-muted: var(--pf-unslop-text-secondary);
+  --pf-v6-border: var(--pf-unslop-hairline);
+  --pf-v6-shadow-sm: var(--pf-unslop-shadow-card);
+  --pf-v6-shadow-md: var(--pf-unslop-shadow-float);
+  --pf-v6-radius-xl: var(--pf-unslop-radius-card);
+  --pf-v6-radius-lg: var(--pf-unslop-radius-card);
+  --pf-v6-radius-md: var(--pf-unslop-radius-segment);
+}
+
+/* ==========================================================================
+   1. Programmatic Heading Focus Box Bug Fix & Keyboard Focus Clarity
+   ========================================================================== */
+#workspace-main-heading:focus:not(:focus-visible),
+#workspace-main-heading:focus,
+#workspace-main-heading:focus-visible,
+#main-content:focus,
+#main-content:focus-visible,
+h1[tabindex='-1']:focus,
+h1[tabindex='-1']:focus-visible,
+h2[tabindex='-1']:focus,
+h2[tabindex='-1']:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    button,
+    a[href],
+    input:not(.pf-cmdk-search-input),
+    select,
+    textarea,
+    summary,
+    [role='tab'],
+    [tabindex='0']
+  ):focus-visible {
+  outline: 2px solid var(--pf-unslop-accent);
+  outline-offset: 2px;
+}
+
+html body #root .flow-app .pf-search input:focus-visible,
+html body #root .flow-app .pf-cmdk-search-box input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   2. Base Surface Ramp & Sticky Scroll Clearance (Desktop / Tablet / Mobile)
+   ========================================================================== */
+html {
+  scroll-padding-top: 72px;
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+html,
+body,
+html:has(#root .flow-app),
+body:has(#root .flow-app) {
+  background: var(--pf-unslop-bg) !important;
+  color: var(--pf-unslop-text-primary);
+}
+
+html body #root .flow-app.app-shell:not(.teaching-high-contrast) {
+  background: var(--pf-unslop-bg) !important;
+  color: var(--pf-unslop-text-primary);
+}
+
+/* Prevent sticky topbar from clipping scrolled-to sections & date strips */
+#member-schedule-section,
+#member-bookings-section,
+#member-wallet-section,
+.schedule-week-selector,
+.schedule-toolbar,
+.schedule-day,
+.page-heading,
+.schedule-page-header,
+.teaching-page-header {
+  scroll-margin-top: 72px;
+}
+
+/* ==========================================================================
+   3. Pass 1 & 6: 4px Grid, Dense 248px Sidebar & Compact 56px Topbar
+   ========================================================================== */
+@media (min-width: 1024px) {
+  html body #root .flow-app.app-shell {
+    grid-template-columns: 248px minmax(0, 1fr) !important;
+  }
+
+  html body #root .flow-app > .sidebar {
+    width: 248px !important;
+    padding: 20px 16px 16px !important;
+    background: var(--pf-unslop-sidebar) !important;
+    border-right: 1px solid var(--pf-unslop-hairline) !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Brand lockup: flat leaf glyph + calm Korean subtitle (no uppercase wide tracking) */
+html body #root .flow-app .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 4px 24px !important;
+  padding: 4px;
+  border-radius: var(--pf-unslop-radius-row);
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .brand > svg {
+  width: 20px !important;
+  height: 20px !important;
+  margin-top: 0 !important;
+  align-self: center !important;
+  color: var(--pf-unslop-accent);
+  flex: 0 0 20px;
+}
+
+html body #root .flow-app .brand > span {
+  display: flex !important;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--pf-font-sans) !important;
+  font-size: 17px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .brand small.brand-tagline-deco::after {
+  content: none !important;
+}
+
+html body #root .flow-app .brand small.brand-tagline-deco {
+  display: block !important;
+  margin-top: 0 !important;
+  font-family: var(--pf-font-sans) !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+}
+
+/* Sidebar section label: 24px above (from brand), 8px below */
+html body #root .flow-app .sidebar-label {
+  display: block !important;
+  margin: 0 0 8px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+}
+
+/* Sidebar navigation: 4px gap, 40px rows (44px on coarse/mobile), 16px icon col */
+html body #root .flow-app .desktop-nav {
+  display: grid !important;
+  gap: 4px !important;
+}
+
+html body #root .flow-app .desktop-nav > button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100%;
+  min-height: 40px !important;
+  height: 40px;
+  padding: 0 12px !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app .desktop-nav > button > svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  color: var(--pf-unslop-text-muted-on-linen);
+}
+
+html body #root .flow-app .desktop-nav > button:hover:not(.active) {
+  background: rgba(31, 27, 22, 0.04) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .desktop-nav > button.active {
+  background: var(--pf-unslop-raised) !important;
+  border-color: var(--pf-unslop-hairline) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app .desktop-nav > button.active > svg {
+  color: var(--pf-unslop-accent);
+}
+
+/* Right-aligned tabular-nums count in muted text (no pill chrome) */
+html body #root .flow-app .desktop-nav > button small,
+html body #root .flow-app .desktop-nav > button.active small {
+  margin-left: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Sidebar Quick Stage button */
+html body #root .flow-app .pf-sidebar-quick-stage {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100%;
+  min-height: 40px !important;
+  margin-top: 16px !important;
+  padding: 8px 12px !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage > svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage small {
+  display: inline-block !important;
+  margin-left: auto !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  color: var(--pf-unslop-text-muted) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage.is-ready,
+html body #root .flow-app .pf-sidebar-quick-stage.is-active {
+  background: var(--pf-unslop-accent) !important;
+  border-color: var(--pf-unslop-accent) !important;
+  color: #ffffff !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage.is-ready small,
+html body #root .flow-app .pf-sidebar-quick-stage.is-active small {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Sidebar secondary disclosure & footer profile button */
+html body #root .flow-app .pf-sidebar-more-drawer {
+  margin-top: auto !important;
+  padding: 4px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--pf-unslop-hairline) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+html body #root .flow-app .pf-sidebar-more-drawer > summary {
+  min-height: 40px !important;
+  padding: 8px 12px !important;
+  border-radius: var(--pf-unslop-radius-row);
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .flow-app .pf-sidebar-more-drawer__body {
+  display: grid;
+  gap: 4px !important;
+  padding: 4px 0 8px !important;
+}
+
+html body #root .flow-app .sidebar-study-link,
+html body #root .flow-app .pwa-sidebar-button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 36px !important;
+  padding: 8px 12px !important;
+  margin-top: 0 !important;
+  border: 0 !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+html body #root .flow-app .sidebar-study-link > svg,
+html body #root .flow-app .pwa-sidebar-button > svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  color: var(--pf-unslop-text-muted-on-linen);
+}
+
+html body #root .flow-app .sidebar-study-link:hover,
+html body #root .flow-app .pwa-sidebar-button:hover {
+  background: rgba(31, 27, 22, 0.04) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .workspace-button {
+  display: flex;
+  align-items: center;
+  gap: 10px !important;
+  min-height: 48px !important;
+  margin-top: 8px !important;
+  padding: 12px 8px 4px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--pf-unslop-hairline) !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .studio-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: var(--pf-unslop-raised) !important;
+  border: 1px solid var(--pf-unslop-hairline);
+  color: var(--pf-unslop-text-primary) !important;
+  font-family: var(--pf-font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+html body #root .flow-app .workspace-button > span:not(.studio-avatar) {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .workspace-button small {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+}
+
+/* Coarse pointer / Touch ergonomics: guarantee >= 44px hit targets */
+@media (pointer: coarse), (max-width: 1023px) {
+  html body #root .flow-app .desktop-nav > button,
+  html body #root .flow-app .pf-sidebar-quick-stage,
+  html body #root .flow-app .pf-sidebar-more-drawer > summary,
+  html body #root .flow-app .sidebar-study-link,
+  html body #root .flow-app .pwa-sidebar-button {
+    min-height: 44px !important;
+    height: auto !important;
+  }
+}
+
+/* Compact 56px Topbar with Quiet Hairline */
+html body #root .flow-app .topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  min-height: 56px !important;
+  height: 56px;
+  padding: 0 24px !important;
+  gap: 12px !important;
+  background: rgba(247, 244, 238, 0.94) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--pf-unslop-hairline) !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app .breadcrumb {
+  font-size: 13px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .flow-app .breadcrumb > span {
+  padding: 0 8px !important;
+  color: var(--pf-unslop-text-muted) !important;
+}
+
+html body #root .flow-app .topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px !important;
+}
+
+html body #root .flow-app .pf-topbar-cmdk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+}
+
+html body #root .flow-app .pf-topbar-cmdk-btn:hover {
+  border-color: var(--pf-unslop-border-hover) !important;
+  background: var(--pf-unslop-subtle) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .app-create-movement {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+}
+
+html body #root .flow-app .app-create-movement:hover {
+  background: var(--pf-unslop-raised) !important;
+  border-color: var(--pf-unslop-border-hover) !important;
+}
+
+html body #root .flow-app .topbar .icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .flow-app .topbar .icon-btn:hover {
+  background: rgba(31, 27, 22, 0.05);
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  html body #root .flow-app .pf-topbar-cmdk-btn,
+  html body #root .flow-app .app-create-movement,
+  html body #root .flow-app .topbar .icon-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+}
+
+/* ==========================================================================
+   4. Responsive Layout & Sticky Topbar / Bottom-Nav Clearance
+      - Desktop (>= 1100px): 24px–32px page edges, fluid up to 1440px
+      - Tablet (768px–1099px): clean top spacing & bottom nav clearance
+      - Mobile (< 768px): clean top spacing & bottom nav clearance
+   ========================================================================== */
+@media (min-width: 1100px) {
+  html body #root .flow-app .main-content {
+    max-width: 1440px !important;
+    margin-inline: auto;
+    padding: 24px 32px 48px !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1099px) {
+  html body #root .flow-app .main-content {
+    max-width: 100% !important;
+    padding: 24px 24px calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  html body #root .flow-app.app-shell {
+    display: block;
+    --flow-bottom-nav-clearance: calc(
+      96px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px)
+    );
+    padding-bottom: 0 !important;
+  }
+
+  html body #root .flow-app > .sidebar {
+    width: min(264px, 84vw) !important;
+    padding: 20px 16px 20px !important;
+    background: var(--pf-unslop-card) !important;
+    border-right: 1px solid var(--pf-unslop-hairline) !important;
+    box-shadow: var(--pf-unslop-shadow-float) !important;
+  }
+
+  html body #root .flow-app .topbar {
+    height: auto;
+    min-height: 56px !important;
+    padding: 6px 16px !important;
+  }
+
+  html body #root .flow-app .vnext-wordmark {
+    display: inline-flex;
+    flex-direction: column;
+    font-family: var(--pf-font-sans) !important;
+    font-size: 16px !important;
+    line-height: 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--pf-unslop-text-primary) !important;
+  }
+
+  html body #root .flow-app .vnext-wordmark small {
+    display: none !important;
+  }
+
+  /* Bottom navigation bar: calm raised surface + quiet hairline */
+  html body #root .flow-app .bottom-nav {
+    inset: auto 8px
+      calc(8px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px)) !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    border-radius: var(--pf-unslop-radius-card) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--pf-unslop-hairline) !important;
+    box-shadow: var(--pf-unslop-shadow-float) !important;
+  }
+
+  html body #root .flow-app .bottom-nav > button {
+    min-height: 52px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    border-radius: var(--pf-unslop-radius-segment) !important;
+    background: transparent !important;
+    color: var(--pf-unslop-text-secondary) !important;
+    font-size: 12px !important;
+    line-height: 16px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+  }
+
+  html body #root .flow-app .bottom-nav > button > svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  html body #root .flow-app .bottom-nav > button.active {
+    background: var(--pf-unslop-raised) !important;
+    color: var(--pf-unslop-accent) !important;
+    font-weight: 600 !important;
+    border-radius: var(--pf-unslop-radius-segment) !important;
+    box-shadow: inset 0 0 0 1px var(--pf-unslop-hairline) !important;
+  }
+}
+
+/* Tablet (768px - 1023px): generous top spacing + guaranteed bottom-tab clearance */
+@media (min-width: 768px) and (max-width: 1023px) {
+  html body #root .flow-app:not(.is-teaching) .main-content {
+    max-width: 960px !important;
+    margin-inline: auto;
+    padding: 20px 24px
+      calc(96px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px)) !important;
+  }
+}
+
+/* Mobile (< 768px): clean top spacing + guaranteed bottom-tab clearance for CTAs & footers */
+@media (max-width: 767px) {
+  html body #root .flow-app .topbar {
+    padding: 6px 12px !important;
+  }
+
+  html body #root .flow-app:not(.is-teaching) .main-content,
+  html body #root .flow-app:not(.is-teaching) .main-content:has(.v3-workbench) {
+    max-width: 100% !important;
+    padding: 16px 16px
+      calc(96px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px)) !important;
+  }
+
+  html body #root .flow-app .instructor-schedule {
+    padding: 0 !important;
+  }
+}
+
+/* Align sticky sub-page bar directly beneath 56px topbar without clipping */
+html body #root .flow-app .pf-mobile-subpage-bar {
+  top: 56px !important;
+  margin: 0 0 16px !important;
+  padding: 8px 0 !important;
+  background: var(--pf-unslop-bg) !important;
+}
+
+html body #root .flow-app dialog .pf-mobile-subpage-bar,
+html body #root .flow-app .LightDismissDialog .pf-mobile-subpage-bar {
+  top: 0 !important;
+  background: var(--pf-unslop-card) !important;
+}
+
+/* ==========================================================================
+   5. Pass 7: Concentric Radii, Quiet Cards & Taming Pill Overload
+      - Outer panels/cards: 16px radius, 1px hairline, 0 1px 2px rgba(0,0,0,0.04)
+      - Controls/inputs/buttons: 10px radius
+      - Segmented switchers: #EFE9DF 12px container + #FFFFFF 8px raised step
+      - Signature keycaps (⌘K, spring codes, tags): 6px radius, 12px, tabular-nums
+   ========================================================================== */
+
+/* Outer Cards & Panels (16px radius, quiet hairline, no decorative hue gradients) */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .panel,
+    .pf-card,
+    .pf-step-stage-frame,
+    .flow-class-brief,
+    .flow-picker,
+    .flow-plan,
+    .flow-binder-card,
+    .teaching-sequence-card,
+    .movement-card,
+    .schedule-class,
+    .flow-schedule-agenda,
+    .flow-schedule-today,
+    .pf-member-slot-card,
+    .pf-member-pass-card,
+    .pf-teaching-balance-card,
+    .pf-studio3d-hero-card,
+    .pf-b05-3sec-summary-panel,
+    .pf-v70-circuit-card,
+    .pf-v70-curriculum-card,
+    .sequence-column,
+    .flow-step,
+    .workbench-welcome
+  ) {
+  background: var(--pf-unslop-card) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  border-radius: var(--pf-unslop-radius-card) !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+}
+
+/* Remove hue gradients on chrome banners -> calm neutral surface step */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .pf-page-intent-banner:not(.is-emerald),
+    .pf-ai-quick-bar,
+    .pf-ai-smart-schedule-card,
+    .pf-hero-3d-modeler-bar,
+    .pf-v70-adaptive-banner,
+    .pf-idea-3d-studio-banner,
+    .pf-home-3d-hero-showcase,
+    .flow-schedule-next,
+    .schedule-today-glance-strip
+  ) {
+  background: var(--pf-unslop-card) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  border-radius: var(--pf-unslop-radius-card) !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app:not(.teaching-high-contrast) .schedule-class.schedule-class-scheduled {
+  border-left: 3px solid var(--pf-unslop-accent) !important;
+}
+
+html body #root .flow-app .movement-card .pf-p06-3d-art {
+  border-radius: 15px 15px 0 0 !important;
+}
+
+/* Dialogs & Floating Sheets (20px window radius) */
+html body #root dialog.light-dismiss-dialog,
+html body #root .atelier-modal-dialog {
+  border-radius: var(--pf-unslop-radius-panel) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  box-shadow: var(--pf-unslop-shadow-float) !important;
+}
+
+@media (max-width: 767px) {
+  html body #root dialog.light-dismiss-dialog,
+  html body #root .atelier-modal-dialog.step-inspector-sheet {
+    border-radius: 20px 20px 0 0 !important;
+  }
+}
+
+/* Primary & Secondary Action Buttons (10px control radius, single #1F4435 accent) */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .btn-primary,
+    .pf-btn--primary,
+    .pf-step-primary-cta,
+    .pf-step-nav-pill-btn.is-primary,
+    .movement-add,
+    .pf-member-slot-cta:not(.is-secondary),
+    .pf-p04-live-btn,
+    .pf-ai-quick-bar__submit
+  ) {
+  background: var(--pf-unslop-accent) !important;
+  border: 1px solid var(--pf-unslop-accent) !important;
+  color: #ffffff !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  font-weight: 500 !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .btn-primary,
+    .pf-btn--primary,
+    .pf-step-primary-cta,
+    .pf-step-nav-pill-btn.is-primary,
+    .movement-add,
+    .pf-member-slot-cta:not(.is-secondary),
+    .pf-p04-live-btn,
+    .pf-ai-quick-bar__submit
+  ):hover:not(:disabled) {
+  background: var(--pf-unslop-accent-hover) !important;
+  border-color: var(--pf-unslop-accent-hover) !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .btn-secondary,
+    .pf-btn--secondary,
+    .pf-p04-save-btn,
+    .pf-ai-quick-bar__shuffle,
+    .pf-binder-qr-import-pill,
+    .pf-hero-3d-modeler-toggle
+  ) {
+  background: var(--pf-unslop-card) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .btn-secondary,
+    .pf-btn--secondary,
+    .pf-p04-save-btn,
+    .pf-ai-quick-bar__shuffle,
+    .pf-binder-qr-import-pill,
+    .pf-hero-3d-modeler-toggle
+  ):hover:not(:disabled) {
+  background: var(--pf-unslop-raised) !important;
+  border-color: var(--pf-unslop-border-hover) !important;
+}
+
+/* Inputs, Selects, Textareas & Search Boxes (10px control radius) */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea,
+    .pf-input,
+    .pf-select,
+    .pf-textarea,
+    .pf-search,
+    .teaching-search,
+    .pf-cmdk-search-box
+  ) {
+  border-radius: var(--pf-unslop-radius-control) !important;
+  border-color: var(--pf-unslop-border-control) !important;
+}
+
+html body #root .flow-app .pf-search input,
+html body #root .flow-app .teaching-search input,
+html body #root .flow-app .pf-cmdk-search-box input {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* Segmented Tab Bars: Quiet #EFE9DF 12px Container + #FFFFFF 8px Raised Active Step */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .pf-tabs-list,
+    .pf-tabs--segmented,
+    .pf-mobile-subpage-track,
+    .schedule-view-toggle,
+    .schedule-prep-filter,
+    .pf-role-switcher,
+    .class-insights-tabs,
+    .pf-teaching-balance-card__window-toggle,
+    .pf-studio3d-mode-tabs,
+    .pf-unified-motion-hero .pf-studio3d-mode-tabs,
+    .pf-p07-top-tabs .pf-step-guide-list,
+    .workbench-step-flow-banner
+  ) {
+  padding: 4px !important;
+  gap: 4px !important;
+  border-radius: var(--pf-unslop-radius-segment) !important;
+  background: var(--pf-unslop-raised) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app:not(.teaching-high-contrast) .pf-role-switcher {
+  padding: 3px !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .pf-tabs-list > button,
+    .pf-tabs--segmented .pf-tab,
+    .pf-mobile-subpage-btn,
+    .schedule-view-toggle > button,
+    .schedule-prep-filter > button,
+    .pf-role-switcher__btn,
+    .class-insights-tabs > button[role='tab'],
+    .pf-teaching-balance-window-btn,
+    .pf-studio3d-mode-btn,
+    .pf-unified-motion-hero .pf-studio3d-mode-btn,
+    .pf-p07-top-tabs .pf-step-guide-chip,
+    .pf-step-wizard-tab
+  ) {
+  border-radius: var(--pf-unslop-radius-row) !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app:not(.teaching-high-contrast) .pf-role-switcher__btn {
+  min-height: 30px !important;
+  padding: 4px 10px !important;
+  border-radius: 7px !important;
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  html body #root .flow-app:not(.teaching-high-contrast) .pf-role-switcher__btn {
+    min-height: 38px !important;
+  }
+}
+
+html body #root .flow-app:not(.teaching-high-contrast) .pf-mobile-subpage-btn__pill {
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: var(--pf-unslop-card) !important;
+  border: 1px solid rgba(31, 27, 22, 0.06) !important;
+  box-shadow: var(--pf-unslop-shadow-step) !important;
+}
+
+html body #root .flow-app:not(.teaching-high-contrast) .pf-mobile-subpage-btn.is-active {
+  background: transparent !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .pf-tabs-list > button[aria-selected='true'],
+    .pf-tabs-list > button[aria-pressed='true'],
+    .pf-tabs-list > button.active,
+    .pf-tabs--segmented .pf-tab[aria-selected='true'],
+    .pf-tabs--segmented .pf-tab[aria-pressed='true'],
+    .pf-tabs--segmented .pf-tab.active,
+    .schedule-view-toggle > button[aria-pressed='true'],
+    .schedule-prep-filter > button[aria-pressed='true'],
+    .pf-role-switcher__btn[aria-pressed='true'],
+    .class-insights-tabs > button[role='tab'][aria-selected='true'],
+    .pf-teaching-balance-window-btn.is-active,
+    .pf-studio3d-mode-btn.is-active,
+    .pf-unified-motion-hero .pf-studio3d-mode-btn.is-active,
+    .pf-p07-top-tabs .pf-step-guide-chip.is-active,
+    .pf-step-wizard-tab.is-active
+  ) {
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600 !important;
+  box-shadow: var(--pf-unslop-shadow-step) !important;
+}
+
+html body #root .flow-app .pf-mobile-subpage-btn__badge,
+html body #root .flow-app .pf-mobile-subpage-btn.is-active .pf-mobile-subpage-btn__badge {
+  min-width: auto !important;
+  height: auto !important;
+  padding: 0 2px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Filter Chips: 8px–10px calm control radius instead of 9999px stadium pills */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .pf-tabs--pills .pf-tab,
+    .teaching-saved-filter-pill,
+    .pf-member-chip:not(.pf-member-day-btn),
+    .pf-ai-recipe-chip,
+    .pf-ai-caution-chip,
+    .pf-ai-refine-chip,
+    .pf-p05-chip,
+    .pf-v70-option-chip,
+    .pf-orbit3d-preset-chip,
+    .pf-orbit3d-tool-chip,
+    .pf-orbit3d-play-btn,
+    .pf-orbit3d-speed-btn,
+    .pf-cmdk-brand-chip,
+    .atlas-compare-brand-chip,
+    .flow-layer-pill
+  ) {
+  border-radius: var(--pf-unslop-radius-row) !important;
+}
+
+/* Signature Detail: Keycap Spring Codes, Shortcuts (⌘K) & Small Tags (6px, 12px, tabular-nums) */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    kbd,
+    .pf-topbar-cmdk-kbd,
+    .pf-cmdk-kbd-hint,
+    .pf-spring-pill,
+    .flow-row-spring-pill,
+    .pf-badge,
+    .schedule-summary-period,
+    .schedule-prep-pill
+  ) {
+  border-radius: var(--pf-unslop-radius-keycap) !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root .flow-app :is(kbd, .pf-topbar-cmdk-kbd, .pf-cmdk-kbd-hint) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px !important;
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  color: var(--pf-unslop-text-muted) !important;
+  font-family: var(--pf-font-mono) !important;
+  box-shadow: 0 1px 0 rgba(31, 27, 22, 0.06);
+}
+
+html body #root .flow-app :is(.pf-spring-pill, .flow-row-spring-pill) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px !important;
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  box-shadow: 0 1px 0 rgba(31, 27, 22, 0.06);
+}
+
+/* ==========================================================================
+   6. Pass 5: Korean Typography, Tamed Weights (500–600) & Tabular Numerals
+   ========================================================================== */
+html body #root .flow-app :is(h1, h2, h3, h4) {
+  font-weight: 600 !important;
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+html
+  body
+  #root
+  .flow-app
+  :is(.page-heading h1, .schedule-page-header h1, .teaching-page-header h1) {
+  font-size: clamp(24px, 2.4vw, 30px) !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app :is(p, label, summary, li, button, th, td) {
+  word-break: keep-all;
+}
+
+/* Zero negative or wide uppercase tracking on small text (< 16px) */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    .eyebrow,
+    .flow-atlas__eyebrow,
+    .flow-schedule-today-label,
+    .pf-studio-kicker-pill,
+    .pf-page-intent-banner__badge,
+    .pf-ai-quick-bar__badge,
+    small,
+    .today-label,
+    .muted
+  ) {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-style: normal !important;
+}
+
+/* Consistent tabular figures across timers, durations, counts, dates & metrics */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    time,
+    .today-label,
+    .time-summary strong,
+    .v2-time-breakdown,
+    .v3-step-time,
+    .step-number,
+    .flow-time-equation,
+    .flow-plan-time,
+    .flow-row-time-group,
+    .flow-binder-time,
+    .flow-binder-moves,
+    .teaching-count,
+    .teaching-timer-digits,
+    .live-stage-timer,
+    .schedule-week-strip,
+    .schedule-week-strip strong,
+    .schedule-week-count,
+    .schedule-class-time,
+    .schedule-duration,
+    .schedule-prep-counts,
+    .pf-member-day-btn,
+    .pf-member-pass-metrics,
+    .pf-member-chip__count,
+    .pf-teaching-balance-kpi strong,
+    .pf-teaching-balance-plane-label,
+    .pf-b05-balance-summary-pill strong,
+    .pf-orbit3d-pct,
+    input[type='number'],
+    input[type='date'],
+    input[type='time']
+  ) {
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ==========================================================================
+   7. Pass 9: Disciplined Motion & Reduced-Motion Safety
+      - Single curve cubic-bezier(0.22, 1, 0.36, 1)
+      - Explicit named properties only (never transition: all)
+      - Remove decorative idle loops & card hover jumps
+   ========================================================================== */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    summary,
+    .pf-btn,
+    .pf-tab,
+    .flow-pick-card,
+    .flow-binder-card,
+    .movement-card,
+    .schedule-class,
+    .pf-member-slot-card
+  ) {
+  transition:
+    background-color var(--pf-unslop-fast) var(--pf-unslop-ease),
+    border-color var(--pf-unslop-fast) var(--pf-unslop-ease),
+    color var(--pf-unslop-fast) var(--pf-unslop-ease),
+    transform var(--pf-unslop-fast) var(--pf-unslop-ease);
+}
+
+/* Stop decorative idle animations on static cards/icons */
+html body #root .flow-app .pf-spot-carriage-svg.is-selected .pf-spot-carriage-bed,
+html body #root .flow-app .pf-studio-spot-btn:hover:not(:disabled) .pf-spot-carriage-bed,
+html body #root .flow-app .pf-spine-breath-arc,
+html body #root .flow-app .pf-hud-peak-pulse {
+  animation: none !important;
+}
+
+/* Cards shift border/surface on hover instead of flying up */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    .pf-ai-quick-recipe-card,
+    .pf-studio3d-frame-thumb,
+    .pf-card--interactive,
+    .flow-pick-card,
+    .flow-binder-card,
+    .movement-card
+  ):hover {
+  transform: none !important;
+  border-color: var(--pf-unslop-border-hover) !important;
+}
+
+/* Multi-Viewport Visual Audit Refinements (PC / Tablet 768px / Mobile 390px) */
+@media (min-width: 768px) and (max-width: 1099px) {
+  html body #root .flow-studio .flow-mobile-panes {
+    display: none !important;
+  }
+
+  html body #root .flow-studio .flow-studio-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr) !important;
+    gap: 12px !important;
+    align-items: start !important;
+  }
+
+  html body #root .flow-studio[data-mobile-pane='plan'] .flow-picker,
+  html body #root .flow-studio[data-mobile-pane='library'] .flow-plan {
+    display: block !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body #root .flow-app .pf-topbar-cmdk-btn {
+    width: 44px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  html body #root .flow-app .pf-topbar-cmdk-btn span,
+  html body #root .flow-app .pf-topbar-cmdk-btn kbd {
+    display: none !important;
+  }
+}
+
+html body #root .pf-member-view .pf-member-wallet-hero .eyebrow,
+html body #root .pf-member-view .pf-member-wallet-hero .eyebrow svg {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html body #root .library-modal-footer {
+  background: var(--pf-unslop-card, #ffffff) !important;
+  padding: 10px 0 4px !important;
+  border-top: 1px solid var(--pf-unslop-hairline) !important;
+  z-index: 4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  html body #root .flow-app *,
+  html body #root .flow-app *::before,
+  html body #root .flow-app *::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    scroll-behavior: auto !important;
+  }
+}

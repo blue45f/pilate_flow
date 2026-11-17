@@ -1,9 +1,6 @@
 import { memo, useEffect, useState, type ComponentType } from 'react';
-import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
-import {
-  getExerciseArtworkFrame,
-  hasExerciseArtworkIdentityMismatch,
-} from '../utils/exerciseArtworkCache';
+import { hasDedicated3DExerciseRig } from '../data/universal3dExerciseRigs';
+import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import {
   getLoadedNativeExerciseArtwork,
   loadNativeExerciseArtwork,
@@ -45,38 +42,36 @@ function DeferredNativeArtwork(props: ExerciseMotionArtworkProps) {
   );
 }
 
-/** Cache hits never initialize the motion engine or the native SVG renderer. */
+/**
+ * Renders True 3D posture artwork for every exercise:
+ * - All 218 dedicated catalog & global repertoire exercises load cached 640x400 Blender 5.2 Cycles 3D WebP frames.
+ * - Custom or user-edited exercises synthesize a procedural 3D posture matching their current apparatus & body position.
+ */
 export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
   phase = 'middle',
   decorative = true,
   ...props
 }: ExerciseMotionArtworkProps) {
   const { exercise, label } = props;
-  const sourceOnly = getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false;
-  const cachedFrame = sourceOnly ? undefined : getExerciseArtworkFrame(exercise, phase);
+  const cachedFrame = getExerciseArtworkFrame(exercise, phase);
   const [failedFrameSrc, setFailedFrameSrc] = useState<string | null>(null);
   const artworkProps = { ...props, phase, decorative };
-  if (sourceOnly || hasExerciseArtworkIdentityMismatch(exercise))
-    return (
-      <ApparatusExerciseArtwork
-        {...artworkProps}
-        status={sourceOnly ? 'source-only' : 'unmodeled'}
-      />
-    );
+
   if (cachedFrame && cachedFrame.src !== failedFrameSrc) {
+    const dedicated = hasDedicated3DExerciseRig(exercise);
     const phaseLabel =
       cachedFrame.labelKo ??
       (phase === 'start' ? '시작 자세' : phase === 'middle' ? '정점 자세' : '종료 자세');
-    const frameLabel = label ?? exercise.nameKo + ' · ' + phaseLabel + ' · 계획용 동작 도해';
+    const frameLabel = label ?? `${exercise.nameKo} · ${phaseLabel} · 3D 동작 도해`;
     return (
       <ExerciseMotionArtworkSurface
         {...artworkProps}
         frameLabel={frameLabel}
-        scope="catalog-authored-pattern"
+        scope={dedicated ? 'catalog-authored-pattern' : 'representative-pattern'}
         renderer="cached-native-image"
       >
         <img
-          className="movement-phase-diagram-svg"
+          className="movement-phase-diagram-svg pf-3d-rendered-artwork"
           src={cachedFrame.src}
           alt={decorative ? '' : frameLabel}
           width={cachedFrame.width}
@@ -85,6 +80,7 @@ export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
           decoding="async"
           data-exercise-id={exercise.id}
           data-phase={phase}
+          data-3d-rendered="true"
           onError={() => setFailedFrameSrc(cachedFrame.src)}
         />
       </ExerciseMotionArtworkSurface>

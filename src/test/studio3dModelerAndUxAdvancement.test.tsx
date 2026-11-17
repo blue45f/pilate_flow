@@ -11,7 +11,7 @@ import {
 } from '../components/Studio3DMotionHeroCard';
 import { StudioCommandPalette } from '../components/StudioCommandPalette';
 import { StudioInteractive3DViewport } from '../components/StudioInteractive3DViewport';
-import { BLENDER_STUDIO_GLB_MANIFEST } from '../data/blenderStudioGlbManifest';
+import { ALL_STUDIO_GLB_ASSETS } from '../data/blenderStudioGlbManifest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { renderRealtimeStudio3DFrame } from '../utils/realtimeStudio3dEngine';
@@ -59,7 +59,8 @@ describe('Luxury 3D Modeler Engine, 100/100 GLB Manifest & Korean Studio UX Adva
     expect(fs.existsSync(licensePath)).toBe(true);
     expect(fs.readFileSync(licensePath, 'utf8')).toContain('SPDX-License-Identifier: MIT');
 
-    for (const meta of Object.values(BLENDER_STUDIO_GLB_MANIFEST)) {
+    expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
+    for (const meta of ALL_STUDIO_GLB_ASSETS) {
       const abs = path.resolve(process.cwd(), 'public', meta.url.replace(/^\//, ''));
       expect(fs.existsSync(abs)).toBe(true);
       const buf = fs.readFileSync(abs);
@@ -175,7 +176,7 @@ describe('Luxury 3D Modeler Engine, 100/100 GLB Manifest & Korean Studio UX Adva
     fireEvent.click(within(lab).getByTestId('apply-3d-spring-to-step'));
     expect(onApplySpring).toHaveBeenCalledWith('1B 1Y');
 
-    expect(within(lab).getByRole('link', { name: /\.glb/ })).toHaveAttribute(
+    expect(within(lab).getAllByRole('link', { name: /\.glb/ })[0]).toHaveAttribute(
       'href',
       '/models/pilates-studio/reformer-studio-rig.glb',
     );
@@ -265,7 +266,7 @@ describe('Luxury 3D Modeler Engine, 100/100 GLB Manifest & Korean Studio UX Adva
     expect(usePilatesStore.getState().activeSteps[0]?.customSpringOverride).toBe('1B 1Y');
   });
 
-  it('localizes setup summaries cleanly and mounts the 3D Modeler on demand in Studio3DMotionHeroCard & Apparatus3dRigPreviewCard', () => {
+  it('localizes setup summaries cleanly and mounts the 3D Modeler immediately as the primary hero in Studio3DMotionHeroCard & Apparatus3dRigPreviewCard', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
       () => createMock2DContext() as never,
     );
@@ -275,12 +276,13 @@ describe('Luxury 3D Modeler Engine, 100/100 GLB Manifest & Korean Studio UX Adva
 
     const view = render(<Studio3DMotionHeroCard exercise={matEx} />);
     const card = screen.getByTestId('studio-3d-motion-hero-card');
-    expect(card.querySelectorAll('canvas')).toHaveLength(0);
-    expect(screen.getByTestId('detail-essential-3-strip')).not.toHaveTextContent('풋바 none');
-
-    fireEvent.click(screen.getByTestId('toggle-interactive-3d-modeler'));
     expect(screen.getByTestId('interactive-3d-modeler-panel')).toBeVisible();
     expect(card.querySelectorAll('canvas')).toHaveLength(1);
+    expect(screen.getByTestId('detail-essential-3-strip')).not.toHaveTextContent('풋바 none');
+
+    fireEvent.click(within(card).getByRole('button', { name: '3D 자세 프레임' }));
+    expect(card).toHaveAttribute('data-motion-mode', 'start');
+    expect(card.querySelectorAll('canvas')).toHaveLength(0);
     view.unmount();
 
     render(<Apparatus3dRigPreviewCard apparatus="barrel" bodyPosition="prone" />);

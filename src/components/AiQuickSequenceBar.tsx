@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, ShieldCheck, Sparkles, Wand2 } from 'lucide-react';
+import { RefreshCw, ShieldCheck, Wand2 } from 'lucide-react';
 import {
   BODY_CAUTION_META,
   composeAiSmartSequence,
@@ -74,19 +74,66 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
       data-testid="ai-quick-sequence-bar"
       aria-label="AI 맞춤 수업 자동 구성"
     >
-      <div className="pf-ai-quick-bar__header">
-        <div className="pf-ai-quick-bar__title-wrap">
-          <span className="pf-ai-quick-bar__badge" aria-hidden="true">
-            <Sparkles size={14} /> AI 자동 구성
-          </span>
-          <strong>
-            원하는 수업 느낌만 적거나 테마를 누르면 준비·메인·마무리를 한 번에 짜드려요
-          </strong>
-        </div>
+      <div className="pf-ai-quick-bar__top">
+        <form
+          className="pf-ai-quick-bar__form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSelectedRecipeId(null);
+            runCompose(prompt, 0, cautions);
+          }}
+        >
+          <div className="pf-ai-quick-bar__field">
+            <Wand2
+              size={16}
+              strokeWidth={1.5}
+              className="pf-ai-quick-bar__lead-icon"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              className="pf-ai-quick-bar__input"
+              aria-label="AI 수업 자동 구성 프롬프트"
+              data-testid="ai-quick-prompt-input"
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              placeholder="수업 느낌을 적거나 아래 테마를 선택하세요 (예: 리포머 초급 50분 코어 중심)"
+              maxLength={180}
+            />
+          </div>
+          <button
+            type="submit"
+            className="pf-ai-quick-bar__submit"
+            data-testid="ai-quick-compose-btn"
+          >
+            <span>자동 완성</span>
+          </button>
+          {lastSummary && (
+            <button
+              type="button"
+              className="pf-ai-quick-bar__shuffle"
+              data-testid="ai-quick-shuffle-btn"
+              onClick={() => runCompose(prompt, seed + 1, cautions)}
+            >
+              <RefreshCw size={15} strokeWidth={1.5} aria-hidden="true" />
+              <span>다른 조합</span>
+            </button>
+          )}
+        </form>
 
-        <details className="pf-ai-caution-disclosure" data-testid="ai-caution-disclosure">
+        <details
+          className="pf-ai-caution-disclosure"
+          data-testid="ai-caution-disclosure"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector('summary')?.focus();
+            }
+          }}
+        >
           <summary>
-            <ShieldCheck size={14} aria-hidden="true" />
+            <ShieldCheck size={15} strokeWidth={1.5} aria-hidden="true" />
             <span>
               보호 부위{cautions.length > 0 ? ` · ${cautions.length}곳 선택됨` : ' (선택)'}
             </span>
@@ -109,45 +156,6 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
           </div>
         </details>
       </div>
-
-      <form
-        className="pf-ai-quick-bar__form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setSelectedRecipeId(null);
-          runCompose(prompt, 0, cautions);
-        }}
-      >
-        <input
-          type="text"
-          className="pf-ai-quick-bar__input"
-          aria-label="AI 수업 자동 구성 프롬프트"
-          data-testid="ai-quick-prompt-input"
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder="예: 리포머 초급 50분, 허리 부담 없이 코어와 둔근 위주로 짜줘"
-          maxLength={180}
-        />
-        <button
-          type="submit"
-          className="pf-ai-quick-bar__submit"
-          data-testid="ai-quick-compose-btn"
-        >
-          <Wand2 size={16} aria-hidden="true" />
-          <span>자동 완성</span>
-        </button>
-        {lastSummary && (
-          <button
-            type="button"
-            className="pf-ai-quick-bar__shuffle"
-            data-testid="ai-quick-shuffle-btn"
-            onClick={() => runCompose(prompt, seed + 1, cautions)}
-          >
-            <RefreshCw size={15} aria-hidden="true" />
-            <span>다른 조합</span>
-          </button>
-        )}
-      </form>
 
       <div className="pf-ai-quick-bar__recipes" role="group" aria-label="원클릭 수업 테마 추천">
         {STUDIO_AI_QUICK_RECIPES.map((recipe) => (
@@ -176,6 +184,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
             <button
               type="button"
               className="pf-ai-refine-chip"
+              data-testid="ai-quick-refine-easy"
               onClick={() => {
                 const nextPrompt = `${prompt || '정규 수업'} · 초급 완화 중심으로 부드럽게`;
                 setPrompt(nextPrompt);
@@ -187,6 +196,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
             <button
               type="button"
               className="pf-ai-refine-chip"
+              data-testid="ai-quick-refine-core"
               onClick={() => {
                 const nextPrompt = `${prompt || '정규 수업'} · 심부 코어와 복부 집중 강화`;
                 setPrompt(nextPrompt);
@@ -198,6 +208,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
             <button
               type="button"
               className="pf-ai-refine-chip"
+              data-testid="ai-quick-refine-mobility"
               onClick={() => {
                 const nextPrompt = `${prompt || '정규 수업'} · 척추 분절과 스트레칭 이완 위주`;
                 setPrompt(nextPrompt);
