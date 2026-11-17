@@ -1908,6 +1908,48 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
   }
 }
 
+/* ==========================================================================
+   13. Pass 8: Seamless 3D Cyclorama & Thumbnail Surface Blending
+       Matches Infinity L-Sweep Studio Cyclorama (#f2eee5..#f7f4ee) with quiet
+       1px neutral hairlines so 3D renders & interactive WebGL/Canvas stages
+       sit natively inside warm-linen cards without harsh rectangular seams.
+   ========================================================================== */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .flow-atlas__art,
+    .flow-pick-card__preview,
+    .flow-row-art,
+    .flow-step-editor__art,
+    .pf-p06-3d-art,
+    .pf-studio3d-stage,
+    .pf-studio3d-frame-thumb,
+    .pf-orbit3d-canvas-wrap,
+    .exercise-motion-artwork
+  ) {
+  background-color: #f2eee5 !important;
+  border-color: var(--pf-unslop-hairline) !important;
+}
+
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(.pf-studio3d-stage img, .flow-atlas__art img, .pf-p06-3d-art img) {
+  background-color: #f2eee5;
+}
+
+/* Pass 3: Consistent 1.75px / 1.5px calm stroke discipline on chrome SVG icons */
+html
+  body
+  #root
+  .flow-app
+  :is(.desktop-nav > button > svg, .topbar .icon-btn > svg, .pf-topbar-cmdk-btn > svg, .bottom-nav > button > svg) {
+  stroke-width: 1.75;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;

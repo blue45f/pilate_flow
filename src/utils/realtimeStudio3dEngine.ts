@@ -1657,6 +1657,17 @@ function makeAnatomicalHeadWithHairQuads(
   const skinGrid: Vec3[][] = [];
   const hairGrid: Vec3[][] = [];
   const nrmGrid: Vec3[][] = [];
+  const localPt = (lx: number, ly: number, lz: number): Vec3 =>
+    add3(center, add3(mul3(rightAxis, lx), add3(mul3(antAxis, ly), mul3(upAxis, lz))));
+  const faceSurfY = (lx: number, lz: number): number => {
+    const r2 = Math.max(0.05, 1 - (lx / 0.074) * (lx / 0.074) - (lz / 0.098) * (lz / 0.098));
+    let baseY = Math.sqrt(r2) * 0.087;
+    if (lz < 0.08) {
+      const jawT = Math.min(1, (0.08 - lz) / 1.08);
+      baseY *= 1 - 0.11 * jawT;
+    }
+    return baseY;
+  };
 
   for (let r = 0; r <= ringsCount; r++) {
     const phi = -Math.PI * 0.5 + (Math.PI * r) / ringsCount;
@@ -1673,50 +1684,60 @@ function makeAnatomicalHeadWithHairQuads(
       const th = (2 * Math.PI * s) / segs;
       const nx = cp * Math.cos(th);
       const ny = cp * Math.sin(th);
-      let x = nx * 0.073;
-      let y = ny * 0.088;
+      let x = nx * 0.074;
+      let y = ny * 0.087;
       let z = nz * 0.098;
 
       if (ny > 0) {
-        if (nz < 0.05) {
-          const jawT = Math.min(1, (0.05 - nz) / 1.05);
-          x *= 1 - 0.34 * jawT * Math.sqrt(jawT);
-          y *= 1 - 0.1 * jawT;
-          const cDx = nx / 0.32;
-          const cDz = (nz + 0.78) / 0.24;
+        if (nz < 0.08) {
+          const jawT = Math.min(1, (0.08 - nz) / 1.08);
+          x *= 1 - 0.42 * Math.pow(jawT, 1.32);
+          y *= 1 - 0.11 * jawT;
+          const cDx = nx / 0.24;
+          const cDz = (nz + 0.8) / 0.22;
           const chinW = Math.exp(-(cDx * cDx + cDz * cDz));
-          y += 0.009 * chinW;
-          z -= 0.006 * chinW;
+          y += 0.0115 * chinW;
+          z -= 0.0055 * chinW;
         }
-        const nDx = nx / 0.16;
-        const nDz = (nz + 0.12) / 0.28;
-        y += 0.011 * Math.exp(-(nDx * nDx + nDz * nDz)) * ny;
-        const eDx = (Math.abs(nx) - 0.36) / 0.18;
-        const eDz = (nz - 0.08) / 0.14;
-        y -= 0.0045 * Math.exp(-(eDx * eDx + eDz * eDz)) * ny;
+        const ckDx = (Math.abs(nx) - 0.5) / 0.24;
+        const ckDz = (nz + 0.1) / 0.22;
+        const cheekW = Math.exp(-(ckDx * ckDx + ckDz * ckDz));
+        x += (nx >= 0 ? 1 : -1) * 0.004 * cheekW * ny;
+        y += 0.0044 * cheekW * ny;
+
+        const bDx = nx / 0.11;
+        const bDz = (nz + 0.06) / 0.24;
+        const tDx = nx / 0.13;
+        const tDz = (nz + 0.22) / 0.11;
+        const tipW = Math.exp(-(tDx * tDx + tDz * tDz));
+        y += (0.0095 * Math.exp(-(bDx * bDx + bDz * bDz)) + 0.0085 * tipW) * ny;
+        z += 0.0018 * tipW * ny;
+
+        const eDx = (Math.abs(nx) - 0.36) / 0.19;
+        const eDz = (nz - 0.04) / 0.13;
+        y -= 0.005 * Math.exp(-(eDx * eDx + eDz * eDz)) * ny;
       } else if (nz < -0.25) {
         const occT = (-0.25 - nz) / 0.75;
         x *= 1 - 0.22 * occT;
         y *= 1 - 0.18 * occT;
       }
 
-      skinRow.push(add3(center, add3(mul3(rightAxis, x), add3(mul3(antAxis, y), mul3(upAxis, z)))));
+      skinRow.push(localPt(x, y, z));
 
-      const templeWave = 0.0034 * templeExp * Math.abs(nx);
+      const templeWave = 0.0042 * templeExp * Math.abs(nx);
+      const crownLift = 0.005 * Math.max(0, nz);
       const partDip =
-        ny > -0.15 && nz > 0.32 ? 0.0028 * Math.exp(-((nx / 0.085) * (nx / 0.085))) : 0;
-      const hx = nx * (0.078 + templeWave);
-      const hy = y * 1.045 - 0.004;
-      const hz = z * 1.038 + 0.003 - partDip;
-      hairRow.push(
-        add3(center, add3(mul3(rightAxis, hx), add3(mul3(antAxis, hy), mul3(upAxis, hz)))),
-      );
+        ny > -0.15 && nz > 0.32 ? 0.0028 * Math.exp(-((nx / 0.08) * (nx / 0.08))) : 0;
+      const hx = nx * (0.08 + templeWave);
+      const hy = y * 1.05 - 0.004;
+      const hz = z * 1.042 + 0.004 + crownLift - partDip;
+      hairRow.push(localPt(hx, hy, hz));
 
       nRow.push(
         norm3(
           add3(
-            mul3(rightAxis, nx / 0.073),
-            add3(mul3(antAxis, ny / 0.088), mul3(upAxis, nz / 0.098)),
+            mul3(rightAxis, nx / 0.074),
+            add3(mul3(antAxis, ny / 0.087), mul3(upAxis, nz / 0.098)),
           ),
         ),
       );
@@ -1737,8 +1758,8 @@ function makeAnatomicalHeadWithHairQuads(
       const thMid = (2 * Math.PI * (s + 0.5)) / segs;
       const lxMid = cpMid * Math.cos(thMid);
       const lyMid = cpMid * Math.sin(thMid);
-      const partArch = 0.11 * Math.exp(-((lxMid / 0.25) * (lxMid / 0.25)));
-      const isHair = lzMid - lyMid * 0.66 > 0.07 + partArch || lyMid < -0.18;
+      const partArch = 0.12 * Math.exp(-((lxMid / 0.24) * (lxMid / 0.24)));
+      const isHair = lzMid - lyMid * 0.68 > 0.065 + partArch || lyMid < -0.16;
       const grid = isHair ? hairGrid : skinGrid;
       const v0 = grid[r]![s]!;
       const v1 = grid[r]![sn]!;
@@ -1753,28 +1774,217 @@ function makeAnatomicalHeadWithHairQuads(
         vNormals: flip ? [n0, n3, n2, n1] : [n0, n1, n2, n3],
         baseRgb: isHair ? hairRgb : skinRgb,
         alpha,
-        spec: isHair ? 0.32 : 0.14,
-        shininess: isHair ? 30 : 20,
+        spec: isHair ? 0.34 : 0.14,
+        shininess: isHair ? 32 : 20,
         materialRole: isHair ? undefined : 'skin',
       });
     }
   }
 
+  const isClayTone = Math.abs(skinRgb[0] - skinRgb[1]) < 8;
+  const lashRgb: Rgb = isClayTone ? hairRgb : [26, 20, 20];
+  const irisRgb: Rgb = isClayTone ? hairRgb : [48, 30, 24];
+  const catchlightRgb: Rgb = [250, 247, 240];
+  const lipRgb: Rgb = isClayTone
+    ? skinRgb
+    : [
+        Math.min(255, Math.round(skinRgb[0] * 0.9)),
+        Math.round(skinRgb[1] * 0.64),
+        Math.round(skinRgb[2] * 0.66),
+      ];
+  const strandSides = segs >= 18 ? 6 : 5;
+
+  // Expressive Korean Webtoon Brows, Winged Eyelashes, Glossy Irises & Specular Catchlights
+  if (segs >= 14) {
+    for (const sgn of [-1, 1] as const) {
+      const browPts: Vec3[] = [0, 0.5, 1].map((u) => {
+        const bx = sgn * (0.013 + u * 0.027);
+        const bz = 0.02 + Math.sin(u * Math.PI * 0.82) * 0.0055 - u * 0.0025;
+        return localPt(bx, faceSurfY(bx, bz) + 0.0028, bz);
+      });
+      const lashPts: Vec3[] = [0, 0.45, 0.82, 1].map((u) => {
+        const lx = sgn * (0.014 + u * 0.026);
+        const lz = 0.002 + Math.sin(u * Math.PI * 0.88) * 0.0062 + (u > 0.8 ? 0.002 : 0);
+        return localPt(lx, faceSurfY(lx, lz) - 0.0008, lz);
+      });
+      const ix = sgn * 0.026;
+      const iz = -0.0005;
+      const iy = faceSurfY(ix, iz) - 0.0022;
+      quads.push(
+        ...makeTaperedTubeQuads(
+          browPts,
+          [
+            [0.002, 0.0016],
+            [0.0023, 0.0018],
+            [0.0013, 0.0011],
+          ],
+          hairRgb,
+          strandSides,
+          alpha,
+          0.22,
+          0,
+          24,
+          antAxis,
+        ),
+        ...makeTaperedTubeQuads(
+          lashPts,
+          [
+            [0.0016, 0.0014],
+            [0.0024, 0.002],
+            [0.0025, 0.0021],
+            [0.0014, 0.0012],
+          ],
+          lashRgb,
+          strandSides,
+          alpha,
+          0.18,
+          0,
+          22,
+          antAxis,
+        ),
+        ...makeOrientedEllipsoidQuads(
+          localPt(ix, iy, iz),
+          rightAxis,
+          antAxis,
+          upAxis,
+          0.0066,
+          0.0028,
+          0.0076,
+          irisRgb,
+          segs >= 18 ? 10 : 8,
+          6,
+          alpha,
+          0.52,
+          56,
+        ),
+        ...makeOrientedEllipsoidQuads(
+          localPt(ix - sgn * 0.002, iy + 0.0024, iz + 0.0024),
+          rightAxis,
+          antAxis,
+          upAxis,
+          0.0019,
+          0.0014,
+          0.0019,
+          catchlightRgb,
+          6,
+          4,
+          alpha,
+          0.65,
+          64,
+        ),
+      );
+    }
+    const lipPts: Vec3[] = [-0.011, 0, 0.011].map((lx) =>
+      localPt(lx, faceSurfY(lx, -0.045) + 0.0038, -0.045 - (lx === 0 ? 0.0008 : 0)),
+    );
+    quads.push(
+      ...makeTaperedTubeQuads(
+        lipPts,
+        [
+          [0.0016, 0.0015],
+          [0.003, 0.0026],
+          [0.0016, 0.0015],
+        ],
+        lipRgb,
+        strandSides,
+        alpha,
+        0.28,
+        0,
+        30,
+        antAxis,
+        0,
+        0,
+        'skin',
+      ),
+    );
+  }
+
+  // Airy See-Through Center Bang Wisp + Sweeping Curtain Bangs & Cheek-Framing Side-Locks
+  const wispPts: Vec3[] = [
+    [-0.002, 0.088, 0.0045],
+    [0.001, 0.066, 0.0034],
+    [0.003, 0.042, 0.0024],
+    [0.002, 0.022, 0.0016],
+  ].map(([wx, wz, lift]) => localPt(wx!, faceSurfY(wx!, wz!) + lift!, wz!));
+  quads.push(
+    ...makeTaperedTubeQuads(
+      wispPts,
+      [
+        [0.0055, 0.0026],
+        [0.0062, 0.0028],
+        [0.0048, 0.0022],
+        [0.0022, 0.0012],
+      ],
+      hairRgb,
+      strandSides,
+      alpha,
+      0.34,
+      0,
+      32,
+      antAxis,
+    ),
+  );
+  for (const sgn of [-1, 1] as const) {
+    const curtainPts: Vec3[] = [
+      [0.005, 0.09, 0.0052],
+      [0.022, 0.072, 0.0042],
+      [0.042, 0.046, 0.0034],
+      [0.058, 0.018, 0.003],
+    ].map(([cxB, czB, lift]) => localPt(sgn * cxB!, faceSurfY(sgn * cxB!, czB!) + lift!, czB!));
+    const sideLockPts: Vec3[] = [
+      localPt(sgn * 0.058, 0.036, 0.034),
+      localPt(sgn * 0.067, 0.024, 0.0),
+      localPt(sgn * 0.061, 0.022, -0.036),
+      localPt(sgn * 0.046, 0.028, -0.068),
+    ];
+    quads.push(
+      ...makeTaperedTubeQuads(
+        curtainPts,
+        [
+          [0.0088, 0.0042],
+          [0.0115, 0.005],
+          [0.0096, 0.0044],
+          [0.0054, 0.0028],
+        ],
+        hairRgb,
+        strandSides,
+        alpha,
+        0.34,
+        0,
+        32,
+        antAxis,
+      ),
+      ...makeTaperedTubeQuads(
+        sideLockPts,
+        [
+          [0.0085, 0.0042],
+          [0.0094, 0.0045],
+          [0.0068, 0.0034],
+          [0.0032, 0.0018],
+        ],
+        hairRgb,
+        strandSides,
+        alpha,
+        0.34,
+        0,
+        32,
+        rightAxis,
+      ),
+    );
+  }
+
   // Sculpted Left & Right Ears
   for (const sgn of [-1, 1] as const) {
-    const earPos = add3(
-      center,
-      add3(mul3(rightAxis, sgn * 0.072), add3(mul3(antAxis, -0.006), mul3(upAxis, -0.008))),
-    );
+    const earPos = localPt(sgn * 0.072, -0.007, -0.008);
     quads.push(
       ...makeOrientedEllipsoidQuads(
         earPos,
         rightAxis,
         antAxis,
         upAxis,
-        0.007,
-        0.013,
-        0.022,
+        0.0065,
+        0.0135,
+        0.0225,
         skinRgb,
         segs >= 18 ? 8 : 6,
         5,
@@ -1787,18 +1997,18 @@ function makeAnatomicalHeadWithHairQuads(
     );
   }
 
-  // Satin Ivory Scrunchie + Twisted 3-Lobe Chignon Ballet Bun
-  const scrunchiePos = add3(center, add3(mul3(antAxis, -0.092), mul3(upAxis, 0.026)));
-  const bunPos = add3(center, add3(mul3(antAxis, -0.114), mul3(upAxis, 0.032)));
+  // Satin Ivory Scrunchie + Braided 4-Lobe Chignon Ballet Bun
+  const scrunchiePos = localPt(0, -0.091, 0.03);
+  const bunPos = localPt(0, -0.114, 0.035);
   quads.push(
     ...makeOrientedEllipsoidQuads(
       scrunchiePos,
       rightAxis,
       antAxis,
       upAxis,
-      0.029,
+      0.03,
       0.016,
-      0.029,
+      0.03,
       scrunchieRgb,
       segs >= 18 ? 12 : 8,
       5,
@@ -1813,16 +2023,16 @@ function makeAnatomicalHeadWithHairQuads(
       rightAxis,
       antAxis,
       upAxis,
-      0.041,
-      0.035,
-      0.041,
+      0.044,
+      0.036,
+      0.044,
       hairRgb,
       segs >= 18 ? 14 : 10,
       7,
       alpha,
-      0.32,
-      30,
-      3,
+      0.34,
+      32,
+      4,
     ),
   );
 
@@ -4421,7 +4631,7 @@ function buildStudio3DScene(options: {
     ? [226, 222, 215]
     : shader === 'biomech-xray'
       ? [125, 212, 188]
-      : [222, 178, 152];
+      : [236, 198, 176];
   const hairCol: Rgb = isClay ? [168, 164, 158] : MOTION_STUDIO_RGB.hair;
   const coralRgb: Rgb = MOTION_STUDIO_RGB.primaryMuscle;
   const bodyAlpha = shader === 'biomech-xray' ? 0.44 : 1.0;

@@ -1,5 +1,5 @@
 """
-Builds ALL 6 Flagship Precision v2 Pilates Studio `.glb` Hero Rigs in Blender 5.2 LTS:
+Builds ALL 6 Flagship Precision v3 Pilates Studio `.glb` Hero Rigs in Blender 5.x:
 1. `reformer-studio-rig.glb`
 2. `cadillac-studio-rig.glb`
 3. `chair-studio-rig.glb`
@@ -7,14 +7,15 @@ Builds ALL 6 Flagship Precision v2 Pilates Studio `.glb` Hero Rigs in Blender 5.
 5. `mat-studio-rig.glb`
 6. `practitioner-studio-rig.glb`
 
-Enforces `blender-headless-asset-ops` & `blender-52-hero-modeling` hygiene before export:
+Enforces strict topology & UV hygiene before export:
 - 0 `true_nonmanifold` edges, 0 `boundary` edges, 0 `loose_verts`, 0 `wire_edges`
 - Applied transforms (`scale == (1, 1, 1)`), floor grounded at `Z = 0.0`
-- Non-degenerate isotropic UVs via `uv.smart_project` + `uv.pack_islands` (margin >= 0.004) inside `[0, 1]`
+- Non-degenerate isotropic UVs via `uv.smart_project` + `uv.pack_islands` inside `[0, 1]`
 - Triangle count strictly inside the `25,000–35,000` flagship sweet spot (2 draw calls, 2 PBR materials)
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -24,6 +25,7 @@ import bmesh
 from mathutils import Vector
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
@@ -42,19 +44,11 @@ from pilates_3d_modeling_kernel import (
 )
 
 
-def clear_all_blender_data():
-    bpy.ops.object.select_all(action="SELECT")
-    bpy.ops.object.delete(use_global=False)
-    for block_col in (bpy.data.meshes, bpy.data.materials, bpy.data.images, bpy.data.curves):
-        for item in list(block_col):
-            block_col.remove(item)
-
-
 def make_glb_materials(atlas_img):
     mats = {}
     for key, mname, rough, metal, sheen, coat in [
-        ("glb_diel", "MAT_StudioDielectric", 0.46, 0.0, 0.22, 0.14),
-        ("glb_metal", "MAT_StudioMetallic", 0.21, 1.0, 0.0, 0.0),
+        ("glb_diel", "MAT_StudioDielectric", 0.44, 0.0, 0.24, 0.16),
+        ("glb_metal", "MAT_StudioMetallic", 0.20, 1.0, 0.0, 0.0),
     ]:
         mat = bpy.data.materials.new(mname)
         if mat.node_tree is None:
@@ -85,7 +79,7 @@ def extract_object_band(obj: bpy.types.Object) -> int:
     return band
 
 
-def bake_modifiers_and_join(group_name: str, objs: list[bpy.types.Object]) -> bpy.types.Object | None:
+def bake_modifiers_and_join(scene: bpy.types.Scene, group_name: str, objs: list[bpy.types.Object]) -> bpy.types.Object | None:
     if not objs:
         return None
     deps = bpy.context.evaluated_depsgraph_get()
@@ -95,7 +89,6 @@ def bake_modifiers_and_join(group_name: str, objs: list[bpy.types.Object]) -> bp
         eval_obj = o.evaluated_get(deps)
         new_mesh = bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=deps)
 
-        # Clean each individual watertight shell BEFORE join so adjacent shells never cross-weld into non-manifold edges!
         bm_part = bmesh.new()
         bm_part.from_mesh(new_mesh)
         bmesh.ops.remove_doubles(bm_part, verts=bm_part.verts, dist=1e-6)
@@ -117,7 +110,7 @@ def bake_modifiers_and_join(group_name: str, objs: list[bpy.types.Object]) -> bp
 
         new_obj = bpy.data.objects.new(o.name + "_baked", new_mesh)
         new_obj.matrix_world = o.matrix_world.copy()
-        bpy.context.scene.collection.objects.link(new_obj)
+        scene.collection.objects.link(new_obj)
         baked_objs.append(new_obj)
         bpy.data.objects.remove(o, do_unlink=True)
 
@@ -148,10 +141,6 @@ def uv_polygon_area(uvs: list[tuple[float, float]]) -> float:
 
 
 def unwrap_and_pack_atlas_uvs(obj: bpy.types.Object) -> None:
-    """
-    Runs `bpy.ops.uv.smart_project` + per-swatch `bpy.ops.uv.pack_islands` (preserving margin >= 0.0045
-    in global `[0, 1]` UV space) so every island is isotropic, non-overlapping, and strictly inside `[0, 1]`.
-    """
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
@@ -178,14 +167,12 @@ def unwrap_and_pack_atlas_uvs(obj: bpy.types.Object) -> None:
         for f in bm.faces:
             f.select = (int(f[band_layer]) == band_idx) if band_layer is not None else True
         bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
-        # Tile span is ~0.232; margin=0.022 inside [0,1] maps to 0.022 * 0.232 = 0.0051 >= 0.004 in [0,1]!
         bpy.ops.uv.pack_islands(rotate=True, margin=0.022)
 
         bm = bmesh.from_edit_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.verify()
         band_layer = bm.faces.layers.int.get("mat_band")
         u_min, u_max, v_min, v_max = atlas_tile_bounds(band_idx, pad=0.008)
-        # Reserve tiny 0.006 top-right corner inside the swatch for any edge-on micro-faces
         pack_u_span = (u_max - u_min) - 0.008
         pack_v_span = (v_max - v_min) - 0.008
 
@@ -213,7 +200,6 @@ def unwrap_and_pack_atlas_uvs(obj: bpy.types.Object) -> None:
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Strip temporary face attribute before glTF export
     bm_clean = bmesh.new()
     bm_clean.from_mesh(obj.data)
     bl = bm_clean.faces.layers.int.get("mat_band")
@@ -231,25 +217,16 @@ def ground_scene_objects(objs: list[bpy.types.Object]):
         for v in o.data.vertices
     )
     if abs(min_z) > 1e-6:
+        bpy.ops.object.select_all(action="DESELECT")
         for o in objs:
             if o is not None:
                 o.location.z -= min_z
-        bpy.ops.object.select_all(action="SELECT")
+                o.select_set(True)
+        bpy.context.view_layer.objects.active = objs[0]
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
 def verify_strict_hygiene(fname: str, objs: list[bpy.types.Object]) -> tuple[int, int]:
-    """
-    Verifies on every mesh before export:
-    - 0 `true_nonmanifold` edges (`not e.is_manifold and not e.is_boundary`)
-    - 0 `boundary` edges (100% closed watertight solids)
-    - 0 `loose_verts`
-    - 0 `wire_edges`
-    - `scale == (1, 1, 1)`
-    - Standing floor grounded at `Z = 0`
-    - Non-degenerate UVs packed cleanly inside `[0, 1]`
-    - Total triangles inside `25,000–35,000`
-    """
     total_tris = 0
     total_verts = 0
     min_z = float("inf")
@@ -316,9 +293,14 @@ def verify_strict_hygiene(fname: str, objs: list[bpy.types.Object]) -> tuple[int
     return total_tris, total_verts
 
 
-def export_raw_glb(out_path: str):
+def export_selected_glb(objs: list[bpy.types.Object], out_path: str):
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
     bpy.ops.export_scene.gltf(
         filepath=out_path,
+        use_selection=True,
         export_format="GLB",
         export_yup=True,
         export_apply=True,
@@ -329,13 +311,11 @@ def export_raw_glb(out_path: str):
 
 
 def build_practitioner_hero_spec(mc: MeshCollector):
-    # Multi-Tier Sculpted American Walnut & Satin Champagne Brass Studio Pedestal (Z = 0.0 .. 0.038)
     add_cylinder_rod(mc, "Pedestal_BrassPlinth", (0.0, 0.0, 0.0), (0.0, 0.0, 0.010), 0.362, "brass", segs=48, r2=0.356)
     add_cylinder_rod(mc, "Pedestal_WalnutDeck", (0.0, 0.0, 0.008), (0.0, 0.0, 0.038), 0.354, "walnut", segs=48, r2=0.338)
     add_torus(mc, "Pedestal_BrassRim", (0.0, 0.0, 0.020), 0.348, 0.0065, "brass", axis="Z", segs=48, tsegs=10)
     add_torus(mc, "Pedestal_BrassInlay", (0.0, 0.0, 0.038), 0.285, 0.0030, "brass", axis="Z", segs=44, tsegs=8)
 
-    # Standing Pilates Arabesque Balance Pose (standing sole grounded directly on Pedestal_WalnutDeck z = 0.038!)
     rig = {
         "pelvis": [0.02, 0.0, 0.892],
         "spineMid": [0.08, 0.0, 1.082],
@@ -353,7 +333,6 @@ def build_practitioner_hero_spec(mc: MeshCollector):
     }
     build_sculpted_practitioner(mc, rig, subsurf=1)
 
-    # Compute exact upward-cupped Palmar Arch center for both supinated hands so Brass Toning Orbs sit cradled in the palms!
     pelvis = Vector(rig["pelvis"])
     chest = Vector(rig["chest"])
     sp_up = (chest - pelvis).normalized()
@@ -364,7 +343,7 @@ def build_practitioner_hero_spec(mc: MeshCollector):
         ("L", -1.0, "lHand", "lElbowPole"),
         ("R", 1.0, "rHand", "rElbowPole"),
     ]:
-        sh = chest + body_right * (sign * 0.150)
+        sh = chest + body_right * (sign * 0.148)
         elb, wr, _ = solve_2bone_ik_with_bend(sh, Vector(rig[hd_key]), 0.28, 0.26, Vector(rig[ep_key]))
         forearm_dir = (wr - elb).normalized()
         fdir, _, dorsal = compute_hand_frame(side, forearm_dir, body_right, ant_n, supinate_up=True)
@@ -372,56 +351,86 @@ def build_practitioner_hero_spec(mc: MeshCollector):
         add_ellipsoid(mc, f"BrassToningOrb_{side}", orb_center, 0.027, 0.027, 0.027, "brass", u_seg=20, v_seg=14)
 
 
-def main():
-    poses_path = "/Users/hjunkim/.gemini/antigravity/brain/e3c254a4-3b6a-402f-906c-6b96d66ba5b8/scratch/poses_218x3.json"
-    raw_dir = "/Users/hjunkim/.gemini/antigravity/brain/e3c254a4-3b6a-402f-906c-6b96d66ba5b8/scratch/raw_flagship_glbs"
-    os.makedirs(raw_dir, exist_ok=True)
+def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | None = None, out_dir: str | None = None) -> dict:
+    poses_path = poses_path or os.path.join(SCRIPT_DIR, "poses_studio_canonical.json")
+    out_dir = out_dir or os.path.join(ROOT_DIR, "public", "models", "pilates-studio")
+    os.makedirs(out_dir, exist_ok=True)
 
     with open(poses_path, "r", encoding="utf-8") as f:
         poses_list = json.load(f)
     by_id = {item["id"]: item for item in poses_list}
 
     targets = [
-        ("reformer-studio-rig.glb", "ex-footwork-01", "middle", None),
-        ("cadillac-studio-rig.glb", "original-cadillac-seated-roll-back", "middle", None),
-        ("chair-studio-rig.glb", "ex-kr-chair-01", "middle", None),
-        ("barrel-studio-rig.glb", "ex-kr-barrel-01", "middle", None),
-        ("mat-studio-rig.glb", "expanded-mat-hundred", "middle", ["magic-circle", "foam-roller", "mini-ball"]),
-        ("practitioner-studio-rig.glb", None, None, None),
+        ("reformer", "reformer-studio-rig.glb", "ex-footwork-01", "middle", None),
+        ("cadillac", "cadillac-studio-rig.glb", "original-cadillac-seated-roll-back", "middle", None),
+        ("chair", "chair-studio-rig.glb", "ex-kr-chair-01", "middle", None),
+        ("barrel", "barrel-studio-rig.glb", "ex-kr-barrel-01", "middle", None),
+        ("mat", "mat-studio-rig.glb", "expanded-mat-hundred", "middle", ["magic-circle", "foam-roller", "mini-ball"]),
+        ("practitioner", "practitioner-studio-rig.glb", None, None, None),
     ]
+    if only_keys:
+        allowed = set(only_keys)
+        targets = [t for t in targets if t[0] in allowed]
 
-    for fname, ex_id, phase_key, extra_props in targets:
-        clear_all_blender_data()
-        atlas = build_glb_pbr_atlas(512)
-        mats = make_glb_materials(atlas)
-        mc = MeshCollector(bpy.context.scene.collection, mats, glb_mode=True)
+    work_scene = bpy.context.scene
+    if bpy.context.object and bpy.context.object.mode != "OBJECT":
+        bpy.ops.object.mode_set(mode="OBJECT")
 
-        if ex_id is None:
-            build_practitioner_hero_spec(mc)
-        else:
-            ex = dict(by_id[ex_id])
-            ex["props"] = extra_props if extra_props is not None else []
-            rig = ex["phases"][phase_key]
-            build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=1)
+    results = {}
+    atlas = build_glb_pbr_atlas(512)
+    mats = make_glb_materials(atlas)
+    try:
+        for app_key, fname, ex_id, phase_key, extra_props in targets:
+            for o in list(work_scene.objects):
+                bpy.data.objects.remove(o, do_unlink=True)
+            for m in list(bpy.data.meshes):
+                if m.users == 0:
+                    bpy.data.meshes.remove(m)
 
-        diel_joined = bake_modifiers_and_join("SM_Studio_Dielectric", mc.diel_objs)
-        metal_joined = bake_modifiers_and_join("SM_Studio_Metallic", mc.metal_objs)
-        final_objs = [o for o in (diel_joined, metal_joined) if o is not None]
+            mc = MeshCollector(work_scene.collection, mats, glb_mode=True)
+            if ex_id is None:
+                build_practitioner_hero_spec(mc)
+            else:
+                ex = dict(by_id[ex_id])
+                ex["props"] = extra_props if extra_props is not None else []
+                rig = ex["phases"][phase_key]
+                build_apparatus_and_props(mc, ex, rig)
+                build_sculpted_practitioner(mc, rig, subsurf=1)
 
-        ground_scene_objects(final_objs)
-        for o in final_objs:
-            unwrap_and_pack_atlas_uvs(o)
+            diel_joined = bake_modifiers_and_join(work_scene, "SM_Studio_Dielectric", mc.diel_objs)
+            metal_joined = bake_modifiers_and_join(work_scene, "SM_Studio_Metallic", mc.metal_objs)
+            final_objs = [o for o in (diel_joined, metal_joined) if o is not None]
 
-        tris, verts = verify_strict_hygiene(fname, final_objs)
-        out_raw = os.path.join(raw_dir, fname)
-        export_raw_glb(out_raw)
-        print(
-            f"[Flagship v2 Verified] {fname}: {tris} tris, {verts} verts, "
-            f"0 non-manifold, 0 loose, 0 wire, Z_min=0.0, {os.path.getsize(out_raw)} raw bytes",
-            flush=True,
-        )
+            ground_scene_objects(final_objs)
+            for o in final_objs:
+                unwrap_and_pack_atlas_uvs(o)
+
+            tris, verts = verify_strict_hygiene(fname, final_objs)
+            out_glb = os.path.join(out_dir, fname)
+            export_selected_glb(final_objs, out_glb)
+            with open(out_glb, "rb") as gf:
+                glb_bytes = gf.read()
+            results[app_key] = {
+                "fileName": fname,
+                "fileBytes": len(glb_bytes),
+                "triangles": tris,
+                "vertices": verts,
+                "drawCalls": len(final_objs),
+                "sha256": hashlib.sha256(glb_bytes).hexdigest(),
+            }
+            for o in final_objs:
+                bpy.data.objects.remove(o, do_unlink=True)
+    finally:
+        for mat in mats.values():
+            bpy.data.materials.remove(mat)
+        bpy.data.images.remove(atlas)
+        for m in list(bpy.data.meshes):
+            if m.users == 0:
+                bpy.data.meshes.remove(m)
+
+    return results
 
 
 if __name__ == "__main__":
-    main()
+    summary = build_flagship_glbs()
+    print(json.dumps(summary, indent=2), flush=True)

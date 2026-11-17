@@ -510,7 +510,7 @@ html #root .flow-app .desktop-nav > button.active {
   cursor: pointer;
   list-style: none;
   font-size: 0.84rem;
-  font-weight: 720;
+  font-weight: 600;
   color: #1f4435;
 }
 
@@ -520,7 +520,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .flow-step-3d-disclosure__summary small {
   font-size: 0.74rem;
-  font-weight: 560;
+  font-weight: 500;
   color: #52665a;
 }
 
@@ -556,17 +556,18 @@ html #root .flow-app .desktop-nav > button.active {
   align-items: center;
   gap: 4px;
   font-size: 0.78rem;
-  font-weight: 760;
+  font-weight: 600;
   color: #1f4435;
 }
 
 .pf-orbit3d-hotspot-card__metric {
   font-size: 0.72rem;
-  font-weight: 680;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #e8f0e4;
-  color: #1f4435;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #f3efe7;
+  border: 1px solid rgba(31, 27, 22, 0.12);
+  color: #1f1b16;
 }
 
 .pf-orbit3d-hotspot-card__close {
@@ -639,9 +640,9 @@ html #root .flow-app .desktop-nav > button.active {
   gap: 12px;
   margin-top: 10px;
   padding: 12px 16px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f8f7f2 0%, #edf3e8 100%);
-  border: 1px solid rgba(34, 62, 48, 0.12);
+  border-radius: 16px;
+  background: #faf8f4;
+  border: 1px solid rgba(31, 27, 22, 0.08);
 }
 
 .pf-hero-3d-modeler-bar__copy {
@@ -652,13 +653,13 @@ html #root .flow-app .desktop-nav > button.active {
 
 .pf-hero-3d-modeler-bar__copy strong {
   font-size: 0.86rem;
-  font-weight: 760;
-  color: #1f4435;
+  font-weight: 600;
+  color: #1f1b16;
 }
 
 .pf-hero-3d-modeler-bar__copy span {
   font-size: 0.76rem;
-  color: #536659;
+  color: #5e554a;
   line-height: 1.45;
 }
 
@@ -668,17 +669,17 @@ html #root .flow-app .desktop-nav > button.active {
   gap: 6px;
   min-height: 44px;
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid #1f4435;
   background: #1f4435;
   color: #ffffff;
   font-size: 0.78rem;
-  font-weight: 720;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   transition:
-    background-color 150ms ease,
-    color 150ms ease;
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-hero-3d-modeler-toggle.is-open {
@@ -1104,11 +1105,11 @@ html #root .flow-app .desktop-nav > button.active {
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   grid-template-columns: none !important;
-  padding: 3px !important;
-  gap: 3px !important;
-  background: #ece8de !important;
-  border-radius: 999px !important;
-  border: 1px solid rgba(34, 62, 48, 0.12) !important;
+  padding: 4px !important;
+  gap: 4px !important;
+  background: #efe9df !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(31, 27, 22, 0.08) !important;
 }
 
 .pf-unified-motion-hero .pf-studio3d-mode-btn {
@@ -1192,13 +1193,13 @@ html #root .flow-app .desktop-nav > button.active {
 
 .pf-detail-layer-tab {
   min-height: 28px;
-  padding: 3px 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(34, 62, 48, 0.16);
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 27, 22, 0.14);
   background: #ffffff;
-  color: #365044;
+  color: #1f1b16;
   font-size: 0.75rem;
-  font-weight: 650;
+  font-weight: 500;
   cursor: pointer;
 }
 

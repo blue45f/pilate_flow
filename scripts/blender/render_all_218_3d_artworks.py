@@ -1,10 +1,9 @@
 """
 Flagship Precision Blender 5.2 LTS Cycles Metal GPU Renderer — All 218 Pilates 3D Exercises (654 Frames @ 640x400)
-Powered by `pilates_3d_modeling_kernel.py`:
-- Continuous SubD Multi-Station Anatomical Torso, Muscle-Bellied Limbs, 5-Digit Hands & Tibia-Aligned Grip-Sock Feet
-- Industrial Studio Apparatuses (Open C-Frame Wunda Chair, Flanged Cadillac Canopy, Routed Oak Reformer, Piped Whaleback Barrel)
-- Procedural European White Oak Grain, Pebbled Sage Leather, Subsurface Skin & Anisotropic Metals
-- Exact Perspective Frustum Camera Auto-Framer (`aim_camera_perspective_exact`) guaranteeing 0% clipping across all 654 frames
+Powered by `pilates_3d_modeling_kernel.py` v3:
+- Seamless 360-Degree Curved Infinity Cyclorama (`build_infinity_cyclorama_bowl`) eliminating hard wall/floor horizon seams
+  and matching Pilates Flow's `#f7f4ee` / `#f3efe7` warm atelier linen palette
+- Stylized Korean Webtoon / Atelier Practitioner + True Cathedral European White Oak, Satin Brass & Pebbled Sage Leather
 """
 from __future__ import annotations
 
@@ -15,6 +14,7 @@ import os
 import sys
 import time
 import bpy
+import bmesh
 from mathutils import Vector
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,11 +31,61 @@ from pilates_3d_modeling_kernel import (
 )
 
 
-def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: int = 10):
-    bpy.ops.object.select_all(action="SELECT")
-    bpy.ops.object.delete(use_global=False)
+def build_infinity_cyclorama_bowl(collection, mat) -> bpy.types.Object:
+    """
+    Constructs a smooth, continuous 360-degree L-sweep studio cyclorama bowl:
+    - Perfectly flat grounded stage disk (`r <= 3.6m`, `z = 0.0`) for crisp contact shadows
+    - Smoothly filleted circular cove (`R_cove = 5.4m`) sweeping seamlessly up to `z = 9.5m`
+      so NO diagonal horizon seam ever appears behind any camera azimuth or elevation!
+    """
+    bm = bmesh.new()
+    ang_segs = 64
+    r_flat = 3.6
+    r_cove = 5.4
 
-    scene = bpy.context.scene
+    profile_rz = [(0.0, 0.0), (1.4, 0.0), (2.6, 0.0), (r_flat, 0.0)]
+    for k in range(1, 17):
+        a = (math.pi * 0.48) * (k / 16.0)
+        rr = r_flat + math.sin(a) * r_cove
+        zz = (1.0 - math.cos(a)) * r_cove
+        profile_rz.append((rr, zz))
+    profile_rz.append((r_flat + r_cove + 0.4, r_cove + 4.2))
+
+    center_v = bm.verts.new((0.0, 0.0, 0.0))
+    rings = []
+    for rr, zz in profile_rz[1:]:
+        row = []
+        for s in range(ang_segs):
+            th = 2.0 * math.pi * s / ang_segs
+            row.append(bm.verts.new((math.cos(th) * rr, math.sin(th) * rr, zz)))
+        rings.append(row)
+
+    for s in range(ang_segs):
+        s2 = (s + 1) % ang_segs
+        bm.faces.new((center_v, rings[0][s], rings[0][s2]))
+
+    for i in range(len(rings) - 1):
+        for s in range(ang_segs):
+            s2 = (s + 1) % ang_segs
+            bm.faces.new((rings[i][s], rings[i + 1][s], rings[i + 1][s2], rings[i][s2]))
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    mesh = bpy.data.meshes.new("StudioInfinityCycloramaMesh")
+    bm.to_mesh(mesh)
+    bm.free()
+    for p in mesh.polygons:
+        p.use_smooth = True
+    mesh.materials.append(mat)
+    obj = bpy.data.objects.new("StudioInfinityCyclorama", mesh)
+    collection.objects.link(obj)
+    return obj
+
+
+def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: int = 12, target_scene: bpy.types.Scene | None = None):
+    scene = target_scene or bpy.context.scene
+    for obj in list(scene.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+
     scene.render.engine = "CYCLES"
     prefs = bpy.context.preferences.addons["cycles"].preferences
     try:
@@ -53,7 +103,6 @@ def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: in
     scene.cycles.max_bounces = 3
     scene.cycles.diffuse_bounces = 2
     scene.cycles.glossy_bounces = 2
-    # Must be False when rebuilding dynamic per-exercise meshes so Metal BVH memory never leaks!
     scene.render.use_persistent_data = False
     scene.render.resolution_x = res_x
     scene.render.resolution_y = res_y
@@ -62,58 +111,42 @@ def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: in
     scene.render.image_settings.color_mode = "RGB"
     scene.render.image_settings.color_depth = "8"
     scene.view_settings.view_transform = "AgX"
-    scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = -0.04
+    scene.view_settings.look = "None"
+    scene.view_settings.exposure = 0.28
 
     mats = build_cycles_studio_materials()
-
-    # Wide Architectural Cyclorama Floor & Distant Warm Linen Wall (never occludes wide/standing camera)
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, -0.025))
-    flr = bpy.context.active_object
-    flr.name = "StudioFloor"
-    flr.scale = (32.0, 32.0, 0.05)
-    flr.data.materials.append(mats["studio_floor"])
-
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 7.2, 3.2))
-    wall_back = bpy.context.active_object
-    wall_back.name = "StudioBackWall"
-    wall_back.scale = (32.0, 0.08, 7.6)
-    wall_back.data.materials.append(mats["studio_bg"])
+    build_infinity_cyclorama_bowl(scene.collection, mats["studio_bg"])
 
     world = scene.world or bpy.data.worlds.new("StudioWorld")
     scene.world = world
     world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
-    bg.inputs["Color"].default_value = (*srgb_tuple((0.952, 0.938, 0.908)), 1.0)
-    bg.inputs["Strength"].default_value = 0.46
+    bg.inputs["Color"].default_value = (*srgb_tuple((0.972, 0.960, 0.936)), 1.0)
+    bg.inputs["Strength"].default_value = 0.78
 
-    # Subject-Class-Aware 3-Point Architectural Atelier Softboxes (`blender-lighting`)
-    bpy.ops.object.light_add(type="AREA", location=(-2.2, -2.5, 3.0))
-    key = bpy.context.active_object
-    key.data.energy = 275.0
-    key.data.size = 2.4
-    key.data.color = (1.0, 0.962, 0.905)
-    key.rotation_euler = (math.radians(47), math.radians(-18), math.radians(-28))
+    def add_area_light(lname: str, loc, rot_deg, energy: float, size: float, color):
+        ldata = bpy.data.lights.new(lname, type="AREA")
+        ldata.energy = energy
+        ldata.size = size
+        ldata.color = color
+        lobj = bpy.data.objects.new(lname, ldata)
+        lobj.location = loc
+        lobj.rotation_euler = tuple(math.radians(a) for a in rot_deg)
+        scene.collection.objects.link(lobj)
+        return lobj
 
-    bpy.ops.object.light_add(type="AREA", location=(2.5, -2.3, 2.0))
-    fill = bpy.context.active_object
-    fill.data.energy = 90.0
-    fill.data.size = 3.0
-    fill.data.color = (0.94, 0.97, 1.0)
-    fill.rotation_euler = (math.radians(58), math.radians(20), math.radians(32))
+    # Warm Morning Atelier Softboxes + Cyclorama Wash (seamless #f6f3ec studio backdrop)
+    add_area_light("AtelierKeyLight", (-2.3, -2.6, 3.1), (46, -18, -28), 235.0, 2.8, (1.0, 0.972, 0.930))
+    add_area_light("AtelierFillLight", (2.6, -2.4, 2.2), (56, 20, 32), 110.0, 3.4, (0.96, 0.98, 1.0))
+    add_area_light("AtelierRimLight", (0.2, 2.1, 2.9), (-36, 0, 0), 115.0, 2.8, (1.0, 0.985, 0.95))
+    add_area_light("AtelierCycWash", (0.0, 1.2, 4.6), (0, 0, 0), 165.0, 6.2, (0.995, 0.982, 0.956))
 
-    bpy.ops.object.light_add(type="AREA", location=(0.2, 1.8, 2.7))
-    rim = bpy.context.active_object
-    rim.data.energy = 95.0
-    rim.data.size = 2.2
-    rim.data.color = (1.0, 0.98, 0.93)
-    rim.rotation_euler = (math.radians(-38), 0.0, 0.0)
-
-    bpy.ops.object.camera_add(location=(0.0, -3.2, 1.3))
-    cam = bpy.context.active_object
-    cam.name = "StudioCamera"
-    cam.data.lens = 66.0
-    cam.data.sensor_width = 36.0
+    cam_data = bpy.data.cameras.new("StudioCamera")
+    cam_data.lens = 66.0
+    cam_data.sensor_width = 36.0
+    cam = bpy.data.objects.new("StudioCamera", cam_data)
+    cam.location = (0.0, -3.2, 1.3)
+    scene.collection.objects.link(cam)
     scene.camera = cam
 
     subj_col = bpy.data.collections.new("SubjectCol")
@@ -169,7 +202,7 @@ def collect_exercise_envelope_points(ex: dict) -> list[Vector]:
 def main():
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
-    parser.add_argument("--poses", required=True)
+    parser.add_argument("--poses", default=os.path.join(SCRIPT_DIR, "poses_studio_canonical.json"))
     parser.add_argument("--outdir", required=True)
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--end", type=int, default=9999)
@@ -184,7 +217,7 @@ def main():
         allowed = {x.strip() for x in args.apparatus.split(",") if x.strip()}
         all_exercises = [ex for ex in all_exercises if ex["apparatus"] in allowed]
     subset = all_exercises[args.start : args.end]
-    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=640, res_y=400, samples=10)
+    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=640, res_y=400, samples=12)
 
     t0 = time.time()
     rendered = 0

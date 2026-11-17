@@ -135,7 +135,7 @@ export function FlowAtlasCatalog({
     <section className="flow-atlas" aria-labelledby="workspace-main-heading">
       <header className="flow-atlas__heading">
         <div className="flow-atlas__intro">
-          <p className="flow-atlas__eyebrow">PILATES FLOW · LIBRARY</p>
+          <p className="flow-atlas__eyebrow">동작 도감 · 3D 아카이브</p>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             동작 라이브러리
           </h1>
