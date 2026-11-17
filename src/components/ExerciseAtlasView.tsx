@@ -945,10 +945,10 @@ interface AtlasEverydayCatalogProps {
 
 const ATLAS_UNSLOP_CSS = `
 .flow-atlas.flow-atlas--unslop {
-  --atlas-ink: #1b2822;
-  --atlas-secondary: #4e5c55;
-  --atlas-muted: #6e7a73;
-  --atlas-line: rgba(31, 68, 53, 0.10);
+  --atlas-ink: #1f1b16;
+  --atlas-secondary: #4e473e;
+  --atlas-muted: #585046;
+  --atlas-line: rgba(31, 27, 22, 0.10);
   --atlas-green: #1f4435;
   --atlas-soft: #f3f1ea;
   display: flex;
