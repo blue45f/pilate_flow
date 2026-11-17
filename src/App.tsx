@@ -180,6 +180,9 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const workbenchDetailAddRef = useRef<
+    ((exerciseId: string) => { success: boolean; message?: string }) | null
+  >(null);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -765,6 +768,9 @@ export function App() {
                 <SequenceStudioWorkbench
                   onStartClass={() => changeTab('stage')}
                   sourceDetailOpen={!!preview || ideaSheetState.open}
+                  onRegisterDetailAddHandler={(handler) => {
+                    workbenchDetailAddRef.current = handler;
+                  }}
                   onOpenYouTubePreview={(exercise) => {
                     if (isMovementIdeaExercise(exercise)) {
                       setIdeaSheetState({ open: true, exercise });
@@ -970,6 +976,9 @@ export function App() {
             onClose={() => setPreview(null)}
             onAddToSequence={(exerciseId) => {
               const before = usePilatesStore.getState();
+              if (before.activeTab === 'workbench' && workbenchDetailAddRef.current) {
+                return workbenchDetailAddRef.current(exerciseId);
+              }
               const exercise = before.exercises.find((item) => item.id === exerciseId);
               if (!exercise)
                 return {

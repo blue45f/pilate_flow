@@ -1169,3 +1169,215 @@
   color: #9c523d;
   font-weight: 600;
 }
+.flow-actionbar small.is-dirty-hint {
+  display: block;
+  color: #7d4b16;
+  font-weight: 600;
+}
+.flow-conflict-banner,
+.flow-next-class-card,
+.flow-location-copy-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  border: 1px solid #d7e0d9;
+  background: #fffefb;
+}
+.flow-conflict-banner {
+  border-color: #d9a77e;
+  background: #fff8f1;
+}
+.flow-conflict-banner strong {
+  display: block;
+  font-size: 13px;
+  color: #7a3c16;
+  margin-bottom: 3px;
+}
+.flow-conflict-banner p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #5f422b;
+  line-height: 1.5;
+}
+.flow-conflict-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.flow-next-class-card__info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 13px;
+  color: #2f4b3c;
+  min-width: 0;
+}
+.flow-next-class-card__info strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #193c33;
+}
+.flow-next-class-badge,
+.flow-next-prep-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  background: #eaf2eb;
+  color: #1f4435;
+}
+.flow-next-prep-pill.is-unassigned {
+  background: #f5efe4;
+  color: #6f4e22;
+}
+.flow-next-class-warning {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #8b442e;
+}
+.flow-location-copy-bar {
+  padding: 10px 16px;
+  background: #f6f4ed;
+  font-size: 12.5px;
+  color: #385143;
+}
+.flow-location-copy-bar > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.flow-location-copy-bar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.flow-location-copy-bar__controls select {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #d4ddd5;
+  border-radius: 10px;
+  background: #fff;
+  color: #193c33;
+  font-size: 13px;
+  max-width: 100%;
+}
+.flow-add-again-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid #bdd0c2;
+  border-radius: 9px;
+  background: #f4f8f4;
+  color: #1f4435;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.flow-section-copy-btn {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #d7e0d9;
+  border-radius: 8px;
+  background: #fff;
+  color: #2f5443;
+  font-size: 12px;
+  font-weight: 600;
+}
+.flow-row-spring-pill.is-unknown,
+.flow-setup-change.is-unknown {
+  background: #fbf2e6;
+  color: #7a4919;
+  border-color: #e3c39d;
+}
+.flow-row-incompatible-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fdf3ec;
+  border: 1px solid #e7c6b2;
+}
+.flow-row-incompatible-bar small {
+  color: #8a3f28;
+  font-size: 12px;
+  font-weight: 650;
+}
+.flow-time-budget-formula {
+  margin: 4px 0 6px;
+  font-size: 12px;
+  color: #4c6154;
+  font-variant-numeric: tabular-nums;
+}
+.flow-footer-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.flow-discard-guard {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #deb089;
+  background: #fff8f1;
+}
+.flow-discard-guard p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6d3b16;
+}
+.flow-fit-impossible__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.flow-fit-impossible__stats > div {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f6f4ed;
+}
+.flow-fit-impossible__stats dt {
+  font-size: 12px;
+  color: #5b6b60;
+  margin-bottom: 4px;
+}
+.flow-fit-impossible__stats dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #193c33;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 800px) {
+  .pf-ai-quick-bar__recipes {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pf-ai-quick-bar__recipes > button {
+    flex: 0 0 auto;
+  }
+  .flow-fit-impossible__stats {
+    grid-template-columns: 1fr;
+  }
+}

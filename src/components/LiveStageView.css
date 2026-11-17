@@ -1005,6 +1005,14 @@ html body #root .teaching-stage .pf-handsfree-remote-badge {
     flex: 0 0 auto;
     justify-content: flex-end;
   }
+
+  .live-stage,
+  .teaching-stage,
+  html body #root .vnext-shell .teaching-stage,
+  html body #root .flow-app .teaching-stage {
+    padding-bottom: 108px;
+    scroll-padding-bottom: 120px;
+  }
 }
 
 @media (max-width: 767px) {

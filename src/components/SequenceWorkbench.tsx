@@ -2,6 +2,7 @@ import { StudioMotionImage } from './StudioMotionImage';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { EquipmentChoice } from './EquipmentChoice';
 import { VisualApparatusPhotoStrip, VisualSequenceFilmstrip } from './VisualFlowComponents';
+import { isImeComposing } from '../utils/imeGuard';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   Suspense,
@@ -498,7 +499,6 @@ export function SequenceWorkbench({
     const dialog = inspectorContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setPreviewStep(null);
-    inspectorDraftCache.current = null;
     requestAnimationFrame(() => {
       if (!document.querySelector('dialog[open]') && inspectorOpener.current?.isConnected)
         inspectorOpener.current.focus();
@@ -4812,6 +4812,7 @@ export function SequenceWorkbench({
           ref={finderContentRef}
           className="workbench-finder-content"
           onKeyDownCapture={(event) => {
+            if (isImeComposing(event)) return;
             // Chrome consumes Escape in search inputs to clear their value.
             // Here Escape closes the temporary picker and preserves the query.
             if (

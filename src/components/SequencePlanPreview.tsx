@@ -97,6 +97,13 @@ function evidenceStamp(exercise?: PilatesExercise): string {
 const segmentDuration = (seconds: number) =>
   `${formatSecondsToMMSS(seconds)}${seconds % 1 === 0.5 ? '.5' : ''}`;
 
+/** In-memory rehearsal cursor scoped strictly to the live activeSteps reference (zero Web Storage writes). */
+let lastRehearsalCursorMemory: {
+  stepsRef: readonly SequenceStep[];
+  elapsedSec: number;
+  manualSelection: number | null;
+} | null = null;
+
 /** Frozen plan rehearsal. Teaching and saving require a separate explicit caller action. */
 export function SequencePlanPreview({
   onClose,
@@ -125,7 +132,31 @@ export function SequencePlanPreview({
       level: DifficultyLevel;
     };
   });
-  const [manualSelection, setManualSelection] = useState<number | null>(0);
+  const [initialRehearsalCursor] = useState(() => {
+    const currentStepsRef = usePilatesStore.getState().activeSteps;
+    if (!lastRehearsalCursorMemory || lastRehearsalCursorMemory.stepsRef !== currentStepsRef) {
+      return { elapsedSec: 0, manualSelection: 0 as number | null, resumed: false };
+    }
+    const savedElapsed = Math.max(0, lastRehearsalCursorMemory.elapsedSec);
+    const savedManual =
+      typeof lastRehearsalCursorMemory.manualSelection === 'number' &&
+      lastRehearsalCursorMemory.manualSelection >= 0 &&
+      lastRehearsalCursorMemory.manualSelection < snapshot.steps.length
+        ? lastRehearsalCursorMemory.manualSelection
+        : null;
+    const resumed = savedElapsed > 0 || (savedManual !== null && savedManual > 0);
+    return {
+      elapsedSec: resumed ? savedElapsed : 0,
+      manualSelection: resumed ? savedManual : (0 as number | null),
+      resumed,
+    };
+  });
+  const [manualSelection, setManualSelection] = useState<number | null>(
+    () => initialRehearsalCursor.manualSelection,
+  );
+  const [resumedCursorNotice, setResumedCursorNotice] = useState(
+    () => initialRehearsalCursor.resumed,
+  );
   const [viewMode, setViewMode] = useState<'timeline' | 'connected'>(() =>
     snapshot.steps.some((step) => !isRestStep(step) && step.motionStudy) ? 'connected' : 'timeline',
   );
@@ -145,6 +176,7 @@ export function SequencePlanPreview({
   const saveFeedback = usePilatesStore((state) => state.saveFeedback);
   const persistenceError = usePilatesStore((state) => state.persistenceError);
   const [saveRequested, setSaveRequested] = useState(false);
+  const savingCopyRef = useRef(false);
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -210,6 +242,7 @@ export function SequencePlanPreview({
   );
   const rehearsal = useSequenceRehearsal({
     totalSec: model.totals.totalSec,
+    initialElapsedSec: initialRehearsalCursor.elapsedSec,
     canRun: canRehearseInHost,
     enabled: model.gate.canRehearse && !snapshotChanged && !segmentRehearsalOpen,
   });
@@ -298,6 +331,16 @@ export function SequencePlanPreview({
     closing.current = true;
     setSegmentRehearsalOpen(false);
     rehearsal.pause();
+    const snapElapsed = rehearsal.elapsedSec;
+    if (snapElapsed > 0 || (manualSelection !== null && manualSelection > 0)) {
+      lastRehearsalCursorMemory = {
+        stepsRef: usePilatesStore.getState().activeSteps,
+        elapsedSec: snapElapsed,
+        manualSelection,
+      };
+    } else {
+      lastRehearsalCursorMemory = null;
+    }
     if (opener.current?.isConnected) opener.current.focus();
     onClose();
   };
@@ -614,13 +657,20 @@ export function SequencePlanPreview({
           )}
           <section className="simulation-controls" aria-label="수업 시간표 리허설">
             <div className="simulation-heading">
-              <h3>시간표 리허설</h3>
+              <h3>시간표 리허설 (빠른 요약 리허설)</h3>
               <span>
                 {viewMode === 'connected'
                   ? '저장한 연결만 표시 · 도해 전문가 미검토'
-                  : '모션 자동 재생 없음'}
+                  : '실제 수업 진행과 별개 · 모션 자동 재생 없음'}
               </span>
             </div>
+            {resumedCursorNotice && (
+              <p className="muted" role="status" data-testid="rehearsal-resume-notice">
+                일반 닫기 후 다시 열어 마지막 확인 위치({index + 1}번 ·{' '}
+                {formatSecondsToMMSS(rehearsal.elapsedSec)})를 일시정지 상태로 유지했습니다. 처음부터
+                보려면 ‘처음으로’를 누르세요.
+              </p>
+            )}
             <div className="simulation-clock" aria-label="시간표 경과와 전체 시간">
               <strong>{formatSecondsToMMSS(rehearsal.elapsedSec)}</strong>
               <span>/ {formatSecondsToMMSS(model.totals.totalSec)}</span>
@@ -699,6 +749,8 @@ export function SequencePlanPreview({
                   className="btn-secondary"
                   aria-label="시간표 처음으로"
                   onClick={() => {
+                    lastRehearsalCursorMemory = null;
+                    setResumedCursorNotice(false);
                     setManualSelection(0);
                     rehearsal.reset();
                   }}
@@ -1142,14 +1194,19 @@ export function SequencePlanPreview({
                   <button
                     type="button"
                     className="btn-secondary"
-                    disabled={snapshotChanged || !snapshot.steps.length}
+                    disabled={snapshotChanged || !snapshot.steps.length || saveRequested}
                     onClick={() => {
+                      if (savingCopyRef.current) return;
+                      savingCopyRef.current = true;
                       rehearsal.pause();
                       setSaveRequested(true);
                       onSave();
+                      queueMicrotask(() => {
+                        savingCopyRef.current = false;
+                      });
                     }}
                   >
-                    <BookmarkPlus size={17} /> 사본 저장
+                    <BookmarkPlus size={17} /> {saveRequested && !persistenceError ? '사본 저장됨' : '사본 저장'}
                   </button>
                 )}
                 {onStart && (

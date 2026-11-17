@@ -8,6 +8,7 @@ import {
   type ComposedAiSequenceResult,
   type StudioQuickRecipe,
 } from '../utils/aiNaturalSequenceComposer';
+import { isImeComposing } from '../utils/imeGuard';
 import { getActiveSequencePlanningCriteria, usePilatesStore } from '../store/usePilatesStore';
 
 export interface AiQuickSequenceBarProps {
@@ -105,6 +106,11 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
               data-testid="ai-quick-prompt-input"
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && isImeComposing(event)) {
+                  event.preventDefault();
+                }
+              }}
               placeholder="원하는 수업을 적거나 아래 테마를 선택하세요 (예: 리포머 초급 50분 코어)"
               maxLength={180}
             />

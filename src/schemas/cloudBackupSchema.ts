@@ -26,6 +26,9 @@ export const categorySchema = z.enum([
   'cooldown',
 ]);
 export const propSchema = z.enum(PROP_OPTIONS.map((prop) => prop.id) as [PropType, ...PropType[]]);
+export const boxStateSchema = z.enum(['none', 'long-box', 'short-box']);
+export const footbarStateSchema = z.enum(['high', 'mid', 'low', 'down', 'none']);
+export const headrestStateSchema = z.enum(['up', 'flat', 'down']);
 export const equipmentSchema = z.enum(
   EQUIPMENT_OPTIONS.map((equipment) => equipment.id) as [EquipmentId, ...EquipmentId[]],
 );
@@ -131,6 +134,10 @@ export const stepBlockOptionsSchema = stepTimingOptionsBaseSchema
     selectedLayer: layerSchema.optional(),
     classSection: classSectionRoleSchema.nullable().optional(),
     motionStudy: sequenceMotionStudyBindingSchema.nullable().optional(),
+    footbarOverride: footbarStateSchema.nullable().optional(),
+    headrestOverride: headrestStateSchema.nullable().optional(),
+    boxOverride: boxStateSchema.nullable().optional(),
+    propOverride: propSchema.nullable().optional(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -299,6 +306,10 @@ export const stepSchema = z
     durationMin: z.number().finite().positive().max(120),
     selectedLayer: layerSchema,
     customSpringOverride: textSchema.optional(),
+    footbarOverride: footbarStateSchema.optional(),
+    headrestOverride: headrestStateSchema.optional(),
+    boxOverride: boxStateSchema.optional(),
+    propOverride: propSchema.optional(),
     instructorNote: textSchema.optional(),
     locked: z.boolean().optional(),
     explanationSec: z.number().finite().nonnegative().max(7200).optional(),
@@ -335,7 +346,11 @@ export const stepSchema = z
           step.repetitions === undefined &&
           step.sets === undefined &&
           step.sideMode === undefined &&
-          step.timeEstimate === undefined
+          step.timeEstimate === undefined &&
+          step.footbarOverride === undefined &&
+          step.headrestOverride === undefined &&
+          step.boxOverride === undefined &&
+          step.propOverride === undefined
         : step.exerciseId.length > 0,
     '휴식은 동작 참조·횟수·세트·좌우 지정·설명·전환 없이 저장하고, 동작에는 동작 참조가 필요합니다.',
   );

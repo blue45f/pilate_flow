@@ -1001,7 +1001,35 @@ const MovementDetails: React.FC<{
           <Studio3DMotionHeroCard exercise={exercise} />
         </div>
       )}
-      <ExerciseVideoGallery exercise={exercise} />
+      <ExerciseVideoGallery
+        exercise={exercise}
+        onUseForNoteDraft={(video) => {
+          const base = restoredDraft ?? makeInitialDraft(exercise);
+          const nextDraft: PilatesExercise = {
+            ...base,
+            youtube: {
+              ...base.youtube,
+              url: video.watchUrl,
+              videoId: video.videoId,
+              channelName: video.authorName,
+              videoTitle: video.title,
+              startSec: video.startSec ?? 0,
+              ...(video.endSec !== undefined ? { endSec: video.endSec } : { endSec: undefined }),
+            },
+          };
+          const isDirty = exerciseRevision(nextDraft) !== exerciseRevision(makeInitialDraft(exercise));
+          if (isDirty) {
+            writePreviewEditDraft(exercise.id, currentRevision, nextDraft);
+          } else {
+            clearPreviewEditDraft(exercise.id);
+          }
+          setRestoredDraft(nextDraft);
+          setDraftRestoredNotice(false);
+          setDraftResetVersion((v) => v + 1);
+          onDraftStatusChange({ baseRevision: currentRevision, dirty: isDirty });
+          navigatePreviewStep(2);
+        }}
+      />
       {previewStep === 2 && (
         <div ref={step1Ref} data-detail-step1-section className="pf-p08-compact-3d-ref">
           <Studio3DMotionHeroCard exercise={exercise} compact />

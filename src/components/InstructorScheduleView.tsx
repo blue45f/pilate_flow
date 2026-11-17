@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, isEquipmentId, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { INITIAL_HISTORY_LOGS } from '../data/pilatesCatalog';
+import { isImeComposing } from '../utils/imeGuard';
 import { getLastStorageError, usePilatesStore } from '../store/usePilatesStore';
 import { useWorkspaceBrowseState } from '../hooks/useWorkspaceBrowseState';
 import { isScheduleDate } from '../schemas/instructorScheduleSchema';
@@ -2167,7 +2168,16 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         maxWidth="680px"
       >
         {classDraft && (
-          <form ref={classFormRef} className="schedule-form" onSubmit={saveClass}>
+          <form
+            ref={classFormRef}
+            className="schedule-form"
+            onSubmit={saveClass}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && isImeComposing(event)) {
+                event.preventDefault();
+              }
+            }}
+          >
             <nav
               className="pf-step-guide-bar"
               aria-label="수업 일정 등록 단계"
@@ -2463,7 +2473,16 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             </button>
           )}
         </div>
-        <form ref={locationFormRef} className="schedule-form" onSubmit={saveLocation}>
+        <form
+          ref={locationFormRef}
+          className="schedule-form"
+          onSubmit={saveLocation}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && isImeComposing(event)) {
+              event.preventDefault();
+            }
+          }}
+        >
           {formError && (
             <p className="schedule-warning" role="alert">
               {formError}

@@ -6,6 +6,8 @@ import {
   getExerciseVideoReferences,
   type ExerciseVideoReference,
 } from '../utils/exerciseVideoReferences';
+import { formatSecondsToMMSS } from '../utils/sequenceEngine';
+import { getExerciseReviewState } from '../utils/exerciseReview';
 import { isStrictNoAutoplayEmbedUrl } from '../features/referenceLinkPolicyCandidate/urlPolicyEngine';
 import '../styles/exercise-video-gallery.css';
 
@@ -173,8 +175,20 @@ function GalleryContent({
           )}
       </div>
       {!videos.length ? (
-        <p className="evg-empty" role="status">
-          이 동작에 연결된 참고 영상이 아직 없어요.
+        <p
+          className="evg-empty"
+          role="status"
+          data-testid={
+            exercise.youtube.url.trim() &&
+            !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(exercise.youtube.url.trim())
+              ? 'evg-invalid-url-fallback'
+              : 'evg-empty-state'
+          }
+        >
+          {exercise.youtube.url.trim() &&
+          !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(exercise.youtube.url.trim())
+            ? '등록된 영상 URL 형식을 확인하지 못해 재생할 수 없습니다. 영상 없이도 시퀀스 작성과 수업 진행은 계속할 수 있습니다.'
+            : '이 동작에 연결된 참고 영상이 아직 없어요. (출처 미확인 · 정적/3D 참조 도해만 제공)'}
         </p>
       ) : (
         <>
@@ -242,6 +256,56 @@ function GalleryContent({
                 <h4>{selected.title}</h4>
                 <p>{selected.authorName}</p>
                 <p className="evg-reason">{selected.matchReasonKo}</p>
+                {(() => {
+                  const reviewState = getExerciseReviewState(exercise);
+                  const sourceRef = exercise.sourceReference;
+                  const exactMatchChecked = selected.isPrimary && reviewState === 'approved';
+                  const playbackChecked =
+                    !exactMatchChecked &&
+                    sourceRef?.verificationStatus === 'partial-playback-checked' &&
+                    sourceRef.url === selected.watchUrl;
+                  const verificationTierLabel = exactMatchChecked
+                    ? '해당 동작 일치 확인 (내 계획 검토 기록)'
+                    : playbackChecked
+                      ? '재생 확인 (원본 일부 재생 확인 · 전구간 일치 별도)'
+                      : 'URL 존재 (공개 링크·메타데이터 확인 · 재생/동작 일치 미검증)';
+                  const startSec = selected.startSec ?? 0;
+                  const segmentLabel =
+                    startSec > 0 || selected.endSec !== undefined
+                      ? `${formatSecondsToMMSS(startSec)} ~ ${
+                          selected.endSec !== undefined
+                            ? formatSecondsToMMSS(selected.endSec)
+                            : '끝'
+                        }`
+                      : '00:00 ~ 전체 (구간 미지정)';
+                  const checkedDate =
+                    selected.verifiedAt ??
+                    (selected.isPrimary ? sourceRef?.verifiedAt : undefined) ??
+                    (exactMatchChecked ? exercise.review?.reviewedAt?.slice(0, 10) : undefined) ??
+                    '확인일 미기록';
+                  return (
+                    <dl className="evg-provenance-meta" data-testid="evg-provenance-meta">
+                      <div>
+                        <dt>검증 수준</dt>
+                        <dd data-testid="evg-verification-tier">{verificationTierLabel}</dd>
+                      </div>
+                      <div>
+                        <dt>구간</dt>
+                        <dd>{segmentLabel}</dd>
+                      </div>
+                      <div>
+                        <dt>출처 · URL</dt>
+                        <dd>
+                          {selected.authorName} · <code>{selected.watchUrl}</code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>확인일</dt>
+                        <dd>{checkedDate}</dd>
+                      </div>
+                    </dl>
+                  );
+                })()}
               </div>
               {playing && (
                 <div

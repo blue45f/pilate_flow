@@ -20,6 +20,7 @@ import {
 import { LightDismissDialog } from './LightDismissDialog';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
+import { isImeComposing } from '../utils/imeGuard';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { isRestStep } from '../utils/sequenceEngine';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
@@ -287,6 +288,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
               setActiveIndex(0);
             }}
             onKeyDown={(event) => {
+              if (isImeComposing(event)) return;
               if (navigableItems.length === 0) return;
               if (event.key === 'ArrowDown') {
                 event.preventDefault();

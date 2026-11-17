@@ -1,5 +1,5 @@
 import { RECOVERY_STORAGE_KEY } from './recoveryStorageGuard';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { isSuppressingStorageWrite, usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import { syncMovementIdeaAccountScope } from '../utils/movementIdeaDraft';
 
@@ -28,6 +28,10 @@ let switching = false;
 /** Identity of this tab's hydrated workspace, even if another tab changes the shared marker. */
 export function getActiveWorkspaceOwner(): string | null {
   return tabOwner;
+}
+
+export function isAccountWorkspaceSwitching(): boolean {
+  return switching;
 }
 
 function ownerKey(owner: string | null) {
@@ -96,7 +100,7 @@ function savePreservingPrevious(key: string, raw: string): void {
 // Mirror the actual in-memory state synchronously. Do not reread the shared working-copy key
 // in a later microtask: a different account/tab may already have replaced that key.
 usePilatesStore.subscribe((state) => {
-  if (switching) return;
+  if (switching || isSuppressingStorageWrite()) return;
   try {
     localStorage.setItem(ownerKey(tabOwner), serialize(state));
     const liveOwnerRaw = readOwner();
@@ -105,8 +109,15 @@ usePilatesStore.subscribe((state) => {
     if (tabOwner === null) localStorage.removeItem(ACTIVE_OWNER_KEY);
     else localStorage.setItem(ACTIVE_OWNER_KEY, tabOwner);
   } catch {
-    // The main store reports primary-storage errors. Account-slot failures are retried
-    // synchronously before any transition; failure prevents that transition.
+    // Surface secondary account-slot quota/storage failure honestly so '저장됨' is never shown falsely.
+    const message =
+      '브라우저 계정 작업 공간에 기록하지 못했습니다. 현재 작업을 JSON으로 백업하고 저장 여유 공간을 확인해 주세요.';
+    queueMicrotask(() => {
+      const current = usePilatesStore.getState();
+      if (current === state && !current.persistenceError) {
+        usePilatesStore.setState({ persistenceError: message, saveFeedback: null });
+      }
+    });
   }
 });
 

@@ -1,3 +1,4 @@
+import { formatWholeSecondsToMMSS } from './durationFormat';
 import { getDateOnlyCalendarDate, getTeachingHistoryDateSource } from './teachingHistoryDate';
 import {
   APPARATUS_LABELS,
@@ -2883,9 +2884,9 @@ export function formatTeachingHistorySnapshotText(view: ResolvedTeachingHistoryV
   const actualText =
     view.timing.actualDurationSec !== undefined
       ? [
-          `실제 진행 ${formatSecondsToMMSS(view.timing.actualDurationSec)}`,
+          `실제 진행 ${formatWholeSecondsToMMSS(view.timing.actualDurationSec)}`,
           view.timing.actualRestDurationSec !== undefined && view.timing.actualRestDurationSec > 0
-            ? `실제 휴식 ${formatSecondsToMMSS(view.timing.actualRestDurationSec)}`
+            ? `실제 휴식 ${formatWholeSecondsToMMSS(view.timing.actualRestDurationSec)}`
             : null,
         ]
           .filter(Boolean)

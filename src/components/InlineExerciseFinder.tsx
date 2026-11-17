@@ -20,6 +20,7 @@ import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { useSequenceInsertionPlacement } from '../hooks/useSequenceInsertionPlacement';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
+import { isImeComposing } from '../utils/imeGuard';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
   addMovementIdeaToCurrentClass,
@@ -685,6 +686,7 @@ export function InlineExerciseFinder({
             value={filters.query}
             onChange={(event) => update('query', event.target.value)}
             onKeyDown={(event) => {
+              if (isImeComposing(event)) return;
               if (event.key === 'Escape' && filters.query.length > 0) {
                 event.preventDefault();
                 event.stopPropagation();

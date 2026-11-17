@@ -46,6 +46,7 @@ export interface FormattedBrandSpringResult {
   readonly brandShortLabelKo: string;
   readonly equivalentLabelKo: string;
   readonly isNonSpringApparatus: boolean;
+  readonly isUnknownSetup?: boolean;
 }
 
 export function normalizeCanonicalSpringKey(rawSprings?: string): string {
@@ -81,7 +82,7 @@ export function formatBrandSpringEquivalent(
   const brandMeta =
     BRAND_SPRING_OPTIONS.find((item) => item.id === brand) ?? BRAND_SPRING_OPTIONS[0]!;
 
-  if (!raw || apparatus === 'mat' || apparatus === 'barrel') {
+  if (apparatus === 'mat' || apparatus === 'barrel') {
     return {
       rawSprings: raw || '맨몸',
       normalizedCode: 'Bodyweight',
@@ -89,6 +90,21 @@ export function formatBrandSpringEquivalent(
       brandShortLabelKo: brandMeta.shortLabelKo,
       equivalentLabelKo: apparatus === 'barrel' ? '래더·바렐 고정 (무스프링)' : '무스프링 · 맨몸 저항',
       isNonSpringApparatus: true,
+    };
+  }
+
+  if (
+    !raw ||
+    /기구별\s*설정|미확인|미지정|확인\s*필요|미상|알\s*수\s*없|unknown|unspecified|tbd/i.test(raw)
+  ) {
+    return {
+      rawSprings: raw || '미확인',
+      normalizedCode: 'Unknown',
+      brand,
+      brandShortLabelKo: brandMeta.shortLabelKo,
+      equivalentLabelKo: '미확인',
+      isNonSpringApparatus: false,
+      isUnknownSetup: true,
     };
   }
 
@@ -182,6 +198,18 @@ export function formatBrandSpringEquivalent(
       brandShortLabelKo: brandMeta.shortLabelKo,
       equivalentLabelKo,
       isNonSpringApparatus: false,
+    };
+  }
+
+  if (!/빨강|적색|파랑|청색|노랑|황색|초록|녹색|하양|백색|\b(?:red|blue|yellow|green|white|springs?)\b/i.test(raw)) {
+    return {
+      rawSprings: raw,
+      normalizedCode,
+      brand,
+      brandShortLabelKo: brandMeta.shortLabelKo,
+      equivalentLabelKo: `${raw} (세팅 미확인)`,
+      isNonSpringApparatus: false,
+      isUnknownSetup: true,
     };
   }
 

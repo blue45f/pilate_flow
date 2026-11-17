@@ -1,9 +1,21 @@
-import { Fragment, lazy, Suspense, useMemo, useRef, useState, type DragEvent } from 'react';
+import {
+  Fragment,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type DragEvent,
+} from 'react';
 import {
   ArrowDown,
+  ArrowDownUp,
   ArrowLeft,
   ArrowUp,
   Bookmark,
+  CalendarDays,
   Check,
   ChevronRight,
   Clock3,
@@ -12,9 +24,11 @@ import {
   Heart,
   LayoutTemplate,
   LockKeyhole,
+  MapPin,
   MoreHorizontal,
   Play,
   Plus,
+  RefreshCw,
   Search,
   Settings2,
   Trash2,
@@ -26,8 +40,11 @@ import {
   createSequenceSnapshot,
   downloadEmergencyBackupJson,
   getActiveSequencePlanningCriteria,
+  getActiveSequenceSaveState,
   getLastStorageError,
+  getPassiveExternalTabConflict,
   isSavedSequencePersistedOnDisk,
+  subscribeExternalTabConflict,
   usePilatesStore,
 } from '../store/usePilatesStore';
 import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
@@ -35,18 +52,39 @@ import { EQUIPMENT_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalo
 import type {
   ApparatusType,
   AutoGenerateCriteria,
+  BoxState,
+  FootbarState,
+  HeadrestState,
   PilatesExercise,
+  PropType,
   SequenceStep,
   StepSideMode,
 } from '../types/pilates';
 import type { ClassSectionRole } from '../types/sequenceMotion';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
+import { isImeComposing } from '../utils/imeGuard';
+import {
+  addScheduleDays,
+  expandInstructorSchedule,
+  formatScheduleDate,
+  getSchedulePlanWarnings,
+  localScheduleDate,
+  scheduleMinutes,
+} from '../utils/instructorSchedule';
+import { getDatedPlanKey } from '../utils/datedSequencePlanning';
+import {
+  buildSafeTransitionOptimization,
+  describeStepTransitionFromPrevious,
+  resolveStepSetup,
+  type SafeTransitionOptimizationPlan,
+} from '../utils/transitionSummary';
 import {
   exerciseMatchesCriteria,
   fitSequenceDuration,
   getStepSideLabels,
   getStepTiming,
   isRestStep,
+  proposeBlockAlternatives,
 } from '../utils/sequenceEngine';
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
@@ -57,7 +95,7 @@ import {
 import { AiQuickSequenceBar } from './AiQuickSequenceBar';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { LightDismissDialog } from './LightDismissDialog';
-import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
+import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
 import '../styles/sequence-studio.css';
 
 const AdvancedWorkbench = lazy(() =>
@@ -71,6 +109,11 @@ const LazyStep3DViewport = lazy(() =>
     default: m.StudioInteractive3DViewport,
   })),
 );
+const LazyQuickPlanRehearsal = lazy(() =>
+  import('./SequencePlanPreview').then((m) => ({
+    default: m.SequencePlanPreview,
+  })),
+);
 
 interface Props {
   onOpenYouTubePreview: (exercise: PilatesExercise) => void;
@@ -80,6 +123,9 @@ interface Props {
   onOpenInventory: () => void;
   onStartClass: () => void;
   sourceDetailOpen?: boolean;
+  onRegisterDetailAddHandler?: (
+    handler: ((exerciseId: string) => { success: boolean; message?: string }) | null,
+  ) => void;
 }
 
 const LEVELS = { '1.0': '기초', '1.5': '중급', '2.0': '심화' } as const;
@@ -160,6 +206,11 @@ function PlanningInput({
           onInvalid();
         } else if (kind === 'title' && text !== text.trim()) onCommit(text.trim());
       }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && isImeComposing(event)) {
+          event.preventDefault();
+        }
+      }}
     />
   );
 }
@@ -184,24 +235,69 @@ function StepEditor({
   const [section, setSection] = useState(getSequenceStepClassSection(step));
   const [note, setNote] = useState(step.instructorNote ?? '');
   const [customSpring, setCustomSpring] = useState(step.customSpringOverride ?? '');
+  const [footbarOverride, setFootbarOverride] = useState<FootbarState | 'default'>(
+    step.footbarOverride ?? 'default',
+  );
+  const [headrestOverride, setHeadrestOverride] = useState<HeadrestState | 'default'>(
+    step.headrestOverride ?? 'default',
+  );
+  const [boxOverride, setBoxOverride] = useState<BoxState | 'default'>(
+    step.boxOverride ?? 'default',
+  );
+  const [propOverride, setPropOverride] = useState<PropType | 'default'>(
+    step.propOverride ?? 'default',
+  );
   const [preview3DOpen, setPreview3DOpen] = useState(false);
+  const [pendingDiscardClose, setPendingDiscardClose] = useState<(() => void) | null>(null);
   const [error, setError] = useState('');
   const rest = isRestStep(step);
   const movementSeconds = Math.max(
     0,
     Math.round(Number(duration) * 60) - Number(explanation) - Number(transition),
   );
+  const initialSection = getSequenceStepClassSection(openedStep);
+  const isDraftDirty = rest
+    ? Number(duration) !== openedStep.durationMin
+    : Number(duration) !== openedStep.durationMin ||
+      Number(explanation) !== (openedStep.explanationSec ?? 0) ||
+      Number(transition) !== (openedStep.transitionSec ?? 0) ||
+      repetitions.trim() !== (openedStep.repetitions ? String(openedStep.repetitions) : '') ||
+      sideMode !== (openedStep.sideMode ?? 'auto') ||
+      section !== initialSection ||
+      note !== (openedStep.instructorNote ?? '') ||
+      customSpring.trim() !== (openedStep.customSpringOverride ?? '') ||
+      footbarOverride !== (openedStep.footbarOverride ?? 'default') ||
+      headrestOverride !== (openedStep.headrestOverride ?? 'default') ||
+      boxOverride !== (openedStep.boxOverride ?? 'default') ||
+      propOverride !== (openedStep.propOverride ?? 'default');
+  const springDraftChanged = customSpring.trim() !== (openedStep.customSpringOverride ?? '');
   return (
     <LightDismissDialog
       open
       onClose={onClose}
+      onBeforeClose={({ close }) => {
+        if (isDraftDirty) {
+          setPendingDiscardClose(() => close);
+          return false;
+        }
+        return true;
+      }}
       title={rest ? '휴식 시간' : (exercise?.nameKo ?? '동작 편집')}
-      subtitle="시간과 수업 메모를 한곳에서 조정하세요"
+      subtitle="변경 적용을 누르기 전까지 원본 수업은 바뀌지 않아요"
       maxWidth="600px"
       variant="sheet"
     >
       <form
         className="flow-step-editor"
+        onKeyDown={(event) => {
+          if (
+            event.key === 'Enter' &&
+            event.target instanceof HTMLInputElement &&
+            isImeComposing(event)
+          ) {
+            event.preventDefault();
+          }
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           const state = usePilatesStore.getState();
@@ -212,6 +308,12 @@ function StepEditor({
           }
           const trimmedSpring = customSpring.trim();
           const springChanged = trimmedSpring !== (step.customSpringOverride ?? '');
+          const timingOrPracticeEdited =
+            Number(duration) !== openedStep.durationMin ||
+            Number(explanation) !== (openedStep.explanationSec ?? 0) ||
+            Number(transition) !== (openedStep.transitionSec ?? 0) ||
+            repetitions.trim() !== (openedStep.repetitions ? String(openedStep.repetitions) : '') ||
+            sideMode !== (openedStep.sideMode ?? 'auto');
           const result = rest
             ? state.setRestDuration(index, Number(duration))
             : state.setStepBlockOptions(
@@ -224,7 +326,14 @@ function StepEditor({
                   sideMode: sideMode === 'auto' ? undefined : sideMode,
                   classSection: section,
                   instructorNote: note,
+                  ...(openedStep.timeEstimate && timingOrPracticeEdited
+                    ? { timeEstimate: null }
+                    : {}),
                   ...(springChanged ? { customSpringOverride: trimmedSpring || undefined } : {}),
+                  footbarOverride: footbarOverride === 'default' ? null : footbarOverride,
+                  headrestOverride: headrestOverride === 'default' ? null : headrestOverride,
+                  boxOverride: boxOverride === 'default' ? null : boxOverride,
+                  propOverride: propOverride === 'default' ? null : propOverride,
                 },
                 openedStep,
               );
@@ -232,6 +341,7 @@ function StepEditor({
             setError(result.message);
             return;
           }
+          setPendingDiscardClose(null);
           onNotice(result.message);
           onClose();
         }}
@@ -338,6 +448,83 @@ function StepEditor({
               </label>
             </div>
             {exercise && (
+              <details className="flow-step-3d-disclosure" data-testid="step-editor-setup-disclosure">
+                <summary className="flow-step-3d-disclosure__summary">
+                  <span>기구 세부 세팅 (박스 · 풋바 · 헤드레스트 · 소도구)</span>
+                  <small>
+                    {footbarOverride !== 'default' ||
+                    headrestOverride !== 'default' ||
+                    boxOverride !== 'default' ||
+                    propOverride !== 'default'
+                      ? '맞춤 세팅 선택됨'
+                      : '기본 카탈로그 세팅 사용'}
+                  </small>
+                </summary>
+                <div className="flow-step-3d-disclosure__body flow-form-grid">
+                  <label className="flow-field">
+                    박스 세팅
+                    <select
+                      aria-label="단계별 박스 세팅"
+                      value={boxOverride}
+                      onChange={(e) => setBoxOverride(e.target.value as BoxState | 'default')}
+                    >
+                      <option value="default">기본 ({exercise.box === 'none' ? '없음' : exercise.box})</option>
+                      <option value="none">박스 없음</option>
+                      <option value="short-box">숏박스</option>
+                      <option value="long-box">롱박스</option>
+                    </select>
+                  </label>
+                  <label className="flow-field">
+                    풋바 높이
+                    <select
+                      aria-label="단계별 풋바 높이"
+                      value={footbarOverride}
+                      onChange={(e) =>
+                        setFootbarOverride(e.target.value as FootbarState | 'default')
+                      }
+                    >
+                      <option value="default">기본 ({exercise.footbar})</option>
+                      <option value="high">높음</option>
+                      <option value="mid">중간</option>
+                      <option value="low">낮음</option>
+                      <option value="down">내림</option>
+                      <option value="none">없음</option>
+                    </select>
+                  </label>
+                  <label className="flow-field">
+                    헤드레스트
+                    <select
+                      aria-label="단계별 헤드레스트"
+                      value={headrestOverride}
+                      onChange={(e) =>
+                        setHeadrestOverride(e.target.value as HeadrestState | 'default')
+                      }
+                    >
+                      <option value="default">기본 ({exercise.headrest})</option>
+                      <option value="flat">평평하게</option>
+                      <option value="up">올림</option>
+                      <option value="down">내림</option>
+                    </select>
+                  </label>
+                  <label className="flow-field">
+                    소도구 지정
+                    <select
+                      aria-label="단계별 소도구"
+                      value={propOverride}
+                      onChange={(e) => setPropOverride(e.target.value as PropType | 'default')}
+                    >
+                      <option value="default">기본 카탈로그 소도구</option>
+                      <option value="none">소도구 없음</option>
+                      <option value="mini-ball">미니볼</option>
+                      <option value="magic-circle">써클링</option>
+                      <option value="foam-roller">폼롤러</option>
+                      <option value="theraband">탄력 밴드</option>
+                    </select>
+                  </label>
+                </div>
+              </details>
+            )}
+            {exercise && (
               <details
                 className="flow-step-3d-disclosure"
                 data-testid="step-editor-3d-disclosure"
@@ -345,25 +532,52 @@ function StepEditor({
                 onToggle={(event) => setPreview3DOpen(event.currentTarget.open)}
               >
                 <summary className="flow-step-3d-disclosure__summary">
-                  <span>3D 자세 · 스프링 시뮬레이션 보기</span>
+                  <span>3D 자세 설명 · 스프링 시뮬레이션 보기</span>
                   <small>
                     {customSpring.trim()
-                      ? `현재 적용: ${customSpring.trim()}`
-                      : '360° 회전 · 관절 코칭 · 스프링 반영'}
+                      ? springDraftChanged
+                        ? `초안 미적용: ${customSpring.trim()}`
+                        : `단계 지정: ${customSpring.trim()}`
+                      : '시작·중간·끝 · 시점 리셋 · 정적 폴백'}
                   </small>
                 </summary>
                 {preview3DOpen && (
                   <div className="flow-step-3d-disclosure__body">
                     <Suspense
                       fallback={
-                        <p className="flow-hint">실시간 3D 모델러를 불러오는 중입니다...</p>
+                        <p className="flow-hint">실시간 3D 설명 패널을 불러오는 중입니다...</p>
                       }
                     >
                       <LazyStep3DViewport
                         exercise={exercise}
                         compact
                         initialSpringOverride={customSpring.trim() || undefined}
+                        initialFootbarOverride={
+                          footbarOverride === 'default' ? undefined : footbarOverride
+                        }
+                        initialHeadrestOverride={
+                          headrestOverride === 'default' ? undefined : headrestOverride
+                        }
+                        initialBoxOverride={boxOverride === 'default' ? undefined : boxOverride}
+                        initialPropOverride={propOverride === 'default' ? undefined : propOverride}
                         onApplySpringToStep={(springVal) => setCustomSpring(springVal)}
+                        onApplySetupToStep={(patch) => {
+                          if (patch.springOverride !== undefined) {
+                            setCustomSpring(patch.springOverride);
+                          }
+                          if (patch.footbarOverride !== undefined) {
+                            setFootbarOverride(patch.footbarOverride ?? 'default');
+                          }
+                          if (patch.headrestOverride !== undefined) {
+                            setHeadrestOverride(patch.headrestOverride ?? 'default');
+                          }
+                          if (patch.boxOverride !== undefined) {
+                            setBoxOverride(patch.boxOverride ?? 'default');
+                          }
+                          if (patch.propOverride !== undefined) {
+                            setPropOverride(patch.propOverride ?? 'default');
+                          }
+                        }}
                       />
                     </Suspense>
                   </div>
@@ -381,13 +595,52 @@ function StepEditor({
             </label>
           </>
         )}
+        {pendingDiscardClose && (
+          <div
+            role="alert"
+            className="flow-discard-guard"
+            data-testid="step-editor-discard-guard"
+          >
+            <p>적용하지 않은 편집 초안이 있습니다. 원래 상태로 취소하고 닫을까요?</p>
+            <div className="flow-dialog-actions">
+              <button
+                type="button"
+                className="flow-button"
+                onClick={() => setPendingDiscardClose(null)}
+              >
+                계속 편집
+              </button>
+              <button
+                type="button"
+                className="flow-button"
+                onClick={() => {
+                  const proceed = pendingDiscardClose;
+                  setPendingDiscardClose(null);
+                  proceed();
+                }}
+              >
+                변경 버리고 닫기
+              </button>
+              <button type="submit" className="flow-button flow-button--primary">
+                변경 적용
+              </button>
+            </div>
+          </div>
+        )}
         {error && (
           <p role="alert" className="flow-error">
             {error}
           </p>
         )}
         <div className="flow-dialog-actions">
-          <button type="button" className="flow-button" onClick={onClose}>
+          <button
+            type="button"
+            className="flow-button"
+            onClick={() => {
+              setPendingDiscardClose(null);
+              onClose();
+            }}
+          >
             취소
           </button>
           <button className="flow-button flow-button--primary" type="submit">
@@ -428,6 +681,27 @@ export function SequenceStudioWorkbench(props: Props) {
     target: number;
     fitted: SequenceStep[];
   } | null>(null);
+  const [fitImpossibleInfo, setFitImpossibleInfo] = useState<{
+    targetMin: number;
+    lockedAndRestSec: number;
+    adjustableCount: number;
+    minPossibleSec: number;
+    maxPossibleSec: number;
+    reasonMessage: string;
+  } | null>(null);
+  const [transitionDiffPlan, setTransitionDiffPlan] =
+    useState<SafeTransitionOptimizationPlan | null>(null);
+  const [quickRehearsalOpen, setQuickRehearsalOpen] = useState(false);
+  const [replacingStepIndex, setReplacingStepIndex] = useState<number | null>(null);
+  const [selectedLocationCopyId, setSelectedLocationCopyId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const passiveConflict = useSyncExternalStore(
+    subscribeExternalTabConflict,
+    getPassiveExternalTabConflict,
+    getPassiveExternalTabConflict,
+  );
+  const activeTabConflict = s.externalTabConflict ?? passiveConflict;
+  const savingLockRef = useRef(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const planHeadingRef = useRef<HTMLHeadingElement>(null);
   const toolsSummaryRef = useRef<HTMLElement>(null);
@@ -526,10 +800,16 @@ export function SequenceStudioWorkbench(props: Props) {
     const result = usePilatesStore.getState().updateSequencePlanningConditions(patch);
     setNotice(result.message);
   };
-  const addExercise = (exercise: PilatesExercise, override?: SequenceInsertionPlacement) => {
+  const addExercise = (
+    exercise: PilatesExercise,
+    override?: SequenceInsertionPlacement,
+    allowDuplicate = false,
+  ) => {
     const result = usePilatesStore
       .getState()
-      .insertExerciseIntoSequence(exercise.id, override ?? placement);
+      .insertExerciseIntoSequence(exercise.id, override ?? placement, undefined, {
+        allowDuplicate,
+      });
     setNotice(result.message);
     if (result.success && result.stepId) {
       setRecentAddition({ sequenceId: s.activeSequenceId, stepId: result.stepId });
@@ -540,6 +820,142 @@ export function SequenceStudioWorkbench(props: Props) {
         });
       }
     }
+    return result;
+  };
+
+  useEffect(() => {
+    if (!props.onRegisterDetailAddHandler) return undefined;
+    props.onRegisterDetailAddHandler((exerciseId: string) => {
+      const targetEx = usePilatesStore
+        .getState()
+        .exercises.find((item) => item.id === exerciseId);
+      if (!targetEx) {
+        return {
+          success: false,
+          message: '동작 정보가 바뀌었습니다. 현재 정보를 다시 확인해 주세요.',
+        };
+      }
+      const res = addExercise(targetEx);
+      return { success: res.success, message: res.message };
+    });
+    return () => {
+      props.onRegisterDetailAddHandler?.(null);
+    };
+  });
+
+  const saveStatus = getActiveSequenceSaveState(s, isSaving);
+  const transitionOptimization = useMemo(
+    () => buildSafeTransitionOptimization(s.activeSteps, byId),
+    [s.activeSteps, byId],
+  );
+  const nextScheduledContext = useMemo(() => {
+    if (!s.instructorSchedule.classes.length) return null;
+    try {
+      const today = localScheduleDate();
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const occurrences = expandInstructorSchedule(
+        s.instructorSchedule,
+        today,
+        addScheduleDays(today, 14),
+      ).filter((row) => row.status === 'scheduled');
+      const upcoming =
+        occurrences.find(
+          (row) => row.date > today || scheduleMinutes(row.endTime) >= nowMin,
+        ) ?? occurrences[0];
+      if (!upcoming) return null;
+      const location = s.instructorSchedule.locations.find(
+        (loc) => loc.id === upcoming.locationId,
+      );
+      const planKey = getDatedPlanKey(upcoming.classId, upcoming.originalDate);
+      const assignment = s.datedSequencePlanning?.assignments.find(
+        (item) => getDatedPlanKey(item.classId, item.originalDate) === planKey,
+      );
+      const warnings = getSchedulePlanWarnings(
+        upcoming,
+        s.instructorSchedule,
+        s.savedSequences,
+        s.exercises,
+      );
+      const slotMinutes = Math.max(
+        10,
+        Math.min(120, scheduleMinutes(upcoming.endTime) - scheduleMinutes(upcoming.startTime)),
+      );
+      return {
+        occurrence: upcoming,
+        location,
+        assignment,
+        warnings,
+        slotMinutes,
+      };
+    } catch {
+      return null;
+    }
+  }, [s.instructorSchedule, s.datedSequencePlanning, s.savedSequences, s.exercises]);
+
+  const continueNextScheduledClass = () => {
+    if (!nextScheduledContext) return;
+    const { occurrence, location, assignment, slotMinutes } = nextScheduledContext;
+    const store = usePilatesStore.getState();
+    if (assignment) {
+      const loaded = store.loadDatedSequencePlanAsDraft(assignment.id);
+      setNotice(loaded.message);
+      setMobilePane('plan');
+      return;
+    }
+    if (occurrence.linkSavedSequenceId) {
+      const linked = store.savedSequences.find((seq) => seq.id === occurrence.linkSavedSequenceId);
+      if (linked) {
+        const assigned = store.assignSequenceToOccurrence({
+          sequenceId: linked.id,
+          classId: occurrence.classId,
+          originalDate: occurrence.originalDate,
+          state: 'draft',
+        });
+        if (assigned.success && assigned.assignmentId) {
+          const loaded = usePilatesStore
+            .getState()
+            .loadDatedSequencePlanAsDraft(assigned.assignmentId);
+          setNotice(`${occurrence.title} 회차 계획을 불러왔습니다. ${loaded.message}`);
+          setMobilePane('plan');
+          return;
+        }
+        store.loadSequenceIntoWorkbench(linked.id);
+        setNotice(`${occurrence.title} 연결 시퀀스를 불러왔습니다.`);
+        setMobilePane('plan');
+        return;
+      }
+    }
+    const validEquip = (location?.equipmentIds ?? []).filter((id) =>
+      store.ownedEquipment.includes(id),
+    );
+    const families = [
+      ...new Set(
+        validEquip
+          .map((id) => EQUIPMENT_OPTIONS.find((opt) => opt.id === id)?.apparatusFamily)
+          .filter((v): v is ApparatusType => Boolean(v)),
+      ),
+    ];
+    const nextApparatus: ApparatusType | 'mixed' =
+      families.length === 1 ? families[0]! : families.length > 1 ? 'mixed' : store.activeApparatus;
+    store.setActiveSequenceMeta({
+      title: occurrence.title,
+      targetMinutes: slotMinutes,
+    });
+    const res = store.updateSequencePlanningConditions({
+      apparatus: nextApparatus,
+      ...(validEquip.length ? { availableEquipment: validEquip } : {}),
+      ...(location?.propIds.length
+        ? { preferredProps: location.propIds.filter((p) => store.ownedProps.includes(p)) }
+        : {}),
+      targetMinutes: slotMinutes,
+    });
+    setNotice(
+      res.success
+        ? `다음 수업(${occurrence.title} · ${location?.alias ?? '장소 미지정'}) 시간·기구 조건을 반영했습니다.`
+        : res.message,
+    );
+    setMobilePane('plan');
   };
   const revealStep = (stepId: string) => {
     setMobilePane('plan');
@@ -560,17 +976,31 @@ export function SequenceStudioWorkbench(props: Props) {
     });
   };
   const save = async () => {
+    if (savingLockRef.current) return false;
     const state = usePilatesStore.getState();
     if (!state.activeSteps.some((step) => !isRestStep(step))) {
       setNotice('동작을 추가한 뒤 저장해 주세요.');
       return false;
     }
-    state.saveCurrentSequenceToBinder();
-    await Promise.resolve();
-    const next = usePilatesStore.getState();
-    const err = getLastStorageError() ?? next.persistenceError;
-    setNotice(err ?? '저장한 수업에 보관했습니다.');
-    return !err;
+    savingLockRef.current = true;
+    setIsSaving(true);
+    try {
+      state.saveCurrentSequenceToBinder();
+      await Promise.resolve();
+      const next = usePilatesStore.getState();
+      const savedObj = next.savedSequences.find((item) => item.id === next.activeSequenceId);
+      const persistedOk =
+        Boolean(savedObj) && isSavedSequencePersistedOnDisk(savedObj!, next.persistenceError);
+      const err =
+        getLastStorageError() ??
+        next.persistenceError ??
+        (persistedOk ? null : '브라우저 저장을 아직 확인하지 못했습니다. 다시 저장해 주세요.');
+      setNotice(err ?? '저장한 수업에 보관했습니다.');
+      return !err;
+    } finally {
+      savingLockRef.current = false;
+      setIsSaving(false);
+    }
   };
   const start = () => {
     const state = usePilatesStore.getState();
@@ -677,6 +1107,152 @@ export function SequenceStudioWorkbench(props: Props) {
           </details>
         </div>
       </header>
+
+      {activeTabConflict && (
+        <div
+          className="flow-conflict-banner"
+          role="alert"
+          data-testid="flow-cross-tab-conflict-banner"
+        >
+          <div>
+            <strong>다른 탭 변경 감지</strong>
+            <p>{activeTabConflict.message}</p>
+          </div>
+          <div className="flow-conflict-banner__actions">
+            <button
+              type="button"
+              className="flow-button"
+              onClick={() => {
+                const res = usePilatesStore.getState().reloadFromExternalTabStorage();
+                setNotice(res.message);
+              }}
+            >
+              최신 저장본 불러오기
+            </button>
+            <button
+              type="button"
+              className="flow-button"
+              disabled={!exerciseCount}
+              onClick={() => {
+                usePilatesStore.getState().saveCurrentSequenceToBinder(true);
+                setNotice('현재 초안을 별도 사본으로 저장해 두 탭의 내용을 모두 보존했습니다.');
+              }}
+            >
+              사본으로 따로 저장
+            </button>
+            <button
+              type="button"
+              className="flow-button flow-button--primary"
+              disabled={!exerciseCount}
+              onClick={() => {
+                void save();
+              }}
+            >
+              현재 내용으로 덮어쓰기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {nextScheduledContext && (
+        <section
+          className="flow-next-class-card"
+          aria-label="다음 예정 수업 준비"
+          data-testid="flow-next-scheduled-class-card"
+        >
+          <div className="flow-next-class-card__info">
+            <span className="flow-next-class-badge">
+              <CalendarDays size={13} strokeWidth={1.6} aria-hidden="true" /> 다음 수업
+            </span>
+            <strong>{nextScheduledContext.occurrence.title}</strong>
+            <span>
+              {formatScheduleDate(nextScheduledContext.occurrence.date)}{' '}
+              {nextScheduledContext.occurrence.startTime}–{nextScheduledContext.occurrence.endTime} (
+              {nextScheduledContext.slotMinutes}분)
+            </span>
+            {nextScheduledContext.location && (
+              <span>
+                <MapPin size={13} strokeWidth={1.5} aria-hidden="true" />{' '}
+                {nextScheduledContext.location.alias} ·{' '}
+                {nextScheduledContext.location.equipmentIds
+                  .map((id) => EQUIPMENT_OPTIONS.find((opt) => opt.id === id)?.labelKo ?? id)
+                  .join(', ') || '기구 미지정'}
+              </span>
+            )}
+            <span
+              className={`flow-next-prep-pill is-${
+                nextScheduledContext.assignment?.state ??
+                (nextScheduledContext.occurrence.linkSavedSequenceId ? 'linked' : 'unassigned')
+              }`}
+              data-testid="flow-next-class-prep-status"
+            >
+              {nextScheduledContext.assignment
+                ? nextScheduledContext.assignment.state === 'prepared'
+                  ? '준비 완료 표시됨'
+                  : '회차 초안 작성 중'
+                : nextScheduledContext.occurrence.linkSavedSequenceId
+                  ? '기본 시퀀스 연결됨'
+                  : '회차 계획 미연결'}
+            </span>
+            {nextScheduledContext.warnings.length > 0 && (
+              <small className="flow-next-class-warning">
+                {nextScheduledContext.warnings[0]}
+              </small>
+            )}
+          </div>
+          <div className="flow-next-class-card__actions">
+            <button
+              type="button"
+              className="flow-button flow-button--primary"
+              data-testid="flow-continue-next-class-btn"
+              onClick={continueNextScheduledClass}
+            >
+              이어서 준비
+            </button>
+          </div>
+        </section>
+      )}
+
+      {s.instructorSchedule.locations.length > 0 && s.activeSteps.length > 0 && (
+        <div className="flow-location-copy-bar" data-testid="flow-location-copy-bar">
+          <span>
+            <MapPin size={14} strokeWidth={1.5} aria-hidden="true" /> 다른 장소 기구 기준으로 사본
+            만들기 (원본 불변)
+          </span>
+          <div className="flow-location-copy-bar__controls">
+            <select
+              aria-label="사본을 만들 수업 장소 선택"
+              data-testid="flow-location-copy-select"
+              value={selectedLocationCopyId || s.instructorSchedule.locations[0]!.id}
+              onChange={(e) => setSelectedLocationCopyId(e.target.value)}
+            >
+              {s.instructorSchedule.locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.alias} (
+                  {loc.equipmentIds
+                    .map((id) => EQUIPMENT_OPTIONS.find((opt) => opt.id === id)?.labelKo ?? id)
+                    .join('·') || '기구 미등록'}
+                  )
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="flow-button"
+              data-testid="flow-location-copy-btn"
+              onClick={() => {
+                const locId =
+                  selectedLocationCopyId || s.instructorSchedule.locations[0]?.id || '';
+                const res = usePilatesStore.getState().copyActiveSequenceForLocation(locId);
+                setNotice(res.message);
+                setMobilePane('plan');
+              }}
+            >
+              <Copy size={14} strokeWidth={1.5} aria-hidden="true" /> 장소 변경 사본 열기
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flow-class-brief">
         <label className="flow-field flow-class-title">
@@ -827,6 +1403,13 @@ export function SequenceStudioWorkbench(props: Props) {
               aria-label="수업 동작 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(event) => {
+                if (isImeComposing(event)) return;
+                if (event.key === 'Escape' && query) {
+                  event.preventDefault();
+                  setQuery('');
+                }
+              }}
               placeholder="이름, 영어명, 근육 검색"
             />
             {query && (
@@ -975,6 +1558,17 @@ export function SequenceStudioWorkbench(props: Props) {
                         <Plus size={17} strokeWidth={1.5} />
                       )}
                     </button>
+                    {included.has(exercise.id) && (
+                      <button
+                        type="button"
+                        className="flow-add-again-button"
+                        aria-label={`${exercise.nameKo} 한 번 더 추가`}
+                        disabled={!insertionResolution.success}
+                        onClick={() => addExercise(exercise, undefined, true)}
+                      >
+                        +1
+                      </button>
+                    )}
                   </div>
                 </article>
               ))
@@ -1047,14 +1641,58 @@ export function SequenceStudioWorkbench(props: Props) {
                         fitted: fitSequenceDuration(s.activeSteps, s.activeTargetMinutes),
                       });
                     } catch (error) {
-                      setNotice(
-                        error instanceof Error ? error.message : '시간을 맞출 수 없습니다.',
+                      const lockedAndRestSec = s.activeSteps
+                        .filter((step) => step.locked || isRestStep(step))
+                        .reduce((sum, step) => sum + getStepTiming(step).totalSec, 0);
+                      const adjustable = s.activeSteps.filter(
+                        (step) => !step.locked && !isRestStep(step),
                       );
+                      const minFloorSec = adjustable.reduce(
+                        (sum, step) =>
+                          sum +
+                          Math.ceil(
+                            Math.max(60, (step.explanationSec ?? 0) + (step.transitionSec ?? 0) + 30),
+                          ),
+                        0,
+                      );
+                      const maxCapSec = adjustable.length * 20 * 60;
+                      const message =
+                        error instanceof Error ? error.message : '시간을 맞출 수 없습니다.';
+                      setFitImpossibleInfo({
+                        targetMin: s.activeTargetMinutes,
+                        lockedAndRestSec,
+                        adjustableCount: adjustable.length,
+                        minPossibleSec: lockedAndRestSec + minFloorSec,
+                        maxPossibleSec: lockedAndRestSec + maxCapSec,
+                        reasonMessage: message,
+                      });
+                      setNotice(message);
                     }
                   }}
                 >
                   시간 맞추기
                 </button>
+                {transitionOptimization.savedTransitionCount > 0 && (
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    data-testid="flow-open-transition-diff-btn"
+                    onClick={() => setTransitionDiffPlan(transitionOptimization)}
+                  >
+                    <ArrowDownUp size={14} strokeWidth={1.5} aria-hidden="true" /> 전환{' '}
+                    {transitionOptimization.savedTransitionCount}회 줄이기 미리보기
+                  </button>
+                )}
+                {exerciseCount > 0 && (
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    data-testid="flow-open-quick-rehearsal-btn"
+                    onClick={() => setQuickRehearsalOpen(true)}
+                  >
+                    빠른 요약 리허설
+                  </button>
+                )}
               </div>
               <div
                 className="flow-time-bar"
@@ -1079,6 +1717,16 @@ export function SequenceStudioWorkbench(props: Props) {
                   </span>
                 ))}
               </div>
+              {total > 0 && (
+                <p className="flow-time-budget-formula" data-testid="flow-time-budget-formula">
+                  구성 합계: 수행 {minutes(simulation.totals.movementSec)} (양쪽 포함) · 설명·전환{' '}
+                  {minutes(simulation.totals.teachingSec + simulation.totals.transitionSec)}
+                  {simulation.totals.restSec > 0
+                    ? ` · 휴식 ${minutes(simulation.totals.restSec)}`
+                    : ''}{' '}
+                  · 중복 합산 없음
+                </p>
+              )}
               <p>
                 {!total
                   ? '동작을 추가하면 수업 시간이 채워집니다'
@@ -1142,15 +1790,32 @@ export function SequenceStudioWorkbench(props: Props) {
                   const title = isRestStep(step)
                     ? '휴식'
                     : (exercise?.nameKo ?? '동작을 찾을 수 없음');
-                  const previousExercise = index
-                    ? byId.get(s.activeSteps[index - 1].exerciseId)
-                    : undefined;
-                  const springChanged =
+                  const resolvedSetup =
+                    exercise && !isRestStep(step)
+                      ? resolveStepSetup(step, exercise, s.reformerBrand)
+                      : null;
+                  const stepTransition = describeStepTransitionFromPrevious(
+                    s.activeSteps,
+                    index,
+                    byId,
+                    s.reformerBrand,
+                  );
+                  const sideLabels = getStepSideLabels(step, exercise);
+                  const stepEquipmentNeeds =
+                    exercise && !isRestStep(step) ? getExerciseEquipment(exercise) : null;
+                  const activeEquipPool =
+                    criteria.availableEquipment ??
+                    (criteria.apparatus === 'mixed' ? s.ownedEquipment : [criteria.apparatus]);
+                  const stepNeedsReplacement = Boolean(
                     exercise &&
-                    previousExercise &&
-                    !isRestStep(step) &&
-                    (step.customSpringOverride ?? exercise.springs) !==
-                      (s.activeSteps[index - 1].customSpringOverride ?? previousExercise.springs);
+                      !isRestStep(step) &&
+                      stepEquipmentNeeds &&
+                      ((criteria.apparatus !== 'mixed' &&
+                        exercise.apparatus !== criteria.apparatus) ||
+                        !stepEquipmentNeeds.requiredEquipment.every(
+                          (id) => activeEquipPool.includes(id) && s.ownedEquipment.includes(id),
+                        )),
+                  );
                   return (
                     <Fragment key={step.stepId}>
                       {section !== previousSection && (
@@ -1158,6 +1823,17 @@ export function SequenceStudioWorkbench(props: Props) {
                           <i />
                           <h3>{SECTIONS.find((item) => item.id === section)?.label}</h3>
                           <span>{minutes(sectionTotals[section])}</span>
+                          <button
+                            type="button"
+                            className="flow-section-copy-btn"
+                            aria-label={`${SECTIONS.find((item) => item.id === section)?.label} 구간 독립 복제`}
+                            onClick={() => {
+                              const res = usePilatesStore.getState().duplicateSectionSteps(section);
+                              setNotice(res.message);
+                            }}
+                          >
+                            <Copy size={12} strokeWidth={1.5} aria-hidden="true" /> 구간 복제
+                          </button>
                         </div>
                       )}
                       <article
@@ -1204,21 +1880,43 @@ export function SequenceStudioWorkbench(props: Props) {
                           </button>
                           <div className="flow-row-meta">
                             {exercise && <span>{APPARATUS_LABELS[exercise.apparatus].short}</span>}
-                            {exercise && (step.customSpringOverride ?? exercise.springs) && (
+                            {resolvedSetup && (
                               <span
-                                className="flow-row-spring-pill"
+                                className={`flow-row-spring-pill ${
+                                  resolvedSetup.springUnknown ? 'is-unknown' : ''
+                                }`}
                                 title={`스튜디오 스프링 기준 (${s.reformerBrand})`}
                               >
-                                {step.customSpringOverride
-                                  ? step.customSpringOverride
-                                  : formatBrandSpringEquivalent(
-                                      exercise.springs,
-                                      s.reformerBrand,
-                                      exercise.apparatus,
-                                    ).equivalentLabelKo}
+                                {resolvedSetup.springLabelKo}
                               </span>
                             )}
-                            {getStepSideLabels(step, exercise).length > 1 && <span>양쪽 수행</span>}
+                            {step.boxOverride && resolvedSetup && (
+                              <span>{resolvedSetup.boxLabelKo}</span>
+                            )}
+                            {step.footbarOverride && resolvedSetup && (
+                              <span>{resolvedSetup.footbarLabelKo}</span>
+                            )}
+                            {step.headrestOverride && resolvedSetup && (
+                              <span>{resolvedSetup.headrestLabelKo}</span>
+                            )}
+                            {step.propOverride && resolvedSetup && (
+                              <span>{resolvedSetup.propsLabelKo}</span>
+                            )}
+                            {(step.sideMode || sideLabels.length > 1) && (
+                              <span>
+                                {step.sideMode === 'left-then-right'
+                                  ? '왼쪽 → 오른쪽'
+                                  : step.sideMode === 'right-then-left'
+                                    ? '오른쪽 → 왼쪽'
+                                    : step.sideMode === 'left'
+                                      ? '왼쪽만'
+                                      : step.sideMode === 'right'
+                                        ? '오른쪽만'
+                                        : step.sideMode === 'together'
+                                          ? '양쪽 함께'
+                                          : '양쪽 수행'}
+                              </span>
+                            )}
                             {step.repetitions && <span>{step.repetitions}회</span>}
                             {step.locked && (
                               <span>
@@ -1264,10 +1962,35 @@ export function SequenceStudioWorkbench(props: Props) {
                                 {exercise.layers[step.selectedLayer]}
                               </p>
                             )}
-                          {springChanged && (
-                            <span className="flow-setup-change">
-                              스프링 변경 · {step.customSpringOverride ?? exercise.springs}
+                          {stepTransition && stepTransition.changes.length > 0 && (
+                            <span
+                              className="flow-setup-change"
+                              data-testid="flow-step-transition-badge"
+                            >
+                              전환 · {stepTransition.changes.join(' · ')}
                             </span>
+                          )}
+                          {stepTransition?.unknownNoticeKo && (
+                            <span
+                              className="flow-setup-change is-unknown"
+                              data-testid="flow-step-unknown-setup-badge"
+                            >
+                              {stepTransition.unknownNoticeKo}
+                            </span>
+                          )}
+                          {stepNeedsReplacement && !step.locked && (
+                            <div className="flow-row-incompatible-bar">
+                              <small>현재 장소·기구 조건과 다름</small>
+                              <button
+                                type="button"
+                                className="flow-text-button"
+                                data-testid={`flow-replace-step-${step.stepId}`}
+                                onClick={() => setReplacingStepIndex(index)}
+                              >
+                                <RefreshCw size={13} strokeWidth={1.5} aria-hidden="true" /> 대체 동작
+                                고르기
+                              </button>
+                            </div>
                           )}
                           {step.instructorNote && (
                             <p className="flow-row-note">{step.instructorNote}</p>
@@ -1333,6 +2056,24 @@ export function SequenceStudioWorkbench(props: Props) {
                           </button>
                           <button
                             className="flow-icon-button"
+                            aria-label={`${index + 1}번 ${title} 복제`}
+                            onClick={() => {
+                              const res = usePilatesStore
+                                .getState()
+                                .duplicateSequenceStep(step.stepId);
+                              setNotice(res.message);
+                              if (res.success && res.stepId) {
+                                setRecentAddition({
+                                  sequenceId: s.activeSequenceId,
+                                  stepId: res.stepId,
+                                });
+                              }
+                            }}
+                          >
+                            <Copy size={15} strokeWidth={1.5} />
+                          </button>
+                          <button
+                            className="flow-icon-button"
                             aria-label={`${title} ${step.locked ? '잠금 해제' : '잠그기'}`}
                             onClick={() => s.toggleStepLock(index)}
                           >
@@ -1392,24 +2133,36 @@ export function SequenceStudioWorkbench(props: Props) {
                 <i />
                 {s.persistenceError
                   ? '이 브라우저 미저장 · 현재 화면(메모리)에만 임시 보관 중'
-                  : '작성 중인 수업은 이 기기에 자동 보관'}
+                  : '작성 중인 수업은 이 기기(브라우저)에만 로컬 보관 · 서버 자동 동기화 없음'}
               </span>
               {s.persistenceError ? (
-                <button
-                  type="button"
-                  className="flow-text-button"
-                  data-testid="flow-footer-backup-btn"
-                  onClick={() => {
-                    const ok = downloadEmergencyBackupJson();
-                    setNotice(
-                      ok
-                        ? '메모리 작업본을 포함한 JSON 백업 파일을 내려받았습니다. 저장 공간 확보 후 저장을 다시 눌러 주세요.'
-                        : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
-                    );
-                  }}
-                >
-                  JSON 백업 내보내기
-                </button>
+                <div className="flow-footer-recovery-actions">
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    data-testid="flow-retry-save-btn"
+                    onClick={() => {
+                      void save();
+                    }}
+                  >
+                    <RefreshCw size={13} strokeWidth={1.5} aria-hidden="true" /> 다시 저장 시도
+                  </button>
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    data-testid="flow-footer-backup-btn"
+                    onClick={() => {
+                      const ok = downloadEmergencyBackupJson();
+                      setNotice(
+                        ok
+                          ? '메모리 작업본을 포함한 JSON 백업 파일을 내려받았습니다. 저장 공간 확보 후 저장을 다시 눌러 주세요.'
+                          : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
+                      );
+                    }}
+                  >
+                    JSON 백업 내보내기
+                  </button>
+                </div>
               ) : (
                 <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
               )}
@@ -1441,35 +2194,39 @@ export function SequenceStudioWorkbench(props: Props) {
               ) : (
                 <small
                   data-testid="flow-actionbar-save-hint"
-                  className={s.persistenceError ? 'is-persistence-warning' : undefined}
+                  data-save-status={saveStatus}
+                  className={
+                    saveStatus === 'save-failed' || saveStatus === 'cross-tab-conflict'
+                      ? 'is-persistence-warning'
+                      : saveStatus === 'dirty'
+                        ? 'is-dirty-hint'
+                        : undefined
+                  }
                 >
-                  {s.persistenceError
+                  {saveStatus === 'save-failed'
                     ? '기기 저장 미완료 · 메모리 작업본 유지 중 (JSON 백업 후 여유 공간을 확보해 다시 저장하세요)'
-                    : s.saveFeedback &&
-                        (() => {
-                          const activeSaved = s.savedSequences.find(
-                            (item) => item.id === s.activeSequenceId,
-                          );
-                          return (
-                            !activeSaved ||
-                            isSavedSequencePersistedOnDisk(activeSaved, s.persistenceError)
-                          );
-                        })()
-                      ? s.saveFeedback
-                      : exerciseCount === 0
-                        ? '왼쪽 목록에서 첫 동작을 담아 수업을 시작해 보세요'
-                        : '시퀀스를 저장하고 수업을 시작하세요'}
+                    : saveStatus === 'cross-tab-conflict'
+                      ? '다른 탭 변경 감지 · 자동 덮어쓰기 중단됨 (위 배너에서 불러오기 또는 사본 저장 선택)'
+                      : saveStatus === 'saving'
+                        ? '이 브라우저에 저장하는 중…'
+                        : saveStatus === 'saved-local'
+                          ? s.saveFeedback || '이 브라우저에 수업을 저장했습니다.'
+                          : saveStatus === 'dirty'
+                            ? '저장 후 수정됨 (미저장 초안) · 저장을 눌러 이 브라우저에 반영하세요'
+                            : exerciseCount === 0
+                              ? '왼쪽 목록에서 첫 동작을 담아 수업을 시작해 보세요'
+                              : '시퀀스를 저장하고 수업을 시작하세요 (이 기기 로컬 저장)'}
                 </small>
               )}
             </div>
             <button
               className="flow-button"
-              disabled={!exerciseCount}
+              disabled={!exerciseCount || isSaving}
               onClick={() => {
                 void save();
               }}
             >
-              <Bookmark size={16} strokeWidth={1.5} /> 저장
+              <Bookmark size={16} strokeWidth={1.5} /> {isSaving ? '저장 중…' : '저장'}
             </button>
             <button
               className="flow-button flow-button--primary"
@@ -1662,18 +2419,35 @@ export function SequenceStudioWorkbench(props: Props) {
           open
           onClose={() => setFitPreview(null)}
           title={`목표 ${fitPreview.target}분에 맞추기`}
-          subtitle="잠긴 동작과 휴식은 유지하고 나머지 동작 시간을 조정합니다"
+          subtitle="잠긴 동작과 휴식은 고정 보존하고, 나머지 동작 시간만 조정합니다"
         >
+          <p className="flow-hint" data-testid="flow-fit-preserved-summary">
+            보존 항목: 잠금 {fitPreview.steps.filter((st) => st.locked).length}개 · 휴식{' '}
+            {fitPreview.steps.filter((st) => isRestStep(st)).length}개 고정 유지 (원본은 적용 전까지
+            변경되지 않음)
+          </p>
           <div className="flow-fit-preview">
-            {fitPreview.fitted.map((step, index) => (
-              <div key={step.stepId}>
-                <span>{isRestStep(step) ? '휴식' : byId.get(step.exerciseId)?.nameKo}</span>
-                <small>
-                  {minutes(getStepTiming(fitPreview.steps[index]).totalSec)} →{' '}
-                  <b>{minutes(getStepTiming(step).totalSec)}</b>
-                </small>
-              </div>
-            ))}
+            {fitPreview.fitted.map((step, index) => {
+              const beforeSec = getStepTiming(fitPreview.steps[index]).totalSec;
+              const afterSec = getStepTiming(step).totalSec;
+              const deltaSec = afterSec - beforeSec;
+              const deltaText =
+                deltaSec === 0
+                  ? fitPreview.steps[index].locked
+                    ? '잠금 보존'
+                    : isRestStep(step)
+                      ? '휴식 보존'
+                      : '변동 없음'
+                  : `${deltaSec > 0 ? '+' : '-'}${minutes(Math.abs(deltaSec))}`;
+              return (
+                <div key={step.stepId}>
+                  <span>{isRestStep(step) ? '휴식' : byId.get(step.exerciseId)?.nameKo}</span>
+                  <small>
+                    {minutes(beforeSec)} → <b>{minutes(afterSec)}</b> ({deltaText})
+                  </small>
+                </div>
+              );
+            })}
           </div>
           <div className="flow-dialog-actions">
             <button className="flow-button" onClick={() => setFitPreview(null)}>
@@ -1701,6 +2475,224 @@ export function SequenceStudioWorkbench(props: Props) {
             </button>
           </div>
         </LightDismissDialog>
+      )}
+      {fitImpossibleInfo && (
+        <LightDismissDialog
+          open
+          onClose={() => setFitImpossibleInfo(null)}
+          title={`목표 ${fitImpossibleInfo.targetMin}분 자동 맞춤 안내`}
+          subtitle="무리하게 동작 시간을 깎지 않고 현재 구성을 그대로 보존했습니다"
+        >
+          <div className="flow-fit-impossible" data-testid="flow-fit-impossible-dialog">
+            <p className="flow-error" role="status">
+              {fitImpossibleInfo.reasonMessage}
+            </p>
+            <dl className="flow-fit-impossible__stats">
+              <div>
+                <dt>고정 보존 시간 (잠금·휴식)</dt>
+                <dd>{minutes(fitImpossibleInfo.lockedAndRestSec)}</dd>
+              </div>
+              <div>
+                <dt>조정 가능 동작 수</dt>
+                <dd>{fitImpossibleInfo.adjustableCount}개</dd>
+              </div>
+              <div>
+                <dt>안전 최소 ~ 최대 가능 총시간</dt>
+                <dd>
+                  {minutes(fitImpossibleInfo.minPossibleSec)} ~{' '}
+                  {minutes(fitImpossibleInfo.maxPossibleSec)}
+                </dd>
+              </div>
+              <div>
+                <dt>목표 시간과의 차이</dt>
+                <dd>
+                  {fitImpossibleInfo.targetMin * 60 < fitImpossibleInfo.minPossibleSec
+                    ? `최소 보장 시간보다 ${minutes(
+                        fitImpossibleInfo.minPossibleSec - fitImpossibleInfo.targetMin * 60,
+                      )} 짧음`
+                    : fitImpossibleInfo.targetMin * 60 > fitImpossibleInfo.maxPossibleSec
+                      ? `최대 배분 한도보다 ${minutes(
+                          fitImpossibleInfo.targetMin * 60 - fitImpossibleInfo.maxPossibleSec,
+                        )} 김`
+                      : '조정 가능 동작 없음'}
+                </dd>
+              </div>
+            </dl>
+            <div className="flow-dialog-actions">
+              <button
+                type="button"
+                className="flow-button flow-button--primary"
+                onClick={() => setFitImpossibleInfo(null)}
+              >
+                현재 시간 유지하고 닫기
+              </button>
+            </div>
+          </div>
+        </LightDismissDialog>
+      )}
+      {transitionDiffPlan && (
+        <LightDismissDialog
+          open
+          onClose={() => setTransitionDiffPlan(null)}
+          title="기구·자세 전환 줄이기 전후 비교"
+          subtitle={`준비·마무리 구간, 잠긴 단계(${transitionDiffPlan.preservedLockedCount}개), 휴식(${transitionDiffPlan.preservedRestCount}개), 좌우 쌍(${transitionDiffPlan.preservedPairCount}쌍)을 보존합니다`}
+        >
+          <div className="flow-transition-diff" data-testid="flow-transition-diff-dialog">
+            <p className="flow-hint">
+              예상 세팅 전환: <strong>{transitionDiffPlan.beforeTransitionCount}회</strong> →{' '}
+              <strong>{transitionDiffPlan.afterTransitionCount}회</strong> (
+              {transitionDiffPlan.savedTransitionCount}회 감소)
+            </p>
+            <div className="flow-fit-preview">
+              {transitionDiffPlan.diffRows.map((row) => (
+                <div key={row.position}>
+                  <span>
+                    {row.position}번 · {row.beforeTitleKo}
+                  </span>
+                  <small>
+                    {row.changed ? (
+                      <>
+                        → <b>{row.afterTitleKo}</b>
+                      </>
+                    ) : row.preservedReason === 'locked' ? (
+                      '잠금 보존'
+                    ) : row.preservedReason === 'rest' ? (
+                      '휴식 보존'
+                    ) : row.preservedReason === 'bilateral-pair' ? (
+                      '좌우 쌍 보존'
+                    ) : row.preservedReason === 'section-boundary' ? (
+                      '구간 고정'
+                    ) : (
+                      '위치 유지'
+                    )}
+                  </small>
+                </div>
+              ))}
+            </div>
+            <p className="flow-hint">{transitionDiffPlan.disclaimerKo}</p>
+            <div className="flow-dialog-actions">
+              <button
+                type="button"
+                className="flow-button"
+                onClick={() => setTransitionDiffPlan(null)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="flow-button flow-button--primary"
+                data-testid="flow-apply-transition-diff-btn"
+                onClick={() => {
+                  const current = usePilatesStore.getState();
+                  if (current.activeSteps !== transitionDiffPlan.beforeSteps) {
+                    setNotice('시퀀스가 변경되었습니다. 미리보기를 다시 열어 확인해 주세요.');
+                  } else {
+                    usePilatesStore.setState({
+                      undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
+                      activeSteps: transitionDiffPlan.afterSteps,
+                      generationError: null,
+                      saveFeedback: null,
+                    });
+                    setNotice(
+                      `본운동 순서를 정돈해 기구·자세 전환을 ${transitionDiffPlan.savedTransitionCount}회 줄였습니다. 되돌리기로 복원할 수 있어요.`,
+                    );
+                  }
+                  setTransitionDiffPlan(null);
+                }}
+              >
+                순서 변경 적용
+              </button>
+            </div>
+          </div>
+        </LightDismissDialog>
+      )}
+      {replacingStepIndex !== null && s.activeSteps[replacingStepIndex] && (
+        <LightDismissDialog
+          open
+          onClose={() => setReplacingStepIndex(null)}
+          title="현재 장소·기구 조건에 맞는 대체 동작"
+          subtitle="선택한 동작만 교체하며, 원본 저장 시퀀스는 변경되지 않습니다"
+        >
+          {(() => {
+            const targetStep = s.activeSteps[replacingStepIndex]!;
+            const proposals = proposeBlockAlternatives(
+              targetStep.blockCategory,
+              replacingStepIndex,
+              s.activeSteps,
+              s.exercises,
+              s.historyLogs,
+              s.activeTargetGroupId,
+              criteria,
+            );
+            const fallbackPool = proposals.length
+              ? proposals.map((p) => p.exercise)
+              : s.exercises.filter((ex) => eligible(ex)).slice(0, 6);
+            return (
+              <div className="flow-replace-picker" data-testid="flow-replace-picker-dialog">
+                {fallbackPool.length ? (
+                  <div className="flow-fit-preview">
+                    {fallbackPool.map((candidate) => (
+                      <div key={candidate.id}>
+                        <span>
+                          <strong>{candidate.nameKo}</strong> ·{' '}
+                          {APPARATUS_LABELS[candidate.apparatus].short} · Lv {candidate.level}
+                        </span>
+                        <button
+                          type="button"
+                          className="flow-button flow-button--primary"
+                          data-testid={`flow-confirm-replace-${candidate.id}`}
+                          onClick={() => {
+                            usePilatesStore
+                              .getState()
+                              .replaceStepExercise(replacingStepIndex, candidate.id);
+                            const err = usePilatesStore.getState().generationError;
+                            setNotice(
+                              err ??
+                                `${replacingStepIndex + 1}번 항목을 ‘${candidate.nameKo}’ 동작으로 교체했습니다.`,
+                            );
+                            if (!err) setReplacingStepIndex(null);
+                          }}
+                        >
+                          이 동작으로 교체
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="flow-hint">
+                    현재 기구·소도구 조건에 맞는 미중복 동작이 없습니다. 수업 조건에서 사용 가능
+                    기구·소도구를 확인해 주세요.
+                  </p>
+                )}
+                <div className="flow-dialog-actions">
+                  <button
+                    type="button"
+                    className="flow-button"
+                    onClick={() => setReplacingStepIndex(null)}
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </LightDismissDialog>
+      )}
+      {quickRehearsalOpen && (
+        <Suspense fallback={<p role="status">빠른 요약 리허설을 여는 중…</p>}>
+          <LazyQuickPlanRehearsal
+            onClose={() => setQuickRehearsalOpen(false)}
+            onSave={() => {
+              usePilatesStore.getState().saveCurrentSequenceToBinder(true);
+              setNotice('미리보기 스냅샷을 별도 사본으로 저장했습니다.');
+            }}
+            onStart={() => {
+              setQuickRehearsalOpen(false);
+              start();
+            }}
+            canStartClass={simulation.gate.canRehearse}
+          />
+        </Suspense>
       )}
     </section>
   );

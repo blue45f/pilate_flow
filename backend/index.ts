@@ -4,6 +4,7 @@ import { BackupError, createBackupService } from './backupService';
 import type { BackupRecord } from './backupService';
 import { createFreeAiRoutes, createFreeAiService } from './freeAiService';
 import { assertExpectedPrincipal } from './principalAssertion';
+import { TeamSharingError } from './teamSharingService';
 
 const freeAiRoutes = createFreeAiRoutes(createFreeAiService());
 
@@ -57,6 +58,15 @@ function protect(source: 'query' | 'body', action: RouterMiddleware): RouterMidd
     } catch (cause) {
       if (cause instanceof BackupError)
         response = json({ error: cause.code, message: cause.message }, cause.status);
+      else if (cause instanceof TeamSharingError)
+        response = json(
+          {
+            error: cause.code,
+            message: cause.message,
+            ...(cause.serverVersion !== undefined ? { serverVersion: cause.serverVersion } : {}),
+          },
+          cause.status,
+        );
       else if (isAppDatabaseError(cause) && cause.code === 'AppDatabaseQuotaExceeded')
         response = json(
           {

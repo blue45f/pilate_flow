@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ArrowDownUp, CheckCircle2 } from 'lucide-react';
 import type { PilatesExercise, SequenceStep, SpinalPlane } from '../../types/pilates';
 import { isRestStep } from '../../utils/sequenceEngine';
-import { getSequenceStepClassSection } from '../../utils/sequenceMotionBinding';
+import { buildSafeTransitionOptimization } from '../../utils/transitionSummary';
 
 export interface FlowCoachSummary {
   readonly springTransitions: number;
@@ -69,82 +69,8 @@ export function analyzeAndOptimizeFlowSteps(
     (item) => !coveredPlanes.has(item.plane),
   );
 
-  // Build transition-minimized ordering for unlocked MAIN section exercise steps
-  // while keeping warmup first, cooldown last, rest positions, and locked steps pinned.
-  const copy = steps.map((st) => ({ ...st }));
-  const movableMainIndices: number[] = [];
-  for (let i = 0; i < copy.length; i += 1) {
-    const st = copy[i]!;
-    if (isRestStep(st) || st.locked) continue;
-    const role = getSequenceStepClassSection(st);
-    const normalizedSection = role === 'preparation' ? 'warmup' : role;
-    if (normalizedSection === 'main') {
-      movableMainIndices.push(i);
-    }
-  }
-
-  if (movableMainIndices.length >= 3) {
-    const pool = movableMainIndices.map((idx) => copy[idx]!);
-    // Anchor from the step immediately preceding the first movable main index (if any)
-    let prevAnchorEx: PilatesExercise | undefined;
-    let prevAnchorSpring = '';
-    for (let i = movableMainIndices[0]! - 1; i >= 0; i -= 1) {
-      const candidate = copy[i]!;
-      if (!isRestStep(candidate)) {
-        prevAnchorEx = exercisesById.get(candidate.exerciseId);
-        prevAnchorSpring = (candidate.customSpringOverride || prevAnchorEx?.springs || '')
-          .trim()
-          .toLowerCase();
-        break;
-      }
-    }
-
-    const orderedPool: SequenceStep[] = [];
-    const remaining = [...pool];
-    while (remaining.length > 0) {
-      if (!prevAnchorEx) {
-        const first = remaining.shift()!;
-        orderedPool.push(first);
-        prevAnchorEx = exercisesById.get(first.exerciseId);
-        prevAnchorSpring = (first.customSpringOverride || prevAnchorEx?.springs || '')
-          .trim()
-          .toLowerCase();
-        continue;
-      }
-
-      let bestIdx = 0;
-      let bestCost = Number.POSITIVE_INFINITY;
-      for (let r = 0; r < remaining.length; r += 1) {
-        const cand = remaining[r]!;
-        const candEx = exercisesById.get(cand.exerciseId);
-        if (!candEx) continue;
-        const candSpring = (cand.customSpringOverride || candEx.springs || '')
-          .trim()
-          .toLowerCase();
-        let cost = 0;
-        if (candEx.apparatus !== prevAnchorEx.apparatus) cost += 6;
-        if (candEx.box !== prevAnchorEx.box) cost += 4;
-        if (candEx.bodyPosition !== prevAnchorEx.bodyPosition) cost += 2;
-        if (candSpring && prevAnchorSpring && candSpring !== prevAnchorSpring) cost += 1.5;
-        if (cost < bestCost) {
-          bestCost = cost;
-          bestIdx = r;
-        }
-      }
-      const chosen = remaining.splice(bestIdx, 1)[0]!;
-      orderedPool.push(chosen);
-      prevAnchorEx = exercisesById.get(chosen.exerciseId);
-      prevAnchorSpring = (chosen.customSpringOverride || prevAnchorEx?.springs || '')
-        .trim()
-        .toLowerCase();
-    }
-
-    movableMainIndices.forEach((slotIdx, poolPos) => {
-      copy[slotIdx] = orderedPool[poolPos]!;
-    });
-  }
-
-  const normalizedOptimized = copy.map((st, idx) => ({ ...st, order: idx + 1 }));
+  const safePlan = buildSafeTransitionOptimization(steps, exercisesById);
+  const normalizedOptimized = safePlan.afterSteps;
   const afterCounts = countSetupTransitions(normalizedOptimized, exercisesById);
   const beforeTotal =
     beforeCounts.springTransitions +
@@ -160,7 +86,7 @@ export function analyzeAndOptimizeFlowSteps(
     ...beforeCounts,
     coveredPlanes,
     missingActionPlanes,
-    optimizedSteps: savedTransitionsCount > 0 ? normalizedOptimized : copy,
+    optimizedSteps: savedTransitionsCount > 0 ? normalizedOptimized : steps.map((st) => ({ ...st })),
     savedTransitionsCount,
   };
 }

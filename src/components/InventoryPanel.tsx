@@ -5,6 +5,7 @@ import { EQUIPMENT_OPTIONS, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { EQUIPMENT_GUIDE } from '../data/equipmentGuide';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PropType } from '../types/pilates';
+import { isImeComposing } from '../utils/imeGuard';
 import { EquipmentChoice } from './EquipmentChoice';
 import '../styles/inventory-usability.css';
 
@@ -247,6 +248,7 @@ export function InventoryPanel() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               onKeyDown={(event) => {
+                if (isImeComposing(event)) return;
                 if (event.key === 'Escape' && searchQuery.length > 0) {
                   event.preventDefault();
                   event.stopPropagation();

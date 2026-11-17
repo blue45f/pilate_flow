@@ -8,6 +8,8 @@ import type { SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
 import { resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
 import { getSavedHumanMovementDrafts, getSavedReusableBlocks } from '../utils/movementIdeaDraft';
+import { normalizeWholeSeconds } from '../utils/durationFormat';
+import { isImeComposing } from '../utils/imeGuard';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
   attachProgramSnapshotToHistoryLog,
@@ -292,8 +294,9 @@ const SessionLogForm: React.FC<
     if (typeof initialDraft?.minutes === 'string' && initialDraft.minutes !== '') {
       return initialDraft.minutes;
     }
-    if (context?.actualDurationSec !== undefined) {
-      return String(Math.floor(context.actualDurationSec / 60));
+    const normalized = normalizeWholeSeconds(context?.actualDurationSec);
+    if (normalized !== null) {
+      return String(Math.floor(normalized / 60));
     }
     return typeof initialDraft?.minutes === 'string' ? initialDraft.minutes : '';
   });
@@ -301,8 +304,9 @@ const SessionLogForm: React.FC<
     if (typeof initialDraft?.seconds === 'string' && initialDraft.seconds !== '') {
       return initialDraft.seconds;
     }
-    if (context?.actualDurationSec !== undefined) {
-      return String(Math.round(context.actualDurationSec % 60));
+    const normalized = normalizeWholeSeconds(context?.actualDurationSec);
+    if (normalized !== null) {
+      return String(normalized % 60);
     }
     return typeof initialDraft?.seconds === 'string' ? initialDraft.seconds : '';
   });
@@ -311,6 +315,7 @@ const SessionLogForm: React.FC<
   const [pendingCloseRequest, setPendingCloseRequest] = useState<(() => void) | null>(null);
   const [showGroup, setShowGroup] = useState(classGroups.length === 0);
   const [newGroupName, setNewGroupName] = useState('');
+  const [applyToNextDraft, setApplyToNextDraft] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const submittingRef = useRef(false);
   const planned = snapshot.reduce((sum, step) => sum + step.durationMin, 0);
@@ -323,11 +328,9 @@ const SessionLogForm: React.FC<
   const currentActualSec = hasUserEnteredDuration
     ? (Number.isNaN(parsedMinutesInput) ? 0 : Math.max(0, parsedMinutesInput)) * 60 +
       (Number.isNaN(parsedSecondsInput) ? 0 : Math.max(0, parsedSecondsInput))
-    : typeof context?.actualDurationSec === 'number' && context.actualDurationSec > 0
-      ? Math.round(context.actualDurationSec)
-      : null;
+    : normalizeWholeSeconds(context?.actualDurationSec);
   const durationDeltaSec =
-    plannedTiming.totalSec > 0 && currentActualSec !== null && currentActualSec > 0
+    plannedTiming.totalSec > 0 && currentActualSec !== null
       ? currentActualSec - plannedTiming.totalSec
       : null;
   const exerciseCount = snapshot.filter((step) => !isRestStep(step)).length;
@@ -609,7 +612,14 @@ const SessionLogForm: React.FC<
     } catch {
       // Ignore sessionStorage errors in restricted environments.
     }
-    setActiveTab('history');
+    if (applyToNextDraft) {
+      usePilatesStore.getState().applyHistoryChangesToNextDraft(matchedLog.id, {
+        includeDurations: true,
+        includeNotes: true,
+      });
+    } else {
+      setActiveTab('history');
+    }
     onClose();
   };
 
@@ -618,10 +628,14 @@ const SessionLogForm: React.FC<
       open
       onClose={onClose}
       onBeforeClose={({ reason, close }) => {
-        if (hasEditedDraft && !submitted && (reason === 'backdrop' || reason === 'native-cancel')) {
+        if (
+          hasEditedDraft &&
+          !submitted &&
+          (reason === 'backdrop' || reason === 'native-cancel' || reason === 'close-button')
+        ) {
           setPendingCloseRequest(() => close);
           return false;
-      }
+        }
         return true;
       }}
       variant="sheet"
@@ -804,6 +818,7 @@ const SessionLogForm: React.FC<
                         if (event.target.value.trim()) clearFieldErrorIfMatching('newGroup');
                       }}
                       onKeyDown={(event) => {
+                        if (isImeComposing(event)) return;
                         if (event.key === 'Enter') {
                           event.preventDefault();
                           createGroup();
@@ -1173,6 +1188,17 @@ const SessionLogForm: React.FC<
               }}
             />
           </PfField>
+          <div className="log-quick-note-chips">
+            <button
+              type="button"
+              className={`log-quick-note-chip ${applyToNextDraft ? 'is-selected' : ''}`.trim()}
+              aria-pressed={applyToNextDraft}
+              data-testid="log-apply-to-next-draft-toggle"
+              onClick={() => setApplyToNextDraft((prev) => !prev)}
+            >
+              {applyToNextDraft ? '✓ ' : '+ '}실제 진행한 순서·시간·회고 메모를 다음 수업 초안에 바로 선택 반영 (원본 템플릿·다른 예정 수업 불변)
+            </button>
+          </div>
         </div>
         <footer className="class-log-footer">
           {pendingCloseRequest && (

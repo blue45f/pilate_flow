@@ -155,6 +155,10 @@ export interface SequenceStep extends StepPracticeOptions {
   durationMin: number;
   selectedLayer: LayerMode;
   customSpringOverride?: string;
+  footbarOverride?: FootbarState;
+  headrestOverride?: HeadrestState;
+  boxOverride?: BoxState;
+  propOverride?: PropType;
   instructorNote?: string;
   locked?: boolean;
   explanationSec?: number;

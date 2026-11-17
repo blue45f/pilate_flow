@@ -127,9 +127,9 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .flow-studio .flow-heading-actions > .flow-button {
-  min-height: 36px;
-  height: 36px;
-  padding: 0 12px;
+  min-height: 44px;
+  height: auto;
+  padding: 8px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -137,13 +137,15 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .flow-studio .flow-tools > summary {
-  width: 36px;
-  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
 }
 
 .flow-studio .flow-tools > div {
-  top: 42px;
+  top: 48px;
   border-radius: 10px;
 }
 
@@ -471,10 +473,10 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .flow-studio .flow-actionbar .flow-button {
-  min-height: 38px;
-  height: 38px;
-  min-width: 84px;
-  padding: 0 14px;
+  min-height: 44px;
+  height: auto;
+  min-width: 88px;
+  padding: 10px 14px;
   border-radius: 8px;
   font-weight: 500;
 }
@@ -1367,10 +1369,10 @@ html #root .flow-app .desktop-nav > button.active {
   }
 
   .flow-studio .flow-heading-actions > .flow-button {
-    min-height: 36px;
-    height: 36px;
-    min-width: 0;
-    padding: 0 10px;
+    min-height: 44px;
+    height: auto;
+    min-width: 44px;
+    padding: 8px 10px;
     font-size: 12px;
   }
 
@@ -1518,10 +1520,10 @@ html #root .flow-app .desktop-nav > button.active {
 
   .flow-studio .flow-actionbar .flow-button {
     flex: 0 0 auto;
-    min-width: 0;
-    height: 38px;
-    min-height: 38px;
-    padding: 0 12px;
+    min-width: 44px;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 12px;
     font-size: 12px;
   }
 
@@ -1534,7 +1536,7 @@ html #root .flow-app .desktop-nav > button.active {
   .pf-orbit3d-tool-chip,
   .pf-orbit3d-play-btn,
   .pf-orbit3d-speed-btn {
-    min-height: 40px;
+    min-height: 44px;
   }
 }
 

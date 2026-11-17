@@ -13,7 +13,11 @@ import {
   getHumanDraftsForBackup,
   getReusableBlocksForBackup,
 } from '../utils/reusableBlockBackupBridge';
-import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
+import {
+  assessSequenceMotionStudyBinding,
+  getSequenceStepClassSection,
+} from '../utils/sequenceMotionBinding';
+import type { ClassSectionRole } from '../types/sequenceMotion';
 import type { BackupRecoveryOptions } from '../utils/backupRecoveryInspection';
 import { resolveDatedPlanOccurrence, getDatedPlanWarnings } from '../utils/datedSequencePlanning';
 import type {
@@ -156,6 +160,20 @@ export interface SequencePlanningActionResult {
   message: string;
   sequenceId?: string;
 }
+export interface ExternalTabStorageConflict {
+  readonly detectedAt: string;
+  readonly message: string;
+}
+
+export type ActiveSequenceSaveStatus =
+  | 'empty'
+  | 'unsaved-draft'
+  | 'dirty'
+  | 'saving'
+  | 'saved-local'
+  | 'save-failed'
+  | 'cross-tab-conflict';
+
 export interface PilatesStudioState extends SequenceSnapshot {
   activeTab: ActiveWorkspaceTab;
   themeMode: 'system' | 'light' | 'dark';
@@ -176,6 +194,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   generationError: string | null;
   saveFeedback: string | null;
   persistenceError: string | null;
+  externalTabConflict: ExternalTabStorageConflict | null;
   undoStack: SequenceSnapshot[];
   setActiveTab: (tab: ActiveWorkspaceTab) => void;
   loadDatedSequencePlanAsDraft: (
@@ -301,7 +320,30 @@ export interface PilatesStudioState extends SequenceSnapshot {
     exerciseId: string,
     placement: SequenceInsertionPlacement,
     blockCategory?: ClassBlockCategory,
+    options?: { allowDuplicate?: boolean },
   ) => { success: boolean; message: string; stepId?: string };
+  duplicateSequenceStep: (stepId: string) => {
+    success: boolean;
+    message: string;
+    stepId?: string;
+  };
+  duplicateSectionSteps: (section: ClassSectionRole) => {
+    success: boolean;
+    message: string;
+    addedStepIds?: string[];
+  };
+  copyActiveSequenceForLocation: (locationId: string) => {
+    success: boolean;
+    message: string;
+    sequenceId?: string;
+    incompatibleStepCount?: number;
+  };
+  applyHistoryChangesToNextDraft: (
+    logId: string,
+    options?: { includeNotes?: boolean; includeDurations?: boolean },
+  ) => { success: boolean; message: string };
+  dismissExternalTabConflict: () => void;
+  reloadFromExternalTabStorage: () => { success: boolean; message: string };
   optimizeActiveTransitions: () => void;
   swapFreshExercisesForGroup: () => void;
   saveCurrentSequenceToBinder: (asNew?: boolean) => string;
@@ -403,6 +445,22 @@ const settingsSchema = z.object({
 const recoveryStorageGuard = createRecoveryStorageGuard(() =>
   localStorage.getItem(RECOVERY_STORAGE_KEY),
 );
+let passiveExternalTabConflict: PilatesStudioState['externalTabConflict'] = null;
+const externalTabConflictListeners = new Set<() => void>();
+function setPassiveExternalTabConflict(next: PilatesStudioState['externalTabConflict']) {
+  if (passiveExternalTabConflict === next) return;
+  passiveExternalTabConflict = next;
+  externalTabConflictListeners.forEach((listener) => listener());
+}
+export function subscribeExternalTabConflict(listener: () => void): () => void {
+  externalTabConflictListeners.add(listener);
+  return () => {
+    externalTabConflictListeners.delete(listener);
+  };
+}
+export function getPassiveExternalTabConflict(): PilatesStudioState['externalTabConflict'] {
+  return passiveExternalTabConflict;
+}
 /** Read-only: never sets feedback, rehydrates, writes, or adopts another tab's data. */
 export function getRecoveryStorageStatus(expectedFingerprint?: string) {
   return recoveryStorageGuard.check(expectedFingerprint);
@@ -412,13 +470,17 @@ export function getRecoveryStorageStatus(expectedFingerprint?: string) {
 let lastStorageError: string | null = null;
 let suppressRecoveryRevertWrite = false;
 
+export function isSuppressingStorageWrite(): boolean {
+  return suppressRecoveryRevertWrite;
+}
+
 /** Synchronous read of the most recent browser storage write outcome (null when healthy). */
 export function getLastStorageError(): string | null {
   return lastStorageError;
 }
 
 function canonicalSavedSequenceSignature(sequence: SavedSequence): string {
-  return JSON.stringify({
+  return canonicalRecoveryContent({
     id: sequence.id,
     title: sequence.title,
     subtitle: sequence.subtitle,
@@ -438,12 +500,16 @@ export function isSavedSequencePersistedOnDisk(
   persistenceError: string | null,
   storageOk = getRecoveryStorageStatus().ok,
 ): boolean {
-  if (!persistenceError && !lastStorageError && storageOk) {
-    return true;
-  }
   try {
     const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
-    if (!raw) return false;
+    if (!raw) {
+      return (
+        !persistenceError &&
+        !lastStorageError &&
+        storageOk &&
+        INITIAL_SAVED_SEQUENCES.some((sample) => sample.id === sequence.id)
+      );
+    }
     const parsed: unknown = JSON.parse(raw);
     if (
       !parsed ||
@@ -464,6 +530,41 @@ export function isSavedSequencePersistedOnDisk(
   } catch {
     return false;
   }
+}
+
+export function getActiveSequenceSaveState(
+  state: Pick<
+    PilatesStudioState,
+    | 'activeSequenceId'
+    | 'activeTitle'
+    | 'activeSubtitle'
+    | 'activeApparatus'
+    | 'activeLevel'
+    | 'activeTargetMinutes'
+    | 'activeSteps'
+    | 'savedSequences'
+    | 'persistenceError'
+    | 'externalTabConflict'
+  >,
+  isSaving = false,
+): ActiveSequenceSaveStatus {
+  if (state.externalTabConflict || passiveExternalTabConflict) return 'cross-tab-conflict';
+  if (state.persistenceError || lastStorageError) return 'save-failed';
+  if (isSaving) return 'saving';
+  const saved = state.savedSequences.find((item) => item.id === state.activeSequenceId);
+  if (!saved) {
+    return state.activeSteps.length === 0 ? 'empty' : 'unsaved-draft';
+  }
+  const matchesSaved =
+    saved.title === state.activeTitle &&
+    saved.subtitle === state.activeSubtitle &&
+    saved.apparatus === state.activeApparatus &&
+    saved.level === state.activeLevel &&
+    saved.targetMinutes === state.activeTargetMinutes &&
+    canonicalRecoveryContent(saved.steps) === canonicalRecoveryContent(state.activeSteps);
+  if (!matchesSaved) return 'dirty';
+  if (!isSavedSequencePersistedOnDisk(saved, state.persistenceError)) return 'dirty';
+  return 'saved-local';
 }
 
 /** Shared 1-click JSON backup download preserving both RAM edits and existing records. */
@@ -625,6 +726,17 @@ function editedStepOptions(
   if (Object.prototype.hasOwnProperty.call(patch, 'customSpringOverride')) {
     if (patch.customSpringOverride) next.customSpringOverride = patch.customSpringOverride;
     else delete next.customSpringOverride;
+  }
+  for (const key of [
+    'footbarOverride',
+    'headrestOverride',
+    'boxOverride',
+    'propOverride',
+  ] as const) {
+    if (!Object.prototype.hasOwnProperty.call(patch, key)) continue;
+    const value = patch[key];
+    if (value === undefined || value === null) delete next[key];
+    else (next as Record<string, unknown>)[key] = value;
   }
   const timingChanged = ['durationMin', 'explanationSec', 'transitionSec'].some((key) =>
     Object.prototype.hasOwnProperty.call(patch, key),
@@ -984,6 +1096,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
       generationError: null,
       saveFeedback: null,
       persistenceError: null,
+      externalTabConflict: null,
       conditionTemplates: [],
       undoStack: [],
       setActiveTab: (activeTab) => set({ activeTab }),
@@ -2003,14 +2116,14 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const result = state.insertExerciseIntoSequence(exerciseId, { kind: 'end' }, blockCategory);
         if (!result.success) set({ generationError: result.message });
       },
-      insertExerciseIntoSequence: (exerciseId, placement, blockCategory) => {
+      insertExerciseIntoSequence: (exerciseId, placement, blockCategory, options) => {
         const state = get();
         const resolved = resolveSequenceInsertion(state.activeSteps, placement);
         if (!resolved.success) return resolved;
         const exercise = state.exercises.find((item) => item.id === exerciseId);
         if (!exercise)
           return { success: false, message: '추가할 동작을 찾을 수 없습니다. 다시 선택해 주세요.' };
-        if (duplicatesAnotherStep(state, exercise))
+        if (!options?.allowDuplicate && duplicatesAnotherStep(state, exercise))
           return {
             success: false,
             message: '같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.',
@@ -2074,6 +2187,296 @@ export const usePilatesStore = create<PilatesStudioState>()(
           stepId: insertedStep.stepId,
           message: `${resolved.index + 1}번에 ${exercise.nameKo} 동작을 추가했습니다.`,
         };
+      },
+      duplicateSequenceStep: (stepId) => {
+        const state = get();
+        const sourceIndex = state.activeSteps.findIndex((item) => item.stepId === stepId);
+        if (sourceIndex < 0) {
+          return { success: false, message: '복제할 단계를 찾을 수 없습니다.' };
+        }
+        const sourceStep = state.activeSteps[sourceIndex]!;
+        let resolved = resolveSequenceInsertion(state.activeSteps, {
+          kind: 'step',
+          stepId: sourceStep.stepId,
+        });
+        if (!resolved.success) {
+          resolved = resolveSequenceInsertion(state.activeSteps, { kind: 'end' });
+        }
+        if (!resolved.success) return resolved;
+        const cloned: SequenceStep = {
+          ...structuredClone(sourceStep),
+          stepId: newId('step-copy'),
+          locked: false,
+          order: resolved.index + 1,
+        };
+        const activeSteps = [...state.activeSteps];
+        activeSteps.splice(resolved.index, 0, cloned);
+        const restErr = restDurationError(activeSteps, state.activeTargetMinutes);
+        if (restErr) {
+          set({ generationError: restErr });
+          return { success: false, message: restErr };
+        }
+        set(
+          edit(state, {
+            activeSteps: activeSteps.map((step, index) =>
+              step.locked ? step : { ...step, order: index + 1 },
+            ),
+          }),
+        );
+        const label = isRestStep(sourceStep)
+          ? '휴식'
+          : (state.exercises.find((ex) => ex.id === sourceStep.exerciseId)?.nameKo ?? '동작');
+        return {
+          success: true,
+          stepId: cloned.stepId,
+          message: `${label} 단계를 독립 사본(${resolved.index + 1}번)으로 복제했습니다.`,
+        };
+      },
+      duplicateSectionSteps: (section) => {
+        const state = get();
+        const sectionIndices = state.activeSteps
+          .map((step, idx) =>
+            getSequenceStepClassSection(step, state.activeSteps) === section ? idx : -1,
+          )
+          .filter((idx) => idx >= 0);
+        if (!sectionIndices.length) {
+          return { success: false, message: '복제할 구간 항목이 없습니다.' };
+        }
+        const lastSectionIdx = sectionIndices.at(-1)!;
+        const anchorStep = state.activeSteps[lastSectionIdx]!;
+        let resolved = resolveSequenceInsertion(state.activeSteps, {
+          kind: 'step',
+          stepId: anchorStep.stepId,
+        });
+        if (!resolved.success) {
+          resolved = resolveSequenceInsertion(state.activeSteps, { kind: 'end' });
+        }
+        if (!resolved.success) return resolved;
+        const addedStepIds: string[] = [];
+        const clonedBatch: SequenceStep[] = sectionIndices.map((idx, offset) => {
+          const src = state.activeSteps[idx]!;
+          const freshId = newId(`sec-copy-${offset + 1}`);
+          addedStepIds.push(freshId);
+          return {
+            ...structuredClone(src),
+            stepId: freshId,
+            classSection: section,
+            locked: false,
+            order: resolved.index + offset + 1,
+          };
+        });
+        const activeSteps = [...state.activeSteps];
+        activeSteps.splice(resolved.index, 0, ...clonedBatch);
+        if (activeSteps.length > 1000) {
+          return { success: false, message: '시퀀스 최대 항목 수(1,000개)를 초과할 수 없습니다.' };
+        }
+        const restErr = restDurationError(activeSteps, state.activeTargetMinutes);
+        if (restErr) {
+          set({ generationError: restErr });
+          return { success: false, message: restErr };
+        }
+        set(
+          edit(state, {
+            activeSteps: activeSteps.map((step, index) =>
+              step.locked ? step : { ...step, order: index + 1 },
+            ),
+          }),
+        );
+        const sectionLabel =
+          section === 'preparation' ? '준비' : section === 'cooldown' ? '마무리' : '메인';
+        return {
+          success: true,
+          addedStepIds,
+          message: `${sectionLabel} 구간 ${clonedBatch.length}개 항목을 독립 사본으로 복제했습니다.`,
+        };
+      },
+      copyActiveSequenceForLocation: (locationId) => {
+        const state = get();
+        const location = state.instructorSchedule.locations.find((item) => item.id === locationId);
+        if (!location) {
+          return { success: false, message: '복사할 장소를 찾을 수 없습니다.' };
+        }
+        if (!location.equipmentIds.length) {
+          return {
+            success: false,
+            message: `${location.alias}에 등록된 사용 가능 기구가 없습니다. 장소 기구 프로필을 먼저 확인해 주세요.`,
+          };
+        }
+        const families = getEquipmentFamilies(location.equipmentIds);
+        const nextApparatus: ApparatusType | 'mixed' =
+          families.length === 1 ? families[0]! : 'mixed';
+        const baseCriteria = getActiveSequencePlanningCriteria(state);
+        const nextCriteria: AutoGenerateCriteria = {
+          ...cloneCriteria(baseCriteria),
+          apparatus: nextApparatus,
+          ownedApparatus: families,
+          availableEquipment: [...location.equipmentIds],
+          preferredProps: [...location.propIds],
+          targetMinutes: state.activeTargetMinutes,
+          level: state.activeLevel,
+        };
+        const clonedSteps = state.activeSteps.map((step, index) => ({
+          ...structuredClone(step),
+          stepId: newId(`loc-step-${index + 1}`),
+          order: index + 1,
+        }));
+        const incompatibleStepCount = clonedSteps.filter((step) => {
+          if (isRestStep(step)) return false;
+          const ex = state.exercises.find((item) => item.id === step.exerciseId);
+          return !ex || !exerciseMatchesCriteria(ex, nextCriteria);
+        }).length;
+        const nextId = newId('seq-loc-copy');
+        const baseTitle = state.activeTitle.replace(/\s*\([^)]*\)\s*$/, '').trim() || '새 수업';
+        const nextTitle = `${baseTitle} (${location.alias})`;
+        set(
+          edit(state, {
+            activeSequenceId: nextId,
+            activeTitle: nextTitle,
+            activeSubtitle: `${location.alias} 기구 기준 독립 사본`,
+            activeApparatus: nextApparatus,
+            activeSteps: clonedSteps,
+            draftCriteria: cloneCriteria(nextCriteria),
+            lastCriteria: cloneCriteria(nextCriteria),
+            activeTab: 'workbench',
+          }),
+        );
+        return {
+          success: true,
+          sequenceId: nextId,
+          incompatibleStepCount,
+          message:
+            incompatibleStepCount > 0
+              ? `원본 수업을 그대로 보존하고 ‘${location.alias}’ 기준 사본을 만들었습니다. 기구·소도구 조건이 다른 ${incompatibleStepCount}개 동작을 대체 동작으로 바꿔 주세요.`
+              : `원본 수업을 그대로 보존하고 ‘${location.alias}’ 기준 독립 사본을 열었습니다.`,
+        };
+      },
+      applyHistoryChangesToNextDraft: (logId, options) => {
+        const state = get();
+        const log = state.historyLogs.find((item) => item.id === logId);
+        if (!log) {
+          return { success: false, message: '반영할 수업 기록을 찾을 수 없습니다.' };
+        }
+        const includeNotes = options?.includeNotes ?? true;
+        const includeDurations = options?.includeDurations ?? true;
+        const reconstructed = log.stepsSnapshot?.length
+          ? cloneSteps(log.stepsSnapshot)
+          : (reconstructStepsSnapshotFromHistoryLog(log) ?? []);
+        if (!reconstructed.length) {
+          return {
+            success: false,
+            message: '이 수업 기록에서 복원할 수 있는 단계 구성을 찾지 못했습니다.',
+          };
+        }
+        const sourceSeq = state.savedSequences.find((item) => item.id === log.sequenceId);
+        const sourceByEx = new Map(
+          (sourceSeq?.steps ?? []).map((st) => [st.exerciseId, st] as const),
+        );
+        const nextSteps: SequenceStep[] = reconstructed.map((step, idx) => {
+          const base = sourceByEx.get(step.exerciseId);
+          const durationMin =
+            includeDurations || !base ? step.durationMin : base.durationMin;
+          const mergedNote = includeNotes
+            ? step.instructorNote ||
+              (idx === 0 && log.instructorReflection.trim()
+                ? `[지난 회고 메모] ${log.instructorReflection.trim().slice(0, 240)}`
+                : undefined)
+            : base?.instructorNote;
+          return {
+            ...structuredClone(step),
+            stepId: newId(`next-plan-${idx + 1}`),
+            order: idx + 1,
+            durationMin,
+            ...(mergedNote ? { instructorNote: mergedNote } : { instructorNote: undefined }),
+          };
+        });
+        const totalMin = Math.min(
+          120,
+          Math.max(
+            10,
+            Math.round(getSequenceDurations(nextSteps).totalSec / 60) ||
+              sourceSeq?.targetMinutes ||
+              state.activeTargetMinutes,
+          ),
+        );
+        const nextCriteria = criteriaForSteps(
+          state,
+          nextSteps,
+          log.apparatus,
+          log.level,
+          totalMin,
+          log.criteriaSnapshot ?? sourceSeq?.criteriaSnapshot,
+        );
+        set(
+          edit(state, {
+            activeSequenceId: newId('seq-followup'),
+            activeTitle: `${log.sequenceTitle} · 다음 수업 계획`,
+            activeSubtitle: `${log.groupName} 회고 선택 반영 초안`,
+            activeApparatus: log.apparatus,
+            activeLevel: log.level,
+            activeTargetMinutes: totalMin,
+            activeSteps: nextSteps,
+            draftCriteria: cloneCriteria(nextCriteria),
+            lastCriteria: cloneCriteria(nextCriteria),
+            activeTab: 'workbench',
+          }),
+        );
+        return {
+          success: true,
+          message:
+            '지난 수업의 실제 구성 변경을 다음 계획 초안에 선택 반영했습니다. 원본 템플릿과 다른 예정 수업은 변경되지 않습니다.',
+        };
+      },
+      dismissExternalTabConflict: () => {
+        setPassiveExternalTabConflict(null);
+        if (get().externalTabConflict) {
+          suppressRecoveryRevertWrite = true;
+          try {
+            set({ externalTabConflict: null });
+          } finally {
+            suppressRecoveryRevertWrite = false;
+          }
+        }
+      },
+      reloadFromExternalTabStorage: () => {
+        try {
+          const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
+          if (!raw) {
+            return { success: false, message: '불러올 다른 탭 저장 자료가 없습니다.' };
+          }
+          const parsed: unknown = JSON.parse(raw);
+          if (
+            !parsed ||
+            typeof parsed !== 'object' ||
+            !('state' in parsed) ||
+            !parsed.state ||
+            typeof parsed.state !== 'object'
+          ) {
+            return { success: false, message: '브라우저 저장 자료 형식을 확인할 수 없습니다.' };
+          }
+          const state = get();
+          const mergeFn = usePilatesStore.persist.getOptions().merge;
+          const hydrated = mergeFn
+            ? mergeFn(parsed.state, state)
+            : ({ ...state, ...(parsed.state as Partial<PilatesStudioState>) } as PilatesStudioState);
+          recoveryStorageGuard.observedRead(raw);
+          setPassiveExternalTabConflict(null);
+          set({
+            ...hydrated,
+            undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+            externalTabConflict: null,
+            persistenceError: null,
+            saveFeedback: '다른 탭에서 저장한 최신 수업을 불러왔습니다. (이전 초안은 되돌리기에 보관됨)',
+          });
+          return {
+            success: true,
+            message: '다른 탭에서 저장한 최신 수업을 불러왔습니다. 이전 작업은 되돌리기로 복원할 수 있습니다.',
+          };
+        } catch {
+          return {
+            success: false,
+            message: '다른 탭 저장 자료를 읽지 못했습니다. 현재 초안을 그대로 유지했습니다.',
+          };
+        }
       },
       optimizeActiveTransitions: () => {
         const state = get();
@@ -2152,12 +2555,14 @@ export const usePilatesStore = create<PilatesStudioState>()(
               }
             : {}),
         };
+        setPassiveExternalTabConflict(null);
         set({
           savedSequences:
             !asNew && existing
               ? state.savedSequences.map((item) => (item.id === id ? sequence : item))
               : [sequence, ...state.savedSequences],
           activeSequenceId: id,
+          externalTabConflict: null,
           saveFeedback: '이 브라우저에 수업을 저장했습니다.',
         });
         return id;
@@ -2926,3 +3331,20 @@ export const usePilatesStore = create<PilatesStudioState>()(
     },
   ),
 );
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', (event: StorageEvent) => {
+    if (event.key !== RECOVERY_STORAGE_KEY || event.newValue === null) return;
+    if (event.oldValue === event.newValue) return;
+    const guardStatus = recoveryStorageGuard.check();
+    if (!guardStatus.ok && guardStatus.code === 'storage_changed') {
+      // Never mutate Zustand store state on passive storage events so RecoveryPreview's
+      // in-memory reference invariants stay untouched until explicit user action.
+      setPassiveExternalTabConflict({
+        detectedAt: new Date().toISOString(),
+        message:
+          '다른 탭에서 수업 자료가 변경되었습니다. 자동 덮어쓰기를 막았으니 최신 저장본을 불러오거나 현재 초안을 사본으로 저장해 주세요.',
+      });
+    }
+  });
+}

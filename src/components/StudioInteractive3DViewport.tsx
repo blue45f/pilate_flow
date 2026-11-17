@@ -17,7 +17,14 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import type { FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
+import type {
+  BoxState,
+  FootbarState,
+  HeadrestState,
+  PilatesExercise,
+  PropType,
+} from '../types/pilates';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import {
   hasDedicated3DExerciseRig,
@@ -40,12 +47,27 @@ import {
   type Studio3DShaderPreset,
 } from '../utils/realtimeStudio3dEngine';
 
+export interface Studio3DSetupDraftPatch {
+  readonly springOverride?: string;
+  readonly footbarOverride?: FootbarState | null;
+  readonly headrestOverride?: HeadrestState | null;
+  readonly boxOverride?: BoxState | null;
+  readonly propOverride?: PropType | null;
+}
+
 export interface StudioInteractive3DViewportProps {
   readonly exercise: PilatesExercise;
   readonly compact?: boolean;
   readonly active?: boolean;
   readonly initialSpringOverride?: string;
+  readonly initialFootbarOverride?: FootbarState;
+  readonly initialHeadrestOverride?: HeadrestState;
+  readonly initialBoxOverride?: BoxState;
+  readonly initialPropOverride?: PropType;
   readonly onApplySpringToStep?: (springValue: string) => void;
+  readonly onApplySetupToStep?: (patch: Studio3DSetupDraftPatch) => void;
+  /** Test/diagnostic hook to verify static fallback when 3D rendering fails. */
+  readonly simulateRenderFailure?: boolean;
 }
 
 const SHADER_MODES: readonly {
@@ -122,17 +144,65 @@ const HOTSPOT_QUICK_TABS: readonly {
   { id: 'apparatus', shortKo: '기구·스프링' },
 ];
 
+class Studio3DViewportErrorBoundary extends React.Component<
+  { readonly exercise: PilatesExercise; readonly children: React.ReactNode },
+  { readonly failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { readonly failed: boolean } {
+    return { failed: true };
+  }
+
+  override render() {
+    if (this.state.failed) {
+      return (
+        <div
+          className="pf-orbit3d-static-fallback"
+          role="region"
+          aria-label="3D 뷰포트 정적 도해 폴백"
+          data-testid="studio-3d-static-fallback"
+        >
+          <ExerciseMotionArtwork
+            exercise={this.props.exercise}
+            phase="middle"
+            decorative={false}
+          />
+          <p className="flow-hint" role="status">
+            3D 설명 패널을 불러오지 못해 정적 참조 도해를 표시합니다. 수업 작성과 진행은 그대로 계속할
+            수 있습니다.
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportProps> = (props) => {
   const identityKey = `${props.exercise.id}:${props.exercise.apparatus}:${props.exercise.bodyPosition}`;
-  return <StudioInteractive3DViewportContent key={identityKey} {...props} />;
+  return (
+    <Studio3DViewportErrorBoundary key={identityKey} exercise={props.exercise}>
+      <StudioInteractive3DViewportContent {...props} />
+    </Studio3DViewportErrorBoundary>
+  );
 };
 
 const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportProps> = ({
   exercise,
   compact = false,
   initialSpringOverride,
+  initialFootbarOverride,
+  initialHeadrestOverride,
+  initialBoxOverride,
+  initialPropOverride,
   onApplySpringToStep,
+  onApplySetupToStep,
+  simulateRenderFailure = false,
 }) => {
+  if (simulateRenderFailure) {
+    throw new Error('Simulated 3D viewport render failure');
+  }
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const progressRef = useRef(0);
@@ -176,9 +246,25 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     }
     return 'default';
   });
-  const [footbarOverride, setFootbarOverride] = useState<'default' | FootbarState>('default');
-  const [headrestOverride, setHeadrestOverride] = useState<'default' | HeadrestState>('default');
-  const [propOverride, setPropOverride] = useState<Studio3DPropOverride>('default');
+  const [footbarOverride, setFootbarOverride] = useState<'default' | FootbarState>(() =>
+    initialFootbarOverride && initialFootbarOverride !== 'none' ? initialFootbarOverride : 'default',
+  );
+  const [headrestOverride, setHeadrestOverride] = useState<'default' | HeadrestState>(() =>
+    initialHeadrestOverride && initialHeadrestOverride !== 'down'
+      ? initialHeadrestOverride
+      : 'default',
+  );
+  const [propOverride, setPropOverride] = useState<Studio3DPropOverride>(() => {
+    if (initialBoxOverride === 'short-box' || initialBoxOverride === 'long-box') {
+      return initialBoxOverride;
+    }
+    if (initialPropOverride === 'magic-circle') return 'ring';
+    if (initialPropOverride === 'foam-roller' || initialPropOverride === 'mini-ball') {
+      return initialPropOverride;
+    }
+    if (initialPropOverride === 'none') return 'none';
+    return 'default';
+  });
   const [exportNotice, setExportNotice] = useState<string>('');
 
   const suspend = useCallback(() => {
@@ -605,9 +691,32 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         <div
           className="pf-orbit3d-modeler-strip"
           role="group"
-          aria-label="3D 모델러 정렬·세팅 도구"
+          aria-label="3D 구간 빠른 이동 및 설명 도구"
           data-testid="studio-3d-modeler-tools"
         >
+          {([
+            { id: 'start', labelKo: '시작', target: 0 },
+            { id: 'mid', labelKo: '중간', target: 0.5 },
+            { id: 'end', labelKo: '끝', target: 0.85 },
+          ] as const).map((phaseBtn) => (
+            <button
+              key={phaseBtn.id}
+              type="button"
+              className={`pf-orbit3d-tool-chip ${
+                Math.abs(progress - phaseBtn.target) < 0.08 ? 'is-active' : ''
+              }`}
+              onClick={() => jumpToProgress(phaseBtn.target)}
+            >
+              {phaseBtn.labelKo}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="pf-orbit3d-tool-chip"
+            onClick={() => applyCameraPreset('quarter')}
+          >
+            <RotateCcw size={13} aria-hidden="true" /> 시점 리셋
+          </button>
           <button
             type="button"
             className={`pf-orbit3d-tool-chip ${dualView ? 'is-active' : ''}`}
@@ -622,7 +731,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             aria-pressed={showBiomechOverlay}
             onClick={() => setShowBiomechOverlay((v) => !v)}
           >
-            <Compass size={13} aria-hidden="true" /> 관절 각도·CoM
+            <Compass size={13} aria-hidden="true" /> 참고 각도 도해
           </button>
           <button
             type="button"
@@ -822,22 +931,49 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 <Download size={13} aria-hidden="true" /> {STUDIO_PRACTITIONER_GLB_META.labelKo} (
                 {Math.round(STUDIO_PRACTITIONER_GLB_META.fileBytes / 1024)}KB)
               </a>
-              {onApplySpringToStep && (
+              {(onApplySpringToStep || onApplySetupToStep) && (
                 <button
                   type="button"
                   className="pf-orbit3d-export-btn is-apply-step"
                   data-testid="apply-3d-spring-to-step"
                   onClick={() => {
                     const nextVal = springOverride === 'default' ? '' : springOverride;
-                    onApplySpringToStep(nextVal);
+                    onApplySpringToStep?.(nextVal);
+                    if (onApplySetupToStep) {
+                      const mappedBox: BoxState | null =
+                        propOverride === 'short-box'
+                          ? 'short-box'
+                          : propOverride === 'long-box'
+                            ? 'long-box'
+                            : propOverride === 'none'
+                              ? 'none'
+                              : null;
+                      const mappedProp: PropType | null =
+                        propOverride === 'ring'
+                          ? 'magic-circle'
+                          : propOverride === 'foam-roller'
+                            ? 'foam-roller'
+                            : propOverride === 'mini-ball'
+                              ? 'mini-ball'
+                              : propOverride === 'none'
+                                ? 'none'
+                                : null;
+                      onApplySetupToStep({
+                        springOverride: nextVal,
+                        footbarOverride: footbarOverride === 'default' ? null : footbarOverride,
+                        headrestOverride: headrestOverride === 'default' ? null : headrestOverride,
+                        boxOverride: mappedBox,
+                        propOverride: mappedProp,
+                      });
+                    }
                     setExportNotice(
-                      nextVal
-                        ? `이 동작 블록의 스프링을 '${nextVal}' 조합으로 반영했습니다.`
-                        : '이 동작 블록의 스프링을 기본 권장값으로 되돌렸습니다.',
+                      nextVal || hasCustomSetup
+                        ? '실험 세팅을 현재 편집 초안에 전달했습니다. 하단 ‘변경 적용’을 눌러야 수업에 저장됩니다.'
+                        : '편집 초안의 세팅을 기본 권장값으로 되돌렸습니다. ‘변경 적용’을 눌러 확정하세요.',
                     );
                   }}
                 >
-                  <Check size={13} aria-hidden="true" /> 현재 블록에 스프링 반영
+                  <Check size={13} aria-hidden="true" /> 편집 초안에 세팅 전달
                 </button>
               )}
               {hasCustomSetup && (
@@ -858,6 +994,20 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
           </div>
         )}
       </div>
+      {hasCustomSetup && (
+        <p
+          className="pf-orbit3d-preview-only-banner"
+          role="status"
+          data-testid="studio-3d-unapplied-badge"
+        >
+          미리보기 실험 중 (수업 원본 미적용) · 초안에 전달한 뒤 ‘변경 적용’을 눌러야 반영됩니다.
+        </p>
+      )}
+      <p className="pf-orbit3d-provenance-note" data-testid="studio-3d-provenance-note">
+        출처 수준: {dedicated3d ? '카탈로그 절차적 3D 참조 도해' : '자세 유형 기반 대표 3D 도해'} (정적
+        이미지와 별개 · 외부 전문가 모션 검수 미완료) · 개인별 생체역학 측정, 의료적 교정, 통증 치료 효과를
+        주장하지 않습니다.
+      </p>
       {binding?.sourceUrl && (
         <div className="pf-orbit3d-source-row">
           <span className="pf-orbit3d-pose-summary">{rigMeta.poseFeatureKo}</span>

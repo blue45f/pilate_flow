@@ -1,6 +1,12 @@
 import { StudioMotionImage } from './StudioMotionImage';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import {
+  formatActualDurationDetailText,
+  formatActualDurationSummaryPill,
+  formatWholeSecondsToMMSS,
+} from '../utils/durationFormat';
+import { isImeComposing } from '../utils/imeGuard';
+import {
   compareTeachingHistoryDates,
   getTeachingHistoryDateSource,
 } from '../utils/teachingHistoryDate';
@@ -1302,6 +1308,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => {
+                    if (isImeComposing(e)) return;
                     if (e.key === 'Escape' && query.length > 0) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -2184,6 +2191,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
                 }}
                 onKeyDown={(e) => {
+                  if (isImeComposing(e)) return;
                   if (e.key === 'Escape' && historyQuery.length > 0) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -2664,7 +2672,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                             <span className="teaching-history-time-pill">
                               <Clock3 size={12} aria-hidden="true" />
                               {log.actualDurationSec !== undefined
-                                ? `${Math.max(1, Math.round(log.actualDurationSec / 60))}분 진행`
+                                ? formatActualDurationSummaryPill(log.actualDurationSec)
                                 : `계획 ${plannedMinutes}분`}
                             </span>
                             <span className="teaching-history-meta-pill">
@@ -2718,13 +2726,30 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                               복사해 새 수업 만들기
                             </PfButton>
                             {!isSample && (
-                              <PfButton
-                                variant="secondary"
-                                data-testid={`history-adaptive-btn-${log.id}`}
-                                onClick={() => applySingleLogAdaptive(log)}
-                              >
-                                피드백 반영 보정 생성
-                              </PfButton>
+                              <>
+                                <PfButton
+                                  variant="secondary"
+                                  data-testid={`history-apply-next-draft-btn-${log.id}`}
+                                  onClick={() => {
+                                    const res = usePilatesStore
+                                      .getState()
+                                      .applyHistoryChangesToNextDraft(log.id, {
+                                        includeDurations: true,
+                                        includeNotes: true,
+                                      });
+                                    setMessage(res.message);
+                                  }}
+                                >
+                                  실제 변경 다음 계획 반영
+                                </PfButton>
+                                <PfButton
+                                  variant="secondary"
+                                  data-testid={`history-adaptive-btn-${log.id}`}
+                                  onClick={() => applySingleLogAdaptive(log)}
+                                >
+                                  피드백 반영 보정 생성
+                                </PfButton>
+                              </>
                             )}
                           </div>
                         </div>
@@ -2737,7 +2762,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                             {resolved.restCount > 0 && <span>휴식 {resolved.restCount}개</span>}
                             <span>
                               {log.actualDurationSec !== undefined
-                                ? `타이머/입력 시간 ${Math.floor(log.actualDurationSec / 60)}분 ${Math.round(log.actualDurationSec % 60)}초`
+                                ? `타이머/입력 시간 ${formatActualDurationDetailText(log.actualDurationSec)}`
                                 : '실제 진행 시간 미기록'}
                             </span>
                             <span>강사 평가 {log.rating}/5</span>
@@ -3132,7 +3157,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   <dt>실제 진행 시간 · 평가</dt>
                   <dd>
                     {reopenedView.timing.actualDurationSec !== undefined
-                      ? `실제 ${formatSecondsToMMSS(reopenedView.timing.actualDurationSec)}${reopenedView.timing.actualRestDurationSec ? ` (휴식 ${formatSecondsToMMSS(reopenedView.timing.actualRestDurationSec)})` : ''}`
+                      ? `실제 ${formatWholeSecondsToMMSS(reopenedView.timing.actualDurationSec)}${reopenedView.timing.actualRestDurationSec ? ` (휴식 ${formatWholeSecondsToMMSS(reopenedView.timing.actualRestDurationSec)})` : ''}`
                       : '실제 진행 시간 미기록'}{' '}
                     · 평가 {reopenedView.rating}/5 · {INTENSITY_LABELS[reopenedView.intensity]}
                   </dd>

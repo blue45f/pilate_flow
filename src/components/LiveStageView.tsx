@@ -70,6 +70,22 @@ import {
 } from '../utils/liveStageSensoryCueEngine';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
+import {
+  describeStepTransitionFromPrevious,
+  resolveStepSetup,
+} from '../utils/transitionSummary';
+
+export const LIVE_STAGE_CHECKPOINT_KEY = 'pf_live_stage_checkpoint_v1';
+
+interface LiveStageSessionCheckpoint {
+  readonly sequenceId: string;
+  readonly sourceSignature: string;
+  readonly steps: SequenceStep[];
+  readonly index: number;
+  readonly remainingMs: number;
+  readonly elapsedMs: number;
+  readonly elapsedByStep: Record<number, number>;
+}
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
@@ -230,16 +246,67 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setActiveTab,
   } = usePilatesStore();
   const [session] = useState(() => ({ id: activeSequenceId, title: activeTitle }));
-  const [steps, setSteps] = useState(() => activeSteps.map((step) => ({ ...step })));
+  const sourceSignature = useMemo(
+    () =>
+      `${activeSequenceId}:${activeSteps
+        .map((s) => `${s.stepId}:${s.exerciseId}:${s.durationMin}`)
+        .join('|')}`,
+    [activeSequenceId, activeSteps],
+  );
+  const [initialCheckpoint] = useState<LiveStageSessionCheckpoint | null>(() => {
+    try {
+      const raw = window.sessionStorage.getItem(LIVE_STAGE_CHECKPOINT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as LiveStageSessionCheckpoint;
+      if (
+        !parsed ||
+        parsed.sequenceId !== activeSequenceId ||
+        parsed.sourceSignature !==
+          `${activeSequenceId}:${activeSteps
+            .map((s) => `${s.stepId}:${s.exerciseId}:${s.durationMin}`)
+            .join('|')}` ||
+        !Array.isArray(parsed.steps) ||
+        !parsed.steps.length ||
+        parsed.steps.some((st) => !stepSchema.safeParse(st).success) ||
+        typeof parsed.index !== 'number' ||
+        parsed.index < 0 ||
+        parsed.index >= parsed.steps.length
+      ) {
+        return null;
+      }
+      if ((parsed.elapsedMs ?? 0) <= 0 && parsed.index === 0) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  });
+  const [restoredFromReload, setRestoredFromReload] = useState(() => initialCheckpoint !== null);
+  const unloadingPageRef = useRef(false);
+  const [steps, setSteps] = useState(() =>
+    initialCheckpoint
+      ? initialCheckpoint.steps.map((step) => ({ ...step }))
+      : activeSteps.map((step) => ({ ...step })),
+  );
   const durations = useMemo(() => computeStepDurationsMs(steps), [steps]);
-  const [clock, setClock] = useState<TeachingClock>(() => ({
-    index: 0,
-    remainingMs: durations[0] ?? 0,
-    elapsedMs: 0,
-    running: false,
-    sampledAt: Date.now(),
-    elapsedByStep: {},
-  }));
+  const [clock, setClock] = useState<TeachingClock>(() =>
+    initialCheckpoint
+      ? {
+          index: initialCheckpoint.index,
+          remainingMs: Math.max(0, initialCheckpoint.remainingMs),
+          elapsedMs: Math.max(0, initialCheckpoint.elapsedMs),
+          running: false,
+          sampledAt: Date.now(),
+          elapsedByStep: initialCheckpoint.elapsedByStep ?? {},
+        }
+      : {
+          index: 0,
+          remainingMs: durations[0] ?? 0,
+          elapsedMs: 0,
+          running: false,
+          sampledAt: Date.now(),
+          elapsedByStep: {},
+        },
+  );
   const [autoAdvance, setAutoAdvance] = useState(false);
   const [presentationMode, setPresentationMode] = useState<'focused' | 'reference'>('focused');
   const [highContrast, setHighContrast] = useState(false);
@@ -266,7 +333,42 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     clockRef.current = clock;
     autoAdvanceRef.current = autoAdvance;
     undoRef.current = undoState;
-  }, [steps, durations, clock, autoAdvance, undoState]);
+    try {
+      if (clock.elapsedMs > 0 || clock.index > 0) {
+        const checkpoint: LiveStageSessionCheckpoint = {
+          sequenceId: session.id,
+          sourceSignature,
+          steps,
+          index: clock.index,
+          remainingMs: clock.remainingMs,
+          elapsedMs: clock.elapsedMs,
+          elapsedByStep: clock.elapsedByStep,
+        };
+        window.sessionStorage.setItem(LIVE_STAGE_CHECKPOINT_KEY, JSON.stringify(checkpoint));
+      }
+    } catch {
+      // Ignore sessionStorage restrictions
+    }
+  }, [steps, durations, clock, autoAdvance, undoState, session.id, sourceSignature]);
+
+  useEffect(() => {
+    const markUnloading = () => {
+      unloadingPageRef.current = true;
+    };
+    window.addEventListener('beforeunload', markUnloading);
+    window.addEventListener('pagehide', markUnloading);
+    return () => {
+      window.removeEventListener('beforeunload', markUnloading);
+      window.removeEventListener('pagehide', markUnloading);
+      if (!unloadingPageRef.current) {
+        try {
+          window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
+        } catch {
+          // Ignore sessionStorage restrictions
+        }
+      }
+    };
+  }, []);
 
   const applyClock = (updater: (prev: TeachingClock) => TeachingClock) => {
     const nextClock = updater(clockRef.current);
@@ -1551,7 +1653,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </button>
           <div className="teaching-stage-kicker-row">
             <span className="eyebrow" style={{ letterSpacing: '0.01em' }}>
-              수업 진행
+              실제 수업 진행
             </span>
             <span
               className={`teaching-live-pill ${clock.running ? 'is-live' : ''}`.trim()}
@@ -1575,6 +1677,46 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               남은 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
             </span>
           </p>
+          {restoredFromReload && (
+            <div
+              className="teaching-reload-recovery-banner"
+              role="status"
+              data-testid="live-stage-reload-recovery-banner"
+            >
+              <span>
+                새로고침 전 진행 위치({clock.index + 1}번 · 경과{' '}
+                {formatSecondsToMMSS(clock.elapsedMs / 1000)})를 일시정지 상태로 복구했습니다. 원본
+                수업 계획은 변경되지 않았습니다.
+              </span>
+              <button
+                type="button"
+                className="btn-secondary"
+                data-testid="live-stage-reset-from-start"
+                onClick={() => {
+                  const freshSteps = activeSteps.map((st) => ({ ...st }));
+                  const freshDurations = computeStepDurationsMs(freshSteps);
+                  try {
+                    window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
+                  } catch {
+                    // Ignore sessionStorage restrictions
+                  }
+                  setRestoredFromReload(false);
+                  applyUndo(null);
+                  applySteps(() => freshSteps);
+                  applyClock(() => ({
+                    index: 0,
+                    remainingMs: freshDurations[0] ?? 0,
+                    elapsedMs: 0,
+                    running: false,
+                    sampledAt: Date.now(),
+                    elapsedByStep: {},
+                  }));
+                }}
+              >
+                <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" /> 처음부터 다시 시작
+              </button>
+            </div>
+          )}
           <details className="teaching-time-details" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <summary>운동·휴식 시간 상세</summary>
             <p className="muted">
@@ -1585,6 +1727,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               타이머 운동{' '}
               {formatSecondsToMMSS(Math.max(0, clock.elapsedMs / 1000 - trackedRestSec))} · 휴식{' '}
               {formatSecondsToMMSS(trackedRestSec)}
+            </p>
+            <p className="muted">
+              복구 정책: 벽시계 기준 계산 · 일시정지 시간 제외 · 백그라운드 복귀 시 경과 동기화 ·
+              새로고침 시 일시정지로 위치 복구 · 수업 중 변경은 원본 계획과 분리됩니다.
             </p>
           </details>
         </div>
@@ -2632,6 +2778,27 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   전체 {formatSecondsToMMSS(getStepTiming(next, nextExercise).totalSec)} ·{' '}
                   {POSITION_LABELS[nextExercise.bodyPosition].ko}
                 </p>
+                {(() => {
+                  const nextSetup = resolveStepSetup(next, nextExercise, reformerBrand);
+                  const nextTransition = describeStepTransitionFromPrevious(
+                    steps,
+                    clock.index + 1,
+                    exerciseMap,
+                    reformerBrand,
+                  );
+                  return (
+                    <p
+                      className="muted teaching-next-quick-setup"
+                      data-testid="live-stage-next-quick-setup"
+                    >
+                      다음 세팅: {nextSetup.apparatusLabelKo} · {nextSetup.springLabelKo}
+                      {nextSetup.box !== 'none' ? ` · ${nextSetup.boxLabelKo}` : ''}
+                      {nextTransition && nextTransition.changes.length > 0
+                        ? ` (${nextTransition.changes.slice(0, 2).join(', ')})`
+                        : ''}
+                    </p>
+                  );
+                })()}
                 {(next.repetitions !== undefined || next.sets !== undefined || next.sideMode) && (
                   <p className="muted">
                     {next.repetitions !== undefined ? `${next.repetitions}회` : '횟수 미지정'}
@@ -2756,6 +2923,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         <div className="pf-live-thumb-dock__primary">
+          <button
+            type="button"
+            className="pf-live-thumb-dock__btn"
+            data-testid="live-thumb-prev-step"
+            aria-label="한 손 도크 이전 동작"
+            disabled={clock.index === 0}
+            onClick={() => selectStep(clockRef.current.index - 1)}
+          >
+            <span>이전</span>
+          </button>
           <button
             type="button"
             className="pf-live-thumb-dock__btn"

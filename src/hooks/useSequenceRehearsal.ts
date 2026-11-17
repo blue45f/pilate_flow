@@ -3,6 +3,8 @@ import { useLayoutEffect, useState, useSyncExternalStore } from 'react';
 export interface SequenceRehearsalOptions {
   totalSec: number;
   enabled: boolean;
+  /** Optional initial cursor position in seconds (clamped to [0, totalSec]). */
+  initialElapsedSec?: number;
   /** Live host guard; omitted for a standalone clock. Rechecked before actions/ticks. */
   canRun?: () => boolean;
 }
@@ -49,7 +51,7 @@ function createRehearsalClock(options: SequenceRehearsalOptions) {
   let interval: ReturnType<typeof setInterval> | null = null;
   let run: { startedAt: number; cursorSec: number } | null = null;
   let snapshot: RehearsalSnapshot = {
-    elapsedSec: 0,
+    elapsedSec: clampCursor(options.initialElapsedSec ?? 0, totalSec),
     playing: false,
     speed: 1,
     reducedMotion: mediaQuery?.matches ?? false,
@@ -219,8 +221,15 @@ function createRehearsalClock(options: SequenceRehearsalOptions) {
 }
 
 /** User-controlled elapsed seconds for an already gated, full-plan rehearsal. */
-export function useSequenceRehearsal({ totalSec, enabled, canRun }: SequenceRehearsalOptions) {
-  const [clock] = useState(() => createRehearsalClock({ totalSec, enabled, canRun }));
+export function useSequenceRehearsal({
+  totalSec,
+  enabled,
+  initialElapsedSec,
+  canRun,
+}: SequenceRehearsalOptions) {
+  const [clock] = useState(() =>
+    createRehearsalClock({ totalSec, enabled, initialElapsedSec, canRun }),
+  );
   const snapshot = useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getSnapshot);
 
   useLayoutEffect(() => {
