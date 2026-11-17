@@ -794,7 +794,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
         <>
           <div className="offline-presets-search-row">
             <label className="offline-presets-search">
-              <Search size={17} aria-hidden="true" />
+              <Search size={16} strokeWidth={1.5} aria-hidden="true" />
               <input
                 ref={searchInputRef}
                 type="search"
@@ -814,7 +814,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 aria-label="프리셋 검색어 지우기"
                 onClick={clearQueryOnly}
               >
-                <X size={16} aria-hidden="true" />
+                <X size={16} strokeWidth={1.5} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -893,7 +893,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   onClick={() => handleRemoveConditionChip(index, chip.remove)}
                 >
                   <span>{chip.label}</span>
-                  <X size={14} aria-hidden="true" />
+                  <X size={14} strokeWidth={1.5} aria-hidden="true" />
                 </button>
               ))}
             </div>
@@ -916,7 +916,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                     className="offline-presets-jump-btn"
                     onClick={jumpToSelectedPreview}
                   >
-                    <ArrowDown size={14} aria-hidden="true" /> 선택 확인으로 이동
+                    <ArrowDown size={14} strokeWidth={1.5} aria-hidden="true" /> 선택 확인으로 이동
                   </button>
                 )}
                 {hasAnyActiveFilter && !isNoSourceData && (
@@ -925,7 +925,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                     className="offline-presets-reset-btn"
                     onClick={resetFiltersOnly}
                   >
-                    <RotateCcw size={14} aria-hidden="true" /> 조건 초기화
+                    <RotateCcw size={14} strokeWidth={1.5} aria-hidden="true" /> 조건 초기화
                   </button>
                 )}
               </div>
@@ -1056,7 +1056,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   className="btn-secondary offline-preset-back-btn"
                   onClick={returnToSelectedCard}
                 >
-                  <ArrowUp size={15} aria-hidden="true" /> 목록의 선택 위치로
+                  <ArrowUp size={15} strokeWidth={1.5} aria-hidden="true" /> 목록의 선택 위치로
                 </button>
               )}
               <button
@@ -1194,7 +1194,8 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           )}
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary offline-preset-apply-cta"
+            aria-label={mode === 'append' ? '현재 수업 뒤에 추가' : '복사해서 편집'}
             disabled={
               !prepared ||
               stale ||
@@ -1203,7 +1204,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
             }
             onClick={apply}
           >
-            {mode === 'append' ? '현재 수업 뒤에 추가' : '복사해서 편집'}
+            {mode === 'append' ? '현재 수업 뒤에 추가' : '이 템플릿으로 시작 · 복사해서 편집'}
           </button>
           {alreadyApplied && (
             <div className="offline-preset-stale-box" data-testid="preset-applied-reinspect">

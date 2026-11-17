@@ -47,7 +47,7 @@ export function CloudSyncPanel() {
       aria-labelledby={headingId}
       aria-busy={session.phase === 'checking' || busy}
     >
-      <span className="eyebrow">YOUR ATELIER ACCOUNT</span>
+      <span className="eyebrow">계정 연결</span>
       <h3 id={headingId}>
         <ShieldCheck size={19} aria-hidden="true" /> Google 계정 연결
       </h3>

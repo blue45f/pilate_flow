@@ -169,7 +169,7 @@ export function InventoryPanel() {
 
   return (
     <section className="settings-section inventory-panel" aria-labelledby="inventory-heading">
-      <span className="eyebrow">YOUR EQUIPMENT</span>
+      <span className="eyebrow">내 보유 장비</span>
       <h3 id="inventory-heading">내 보유 기구와 소도구</h3>
       <p>
         추천은 필요한 기구와 소도구가 모두 이 목록에 있는 동작으로 구성됩니다. 캐딜락과 타워, 바렐의

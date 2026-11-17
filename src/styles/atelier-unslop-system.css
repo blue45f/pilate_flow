@@ -1266,6 +1266,648 @@ html body #root .library-modal-footer {
   z-index: 4;
 }
 
+/* ==========================================================================
+   8. Secondary Modals, Sheets & Drawers — Calm Chrome & Sticky Mobile Safety
+   ========================================================================== */
+html body #root dialog.light-dismiss-dialog[open]:not(.pf-idea-sheet-dialog),
+html body #root .atelier-modal-dialog[open]:not(.pf-idea-sheet-dialog) {
+  max-height: min(90dvh, 860px) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-primary);
+  overscroll-behavior: contain;
+}
+
+html body #root :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog) .atelier-modal-header {
+  padding: 20px 24px 16px;
+  background: var(--pf-unslop-card) !important;
+  border-bottom: 1px solid var(--pf-unslop-hairline) !important;
+}
+
+html body #root :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog) .atelier-modal-title {
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+html body #root :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog) .atelier-modal-subtitle {
+  color: var(--pf-unslop-text-secondary) !important;
+  font-weight: 400;
+}
+
+html body #root :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog) .atelier-modal-body {
+  overscroll-behavior: contain;
+}
+
+/* Soften harsh modal close X buttons (1px control hairline instead of heavy dark border) */
+html
+  body
+  #root
+  :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog)
+  .atelier-modal-header
+  > :is(button, .icon-btn, .pf-btn--icon) {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  box-shadow: none !important;
+}
+
+html
+  body
+  #root
+  :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog)
+  .atelier-modal-header
+  > :is(button, .icon-btn, .pf-btn--icon):hover {
+  background: var(--pf-unslop-subtle) !important;
+  border-color: var(--pf-unslop-border-hover) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  html
+    body
+    #root
+    :is(dialog.atelier-modal-dialog, .atelier-modal-dialog, .light-dismiss-dialog)
+    .atelier-modal-header
+    > :is(button, .icon-btn, .pf-btn--icon) {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  html body #root dialog.light-dismiss-dialog[open]:not(.pf-idea-sheet-dialog) {
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin: auto 0 0 !important;
+    max-height: min(90dvh, calc(100dvh - var(--hosted-obstruction-inset, 0px))) !important;
+  }
+
+  html body #root :is(dialog.atelier-modal-dialog, .light-dismiss-dialog) .atelier-modal-header {
+    padding: 16px !important;
+  }
+}
+
+/* ==========================================================================
+   9. StudioCommandPalette (⌘K Modal) — 16px Dialog, 8px Rows, 6px Keycaps
+   ========================================================================== */
+html body #root dialog.pf-cmdk-dialog {
+  border-radius: var(--pf-unslop-radius-card) !important;
+  width: min(680px, calc(100vw - 32px));
+}
+
+@media (max-width: 640px) {
+  html body #root dialog.pf-cmdk-dialog {
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin: auto 0 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+}
+
+html body #root .pf-cmdk-palette {
+  gap: 16px !important;
+  min-width: 0;
+}
+
+html body #root .pf-cmdk-search-box {
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  border-radius: var(--pf-unslop-radius-control) !important;
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  box-shadow: none !important;
+}
+
+html body #root .pf-cmdk-search-box:focus-within {
+  background: var(--pf-unslop-card) !important;
+  border-color: var(--pf-unslop-accent) !important;
+  box-shadow: 0 0 0 2px rgba(31, 68, 53, 0.14) !important;
+}
+
+html body #root .pf-cmdk-search-box input {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .pf-cmdk-clear-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: var(--pf-unslop-radius-keycap) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .pf-cmdk-feedback {
+  padding: 8px 12px !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid rgba(31, 68, 53, 0.24) !important;
+  color: var(--pf-unslop-accent) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+html body #root .pf-cmdk-section__head {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root .pf-cmdk-brand-chip {
+  min-height: 36px;
+  padding: 6px 12px !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-subtle) !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+html body #root .pf-cmdk-brand-chip.is-active {
+  background: var(--pf-unslop-accent) !important;
+  border-color: var(--pf-unslop-accent) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html body #root :is(.pf-cmdk-exercise-row, .pf-cmdk-seq-card, .pf-cmdk-nav-card) {
+  padding: 8px 12px !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  background: var(--pf-unslop-card) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root :is(.pf-cmdk-exercise-row, .pf-cmdk-seq-card, .pf-cmdk-nav-card):hover {
+  background: var(--pf-unslop-subtle) !important;
+  border-color: var(--pf-unslop-border-hover) !important;
+}
+
+html
+  body
+  #root
+  :is(
+    .pf-cmdk-exercise-row.is-kb-active,
+    .pf-cmdk-seq-card.is-kb-active,
+    .pf-cmdk-nav-card.is-kb-active
+  ) {
+  background: var(--pf-unslop-subtle) !important;
+  border-color: var(--pf-unslop-accent) !important;
+  box-shadow: inset 3px 0 0 var(--pf-unslop-accent) !important;
+}
+
+html body #root .pf-cmdk-exercise-thumb {
+  border-radius: var(--pf-unslop-radius-keycap) !important;
+  outline: 1px solid var(--pf-unslop-hairline);
+  outline-offset: -1px;
+}
+
+html
+  body
+  #root
+  :is(.pf-cmdk-exercise-meta strong, .pf-cmdk-nav-copy strong, .pf-cmdk-seq-card strong) {
+  font-weight: 600 !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html
+  body
+  #root
+  :is(.pf-cmdk-exercise-meta small, .pf-cmdk-nav-copy small, .pf-cmdk-seq-card small) {
+  color: var(--pf-unslop-text-secondary) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root :is(.pf-cmdk-btn-ghost, .pf-cmdk-btn-add) {
+  min-height: 32px;
+  padding: 4px 10px !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+html body #root .pf-cmdk-btn-ghost {
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .pf-cmdk-btn-add {
+  background: var(--pf-unslop-accent) !important;
+  border: 1px solid var(--pf-unslop-accent) !important;
+  color: #ffffff !important;
+}
+
+html body #root .pf-cmdk-btn-add.is-added {
+  background: var(--pf-unslop-raised) !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .pf-cmdk-nav-icon {
+  border-radius: var(--pf-unslop-radius-keycap) !important;
+  background: var(--pf-unslop-subtle) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+@media (pointer: coarse), (max-width: 640px) {
+  html body #root :is(.pf-cmdk-brand-chip, .pf-cmdk-btn-ghost, .pf-cmdk-btn-add) {
+    min-height: 40px;
+  }
+}
+
+/* ==========================================================================
+   10. 나의 스튜디오 설정 (PilatesSettingsPage) — Calm White Cards & Quiet Badges
+   ========================================================================== */
+.pf-settings-page {
+  --pf-sp-bg: var(--pf-unslop-bg, #f7f4ee);
+  --pf-sp-card: var(--pf-unslop-card, #ffffff);
+  --pf-sp-subtle: var(--pf-unslop-subtle, #faf8f4);
+  --pf-sp-border: var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  --pf-sp-forest: var(--pf-unslop-text-primary, #1f1b16);
+  --pf-sp-sage: var(--pf-unslop-text-secondary, #5e554a);
+  --pf-sp-muted: var(--pf-unslop-text-secondary, #5e554a);
+  --pf-sp-accent: var(--pf-unslop-accent, #1f4435);
+  --pf-sp-accent-soft: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-settings-page :is(.pf-settings-page__header, .pf-settings-group),
+.pf-settings-fixture-toolbar {
+  padding: 20px;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  border-radius: var(--pf-unslop-radius-card, 16px) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+  box-shadow: var(--pf-unslop-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.04)) !important;
+}
+
+.pf-settings-page .pf-settings-group--active {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24)) !important;
+  box-shadow: var(--pf-unslop-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.04)) !important;
+}
+
+.pf-settings-page .pf-settings-page__eyebrow {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--pf-unslop-text-secondary, #5e554a) !important;
+}
+
+.pf-settings-page .pf-settings-page__title,
+.pf-settings-page .pf-settings-group__title {
+  font-weight: 600 !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
+}
+
+.pf-settings-page .pf-settings-task-steps {
+  padding: 12px;
+  border-radius: var(--pf-unslop-radius-segment, 12px) !important;
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+}
+
+.pf-settings-page
+  :is(
+    .pf-settings-task-steps .pf-step-guide-chip,
+    .pf-settings-page__nav-chip,
+    .pf-settings-subchip,
+    .pf-settings-page__speed-btn
+  ) {
+  min-height: 44px;
+  border-radius: var(--pf-unslop-radius-row, 8px) !important;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.pf-settings-page
+  :is(
+    .pf-settings-task-steps .pf-step-guide-chip.is-active,
+    .pf-settings-task-steps .pf-step-guide-chip[aria-current='step'],
+    .pf-settings-page__nav-chip[aria-pressed='true'],
+    .pf-settings-page__speed-btn[aria-pressed='true'],
+    .pf-settings-subchip[aria-pressed='true']
+  ) {
+  background: var(--pf-unslop-accent, #1f4435) !important;
+  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.pf-settings-page
+  :is(
+    .pf-settings-page__btn:not(.pf-settings-page__btn--primary):not([aria-pressed='true']),
+    .pf-settings-page__link-btn,
+    .pf-settings-task-steps .pf-step-nav-btn
+  ),
+.pf-settings-fixture-toolbar .pf-settings-page__btn:not([aria-pressed='true']) {
+  min-height: 44px;
+  border-radius: var(--pf-unslop-radius-control, 10px) !important;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
+  font-weight: 500 !important;
+}
+
+.pf-settings-page
+  :is(
+    .pf-settings-page__btn:not(.pf-settings-page__btn--primary):not([aria-pressed='true']),
+    .pf-settings-page__link-btn,
+    .pf-settings-task-steps .pf-step-nav-btn
+  ):hover:not(:disabled) {
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24)) !important;
+}
+
+.pf-settings-page .pf-settings-page__btn--primary,
+.pf-settings-page .pf-settings-page__btn[aria-pressed='true'],
+.pf-settings-fixture-toolbar .pf-settings-page__btn[aria-pressed='true'] {
+  min-height: 44px;
+  border-radius: var(--pf-unslop-radius-control, 10px) !important;
+  background: var(--pf-unslop-accent, #1f4435) !important;
+  border: 1px solid var(--pf-unslop-accent, #1f4435) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Quiet neutral badges & tabular storage counts (zero rainbow/glow pills) */
+.pf-settings-page :is(.pf-settings-group__badge, .pf-settings-connection-badge) {
+  padding: 4px 8px !important;
+  border-radius: var(--pf-unslop-radius-keycap, 6px) !important;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  color: var(--pf-unslop-text-secondary, #5e554a) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.pf-settings-page .pf-settings-connection-badge.is-connected {
+  border-color: rgba(31, 68, 53, 0.24) !important;
+  color: var(--pf-unslop-accent, #1f4435) !important;
+}
+
+.pf-settings-page .pf-settings-overview-card {
+  padding: 12px 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+}
+
+.pf-settings-page .pf-settings-overview-card--action:not(.is-attention) {
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  border-color: var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+}
+
+.pf-settings-page .pf-settings-kv-list,
+.pf-settings-page .pf-settings-details,
+.pf-settings-page .pf-settings-status,
+.pf-settings-page .pf-settings-guard-box {
+  border-radius: var(--pf-unslop-radius-segment, 12px) !important;
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  border-color: var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+}
+
+.pf-settings-page .pf-settings-check-label {
+  border-radius: var(--pf-unslop-radius-control, 10px) !important;
+  border-color: var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+}
+
+.pf-settings-page
+  :is(
+    .pf-settings-kv-item dd,
+    .pf-settings-overview-card__value,
+    .pf-settings-overview-card__meta,
+    .pf-settings-status
+  ) {
+  font-variant-numeric: tabular-nums !important;
+}
+
+@media (max-width: 480px) {
+  .pf-settings-page :is(.pf-settings-page__header, .pf-settings-group),
+  .pf-settings-fixture-toolbar {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 340px) {
+  .pf-settings-page :is(.pf-settings-page__header, .pf-settings-group) {
+    padding: 12px;
+  }
+}
+
+/* ==========================================================================
+   11. Secondary Sheets, Study Dialog, History & Quick-Start Cards
+   ========================================================================== */
+html
+  body
+  #root
+  :is(
+    .pf-idea-starter-chip,
+    .pf-idea-chip,
+    .study-scope-chip,
+    .study-bookmark-filter,
+    .study-save-bookmark
+  ) {
+  border-radius: var(--pf-unslop-radius-row, 8px) !important;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html
+  body
+  #root
+  :is(
+    .pf-idea-chip[aria-pressed='true'],
+    .study-scope-chip[aria-pressed='true'],
+    .study-bookmark-filter[aria-pressed='true'],
+    .study-save-bookmark[aria-pressed='true']
+  ) {
+  background: var(--pf-unslop-accent, #1f4435) !important;
+  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html
+  body
+  #root
+  :is(
+    .pf-idea-step-pill,
+    .study-outside-filter-badge,
+    .teaching-count,
+    .teaching-level,
+    .teaching-record-kind-badge,
+    .teaching-record-source-badge,
+    .pf-quickstart-gallery__kicker,
+    .pf-page-intent-banner__action-pill,
+    .pf-detail-intent-banner__pills > span,
+    .pf-plane-dot-chip,
+    .pf-ai-preset-badge,
+    .pf-quickstart-card__duration-pill,
+    .pf-quickstart-card__level-pill,
+    .pf-class-apparatus-pill,
+    .pf-studio3d-chip
+  ) {
+  border-radius: var(--pf-unslop-radius-keycap, 6px) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root .pf-idea-step-pill.is-active {
+  background: var(--pf-unslop-accent, #1f4435) !important;
+  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  color: #ffffff !important;
+}
+
+html body #root .pf-idea-progressive-section {
+  border-radius: var(--pf-unslop-radius-segment, 12px) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+}
+
+html body #root .pf-idea-time-summary {
+  border-radius: var(--pf-unslop-radius-control, 10px) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  background: var(--pf-unslop-subtle, #faf8f4) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body #root .pf-idea-footer-bar {
+  background: var(--pf-unslop-card, #ffffff) !important;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+}
+
+html body #root :is(.pf-quickstart-card, .pf-ai-preset-card) {
+  border-radius: var(--pf-unslop-radius-card, 16px) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+  box-shadow: var(--pf-unslop-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.04)) !important;
+}
+
+html body #root :is(.pf-quickstart-card__cta, .pf-quick-flow-coach__btn) {
+  border-radius: var(--pf-unslop-radius-control, 10px) !important;
+  font-weight: 500 !important;
+}
+
+html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coach__stat) {
+  font-variant-numeric: tabular-nums !important;
+}
+
+@media (max-width: 767px) {
+  html body #root .study-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* ==========================================================================
+   12. ClassCueSheetPreview — Calm Screen Surface (NEVER touches @media print)
+   ========================================================================== */
+@media screen {
+  .class-cue-sheet-root:not(.is-print-preview) {
+    background-color: var(--pf-unslop-bg, #f7f4ee);
+    color: var(--pf-unslop-text-primary, #1f1b16);
+    gap: 16px;
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview)
+    :is(
+      .cue-sheet-compact-header,
+      .cue-sheet-focus-deck,
+      .cue-sheet-progression-section,
+      .cue-sheet-diagnostics-section,
+      .cue-sheet-summary-card,
+      .cue-sheet-fixture-toolbar
+    ) {
+    border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+    border-radius: var(--pf-unslop-radius-card, 16px);
+    background-color: var(--pf-unslop-card, #ffffff);
+    box-shadow: var(--pf-unslop-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.04));
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-focus-card {
+    border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+    border-radius: var(--pf-unslop-radius-segment, 12px);
+    background-color: var(--pf-unslop-subtle, #faf8f4);
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-focus-card.is-current,
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-item.is-active-step,
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-expanded-row.is-active-step {
+    border: 1px solid var(--pf-unslop-accent, #1f4435);
+    box-shadow: inset 3px 0 0 var(--pf-unslop-accent, #1f4435);
+    background-color: var(--pf-unslop-card, #ffffff);
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview)
+    :is(.cue-sheet-item, .cue-sheet-expanded-row, .cue-sheet-summary-cell, .cue-sheet-boundary-banner) {
+    border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+    border-radius: var(--pf-unslop-radius-segment, 12px);
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview)
+    :is(.cue-sheet-btn, .cue-sheet-disclosure-btn, .cue-sheet-fixture-select, .cue-sheet-item-select-btn) {
+    border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+    border-radius: var(--pf-unslop-radius-control, 10px);
+    background-color: var(--pf-unslop-card, #ffffff);
+    color: var(--pf-unslop-text-primary, #1f1b16);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview)
+    :is(.cue-sheet-btn.is-active, .cue-sheet-item-select-btn[aria-current='step']) {
+    background-color: var(--pf-unslop-accent, #1f4435);
+    border-color: var(--pf-unslop-accent, #1f4435);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-badge {
+    border-radius: var(--pf-unslop-radius-keycap, 6px);
+    border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+    background-color: var(--pf-unslop-subtle, #faf8f4);
+    color: var(--pf-unslop-text-secondary, #5e554a);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-badge.is-emphasis {
+    background-color: rgba(31, 68, 53, 0.08);
+    border-color: rgba(31, 68, 53, 0.24);
+    color: var(--pf-unslop-accent, #1f4435);
+    font-weight: 600;
+  }
+
+  .class-cue-sheet-root:not(.is-print-preview) :is(.cue-sheet-meta-line, .cue-sheet-summary-value) {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;

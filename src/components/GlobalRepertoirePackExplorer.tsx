@@ -1,6 +1,6 @@
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import React, { useMemo, useState } from 'react';
-import { Check, ExternalLink, Globe, Plus, Search, Sparkles, Tv, X } from 'lucide-react';
+import { Check, ExternalLink, Globe, Plus, Search, Tv, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getExerciseSourcePageReferences } from '../data/exerciseVideoBindings';
 import {
@@ -91,16 +91,19 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
       }}
     >
       <div
+        className="pf-crawled-pack-hero"
         style={{
-          background: 'linear-gradient(135deg, #173d34 0%, #245345 100%)',
-          color: '#ffffff',
-          borderRadius: '20px',
+          background: '#ffffff',
+          color: '#1f1b16',
+          border: '1px solid rgba(31, 27, 22, 0.08)',
+          borderRadius: '16px',
           padding: '20px',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '14px',
+          gap: '16px',
         }}
       >
         <div style={{ maxWidth: '720px' }}>
@@ -109,26 +112,31 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '999px',
-              background: 'rgba(255,255,255,0.16)',
-              fontSize: '0.74rem',
-              fontWeight: 700,
-              marginBottom: '6px',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              background: '#faf8f4',
+              border: '1px solid rgba(31, 27, 22, 0.14)',
+              color: '#5e554a',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              fontVariantNumeric: 'tabular-nums',
+              marginBottom: '8px',
             }}
           >
-            <Globe size={13} aria-hidden="true" /> GLOBAL &amp; KR REPERTOIRE PACK ·{' '}
-            {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length} MOVEMENTS ·{' '}
-            {CRAWLED_YOUTUBE_DISCOVERY_POOL.length} VIDEOS
+            <Globe size={14} strokeWidth={1.5} aria-hidden="true" /> 국내외 확장 동작 도감 ·{' '}
+            {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종 동작 ·{' '}
+            {CRAWLED_YOUTUBE_DISCOVERY_POOL.length}편 참조 영상
           </span>
-          <h2 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#ffffff' }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 600, color: '#1f1b16' }}>
             클래식·컨템포러리 확장 동작 도감 &amp; 국내외 공식 시범 영상
           </h2>
-          <p style={{ margin: 0, fontSize: '0.84rem', color: '#d7ebe2', lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#5e554a', lineHeight: 1.55 }}>
             클래식 매트 34, 리포머(스터먹 마사지·숏스파인·세미서클·니스트레치·롱박스·스플릿), 캐딜락(몽키·티저·타워·행잉),
             체어(고잉업·마운틴클라이머·풀업), 래더 바렐(트리·사이드싯업·그래스하퍼) 등{' '}
-            <strong>{GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종 동작과 연결된 공식 YouTube 참조 영상</strong>을
-            한 번에 추가하거나 바로 수업에 담으세요. (미검토 참조 자료 · 강사 현장 확인 필수)
+            <strong style={{ color: '#1f1b16', fontWeight: 600 }}>
+              {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종 동작과 연결된 공식 YouTube 참조 영상
+            </strong>
+            을 한 번에 추가하거나 바로 수업에 담으세요. (미검토 참조 자료 · 강사 현장 확인 필수)
           </p>
         </div>
 
@@ -138,14 +146,18 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
           onClick={handleImportAll}
           disabled={unaddedPackItems.length === 0}
           style={{
-            minHeight: '46px',
-            padding: '10px 18px',
-            borderRadius: '14px',
-            border: 'none',
-            background: unaddedPackItems.length === 0 ? 'rgba(255,255,255,0.22)' : '#fffef9',
-            color: unaddedPackItems.length === 0 ? '#d8e6df' : '#173d34',
-            fontWeight: 800,
-            fontSize: '0.88rem',
+            minHeight: '44px',
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border:
+              unaddedPackItems.length === 0
+                ? '1px solid rgba(31, 27, 22, 0.14)'
+                : '1px solid #1f4435',
+            background: unaddedPackItems.length === 0 ? '#faf8f4' : '#1f4435',
+            color: unaddedPackItems.length === 0 ? '#5e554a' : '#ffffff',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            fontVariantNumeric: 'tabular-nums',
             cursor: unaddedPackItems.length === 0 ? 'default' : 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
@@ -154,11 +166,11 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
         >
           {unaddedPackItems.length === 0 ? (
             <>
-              <Check size={16} aria-hidden="true" /> 전체 {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종 추가 완료
+              <Check size={16} strokeWidth={1.5} aria-hidden="true" /> 전체 {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종 추가 완료
             </>
           ) : (
             <>
-              <Sparkles size={16} aria-hidden="true" /> 원클릭 전체 확장 동작 추가 (+{unaddedPackItems.length}종)
+              <Plus size={16} strokeWidth={1.5} aria-hidden="true" /> 원클릭 전체 확장 동작 추가 (+{unaddedPackItems.length}종)
             </>
           )}
         </button>
@@ -170,13 +182,13 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
           aria-live="polite"
           style={{
             margin: 0,
-            padding: '10px 14px',
-            borderRadius: '12px',
-            background: '#eaf3ee',
-            border: '1px solid #bdd3c6',
-            color: '#173d34',
-            fontSize: '0.84rem',
-            fontWeight: 700,
+            padding: '12px 16px',
+            borderRadius: '10px',
+            background: '#faf8f4',
+            border: '1px solid rgba(31, 68, 53, 0.24)',
+            color: '#1f4435',
+            fontSize: '0.875rem',
+            fontWeight: 500,
           }}
         >
           {statusMessage}
@@ -184,19 +196,20 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
       )}
 
       <div
+        className="pf-crawled-pack-toolbar"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '10px',
+          gap: '12px',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: '#fffef9',
-          padding: '12px 14px',
+          background: '#ffffff',
+          padding: '12px 16px',
           borderRadius: '16px',
-          border: '1px solid #d5ddd0',
+          border: '1px solid rgba(31, 27, 22, 0.08)',
         }}
       >
-        <div role="group" aria-label="확장 도감 기구 필터" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div role="group" aria-label="확장 도감 기구 필터" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {(
             [
               { id: 'all', label: `전체 (${GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length})` },
@@ -230,14 +243,15 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                 aria-pressed={active}
                 onClick={() => setApparatusFilter(tab.id)}
                 style={{
-                  minHeight: '38px',
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  border: active ? '1px solid #173d34' : '1px solid #d5ddd0',
-                  background: active ? '#173d34' : '#f7f5ee',
-                  color: active ? '#ffffff' : '#1e3129',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
+                  minHeight: '40px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: active ? '1px solid #1f4435' : '1px solid rgba(31, 27, 22, 0.14)',
+                  background: active ? '#1f4435' : '#faf8f4',
+                  color: active ? '#ffffff' : '#1f1b16',
+                  fontSize: '0.8125rem',
+                  fontWeight: active ? 600 : 500,
+                  fontVariantNumeric: 'tabular-nums',
                   cursor: 'pointer',
                 }}
               >
@@ -252,16 +266,17 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: '#f7f5ee',
-            border: '1px solid #d5ddd0',
-            borderRadius: '999px',
-            padding: '6px 12px',
-            minWidth: '240px',
-            flex: '1 1 240px',
+            background: '#faf8f4',
+            border: '1px solid rgba(31, 27, 22, 0.14)',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            minHeight: '40px',
+            minWidth: 0,
+            flex: '1 1 220px',
             maxWidth: '360px',
           }}
         >
-          <Search size={15} aria-hidden="true" />
+          <Search size={16} strokeWidth={1.5} aria-hidden="true" />
           <input
             type="search"
             aria-label="확장 레퍼토리 동작 및 영상 검색"
@@ -273,7 +288,8 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
               background: 'transparent',
               outline: 'none',
               width: '100%',
-              fontSize: '0.84rem',
+              minWidth: 0,
+              fontSize: '0.875rem',
             }}
           />
           {searchQuery && (
@@ -281,9 +297,9 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
               type="button"
               onClick={() => setSearchQuery('')}
               aria-label="확장 검색어 지우기"
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2 }}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 4 }}
             >
-              <X size={14} />
+              <X size={15} strokeWidth={1.5} />
             </button>
           )}
         </label>
@@ -293,7 +309,7 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 310px), 1fr))',
-          gap: '14px',
+          gap: '16px',
         }}
       >
         {filteredItems.map((item) => {
@@ -306,23 +322,25 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
             <article
               key={item.id}
               style={{
-                background: '#fffef9',
-                border: '1px solid #d6dfd3',
-                borderRadius: '18px',
+                background: '#ffffff',
+                border: '1px solid rgba(31, 27, 22, 0.08)',
+                borderRadius: '16px',
                 padding: '12px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px',
-                boxShadow: '0 4px 14px rgba(23, 61, 52, 0.04)',
+                gap: '12px',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div
                 style={{
                   position: 'relative',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   overflow: 'hidden',
                   aspectRatio: '16 / 10',
-                  background: '#efeae0',
+                  background: '#efe9df',
+                  outline: '1px solid rgba(31, 27, 22, 0.08)',
+                  outlineOffset: '-1px',
                 }}
               >
                 {isEmbedOpen ? (
@@ -344,12 +362,13 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                         position: 'absolute',
                         top: 8,
                         left: 8,
-                        padding: '3px 9px',
-                        borderRadius: '999px',
-                        background: 'rgba(23,61,52,0.88)',
-                        color: '#fff',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(31, 27, 22, 0.84)',
+                        color: '#ffffff',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        fontVariantNumeric: 'tabular-nums',
                       }}
                     >
                       {APPARATUS_LABELS[item.apparatus]?.ko} · Lv {item.level}
@@ -364,19 +383,19 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                         right: 8,
                         minHeight: '32px',
                         padding: '4px 10px',
-                        borderRadius: '999px',
-                        border: 'none',
-                        background: 'rgba(255,254,249,0.95)',
-                        color: '#173d34',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
+                        borderRadius: '8px',
+                        border: '1px solid rgba(31, 27, 22, 0.14)',
+                        background: 'rgba(255, 255, 255, 0.96)',
+                        color: '#1f1b16',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '5px',
+                        gap: '6px',
                       }}
                     >
-                      <Tv size={12} aria-hidden="true" />
+                      <Tv size={14} strokeWidth={1.5} aria-hidden="true" />
                       영상 열기 ({item.youtube.region === 'kr' ? '국내' : '해외'})
                     </button>}
                   </>
@@ -384,28 +403,29 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
               </div>
 
               <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
                   <PfBadge tone="neutral">{POSITION_LABELS[item.bodyPosition]?.ko}</PfBadge>
                   <PfBadge tone="neutral">{item.defaultDurationMin}분</PfBadge>
                   <SpringVisualPills springs={item.springs} />
                 </div>
-                <strong style={{ display: 'block', fontSize: '1rem', color: '#173d34' }}>
+                <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 600, color: '#1f1b16' }}>
                   {item.nameKo}
                 </strong>
-                <span style={{ fontSize: '0.78rem', color: '#56685f' }}>{item.nameEn}</span>
+                <span style={{ fontSize: '0.8125rem', color: '#5e554a' }}>{item.nameEn}</span>
               </div>
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#2b3e35', lineHeight: 1.45 }}>
-                • {item.cues[0]}
+              <p style={{ margin: 0, fontSize: '0.8125rem', color: '#5e554a', lineHeight: 1.5 }}>
+                {item.cues[0]}
               </p>
 
               <div
                 style={{
-                  padding: '7px 10px',
-                  borderRadius: '10px',
-                  background: '#f6f4ed',
-                  fontSize: '0.74rem',
-                  color: '#4c5d53',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  background: '#faf8f4',
+                  border: '1px solid rgba(31, 27, 22, 0.08)',
+                  fontSize: '0.75rem',
+                  color: '#5e554a',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -414,20 +434,20 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
               >
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {hasVideo
-                    ? `🎬 ${item.youtube.channelName} · ${item.youtube.videoTitle}`
+                    ? `${item.youtube.channelName} · ${item.youtube.videoTitle}`
                     : sourcePage ? `${sourcePage.publisher} · 동작 설명 원문` : '개별 영상 연결 확인 중'}
                 </span>
                 {referenceUrl && <a
                   href={referenceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ flexShrink: 0, color: '#173d34', fontWeight: 700 }}
+                  style={{ flexShrink: 0, color: '#1f4435', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 >
-                  {hasVideo ? '영상 원본' : '설명 원문'} <ExternalLink size={11} />
+                  {hasVideo ? '영상 원본' : '설명 원문'} <ExternalLink size={12} strokeWidth={1.5} aria-hidden="true" />
                 </a>}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: 'auto' }}>
                 <PfButton
                   variant="secondary"
                   onClick={() => {
@@ -448,7 +468,7 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                   variant="primary"
                   onClick={() => handleAddSingleToLibrary(item, true)}
                 >
-                  <Plus size={14} aria-hidden="true" /> 수업에 담기
+                  <Plus size={15} strokeWidth={1.5} aria-hidden="true" /> 수업에 담기
                 </PfButton>
               </div>
             </article>

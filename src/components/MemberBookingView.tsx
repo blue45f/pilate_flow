@@ -48,8 +48,8 @@ import { LightDismissDialog } from './LightDismissDialog';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 import { VisualApparatusSpotGlyph } from './VisualFlowComponents';
-import '../styles/member-booking.css';
 import '../styles/atelier-luxury-v2.css';
+import '../styles/member-booking.css';
 
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
 const FIRST_SCHEDULE_DATE = '1900-01-01';
@@ -961,19 +961,19 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           className={activeStepIndex === 1 ? 'is-active' : activeStepIndex > 1 ? 'is-done' : ''}
           aria-current={activeStepIndex === 1 ? 'step' : undefined}
         >
-          1. 내 수강권·남은 횟수 확인
+          1. 수강권 확인
         </li>
         <li
           className={activeStepIndex === 2 ? 'is-active' : activeStepIndex > 2 ? 'is-done' : ''}
           aria-current={activeStepIndex === 2 ? 'step' : undefined}
         >
-          2. 날짜·빈 자리 수업 선택
+          2. 날짜·수업 선택
         </li>
         <li
           className={activeStepIndex === 3 ? 'is-active' : ''}
           aria-current={activeStepIndex === 3 ? 'step' : undefined}
         >
-          3. 기구 자리·취소 기준 확인 후 확정
+          3. 자리·예약 확정
         </li>
       </ol>
 
@@ -997,17 +997,17 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         className="pf-member-wallet-hero"
         aria-label="내 수강권 현황"
       >
-        <div>
+        <div className="pf-member-wallet-hero__main">
           <span
             className="eyebrow"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               letterSpacing: '0.01em',
             }}
           >
-            <Ticket size={16} strokeWidth={1.5} aria-hidden="true" /> 내 수강권 현황
+            <Ticket size={14} strokeWidth={1.5} aria-hidden="true" /> 내 수강권 현황
           </span>
           <h2>{portalState.pass.passTitle}</h2>
           <div className="pf-member-wallet-metrics" data-testid="member-pass-metrics">
@@ -1028,8 +1028,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           {isPassExpired && (
             <p
               style={{
-                margin: '8px 0 0',
-                fontSize: '0.82rem',
+                margin: '6px 0 0',
+                fontSize: '0.8rem',
                 color: '#fde68a',
                 fontWeight: 600,
               }}
@@ -1041,7 +1041,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </div>
 
         <div className="pf-member-wallet-ring" aria-hidden="true">
-          <svg width="92" height="92" viewBox="0 0 88 88">
+          <svg width="76" height="76" viewBox="0 0 88 88">
             <circle
               cx="44"
               cy="44"
@@ -1241,21 +1241,14 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       )}
 
       <section id="member-schedule-section" aria-label="주간 수업 날짜 선택">
-        <div className="pf-member-filter-row" style={{ marginBottom: '8px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
+        <div className="pf-member-filter-row pf-member-week-toolbar">
+          <div className="pf-member-week-range">
             <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" />
             <strong>
               {weekDates[0]} ~ {weekDates[weekDates.length - 1]}
             </strong>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="pf-member-week-nav">
             <button
               type="button"
               className="pf-member-chip"

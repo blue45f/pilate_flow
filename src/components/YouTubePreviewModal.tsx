@@ -154,6 +154,12 @@ usePilatesStore.subscribe((nextState, prevState) => {
   }
 });
 
+const PREVIEW_LEVEL_LABELS: Record<PilatesExercise['level'], string> = {
+  '1.0': '기초',
+  '1.5': '중급',
+  '2.0': '심화',
+};
+
 const ExercisePlanningNotes: React.FC<{ exercise: PilatesExercise; pending: boolean }> = ({
   exercise,
   pending,
@@ -185,7 +191,7 @@ const ExercisePlanningNotes: React.FC<{ exercise: PilatesExercise; pending: bool
         <div>
           <dt>기구 설정 메모</dt>
           <dd>
-            {exercise.springs || '입력되지 않음'}
+            {exercise.springs === 'Bodyweight' ? '맨몸' : exercise.springs || '입력되지 않음'}
             <small>제조사·모델·사용자에 맞는 설정과 안전 장치를 직접 확인하세요.</small>
           </dd>
         </div>
@@ -1042,7 +1048,7 @@ const MovementDetails: React.FC<{
             <span>단계별 자세 도해 · 상세 메모 보기</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
-          <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+          <div style={{ display: 'grid', gap: '10px', paddingTop: '8px' }}>
             <div className="movement-detail-topline">
               <span className="library-badge">
                 {getExerciseEquipment(exercise)
@@ -1052,7 +1058,7 @@ const MovementDetails: React.FC<{
                   .join(' · ') || APPARATUS_LABELS[exercise.apparatus].ko}
               </span>
               {exercise.springs && <SpringVisualPills springs={exercise.springs} />}
-              <span className="library-badge">Lv {exercise.level}</span>
+              <span className="library-badge">{PREVIEW_LEVEL_LABELS[exercise.level]}</span>
               <span className="library-badge">
                 <Clock3 size={12} /> 계획 {exercise.defaultDurationMin}분
                 {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
@@ -1078,7 +1084,7 @@ const MovementDetails: React.FC<{
             <span>자세 정렬 · 타겟 근육 가이드</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
-          <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+          <div style={{ display: 'grid', gap: '10px', paddingTop: '8px' }}>
             <PostureAnatomyGuide exercise={exercise} />
           </div>
         </details>
@@ -1092,7 +1098,7 @@ const MovementDetails: React.FC<{
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
           {voiceGuideOpen && (
-            <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+            <div style={{ display: 'grid', gap: '10px', paddingTop: '8px' }}>
               <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} voiceOnly />
               <MotionReferencePlayer
                 exercise={exercise}

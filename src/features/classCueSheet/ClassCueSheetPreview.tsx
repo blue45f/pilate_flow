@@ -626,6 +626,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
 
   const rootClassName = [
     'class-cue-sheet-root',
+    'pf-unslop-cue-sheet',
     printPreviewMode ? 'is-print-preview' : '',
   ]
     .filter(Boolean)

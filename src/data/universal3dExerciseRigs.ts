@@ -42,6 +42,7 @@ export interface Universal3DPoseRig {
   readonly trapezeStrap?: boolean;
   readonly withDumbbells?: boolean;
   readonly withTheraband?: boolean;
+  readonly withFoamRollerUnderSpine?: boolean;
   readonly activeZones: readonly ActiveMuscleZone3D[];
 }
 
@@ -1732,18 +1733,46 @@ function sampleArchetype3DRig(
         activeZones: ['glutes', 'core'],
       };
     }
-    case 'mat-knee-fold': {
+    case 'mat-foam-roller-supine': {
+      const arcOut = Math.sin(rawT * Math.PI) * 0.22;
       return {
-        poseFeatureKo: '누운 중립 골반 고정에서 교대 테이블탑 니 폴드·힐 슬라이드',
+        poseFeatureKo: '세로 폼롤러 위 후두부~천골 일직선 지지와 흉곽 안정 3D 암써클',
+        trajectoryFocus: 'rHand',
+        withFoamRollerUnderSpine: true,
+        pelvis: [0.08, 0, 0.255],
+        spineMid: [-0.15, 0, lerp(0.258, 0.272, ts)],
+        chest: [-0.38, 0, lerp(0.262, 0.282, ts)],
+        antHint: [0, 0, 1],
+        lFoot: [0.54, -0.15, 0.095],
+        rFoot: [0.54, 0.15, 0.095],
+        lKneePole: [0.28, -0.15, 0.62],
+        rKneePole: [0.28, 0.15, 0.62],
+        lHand: [lerp(0.06, -0.66, ts), -0.22 - arcOut, lerp(0.36, 0.32, ts) + arcOut * 0.55],
+        rHand: [lerp(0.06, -0.66, ts), 0.22 + arcOut, lerp(0.36, 0.32, ts) + arcOut * 0.55],
+        lElbowPole: [-0.24, -0.42, 0.24],
+        rElbowPole: [-0.24, 0.42, 0.24],
+        activeZones: ['core', 'shoulders', 'back'],
+      };
+    }
+    case 'mat-knee-fold': {
+      const isHeelSlide = /heel[\s-]?slide|힐\s*슬라이드/i.test(
+        `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`,
+      );
+      return {
+        poseFeatureKo: isHeelSlide
+          ? '누운 중립 골반 고정에서 매트 바닥을 따른 단측성 힐 슬라이드 신전'
+          : '누운 중립 골반 고정에서 교대 90도 테이블탑 니 폴드 리프트',
         trajectoryFocus: 'rFoot',
         pelvis: [0.04, 0, 0.13],
         spineMid: [-0.18, 0, 0.14],
         chest: [-0.4, 0, 0.15],
         antHint: [0, 0, 1],
         lFoot: [0.54, -0.1, 0.1],
-        rFoot: vlerp([0.54, 0.1, 0.1], [0.32, 0.1, 0.46], ts),
+        rFoot: isHeelSlide
+          ? vlerp([0.48, 0.1, 0.1], [0.82, 0.1, 0.11], ts)
+          : vlerp([0.54, 0.1, 0.1], [0.32, 0.1, 0.46], ts),
         lKneePole: [0.24, -0.1, 0.56],
-        rKneePole: [0.1, 0.1, 0.76],
+        rKneePole: isHeelSlide ? [0.35, 0.1, lerp(0.58, 0.28, ts)] : [0.1, 0.1, 0.76],
         lHand: [0.06, -0.24, 0.09],
         rHand: [0.06, 0.24, 0.09],
         lElbowPole: [-0.2, -0.34, 0.06],
@@ -2005,6 +2034,26 @@ function sampleArchetype3DRig(
         activeZones: ['back', 'glutes', 'core'],
       };
     }
+    case 'mat-standing-calf-raise': {
+      const lift = lerp(0, 0.075, ts);
+      return {
+        poseFeatureKo: '매트 스탠딩 수직 축 정렬에서 양발 뒤꿈치 릴레베 상승·하강 제어',
+        trajectoryFocus: 'pelvis',
+        pelvis: [0.0, 0, 0.88 + lift],
+        spineMid: [0.0, 0, 1.1 + lift],
+        chest: [0.0, 0, 1.32 + lift],
+        antHint: [1, 0, 0],
+        lFoot: [0.0, -0.11, 0.06 + lift * 0.85],
+        rFoot: [0.0, 0.11, 0.06 + lift * 0.85],
+        lKneePole: [0.28, -0.11, 0.48 + lift],
+        rKneePole: [0.28, 0.11, 0.48 + lift],
+        lHand: vlerp([0.04, -0.22, 0.86], [0.22, -0.24, 1.08 + lift], ts),
+        rHand: vlerp([0.04, 0.22, 0.86], [0.22, 0.24, 1.08 + lift], ts),
+        lElbowPole: [-0.08, -0.34, 0.96],
+        rElbowPole: [-0.08, 0.34, 0.96],
+        activeZones: ['quads', 'glutes', 'core'],
+      };
+    }
     case 'mat-standing-rolldown': {
       return {
         poseFeatureKo: '두 발 대칭 매트 스탠딩에서 경추부터 순차 분절 척추 롤다운·센터링',
@@ -2026,6 +2075,97 @@ function sampleArchetype3DRig(
     }
 
     // --- REFORMER ARCHETYPES ---
+    case 'reformer-jumpboard': {
+      const cx = lerp(0.22, -0.28, ts);
+      const ct = 0.41;
+      const flight = smoothstep(Math.max(0, (rawT - 0.28) / 0.72));
+      const scissor = Math.sin(rawT * Math.PI) * 0.035;
+      return {
+        poseFeatureKo: '점프보드 수파인 착지 완충 굴곡에서 삼중 신전 플라이오메트릭 점프 비행',
+        trajectoryFocus: 'rFoot',
+        carriageX: cx,
+        withJumpboard: true,
+        pelvis: [cx + 0.24, 0, ct + 0.1],
+        spineMid: [cx + 0.02, 0, ct + 0.1],
+        chest: [cx - 0.17, 0, ct + 0.11],
+        antHint: [0, 0, 1],
+        lFoot: [lerp(0.925, 0.62, ts), -0.08, lerp(0.59, 0.67, flight) + scissor],
+        rFoot: [lerp(0.925, 0.62, ts), 0.08, lerp(0.59, 0.65, flight) - scissor],
+        lKneePole: [0.22, -0.06, lerp(1.22, 0.82, ts)],
+        rKneePole: [0.22, 0.06, lerp(1.22, 0.82, ts)],
+        lHand: [cx + 0.24, -0.22, ct + 0.04],
+        rHand: [cx + 0.24, 0.22, ct + 0.04],
+        lElbowPole: [0.02, -0.35, -0.25],
+        rElbowPole: [0.02, 0.35, -0.25],
+        activeZones: ['quads', 'glutes', 'core'],
+      };
+    }
+    case 'reformer-pelvic-clock-ball': {
+      const cx = lerp(0.24, 0.21, ts);
+      const ct = 0.41;
+      return {
+        poseFeatureKo: '풋바 양발 지지·무릎 사이 미니볼 밀착에서 골반 시계 틸트와 흉식 호흡 암 플로트',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        pelvis: [cx + 0.24, 0, ct + lerp(0.095, 0.135, ts)],
+        spineMid: [cx + 0.02, 0, ct + lerp(0.105, 0.09, ts)],
+        chest: [cx - 0.17, 0, ct + 0.11],
+        antHint: [lerp(0, 0.14, ts), 0, 1],
+        lFoot: [0.82, -0.085, 0.57],
+        rFoot: [0.82, 0.085, 0.57],
+        lKneePole: [0.42, -0.085, 1.06],
+        rKneePole: [0.42, 0.085, 1.06],
+        lHand: vlerp([cx + 0.22, -0.22, ct + 0.06], [cx + 0.02, -0.25, ct + 0.36], ts),
+        rHand: vlerp([cx + 0.22, 0.22, ct + 0.06], [cx + 0.02, 0.25, ct + 0.36], ts),
+        lElbowPole: [cx - 0.05, -0.36, 0.36],
+        rElbowPole: [cx - 0.05, 0.36, 0.36],
+        activeZones: ['core', 'adductors'],
+      };
+    }
+    case 'reformer-footwork-ring': {
+      const cx = lerp(0.24, -0.18, ts);
+      const ct = 0.41;
+      return {
+        poseFeatureKo: '허벅지 써클링 외전·내전 텐션 유지 채 와이드 세컨드 캐리지 풋워크 프레스',
+        trajectoryFocus: 'chest',
+        carriageX: cx,
+        pelvis: [cx + 0.24, 0, ct + 0.1],
+        spineMid: [cx + 0.02, 0, ct + 0.1],
+        chest: [cx - 0.17, 0, ct + 0.11],
+        antHint: [0, 0, 1],
+        lFoot: [0.82, -0.16, 0.57],
+        rFoot: [0.82, 0.16, 0.57],
+        lKneePole: [0.24, -0.22, lerp(1.24, 0.9, ts)],
+        rKneePole: [0.24, 0.22, lerp(1.24, 0.9, ts)],
+        lHand: [cx + 0.25, -0.22, ct + 0.04],
+        rHand: [cx + 0.25, 0.22, ct + 0.04],
+        lElbowPole: [0.02, -0.35, -0.25],
+        rElbowPole: [0.02, 0.35, -0.25],
+        activeZones: ['glutes', 'adductors', 'quads'],
+      };
+    }
+    case 'reformer-bridge-ring': {
+      const cx = lerp(0.24, 0.04, ts);
+      const ct = 0.41;
+      return {
+        poseFeatureKo: '허벅지 써클링 밀착 브리지 사선 리프트 유지와 햄스트링 캐리지 인·아웃 제어',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [cx + 0.25, 0, ct + lerp(0.12, 0.35, ts)],
+        spineMid: [cx + 0.03, 0, ct + lerp(0.11, 0.24, ts)],
+        chest: [cx - 0.17, 0, ct + 0.11],
+        antHint: [lerp(0.05, 0.34, ts), 0, 1],
+        lFoot: [0.82, -0.09, 0.57],
+        rFoot: [0.82, 0.09, 0.57],
+        lKneePole: [0.32, -0.09, 1.18],
+        rKneePole: [0.32, 0.09, 1.18],
+        lHand: [cx + 0.22, -0.22, ct + 0.04],
+        rHand: [cx + 0.22, 0.22, ct + 0.04],
+        lElbowPole: [0.02, -0.35, -0.25],
+        rElbowPole: [0.02, 0.35, -0.25],
+        activeZones: ['glutes', 'adductors', 'core'],
+      };
+    }
     case 'reformer-supine-arms': {
       const cx = lerp(0.22, -0.12, ts);
       const ct = 0.41;
@@ -2049,51 +2189,358 @@ function sampleArchetype3DRig(
         activeZones: ['core', 'shoulders', 'quads'],
       };
     }
-    case 'reformer-shortbox-abs': {
+    case 'reformer-shortbox-row': {
+      const cx = lerp(0.18, -0.08, ts);
+      const bt = 0.64;
+      return {
+        poseFeatureKo: '숏박스 착석 라이저 방향 수직 척추 정렬과 양손 스트랩 견갑 후인 시티드 로우',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        withShortbox: true,
+        ropeToHands: true,
+        pelvis: [cx + 0.08, 0, bt + 0.08],
+        spineMid: [cx + 0.08, 0, bt + 0.3],
+        chest: [cx + 0.09, 0, bt + 0.52],
+        antHint: [-1, 0, 0],
+        lFoot: [cx - 0.32, -0.11, 0.45],
+        rFoot: [cx - 0.32, 0.11, 0.45],
+        lKneePole: [cx - 0.12, -0.14, bt + 0.22],
+        rKneePole: [cx - 0.12, 0.14, bt + 0.22],
+        lHand: vlerp([cx - 0.22, -0.18, bt + 0.34], [cx + 0.14, -0.22, bt + 0.28], ts),
+        rHand: vlerp([cx - 0.22, 0.18, bt + 0.34], [cx + 0.14, 0.22, bt + 0.28], ts),
+        lElbowPole: [cx + 0.28, -0.36, bt + 0.32],
+        rElbowPole: [cx + 0.28, 0.36, bt + 0.32],
+        activeZones: ['back', 'shoulders', 'core'],
+      };
+    }
+    case 'reformer-shortbox-tree': {
       const cx = 0.14;
       const bt = 0.64;
       return {
-        poseFeatureKo: '숏박스 착석 발 스트랩 고정에서 C커브 라운드백·플랫백 힌지 제어',
+        poseFeatureKo: '숏박스 풋스트랩 반대발 앵커 고정과 한 다리 수직 신전 클라임 어 트리 분절',
+        trajectoryFocus: 'rFoot',
+        carriageX: cx,
+        withShortbox: true,
+        pelvis: [cx + 0.08, 0, bt + 0.08],
+        spineMid: vlerp([cx + 0.06, 0, bt + 0.3], [cx - 0.1, 0, bt + 0.21], ts),
+        chest: vlerp([cx + 0.04, 0, bt + 0.52], [cx - 0.26, 0, bt + 0.34], ts),
+        antHint: vlerp([0.96, 0, 0.2], [0.68, 0, 0.72], ts),
+        lFoot: [0.84, -0.1, 0.54],
+        rFoot: vlerp([0.52, 0.09, 0.94], [0.1, 0.08, 1.36], ts),
+        lKneePole: [0.52, -0.1, 0.88],
+        rKneePole: [0.06, 0.1, 1.18],
+        lHand: vlerp([0.36, -0.1, 0.94], [0.08, -0.08, 1.24], ts),
+        rHand: vlerp([0.36, 0.14, 0.94], [0.08, 0.14, 1.24], ts),
+        lElbowPole: [0.02, -0.32, bt + 0.42],
+        rElbowPole: [0.02, 0.32, bt + 0.42],
+        activeZones: ['core', 'quads'],
+      };
+    }
+    case 'reformer-shortbox-abs': {
+      const cx = 0.14;
+      const bt = 0.64;
+      const exText = `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`;
+      const isFlatOnly = /flat\s*back|플랫백/.test(exText) && !/round|라운드/.test(exText);
+      const hasTwist = /twist|트위스트|oblique|오블리크/.test(exText);
+      const rotY = hasTwist ? lerp(0, -0.08, ts) : 0;
+      return {
+        poseFeatureKo: isFlatOnly
+          ? '숏박스 착석 발 스트랩 고정에서 정수리 축성 신장 플랫백 사선 힌지'
+          : hasTwist
+            ? '숏박스 착석 발 스트랩 고정에서 C커브 라운드백·오블리크 트위스트 리치'
+            : '숏박스 착석 발 스트랩 고정에서 C커브 라운드백·플랫백 힌지 제어',
         trajectoryFocus: 'chest',
         carriageX: cx,
         withShortbox: true,
         pelvis: [cx + 0.08, 0, bt + 0.08],
-        spineMid: vlerp([cx + 0.08, 0, bt + 0.3], [cx - 0.08, 0, bt + 0.22], ts),
-        chest: vlerp([cx + 0.08, 0, bt + 0.52], [cx - 0.24, 0, bt + 0.36], ts),
-        antHint: vlerp([1, 0, 0], [0.72, 0, 0.68], ts),
+        spineMid: vlerp(
+          [cx + 0.08, 0, bt + 0.3],
+          [cx - (isFlatOnly ? 0.05 : 0.09), rotY * 0.5, bt + (isFlatOnly ? 0.27 : 0.22)],
+          ts,
+        ),
+        chest: vlerp(
+          [cx + 0.08, 0, bt + 0.52],
+          [cx - (isFlatOnly ? 0.19 : 0.24), rotY, bt + (isFlatOnly ? 0.44 : 0.36)],
+          ts,
+        ),
+        antHint: hasTwist
+          ? vlerp([1, 0, 0], [0.68, -0.52, 0.52], ts)
+          : vlerp([1, 0, 0], [0.72, 0, 0.68], ts),
         lFoot: [0.84, -0.1, 0.54],
         rFoot: [0.84, 0.1, 0.54],
         lKneePole: [0.52, -0.1, 0.88],
         rKneePole: [0.52, 0.1, 0.88],
-        lHand: vlerp([cx + 0.24, -0.16, bt + 0.44], [cx - 0.08, -0.16, bt + 0.46], ts),
-        rHand: vlerp([cx + 0.24, 0.16, bt + 0.44], [cx - 0.08, 0.16, bt + 0.46], ts),
+        lHand: isFlatOnly
+          ? vlerp([cx + 0.12, -0.18, bt + 0.72], [cx - 0.18, -0.18, bt + 0.64], ts)
+          : hasTwist
+            ? vlerp([cx + 0.24, -0.16, bt + 0.44], [cx + 0.08, -0.34, bt + 0.52], ts)
+            : vlerp([cx + 0.24, -0.16, bt + 0.44], [cx - 0.08, -0.16, bt + 0.46], ts),
+        rHand: isFlatOnly
+          ? vlerp([cx + 0.12, 0.18, bt + 0.72], [cx - 0.18, 0.18, bt + 0.64], ts)
+          : hasTwist
+            ? vlerp([cx + 0.24, 0.16, bt + 0.44], [cx - 0.28, 0.28, bt + 0.44], ts)
+            : vlerp([cx + 0.24, 0.16, bt + 0.44], [cx - 0.08, 0.16, bt + 0.46], ts),
         lElbowPole: [cx - 0.05, -0.34, bt + 0.38],
         rElbowPole: [cx - 0.05, 0.34, bt + 0.38],
         activeZones: ['core', 'obliques'],
       };
     }
-    case 'reformer-longbox-swan': {
+    case 'reformer-longbox-breaststroke': {
       const cx = lerp(0.16, -0.14, ts);
       const bt = 0.64;
+      const sweepY = Math.sin(rawT * Math.PI) * 0.22;
       return {
-        poseFeatureKo: '롱박스 엎드린 지지에서 양손 스트랩 후방 당김(풀링 스트랩)과 흉추 스완 신전',
-        trajectoryFocus: 'chest',
+        poseFeatureKo: '롱박스 엎드린 치골 지지에서 양팔 전방 푸시→수영 원형 스윕 브레스트스트로크 신전',
+        trajectoryFocus: 'rHand',
         carriageX: cx,
         withLongbox: true,
         ropeToHands: true,
         pelvis: [cx + 0.12, 0, bt + 0.07],
+        spineMid: [cx - 0.08, 0, bt + lerp(0.08, 0.18, ts)],
+        chest: [cx - 0.28, 0, bt + lerp(0.11, 0.34, ts)],
+        antHint: [-lerp(0.32, 0.74, ts), 0, -0.82],
+        lFoot: [cx + 0.68, -0.09, bt + lerp(0.08, 0.2, ts)],
+        rFoot: [cx + 0.68, 0.09, bt + lerp(0.08, 0.2, ts)],
+        lKneePole: [cx + 0.42, -0.09, bt - 0.15],
+        rKneePole: [cx + 0.42, 0.09, bt - 0.15],
+        lHand: [lerp(cx - 0.56, cx - 0.04, ts), -0.2 - sweepY, bt + lerp(0.06, 0.22, ts)],
+        rHand: [lerp(cx - 0.56, cx - 0.04, ts), 0.2 + sweepY, bt + lerp(0.06, 0.22, ts)],
+        lElbowPole: [cx - 0.24, -0.4, bt + 0.16],
+        rElbowPole: [cx - 0.24, 0.4, bt + 0.16],
+        activeZones: ['back', 'shoulders', 'glutes'],
+      };
+    }
+    case 'reformer-longbox-swimming': {
+      const cx = lerp(0.12, 0.06, ts);
+      const bt = 0.64;
+      const alt = Math.cos(rawT * Math.PI * 3) * 0.13;
+      return {
+        poseFeatureKo: '롱박스 엎드린 몸통 부양 지지에서 반대쪽 팔·다리 교차 공중 스위밍',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        withLongbox: true,
+        pelvis: [cx + 0.1, 0, bt + 0.07],
+        spineMid: [cx - 0.1, 0, bt + lerp(0.1, 0.16, ts)],
+        chest: [cx - 0.3, 0, bt + lerp(0.14, 0.25, ts)],
+        antHint: [-0.48, 0, -0.86],
+        lFoot: [cx + 0.72, -0.1, bt + 0.18 + alt],
+        rFoot: [cx + 0.72, 0.1, bt + 0.18 - alt],
+        lKneePole: [cx + 0.42, -0.1, bt - 0.14],
+        rKneePole: [cx + 0.42, 0.1, bt - 0.14],
+        lHand: [cx - 0.68, -0.18, bt + 0.26 - alt],
+        rHand: [cx - 0.68, 0.18, bt + 0.26 + alt],
+        lElbowPole: [cx - 0.46, -0.32, bt + 0.2],
+        rElbowPole: [cx - 0.46, 0.32, bt + 0.2],
+        activeZones: ['back', 'glutes', 'core'],
+      };
+    }
+    case 'reformer-longbox-horseback': {
+      const cx = lerp(0.16, -0.08, ts);
+      const bt = 0.64;
+      const hover = lerp(0.07, 0.19, ts);
+      return {
+        poseFeatureKo: '롱박스 양옆 허벅지 내전 기승 착석에서 C커브 골반 호버와 스트랩 전상방 리치',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        withLongbox: true,
+        ropeToHands: true,
+        pelvis: [cx + 0.08, 0, bt + hover],
+        spineMid: [cx + 0.06, 0, bt + hover + 0.21],
+        chest: [cx + 0.12, 0, bt + hover + 0.4],
+        antHint: [0.94, 0, -0.28],
+        lFoot: [cx + 0.18, -0.26, lerp(0.38, 0.46, ts)],
+        rFoot: [cx + 0.18, 0.26, lerp(0.38, 0.46, ts)],
+        lKneePole: [cx + 0.34, -0.34, 0.56],
+        rKneePole: [cx + 0.34, 0.34, 0.56],
+        lHand: vlerp([cx + 0.12, -0.22, bt + 0.14], [cx + 0.42, -0.16, bt + 0.48], ts),
+        rHand: vlerp([cx + 0.12, 0.22, bt + 0.14], [cx + 0.42, 0.16, bt + 0.48], ts),
+        lElbowPole: [cx - 0.04, -0.34, bt + 0.36],
+        rElbowPole: [cx - 0.04, 0.34, bt + 0.36],
+        activeZones: ['adductors', 'core', 'shoulders'],
+      };
+    }
+    case 'reformer-longbox-backstroke': {
+      const cx = lerp(0.16, -0.14, ts);
+      const bt = 0.65;
+      const spread = Math.sin(rawT * Math.PI) * 0.18;
+      return {
+        poseFeatureKo: '롱박스 수파인 상체 컬업 지지에서 팔·다리 천장 리치→수영 서클 백스트로크',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        withLongbox: true,
+        ropeToHands: true,
+        pelvis: [cx + 0.1, 0, bt + 0.08],
+        spineMid: [cx - 0.1, 0, bt + 0.14],
+        chest: [cx - 0.28, 0, bt + lerp(0.22, 0.29, ts)],
+        antHint: [0.46, 0, 0.88],
+        lFoot: [
+          lerp(cx + 0.18, cx + 0.68, ts),
+          -0.08 - spread,
+          lerp(bt + 0.44, bt + 0.52, ts),
+        ],
+        rFoot: [
+          lerp(cx + 0.18, cx + 0.68, ts),
+          0.08 + spread,
+          lerp(bt + 0.44, bt + 0.52, ts),
+        ],
+        lKneePole: [cx - 0.08, -0.14, 1.24],
+        rKneePole: [cx - 0.08, 0.14, 1.24],
+        lHand: [
+          lerp(cx - 0.24, cx + 0.28, ts),
+          -0.16 - spread * 1.1,
+          lerp(bt + 0.48, bt + 0.34, ts),
+        ],
+        rHand: [
+          lerp(cx - 0.24, cx + 0.28, ts),
+          0.16 + spread * 1.1,
+          lerp(bt + 0.48, bt + 0.34, ts),
+        ],
+        lElbowPole: [cx - 0.26, -0.36, bt + 0.24],
+        rElbowPole: [cx - 0.26, 0.36, bt + 0.24],
+        activeZones: ['core', 'adductors', 'shoulders'],
+      };
+    }
+    case 'reformer-longbox-swan': {
+      const isSwanPrepOnly = exercise.id === 'original-reformer-box-swan-prep';
+      const cx = isSwanPrepOnly ? lerp(0.14, 0.08, ts) : lerp(0.16, -0.14, ts);
+      const bt = 0.64;
+      return {
+        poseFeatureKo: isSwanPrepOnly
+          ? '롱박스 엎드린 치골·하부 늑골 지지에서 경추~흉추 축성 베이비 스완 신전'
+          : '롱박스 엎드린 지지에서 양손 스트랩 후방 당김(풀링 스트랩)과 흉추 스완 신전',
+        trajectoryFocus: 'chest',
+        carriageX: cx,
+        withLongbox: true,
+        ropeToHands: !isSwanPrepOnly,
+        pelvis: [cx + 0.12, 0, bt + 0.07],
         spineMid: [cx - 0.08, 0, bt + lerp(0.08, 0.17, ts)],
-        chest: [cx - 0.28, 0, bt + lerp(0.1, 0.32, ts)],
+        chest: [cx - 0.28, 0, bt + lerp(0.1, isSwanPrepOnly ? 0.25 : 0.32, ts)],
         antHint: [-lerp(0.3, 0.72, ts), 0, -0.82],
         lFoot: [cx + 0.68, -0.09, bt + lerp(0.06, 0.18, ts)],
         rFoot: [cx + 0.68, 0.09, bt + lerp(0.06, 0.18, ts)],
         lKneePole: [cx + 0.42, -0.09, bt - 0.15],
         rKneePole: [cx + 0.42, 0.09, bt - 0.15],
-        lHand: vlerp([cx - 0.48, -0.22, bt - 0.08], [cx + 0.08, -0.22, bt + 0.16], ts),
-        rHand: vlerp([cx - 0.48, 0.22, bt - 0.08], [cx + 0.08, 0.22, bt + 0.16], ts),
+        lHand: isSwanPrepOnly
+          ? vlerp([cx - 0.34, -0.22, bt + 0.04], [cx - 0.26, -0.22, bt + 0.14], ts)
+          : vlerp([cx - 0.48, -0.22, bt - 0.08], [cx + 0.08, -0.22, bt + 0.16], ts),
+        rHand: isSwanPrepOnly
+          ? vlerp([cx - 0.34, 0.22, bt + 0.04], [cx - 0.26, 0.22, bt + 0.14], ts)
+          : vlerp([cx - 0.48, 0.22, bt - 0.08], [cx + 0.08, 0.22, bt + 0.16], ts),
         lElbowPole: [cx - 0.12, -0.34, bt + 0.18],
         rElbowPole: [cx - 0.12, 0.34, bt + 0.18],
         activeZones: ['back', 'shoulders', 'glutes'],
+      };
+    }
+    case 'reformer-kneeling-triceps': {
+      const cx = lerp(0.18, -0.06, ts);
+      return {
+        poseFeatureKo: '캐리지 톨 닐링 직립 지지에서 팔꿈치 옆구리 고정 스트랩 트라이셉스 신전',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        ropeToHands: true,
+        pelvis: [cx + 0.1, 0, 0.86],
+        spineMid: [cx + 0.09, 0, 1.08],
+        chest: [cx + 0.08, 0, 1.3],
+        antHint: [-1, 0, 0],
+        lFoot: [cx + 0.4, -0.11, 0.45],
+        rFoot: [cx + 0.4, 0.11, 0.45],
+        lKneePole: [cx - 0.12, -0.11, 0.44],
+        rKneePole: [cx - 0.12, 0.11, 0.44],
+        lHand: vlerp([cx - 0.08, -0.2, 1.06], [cx + 0.22, -0.2, 0.82], ts),
+        rHand: vlerp([cx - 0.08, 0.2, 1.06], [cx + 0.22, 0.2, 0.82], ts),
+        lElbowPole: [cx + 0.16, -0.26, 1.02],
+        rElbowPole: [cx + 0.16, 0.26, 1.02],
+        activeZones: ['shoulders', 'back', 'core'],
+      };
+    }
+    case 'reformer-reverse-abs-kneeling': {
+      const cx = lerp(-0.12, 0.18, ts);
+      return {
+        poseFeatureKo: '프레임·풋바 방향 네발기기 지지에서 하복부 C커브 스쿱 리버스 앱 캐리지 당김',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [cx + 0.12, 0, lerp(0.76, 0.84, ts)],
+        spineMid: [lerp(cx + 0.34, cx + 0.28, ts), 0, lerp(0.78, 0.88, ts)],
+        chest: [0.58, 0, 0.8],
+        antHint: [0.22, 0, -0.96],
+        lFoot: [cx - 0.2, -0.11, 0.45],
+        rFoot: [cx - 0.2, 0.11, 0.45],
+        lKneePole: [cx + 0.24, -0.11, 0.43],
+        rKneePole: [cx + 0.24, 0.11, 0.43],
+        lHand: [0.82, -0.2, 0.44],
+        rHand: [0.82, 0.2, 0.44],
+        lElbowPole: [0.58, -0.34, 0.64],
+        rElbowPole: [0.58, 0.34, 0.64],
+        activeZones: ['core', 'obliques', 'shoulders'],
+      };
+    }
+    case 'reformer-knee-stretches': {
+      const kneesOff = /knees[\s-]?off|니즈\s*오프|호버/i.test(
+        `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`,
+      );
+      const cx = lerp(0.22, -0.1, ts);
+      const kz = kneesOff ? 0.5 : 0.44;
+      return {
+        poseFeatureKo: kneesOff
+          ? '풋바 양손·숄더블록 발볼 지지에서 무릎 4cm 호버링 유지 니즈 오프 왕복'
+          : '풋바 양손·캐리지 무릎 지지에서 상체 C커브 고정 고관절 니 스트레치 왕복',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [cx + 0.18, 0, lerp(0.78, 0.74, ts) + (kneesOff ? 0.05 : 0)],
+        spineMid: [lerp(0.48, 0.38, ts), 0, 0.84 + (kneesOff ? 0.03 : 0)],
+        chest: [0.66, 0, 0.86],
+        antHint: [0.28, 0, -0.95],
+        lFoot: [cx - 0.16, -0.09, 0.46],
+        rFoot: [cx - 0.16, 0.09, 0.46],
+        lKneePole: [cx + 0.24, -0.1, kz],
+        rKneePole: [cx + 0.24, 0.1, kz],
+        lHand: [0.825, -0.17, 0.58],
+        rHand: [0.825, 0.17, 0.58],
+        lElbowPole: [0.58, -0.32, 0.76],
+        rElbowPole: [0.58, 0.32, 0.76],
+        activeZones: ['core', 'quads', 'shoulders'],
+      };
+    }
+    case 'reformer-down-stretch': {
+      const cx = lerp(0.22, -0.14, ts);
+      return {
+        poseFeatureKo: '캐리지 무릎·풋바 양손 지지에서 골반 전진 및 상부 흉추 사선 다운 스트레치 신전',
+        trajectoryFocus: 'chest',
+        carriageX: cx,
+        pelvis: [lerp(cx + 0.26, cx + 0.38, ts), 0, lerp(0.76, 0.7, ts)],
+        spineMid: [lerp(0.54, 0.46, ts), 0, lerp(0.92, 0.9, ts)],
+        chest: [lerp(0.68, 0.62, ts), 0, lerp(1.08, 1.14, ts)],
+        antHint: [0.84, 0, lerp(0.22, 0.52, ts)],
+        lFoot: [cx - 0.16, -0.09, 0.46],
+        rFoot: [cx - 0.16, 0.09, 0.46],
+        lKneePole: [cx + 0.22, -0.1, 0.43],
+        rKneePole: [cx + 0.22, 0.1, 0.43],
+        lHand: [0.825, -0.18, 0.58],
+        rHand: [0.825, 0.18, 0.58],
+        lElbowPole: [0.64, -0.32, 0.82],
+        rElbowPole: [0.64, 0.32, 0.82],
+        activeZones: ['back', 'glutes', 'shoulders'],
+      };
+    }
+    case 'reformer-kneeling-lunge': {
+      const cx = lerp(0.22, -0.16, ts);
+      return {
+        poseFeatureKo: '바닥 지지발과 캐리지 뒷무릎 지지에서 장요근·햄스트링 이브스 런지 스트레치',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [lerp(0.46, 0.34, ts), -0.18, lerp(0.78, 0.68, ts)],
+        spineMid: [lerp(0.54, 0.46, ts), -0.16, lerp(0.98, 0.9, ts)],
+        chest: [lerp(0.62, 0.58, ts), -0.14, lerp(1.18, 1.12, ts)],
+        antHint: [0.94, -0.15, 0.15],
+        lFoot: [0.68, -0.34, 0.05],
+        rFoot: [cx - 0.16, -0.06, 0.46],
+        lKneePole: [0.96, -0.34, 0.48],
+        rKneePole: [cx + 0.18, -0.1, 0.42],
+        lHand: [0.825, -0.22, 0.58],
+        rHand: [0.825, 0.06, 0.58],
+        lElbowPole: [0.56, -0.36, 0.82],
+        rElbowPole: [0.56, 0.2, 0.82],
+        activeZones: ['quads', 'glutes', 'core'],
       };
     }
     case 'reformer-kneeling-arms': {
@@ -2276,6 +2723,138 @@ function sampleArchetype3DRig(
         activeZones: ['obliques', 'core'],
       };
     }
+    case 'reformer-lunge-arabesque': {
+      const cx = lerp(0.24, -0.16, ts);
+      return {
+        poseFeatureKo: '바닥 지지발 고정 런지에서 뒷다리 후상방 단측성 아라베스크 힙 익스텐션',
+        trajectoryFocus: 'rFoot',
+        carriageX: cx,
+        pelvis: [0.46, -0.18, lerp(0.84, 0.88, ts)],
+        spineMid: [0.58, -0.16, lerp(1.0, 0.96, ts)],
+        chest: [0.7, -0.14, lerp(1.16, 1.04, ts)],
+        antHint: [0.85, -0.15, -0.5],
+        lFoot: [0.64, -0.34, 0.05],
+        rFoot: vlerp([cx - 0.12, -0.06, 0.46], [-0.28, -0.1, 0.98], ts),
+        lKneePole: [0.95, -0.34, 0.5],
+        rKneePole: [0.15, -0.12, 0.62],
+        lHand: [0.825, -0.22, 0.58],
+        rHand: [0.825, 0.08, 0.58],
+        lElbowPole: [0.5, -0.36, 0.84],
+        rElbowPole: [0.5, 0.2, 0.84],
+        activeZones: ['glutes', 'quads', 'core'],
+      };
+    }
+    case 'reformer-front-splits': {
+      const isRussian = /russian|러시안/i.test(
+        `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`,
+      );
+      const cx = lerp(0.22, -0.22, ts);
+      return {
+        poseFeatureKo: isRussian
+          ? '기구 위 앞·뒤 발 스플릿 정렬에서 핸즈프리 코어 수직 러시안 스플릿 밸런스'
+          : '풋바 앞발·숄더블록 뒷발 지지에서 골반 스퀘어 리포머 프론트 스플릿 신장',
+        trajectoryFocus: 'rFoot',
+        carriageX: cx,
+        pelvis: [lerp(0.46, 0.28, ts), 0, lerp(0.98, 0.82, ts)],
+        spineMid: [lerp(0.48, 0.3, ts), 0, lerp(1.2, 1.04, ts)],
+        chest: [lerp(0.5, 0.32, ts), 0, lerp(1.42, 1.26, ts)],
+        antHint: [1, 0, 0],
+        lFoot: [0.88, -0.06, 0.46],
+        rFoot: [cx - 0.16, 0.06, 0.46],
+        lKneePole: [1.08, -0.06, 0.78],
+        rKneePole: [cx + 0.14, 0.06, 0.72],
+        lHand: isRussian ? vlerp([0.54, -0.24, 1.32], [0.36, -0.42, 1.24], ts) : [0.825, -0.18, 0.58],
+        rHand: isRussian ? vlerp([0.54, 0.24, 1.32], [0.36, 0.42, 1.24], ts) : [0.825, 0.18, 0.58],
+        lElbowPole: [0.42, -0.34, 1.02],
+        rElbowPole: [0.42, 0.34, 1.02],
+        activeZones: ['quads', 'glutes', 'core'],
+      };
+    }
+    case 'reformer-snake-twist': {
+      const cx = lerp(0.2, -0.16, ts);
+      return {
+        poseFeatureKo: '풋바 비대칭 양손 그립과 교차 발 지지에서 측면 파이크→사이드 플랭크 스네이크 아치',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [cx + 0.22, 0.04, lerp(1.04, 0.74, ts)],
+        spineMid: [cx + 0.4, 0.02, lerp(0.98, 0.8, ts)],
+        chest: [lerp(0.64, 0.56, ts), 0, lerp(0.9, 0.86, ts)],
+        antHint: vlerp([0.2, -0.96, -0.2], [0.35, -0.82, 0.44], ts),
+        lFoot: [cx - 0.14, 0.04, 0.47],
+        rFoot: [cx - 0.1, -0.05, 0.48],
+        lKneePole: [cx + 0.18, -0.26, 0.64],
+        rKneePole: [cx + 0.22, -0.28, 0.66],
+        lHand: [0.825, -0.16, 0.58],
+        rHand: [0.825, 0.12, 0.58],
+        lElbowPole: [0.54, -0.3, 0.82],
+        rElbowPole: [0.54, 0.28, 0.82],
+        activeZones: ['obliques', 'core', 'shoulders'],
+      };
+    }
+    case 'reformer-stomach-massage-round': {
+      const cx = lerp(0.24, -0.14, ts);
+      return {
+        poseFeatureKo: '캐리지 앞모서리 양손 파지와 깊은 C커브 스쿱 스터먹 마사지 라운드백 프레스',
+        trajectoryFocus: 'pelvis',
+        carriageX: cx,
+        pelvis: [cx + 0.24, 0, 0.48],
+        spineMid: [cx + 0.14, 0, 0.67],
+        chest: [cx + 0.22, 0, 0.85],
+        antHint: [0.92, 0, -0.38],
+        lFoot: [0.825, -0.07, lerp(0.56, 0.62, ts)],
+        rFoot: [0.825, 0.07, lerp(0.56, 0.62, ts)],
+        lKneePole: [0.55, -0.2, lerp(0.96, 0.72, ts)],
+        rKneePole: [0.55, 0.2, lerp(0.96, 0.72, ts)],
+        lHand: [cx + 0.44, -0.16, 0.44],
+        rHand: [cx + 0.44, 0.16, 0.44],
+        lElbowPole: [cx + 0.28, -0.34, 0.62],
+        rElbowPole: [cx + 0.28, 0.34, 0.62],
+        activeZones: ['core', 'quads'],
+      };
+    }
+    case 'reformer-stomach-massage-twist': {
+      const cx = lerp(0.24, -0.14, ts);
+      return {
+        poseFeatureKo: '양 좌골 균등 지지에서 캐리지 프레스와 단측성 흉추 회전 리치 업 & 트위스트',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        pelvis: [cx + 0.22, 0, 0.48],
+        spineMid: [cx + 0.2, 0, 0.7],
+        chest: [cx + 0.18, lerp(0, 0.05, ts), 0.92],
+        antHint: vlerp([1, 0, 0], [0.64, -0.76, 0.08], ts),
+        lFoot: [0.825, -0.07, lerp(0.56, 0.62, ts)],
+        rFoot: [0.825, 0.07, lerp(0.56, 0.62, ts)],
+        lKneePole: [0.55, -0.18, lerp(0.96, 0.72, ts)],
+        rKneePole: [0.55, 0.18, lerp(0.96, 0.72, ts)],
+        lHand: vlerp([cx + 0.42, -0.16, 0.88], [0.72, -0.14, 0.98], ts),
+        rHand: vlerp([cx + 0.42, 0.16, 0.88], [cx - 0.16, 0.38, 1.04], ts),
+        lElbowPole: [cx + 0.28, -0.32, 0.82],
+        rElbowPole: [cx + 0.02, 0.36, 0.88],
+        activeZones: ['obliques', 'core', 'quads'],
+      };
+    }
+    case 'reformer-side-arm-sitting': {
+      const cx = lerp(0.18, -0.08, ts);
+      return {
+        poseFeatureKo: '캐리지 측면 가부좌 착석에서 단측성 핸드 스트랩 나선형 몸통 회전 프레스',
+        trajectoryFocus: 'lHand',
+        carriageX: cx,
+        ropeToHands: true,
+        pelvis: [cx + 0.1, 0, 0.49],
+        spineMid: [cx + 0.1, 0, 0.71],
+        chest: [cx + 0.12, lerp(0, -0.04, ts), 0.93],
+        antHint: vlerp([0, -1, 0], [0.58, -0.81, 0], ts),
+        lFoot: [cx + 0.02, -0.16, 0.45],
+        rFoot: [cx + 0.22, -0.16, 0.45],
+        lKneePole: [cx - 0.08, -0.34, 0.5],
+        rKneePole: [cx + 0.3, -0.34, 0.5],
+        lHand: vlerp([cx - 0.06, -0.18, 0.82], [cx + 0.36, -0.24, 0.88], ts),
+        rHand: [cx + 0.18, 0.18, 0.52],
+        lElbowPole: [cx - 0.16, -0.34, 0.76],
+        rElbowPole: [cx + 0.22, 0.32, 0.68],
+        activeZones: ['obliques', 'shoulders', 'core'],
+      };
+    }
     case 'reformer-scooter-lunge': {
       const cx = lerp(0.24, -0.14, ts);
       return {
@@ -2349,6 +2928,99 @@ function sampleArchetype3DRig(
         lElbowPole: [-0.3, -0.3, 0.82],
         rElbowPole: [-0.3, 0.3, 0.82],
         activeZones: ['quads', 'core'],
+      };
+    }
+    case 'chair-goingup-side': {
+      const pdeg = lerp(8, 28, ts);
+      const [px, pz] = chairPedalPos(pdeg);
+      const liftZ = lerp(0.98, 1.31, ts);
+      return {
+        poseFeatureKo: '체어 시트 외회전 지지 다리와 측면 골반 수평 유지 고잉 업 사이드 상승',
+        trajectoryFocus: 'pelvis',
+        pedalDeg: pdeg,
+        withChairHandles: true,
+        pelvis: [lerp(0.12, -0.02, ts), 0.02, liftZ],
+        spineMid: [lerp(0.1, -0.02, ts), 0.02, liftZ + 0.22],
+        chest: [lerp(0.08, -0.02, ts), 0.02, liftZ + 0.44],
+        antHint: [0, -1, 0],
+        lFoot: [-0.08, 0.02, 0.63],
+        rFoot: [px, -0.04, pz + 0.04],
+        lKneePole: [-0.08, -0.38, 0.96],
+        rKneePole: [0.22, -0.34, 0.72],
+        lHand: [-0.02, -0.28, 1.27],
+        rHand: [0.12, -0.26, lerp(1.16, 1.46, ts)],
+        lElbowPole: [-0.14, -0.4, 1.18],
+        rElbowPole: [0.18, -0.4, 1.32],
+        activeZones: ['glutes', 'adductors', 'obliques'],
+      };
+    }
+    case 'chair-standing-leg-pump': {
+      const pdeg = lerp(32, 8, ts);
+      const [px, pz] = chairPedalPos(pdeg);
+      return {
+        poseFeatureKo: '체어 앞 바닥 한 발 수직 지지와 반대 발 단측성 페달 펌프 컨트롤',
+        trajectoryFocus: 'rFoot',
+        pedalDeg: pdeg,
+        pelvis: [0.58, 0, 0.9],
+        spineMid: [0.58, 0, 1.12],
+        chest: [0.58, 0, 1.34],
+        antHint: [-1, 0, 0],
+        lFoot: [0.6, -0.12, 0.05],
+        rFoot: [px, 0.09, pz + 0.04],
+        lKneePole: [0.3, -0.12, 0.48],
+        rKneePole: [0.28, 0.12, lerp(0.92, 0.68, ts)],
+        lHand: [0.58, -0.2, 0.94],
+        rHand: [0.58, 0.2, 0.94],
+        lElbowPole: [0.64, -0.34, 1.04],
+        rElbowPole: [0.64, 0.34, 1.04],
+        activeZones: ['quads', 'glutes', 'core'],
+      };
+    }
+    case 'chair-single-leg-core': {
+      const rDeg = lerp(32, 8, ts);
+      const lDeg = 32;
+      const [rpx, rpz] = chairPedalPos(rDeg);
+      return {
+        poseFeatureKo: '체어 시트 한 다리 90도 테이블탑 부양과 반대 다리 단측성 페달 프레스',
+        trajectoryFocus: 'rFoot',
+        pedalDeg: rDeg,
+        lPedalDeg: lDeg,
+        rPedalDeg: rDeg,
+        pelvis: [-0.06, 0, 0.68],
+        spineMid: [-0.07, 0, 0.9],
+        chest: [-0.08, 0, 1.12],
+        antHint: [1, 0, 0],
+        lFoot: vlerp([0.34, -0.1, 0.68], [0.46, -0.1, 0.78], ts),
+        rFoot: [rpx, 0.09, rpz + 0.04],
+        lKneePole: [0.28, -0.12, 1.04],
+        rKneePole: [0.45, 0.08, 0.96],
+        lHand: [0.22, -0.18, 1.02],
+        rHand: [0.22, 0.18, 1.02],
+        lElbowPole: [-0.06, -0.32, 0.98],
+        rElbowPole: [-0.06, 0.32, 0.98],
+        activeZones: ['core', 'quads'],
+      };
+    }
+    case 'chair-teaser-triceps': {
+      const pdeg = lerp(28, 10, ts);
+      const [px, pz] = chairPedalPos(pdeg);
+      return {
+        poseFeatureKo: '체어 시트 사선 V자 티저 다리 부양과 등 뒤 양손 페달 트라이셉 프레스',
+        trajectoryFocus: 'lHand',
+        pedalDeg: pdeg,
+        pelvis: [-0.02, 0, 0.68],
+        spineMid: [lerp(0.08, 0.14, ts), 0, lerp(0.84, 0.76, ts)],
+        chest: [lerp(0.18, 0.26, ts), 0, lerp(1.0, 0.88, ts)],
+        antHint: [-0.78, 0, 0.62],
+        lFoot: vlerp([-0.54, -0.08, 0.96], [-0.58, -0.08, 1.14], ts),
+        rFoot: vlerp([-0.54, 0.08, 0.96], [-0.58, 0.08, 1.14], ts),
+        lKneePole: [-0.28, -0.08, 1.12],
+        rKneePole: [-0.28, 0.08, 1.12],
+        lHand: [px, -0.16, pz + 0.03],
+        rHand: [px, 0.16, pz + 0.03],
+        lElbowPole: [0.38, -0.3, 0.68],
+        rElbowPole: [0.38, 0.3, 0.68],
+        activeZones: ['core', 'shoulders', 'quads'],
       };
     }
     case 'chair-goingup': {
@@ -2549,6 +3221,47 @@ function sampleArchetype3DRig(
         activeZones: ['core', 'quads'],
       };
     }
+    case 'cadillac-monkey': {
+      const ptDeg = lerp(38, 14, ts);
+      const [ex, ez] = cadillacPushThroughBarPos(ptDeg);
+      return {
+        poseFeatureKo: '푸쉬스루 바 손·발 동시 파지에서 무릎 신전·발목 가동 캐딜락 몽키 스트레치',
+        trajectoryFocus: 'rFoot',
+        pushthroughDeg: ptDeg,
+        pelvis: [0.1, 0, lerp(0.6, 0.65, ts)],
+        spineMid: [-0.08, 0, lerp(0.62, 0.72, ts)],
+        chest: [-0.26, 0, lerp(0.68, 0.84, ts)],
+        antHint: [0.55, 0, 0.83],
+        lFoot: [ex, -0.09, ez - 0.02],
+        rFoot: [ex, 0.09, ez - 0.02],
+        lKneePole: [lerp(0.05, 0.24, ts), -0.14, lerp(1.18, 1.02, ts)],
+        rKneePole: [lerp(0.05, 0.24, ts), 0.14, lerp(1.18, 1.02, ts)],
+        lHand: [ex, -0.2, ez],
+        rHand: [ex, 0.2, ez],
+        lElbowPole: [-0.14, -0.34, 1.05],
+        rElbowPole: [-0.14, 0.34, 1.05],
+        activeZones: ['core', 'back', 'quads'],
+      };
+    }
+    case 'cadillac-spread-eagle': {
+      return {
+        poseFeatureKo: '캐딜락 기둥 손·발 고정 서스펜션에서 C커브 신장→활 모양 스프레드 이글 신전',
+        trajectoryFocus: 'pelvis',
+        pelvis: [lerp(-0.46, -0.7, ts), 0, lerp(1.02, 1.14, ts)],
+        spineMid: [lerp(-0.52, -0.74, ts), 0, lerp(1.24, 1.35, ts)],
+        chest: [lerp(-0.62, -0.76, ts), 0, lerp(1.44, 1.56, ts)],
+        antHint: vlerp([-0.94, 0, -0.32], [-0.86, 0, 0.5], ts),
+        lFoot: [-1.02, -0.26, 0.74],
+        rFoot: [-1.02, 0.26, 0.74],
+        lKneePole: [-0.72, -0.28, 0.92],
+        rKneePole: [-0.72, 0.28, 0.92],
+        lHand: [-1.02, -0.28, 1.66],
+        rHand: [-1.02, 0.28, 1.66],
+        lElbowPole: [-0.74, -0.38, 1.54],
+        rElbowPole: [-0.74, 0.38, 1.54],
+        activeZones: ['back', 'glutes', 'shoulders'],
+      };
+    }
     case 'cadillac-hanging': {
       const lift = lerp(0.92, 1.24, ts);
       return {
@@ -2593,6 +3306,65 @@ function sampleArchetype3DRig(
 
     // --- BARREL ARCHETYPES ---
     case 'barrel-standing': {
+      const exText = `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`;
+      if (/hip-extension|힙\s*익스텐션/.test(exText)) {
+        return {
+          poseFeatureKo: '래더 양손 고정 스탠딩 지지에서 한 다리 후상방 힙 익스텐션 리프트',
+          trajectoryFocus: 'rFoot',
+          pelvis: [0.76, 0, 0.9],
+          spineMid: [0.7, 0, 1.1],
+          chest: [0.64, 0, 1.28],
+          antHint: [-0.94, 0, -0.32],
+          lFoot: [0.78, -0.1, 0.05],
+          rFoot: vlerp([0.84, 0.1, 0.08], [1.14, 0.1, 0.56], ts),
+          lKneePole: [0.5, -0.1, 0.48],
+          rKneePole: [0.95, 0.1, 0.32],
+          lHand: [0.49, -0.18, 0.96],
+          rHand: [0.49, 0.18, 0.96],
+          lElbowPole: [0.58, -0.32, 0.88],
+          rElbowPole: [0.58, 0.32, 0.88],
+          activeZones: ['glutes', 'core'],
+        };
+      }
+      if (/side-reach|사이드\s*레그\s*리치/.test(exText)) {
+        return {
+          poseFeatureKo: '래더 한 손 지지 스탠딩에서 바깥쪽 다리 외전 사이드 레그 리프트',
+          trajectoryFocus: 'rFoot',
+          pelvis: [0.76, 0.02, 0.9],
+          spineMid: [0.76, 0.02, 1.12],
+          chest: [0.76, 0.02, 1.34],
+          antHint: [0, -1, 0],
+          lFoot: [0.74, 0.06, 0.05],
+          rFoot: vlerp([0.78, -0.06, 0.06], [0.82, -0.38, 0.42], ts),
+          lKneePole: [0.74, -0.26, 0.48],
+          rKneePole: [0.82, -0.44, 0.46],
+          lHand: [0.5, 0.14, 0.96],
+          rHand: vlerp([0.78, -0.18, 0.92], [0.78, -0.34, 1.28], ts),
+          lElbowPole: [0.62, 0.3, 0.88],
+          rElbowPole: [0.78, -0.38, 1.12],
+          activeZones: ['glutes', 'obliques'],
+        };
+      }
+      if (/ankle|발목/.test(exText)) {
+        const lift = lerp(0, 0.07, ts);
+        return {
+          poseFeatureKo: '래더 양손 가벼운 지지에서 양발 뒤꿈치 카프 릴레베 발목 가동',
+          trajectoryFocus: 'pelvis',
+          pelvis: [0.78, 0, 0.89 + lift],
+          spineMid: [0.78, 0, 1.11 + lift],
+          chest: [0.78, 0, 1.33 + lift],
+          antHint: [-1, 0, 0],
+          lFoot: [0.78, -0.11, 0.05 + lift * 0.85],
+          rFoot: [0.78, 0.11, 0.05 + lift * 0.85],
+          lKneePole: [0.5, -0.11, 0.48 + lift],
+          rKneePole: [0.5, 0.11, 0.48 + lift],
+          lHand: [0.49, -0.18, 0.96],
+          rHand: [0.49, 0.18, 0.96],
+          lElbowPole: [0.64, -0.32, 0.92],
+          rElbowPole: [0.64, 0.32, 0.92],
+          activeZones: ['quads', 'core'],
+        };
+      }
       return {
         poseFeatureKo: '바렐·래더 앞 스탠딩 한 다리 발레 스트레치 지지와 몸통 측면·전방 리치',
         trajectoryFocus: 'rHand',
@@ -2768,7 +3540,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-mat-ankle-reach': {
     apparatus: 'mat',
     bodyPosition: 'standing',
-    archetype: 'mat-standing-rolldown',
+    archetype: 'mat-standing-calf-raise',
   },
   'original-cadillac-table-ankle': {
     apparatus: 'cadillac',
@@ -2809,7 +3581,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-reformer-seated-row': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'reformer-shortbox-abs',
+    archetype: 'reformer-shortbox-row',
   },
   'original-mat-heel-slide': {
     apparatus: 'mat',
@@ -2999,14 +3771,14 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-warmup-01': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
-    archetype: 'reformer-supine-arms',
+    archetype: 'reformer-pelvic-clock-ball',
   },
   'ex-warmup-02': {
     apparatus: 'cadillac',
     bodyPosition: 'kneeling',
     archetype: 'cadillac-cat-rolldown',
   },
-  'ex-warmup-03': { apparatus: 'mat', bodyPosition: 'supine', archetype: 'mat-supine-breath' },
+  'ex-warmup-03': { apparatus: 'mat', bodyPosition: 'supine', archetype: 'mat-foam-roller-supine' },
   'ex-footwork-01': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
@@ -3015,7 +3787,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-footwork-02': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
-    archetype: 'reformer-footwork',
+    archetype: 'reformer-footwork-ring',
   },
   'ex-footwork-03': { apparatus: 'chair', bodyPosition: 'seated', archetype: 'chair-pedal-press' },
   'ex-bridging-01': { apparatus: 'reformer', bodyPosition: 'supine', archetype: 'reformer-bridge' },
@@ -3096,7 +3868,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-core-04': {
     apparatus: 'reformer',
     bodyPosition: 'kneeling',
-    archetype: 'reformer-kneeling-arms',
+    archetype: 'reformer-reverse-abs-kneeling',
   },
   'ex-lower-04': {
     apparatus: 'reformer',
@@ -3116,7 +3888,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-kr-reformer-02': {
     apparatus: 'reformer',
     bodyPosition: 'standing',
-    archetype: 'reformer-scooter-lunge',
+    archetype: 'reformer-lunge-arabesque',
   },
   'ex-kr-barrel-01': {
     apparatus: 'barrel',
@@ -3126,7 +3898,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-kr-reformer-03': {
     apparatus: 'reformer',
     bodyPosition: 'kneeling',
-    archetype: 'reformer-kneeling-arms',
+    archetype: 'reformer-kneeling-triceps',
   },
   'ex-kr-chair-01': { apparatus: 'chair', bodyPosition: 'quadruped', archetype: 'chair-pike' },
   'ex-kr-reformer-04': {
@@ -3142,7 +3914,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-global-reformer-01': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
-    archetype: 'reformer-footwork',
+    archetype: 'reformer-bridge-ring',
   },
   'ex-global-reformer-02': {
     apparatus: 'mat',
@@ -3152,7 +3924,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'ex-global-reformer-03': {
     apparatus: 'reformer',
     bodyPosition: 'kneeling',
-    archetype: 'reformer-kneeling-arms',
+    archetype: 'reformer-kneeling-lunge',
   },
 
   // --- 60 GLOBAL CRAWLED REPERTOIRE MOVEMENTS ---
@@ -3218,12 +3990,12 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-reformer-stomach-massage-round': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'expanded-reformer-stomach-massage-hands-back',
+    archetype: 'reformer-stomach-massage-round',
   },
   'crawled-reformer-stomach-massage-reach-twist': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'expanded-reformer-stomach-massage-hands-back',
+    archetype: 'reformer-stomach-massage-twist',
   },
   'crawled-reformer-short-spine-massage': {
     apparatus: 'reformer',
@@ -3238,17 +4010,17 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-reformer-knee-stretches-round': {
     apparatus: 'reformer',
     bodyPosition: 'kneeling',
-    archetype: 'expanded-reformer-long-stretch',
+    archetype: 'reformer-knee-stretches',
   },
   'crawled-reformer-knee-stretches-knees-off': {
     apparatus: 'reformer',
     bodyPosition: 'quadruped',
-    archetype: 'expanded-reformer-long-stretch',
+    archetype: 'reformer-knee-stretches',
   },
   'crawled-reformer-down-stretch': {
     apparatus: 'reformer',
     bodyPosition: 'kneeling',
-    archetype: 'expanded-reformer-up-stretch',
+    archetype: 'reformer-down-stretch',
   },
   'crawled-reformer-tendon-stretch': {
     apparatus: 'reformer',
@@ -3258,7 +4030,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-reformer-backstroke-longbox': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
-    archetype: 'reformer-longbox-teaser',
+    archetype: 'reformer-longbox-backstroke',
   },
   'crawled-reformer-longbox-teaser': {
     apparatus: 'reformer',
@@ -3268,32 +4040,32 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-reformer-breaststroke-longbox': {
     apparatus: 'reformer',
     bodyPosition: 'prone',
-    archetype: 'reformer-longbox-swan',
+    archetype: 'reformer-longbox-breaststroke',
   },
   'crawled-reformer-horseback': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'reformer-longbox-teaser',
+    archetype: 'reformer-longbox-horseback',
   },
   'crawled-reformer-shortbox-tree': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'reformer-shortbox-abs',
+    archetype: 'reformer-shortbox-tree',
   },
   'crawled-reformer-snake-twist': {
     apparatus: 'reformer',
     bodyPosition: 'side-lying',
-    archetype: 'expanded-reformer-up-stretch',
+    archetype: 'reformer-snake-twist',
   },
   'crawled-reformer-front-splits': {
     apparatus: 'reformer',
     bodyPosition: 'standing',
-    archetype: 'reformer-scooter-lunge',
+    archetype: 'reformer-front-splits',
   },
   'crawled-reformer-russian-splits': {
     apparatus: 'reformer',
     bodyPosition: 'standing',
-    archetype: 'reformer-side-splits',
+    archetype: 'reformer-front-splits',
   },
   'crawled-reformer-arms-in-straps-coordination': {
     apparatus: 'reformer',
@@ -3303,12 +4075,12 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-reformer-side-arm-rotation': {
     apparatus: 'reformer',
     bodyPosition: 'seated',
-    archetype: 'reformer-mermaid',
+    archetype: 'reformer-side-arm-sitting',
   },
   'crawled-cadillac-monkey': {
     apparatus: 'cadillac',
     bodyPosition: 'supine',
-    archetype: 'cadillac-teaser',
+    archetype: 'cadillac-monkey',
   },
   'crawled-cadillac-teaser-pushthrough': {
     apparatus: 'cadillac',
@@ -3323,7 +4095,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-cadillac-spread-eagle': {
     apparatus: 'cadillac',
     bodyPosition: 'standing',
-    archetype: 'cadillac-hanging',
+    archetype: 'cadillac-spread-eagle',
   },
   'crawled-cadillac-hanging-pullups': {
     apparatus: 'cadillac',
@@ -3363,7 +4135,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-chair-going-up-side': {
     apparatus: 'chair',
     bodyPosition: 'standing',
-    archetype: 'chair-goingup',
+    archetype: 'chair-goingup-side',
   },
   'crawled-chair-mountain-climber': {
     apparatus: 'chair',
@@ -3378,12 +4150,12 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-chair-teaser-tricep-press': {
     apparatus: 'chair',
     bodyPosition: 'seated',
-    archetype: 'expanded-chair-table',
+    archetype: 'chair-teaser-triceps',
   },
   'crawled-chair-standing-leg-pump': {
     apparatus: 'chair',
     bodyPosition: 'standing',
-    archetype: 'chair-goingup',
+    archetype: 'chair-standing-leg-pump',
   },
   'crawled-chair-achilles-frogs': {
     apparatus: 'chair',
@@ -3393,7 +4165,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-chair-intermediate-core-combo': {
     apparatus: 'chair',
     bodyPosition: 'seated',
-    archetype: 'chair-pedal-press',
+    archetype: 'chair-single-leg-core',
   },
   'crawled-chair-spine-stretch-forward': {
     apparatus: 'chair',
@@ -3451,63 +4223,187 @@ function selectProceduralArchetype(
   exercise: Pick<
     PilatesExercise,
     'id' | 'nameKo' | 'nameEn' | 'apparatus' | 'bodyPosition' | 'blockCategory' | 'box' | 'props'
-  >,
+  > & { readonly movementFamily?: string },
 ): string {
-  const { apparatus, bodyPosition, blockCategory, box } = exercise;
+  const { apparatus, bodyPosition, blockCategory, box, props } = exercise;
+  const text =
+    `${exercise.id} ${exercise.nameKo} ${exercise.nameEn} ${exercise.movementFamily ?? ''}`.toLowerCase();
+  const hasLongBox = box === 'long-box' || /long[\s-]?box|롱박스/.test(text);
+  const hasShortBox = box === 'short-box' || /short[\s-]?box|숏박스/.test(text);
+  const hasJumpboard = /jump\s*board|점프보드|점핑|plyo|플라이오|카디오\s*점프/.test(text);
+  const hasRoller = props.includes('foam-roller') || /foam[\s-]?roller|폼롤러/.test(text);
+  const hasRing = props.includes('magic-circle') || /magic[\s-]?circle|써클링|매직써클/.test(text);
+  const hasMiniBall = props.includes('mini-ball') || /mini[\s-]?ball|미니볼/.test(text);
+
   if (apparatus === 'mat') {
-    if (bodyPosition === 'prone')
-      return blockCategory === 'plank' ? 'expanded-mat-leg-pull-front' : 'mat-swan';
-    if (bodyPosition === 'side-lying')
-      return blockCategory === 'plank' ? 'expanded-mat-side-bend' : 'mat-side-clam-lift';
-    if (bodyPosition === 'seated')
-      return exercise.props.includes('theraband') ? 'mat-band-row' : 'mat-seated-twist';
-    if (bodyPosition === 'kneeling') return 'expanded-mat-thigh-stretch';
+    if (bodyPosition === 'prone') {
+      if (blockCategory === 'plank' || /plank|push[\s-]?up|플랭크|푸시업/.test(text))
+        return 'expanded-mat-leg-pull-front';
+      if (/swim|스위밍/.test(text)) return 'expanded-mat-swimming';
+      if (/kick|킥/.test(text)) return 'expanded-mat-double-leg-kick';
+      if (/rock|로킹/.test(text)) return 'expanded-mat-rocking';
+      return 'mat-swan';
+    }
+    if (bodyPosition === 'side-lying') {
+      if (blockCategory === 'plank' || /side[\s-]?bend|사이드\s*벤드/.test(text))
+        return 'expanded-mat-side-bend';
+      if (/open[\s-]?book|오픈\s*북|rotation|회전/.test(text)) return 'mat-open-book';
+      if (/kick|스윙|킥/.test(text)) return 'expanded-mat-side-kicks';
+      return 'mat-side-clam-lift';
+    }
+    if (bodyPosition === 'seated') {
+      if (props.includes('theraband') || /band|밴드|row|로우/.test(text)) return 'mat-band-row';
+      if (/mermaid|머메이드|측굴/.test(text)) return 'mat-mermaid';
+      if (/rolling|rocker|seal|롤링|라커|씰/.test(text)) return 'mat-rolling-ball';
+      if (/roll[\s-]?back|롤백/.test(text)) return 'expanded-mat-half-roll-back';
+      return 'mat-seated-twist';
+    }
+    if (bodyPosition === 'kneeling') {
+      if (/side[\s-]?kick|사이드\s*킥/.test(text)) return 'expanded-mat-kneeling-side-kicks';
+      if (blockCategory === 'plank' || /plank|플랭크/.test(text)) return 'mat-forearm-plank';
+      return 'expanded-mat-thigh-stretch';
+    }
     if (bodyPosition === 'quadruped') return 'mat-quadruped-reach';
-    if (bodyPosition === 'standing') return 'mat-standing-rolldown';
-    if (blockCategory === 'bridging') return 'mat-bridge';
+    if (bodyPosition === 'standing') {
+      if (/ankle|calf|heel|발목|카프|릴레베/.test(text)) return 'mat-standing-calf-raise';
+      return 'mat-standing-rolldown';
+    }
+    if (hasRoller) return 'mat-foam-roller-supine';
+    if (blockCategory === 'bridging' || /bridge|브리지|브릿지/.test(text)) return 'mat-bridge';
+    if (/teaser|티저/.test(text)) return 'mat-teaser';
+    if (/hundred|헌드레드/.test(text)) return 'expanded-mat-hundred';
+    if (/circle|서클|써클/.test(text) && !hasRing) return 'expanded-mat-single-leg-circle';
+    if (/heel[\s-]?slide|knee[\s-]?fold|힐\s*슬라이드|니\s*폴드/.test(text)) return 'mat-knee-fold';
     if (blockCategory === 'core') return 'mat-chest-lift';
     return 'mat-supine-breath';
   }
   if (apparatus === 'reformer') {
-    if (bodyPosition === 'prone')
-      return box === 'long-box' ? 'reformer-longbox-swan' : 'expanded-reformer-long-stretch';
-    if (bodyPosition === 'side-lying') return 'reformer-side-lying';
-    if (bodyPosition === 'seated')
-      return box === 'short-box' ? 'reformer-shortbox-abs' : 'reformer-mermaid';
-    if (bodyPosition === 'kneeling') return 'reformer-kneeling-arms';
-    if (bodyPosition === 'quadruped') return 'expanded-reformer-long-stretch';
-    if (bodyPosition === 'standing')
-      return blockCategory === 'plank' ? 'expanded-reformer-elephant' : 'reformer-scooter-lunge';
-    if (blockCategory === 'bridging') return 'reformer-bridge';
-    if (blockCategory === 'feet-in-straps') return 'reformer-feetstraps';
+    if (hasJumpboard && bodyPosition === 'supine') return 'reformer-jumpboard';
+    if (bodyPosition === 'prone') {
+      if (hasLongBox) {
+        if (/hamstring|햄스트링|curl|컬/.test(text)) return 'expanded-reformer-hamstring-curl';
+        if (/swim|스위밍/.test(text)) return 'reformer-longbox-swimming';
+        if (/breast|브레스트/.test(text)) return 'reformer-longbox-breaststroke';
+        return 'reformer-longbox-swan';
+      }
+      return 'expanded-reformer-long-stretch';
+    }
+    if (bodyPosition === 'side-lying') {
+      if (/snake|스네이크/.test(text)) return 'reformer-snake-twist';
+      return 'reformer-side-lying';
+    }
+    if (bodyPosition === 'seated') {
+      if (hasLongBox) {
+        return /horse|홀스백/.test(text) ? 'reformer-longbox-horseback' : 'reformer-longbox-teaser';
+      }
+      if (hasShortBox) {
+        if (/tree|트리/.test(text)) return 'reformer-shortbox-tree';
+        if (/row|로우|로잉/.test(text)) return 'reformer-shortbox-row';
+        return 'reformer-shortbox-abs';
+      }
+      if (/stomach|스터먹/.test(text)) {
+        return /twist|트위스트/.test(text)
+          ? 'reformer-stomach-massage-twist'
+          : 'reformer-stomach-massage-round';
+      }
+      if (/side[\s-]?arm|사이드\s*시티드/.test(text)) return 'reformer-side-arm-sitting';
+      if (/row|로우|로잉|shave|쉐이브|hug|허그/.test(text))
+        return 'expanded-reformer-rowing-from-chest';
+      return 'reformer-mermaid';
+    }
+    if (bodyPosition === 'kneeling') {
+      if (/lunge|런지|이브스/.test(text)) return 'reformer-kneeling-lunge';
+      if (/down[\s-]?stretch|다운\s*스트레치/.test(text)) return 'reformer-down-stretch';
+      if (/knee[\s-]?stretch|니\s*스트레치/.test(text)) return 'reformer-knee-stretches';
+      if (/reverse|crunch|리버스|크런치/.test(text)) return 'reformer-reverse-abs-kneeling';
+      if (/tricep|트라이셉|삼두/.test(text)) return 'reformer-kneeling-triceps';
+      if (/circle|서클|써클/.test(text)) return 'expanded-reformer-arm-circles';
+      if (/thigh|허벅지/.test(text)) return 'expanded-reformer-thigh-stretch';
+      return 'reformer-kneeling-arms';
+    }
+    if (bodyPosition === 'quadruped') {
+      if (/knee[\s-]?stretch|knees[\s-]?off|니\s*스트레치|니즈\s*오프/.test(text))
+        return 'reformer-knee-stretches';
+      return 'expanded-reformer-long-stretch';
+    }
+    if (bodyPosition === 'standing') {
+      if (blockCategory === 'plank' || /elephant|엘리펀트|tendon|텐던/.test(text))
+        return 'expanded-reformer-elephant';
+      if (/front[\s-]?split|russian[\s-]?split|프론트\s*스플릿|러시안\s*스플릿/.test(text))
+        return 'reformer-front-splits';
+      if (/side[\s-]?split|skater|사이드\s*스플릿|스케이터/.test(text))
+        return 'reformer-side-splits';
+      if (/arabesque|아라베스크/.test(text)) return 'reformer-lunge-arabesque';
+      return 'reformer-scooter-lunge';
+    }
+    if (hasLongBox) {
+      return /backstroke|백스트로크/.test(text)
+        ? 'reformer-longbox-backstroke'
+        : 'reformer-longbox-teaser';
+    }
+    if (blockCategory === 'bridging' || /bridge|브리지|브릿지/.test(text)) {
+      return hasRing ? 'reformer-bridge-ring' : 'reformer-bridge';
+    }
+    if (blockCategory === 'feet-in-straps') {
+      return /short[\s-]?spine|숏\s*스파인/.test(text) ? 'reformer-shortspine' : 'reformer-feetstraps';
+    }
     if (blockCategory === 'core') return 'reformer-supine-arms';
+    if (blockCategory === 'warmup' && hasMiniBall) return 'reformer-pelvic-clock-ball';
+    if (hasRing) return 'reformer-footwork-ring';
     return 'reformer-footwork';
   }
   if (apparatus === 'cadillac') {
     if (bodyPosition === 'prone') return 'cadillac-prone-swan';
     if (bodyPosition === 'side-lying') return 'expanded-cadillac-side-leg-springs-up-down';
     if (bodyPosition === 'seated') return 'cadillac-seated-rollback';
-    if (bodyPosition === 'kneeling' || bodyPosition === 'quadruped') return 'cadillac-cat-rolldown';
-    if (bodyPosition === 'standing') return 'expanded-cadillac-roll-back-biceps';
+    if (bodyPosition === 'kneeling' || bodyPosition === 'quadruped') {
+      if (/side[\s-]?bend|측굴/.test(text)) return 'expanded-cadillac-kneeling-side-bend';
+      if (/thigh|허벅지/.test(text)) return 'expanded-cadillac-roll-back-thigh-stretch';
+      return 'cadillac-cat-rolldown';
+    }
+    if (bodyPosition === 'standing') {
+      if (/spread[\s-]?eagle|스프레드\s*이글/.test(text)) return 'cadillac-spread-eagle';
+      if (/hang|행잉/.test(text)) return 'cadillac-hanging';
+      if (/fencing|punch|boxing|펜싱|펀치|복싱/.test(text))
+        return 'expanded-cadillac-standing-fencing';
+      if (/butterfly|버터플라이/.test(text)) return 'expanded-cadillac-standing-butterfly';
+      return 'expanded-cadillac-roll-back-biceps';
+    }
+    if (/monkey|몽키/.test(text)) return 'cadillac-monkey';
     if (blockCategory === 'feet-in-straps') return 'cadillac-leg-springs';
-    if (blockCategory === 'core') return 'cadillac-teaser';
+    if (blockCategory === 'core' || /teaser|티저/.test(text)) return 'cadillac-teaser';
     return 'cadillac-supine-table';
   }
   if (apparatus === 'chair') {
     if (bodyPosition === 'prone') return 'chair-swan';
-    if (bodyPosition === 'kneeling' || bodyPosition === 'quadruped')
-      return 'expanded-chair-kneeling-push-down';
-    if (bodyPosition === 'standing')
-      return blockCategory === 'plank' ? 'chair-pike' : 'chair-goingup';
+    if (bodyPosition === 'kneeling' || bodyPosition === 'quadruped') {
+      return /mermaid|머메이드|측굴/.test(text)
+        ? 'expanded-chair-mermaid-kneeling'
+        : 'expanded-chair-kneeling-push-down';
+    }
+    if (bodyPosition === 'standing') {
+      if (blockCategory === 'plank' || /pike|pull[\s-]?up|파이크|풀업/.test(text))
+        return 'chair-pike';
+      if (/leg[\s-]?pump|레그\s*펌프/.test(text)) return 'chair-standing-leg-pump';
+      if (/going[\s-]?up[\s-]?side|고잉\s*업\s*사이드/.test(text)) return 'chair-goingup-side';
+      return 'chair-goingup';
+    }
     if (bodyPosition === 'side-lying') return 'expanded-chair-side-pull-up';
+    if (/teaser|tricep|티저|트라이셉/.test(text)) return 'chair-teaser-triceps';
+    if (/single[\s-]?leg|원레그/.test(text)) return 'chair-single-leg-core';
     if (blockCategory === 'upper-body' || blockCategory === 'cooldown') return 'chair-seated-upper';
     return 'chair-pedal-press';
   }
   // barrel
-  if (bodyPosition === 'prone') return 'barrel-swan';
+  if (bodyPosition === 'prone') {
+    return /swim|grasshopper|스위밍|그래스하퍼/.test(text)
+      ? 'expanded-barrel-swimming'
+      : 'barrel-swan';
+  }
   if (bodyPosition === 'side-lying') return 'barrel-sidebend';
   if (bodyPosition === 'standing') return 'barrel-standing';
   if (bodyPosition === 'supine') return 'barrel-spinecorrector';
+  if (/horseback|jockey|홀스백|조키/.test(text)) return 'expanded-barrel-horseback';
   return 'barrel-shortbox';
 }
 
@@ -3536,7 +4432,7 @@ export function sampleUniversal3DExerciseRig(
   exercise: Pick<
     PilatesExercise,
     'id' | 'nameKo' | 'nameEn' | 'apparatus' | 'bodyPosition' | 'blockCategory' | 'box' | 'props'
-  >,
+  > & { readonly movementFamily?: string },
   rawT: number,
 ): Universal3DPoseRig {
   const clampedT = Math.max(0, Math.min(1, Number.isFinite(rawT) ? rawT : 0));

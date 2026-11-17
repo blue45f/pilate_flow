@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { RefreshCw, ShieldCheck, Wand2 } from 'lucide-react';
 import {
   BODY_CAUTION_META,
@@ -23,6 +23,13 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
   const [cautions, setCautions] = useState<BodyCautionArea[]>([]);
   const [seed, setSeed] = useState(0);
   const [lastSummary, setLastSummary] = useState<string | null>(null);
+  const cautionDetailsRef = useRef<HTMLDetailsElement>(null);
+
+  const closeCautionDisclosure = () => {
+    if (cautionDetailsRef.current) {
+      cautionDetailsRef.current.open = false;
+    }
+  };
 
   const runCompose = (overridePrompt?: string, nextSeed = 0, extraCautions = cautions) => {
     const state = usePilatesStore.getState();
@@ -46,6 +53,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
 
       setSeed(nextSeed);
       setLastSummary(composed.summaryKo);
+      closeCautionDisclosure();
       onApplied(composed);
     } catch (err) {
       onError(err instanceof Error ? err.message : '수업 자동 구성을 완료하지 못했습니다.');
@@ -97,7 +105,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
               data-testid="ai-quick-prompt-input"
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder="수업 느낌을 적거나 아래 테마를 선택하세요 (예: 리포머 초급 50분 코어 중심)"
+              placeholder="원하는 수업을 적거나 아래 테마를 선택하세요 (예: 리포머 초급 50분 코어)"
               maxLength={180}
             />
           </div>
@@ -122,6 +130,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
         </form>
 
         <details
+          ref={cautionDetailsRef}
           className="pf-ai-caution-disclosure"
           data-testid="ai-caution-disclosure"
           onKeyDown={(event) => {
@@ -134,9 +143,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
         >
           <summary>
             <ShieldCheck size={15} strokeWidth={1.5} aria-hidden="true" />
-            <span>
-              보호 부위{cautions.length > 0 ? ` · ${cautions.length}곳 선택됨` : ' (선택)'}
-            </span>
+            <span>보호 부위{cautions.length > 0 ? ` · ${cautions.length}곳` : ''}</span>
           </summary>
           <div className="pf-ai-caution-popover" role="group" aria-label="회원 보호 부위 선택">
             {CAUTION_KEYS.map((key) => {

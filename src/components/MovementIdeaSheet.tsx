@@ -7,10 +7,10 @@ import {
   History,
   ImagePlus,
   Layers,
+  NotebookPen,
   Play,
   Plus,
   RotateCcw,
-  Sparkles,
   Trash2,
 } from 'lucide-react';
 import { LightDismissDialog } from './LightDismissDialog';
@@ -374,7 +374,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           ? `메모리에 ‘${result.exercise.nameKo}’ 초안을 임시 반영했으나 ${storageErr}`
           : editingId
             ? `‘${result.exercise.nameKo}’ 수정 내용을 저장했습니다 (v${result.meta?.revision ?? 1}). 바로 수업에 넣거나 창을 닫아도 보존됩니다.`
-            : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다! 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
+            : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다. 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
       );
       setReflectionOpen(true);
       reflectionDetailsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
@@ -638,7 +638,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             className="pf-idea-3d-studio-banner__thumb"
           />
           <div className="pf-idea-3d-studio-banner__body">
-            <span className="pf-studio-kicker-pill">3D STUDIO MEMO · 나만의 동작 노트</span>
+            <span className="pf-studio-kicker-pill">나만의 동작 노트</span>
             <strong>
               {workingTitle.trim() ||
                 ideaLine.trim() ||
@@ -762,7 +762,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           >
             <summary className="pf-idea-progressive-summary">
               <span>
-                <Sparkles size={16} aria-hidden="true" />
+                <NotebookPen size={16} strokeWidth={1.5} aria-hidden="true" />
                 직접 해본 느낌 · 수정할 점 · 사진
               </span>
               <PfBadge
@@ -880,14 +880,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               <div className="pf-idea-photo-box">
                 <div className="pf-idea-photo-header">
                   <strong>
-                    <Camera size={15} aria-hidden="true" /> 참고 사진 · 자세 스케치 (선택 · 이
+                    <Camera size={15} strokeWidth={1.5} aria-hidden="true" /> 참고 사진 · 자세 스케치 (선택 · 이
                     기기에만 저장)
                   </strong>
                   <span className="muted">외부 AI나 서버로 전송되지 않습니다.</span>
                 </div>
                 <div className="pf-idea-photo-actions">
                   <label className="pf-btn pf-btn--secondary pf-btn--sm pf-idea-file-label">
-                    <ImagePlus size={15} aria-hidden="true" />
+                    <ImagePlus size={15} strokeWidth={1.5} aria-hidden="true" />
                     <span>사진 파일 선택</span>
                     <input
                       type="file"
@@ -919,7 +919,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                         syncBuffer({ photoDataUrl: '' });
                       }}
                     >
-                      <Trash2 size={14} /> 사진 지우기
+                      <Trash2 size={14} strokeWidth={1.5} /> 사진 지우기
                     </PfButton>
                   )}
                 </div>
@@ -942,7 +942,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           >
             <summary className="pf-idea-progressive-summary">
               <span>
-                <GitBranch size={16} aria-hidden="true" />
+                <GitBranch size={16} strokeWidth={1.5} aria-hidden="true" />
                 변형 · 이전 버전
               </span>
               <PfBadge
@@ -1010,7 +1010,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                   data-testid="idea-fork-variant"
                   onClick={handleForkVariant}
                 >
-                  <GitBranch size={14} /> 새 변형 초안으로 복제
+                  <GitBranch size={14} strokeWidth={1.5} /> 새 변형 초안으로 복제
                 </PfButton>
                 {activeEditingMeta?.parentDraftId && (
                   <PfBadge tone="sage">
@@ -1022,7 +1022,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               {revisionHistory.length > 0 && (
                 <div className="pf-idea-revision-box" aria-label="초안 버전 이력">
                   <strong>
-                    <History size={14} aria-hidden="true" /> 버전 이력 ({revisionHistory.length}개 ·
+                    <History size={14} strokeWidth={1.5} aria-hidden="true" /> 버전 이력 ({revisionHistory.length}개 ·
                     현재 v{currentRevision})
                   </strong>
                   <ul className="pf-idea-revision-list">
@@ -1057,7 +1057,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           >
             <summary className="pf-idea-progressive-summary">
               <span>
-                <Layers size={16} aria-hidden="true" />
+                <Layers size={16} strokeWidth={1.5} aria-hidden="true" />
                 순서 · 반복 · 좌우 · 동작 묶음
               </span>
               <PfBadge tone="neutral">선택</PfBadge>
@@ -1189,7 +1189,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                     data-testid="create-reusable-block-btn"
                     onClick={handleCreateReusableBlock}
                   >
-                    <Layers size={14} /> 현재 동작으로 재사용 블록 만들기
+                    <Layers size={14} strokeWidth={1.5} /> 현재 동작으로 재사용 블록 만들기
                   </PfButton>
                 </div>
 
@@ -1228,7 +1228,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                                       aria-label={`${block.title} ${idx + 1}번 동작 위로`}
                                       onClick={() => handleMoveBlockItem(block.id, idx, 'up')}
                                     >
-                                      <ArrowUp size={13} />
+                                      <ArrowUp size={14} strokeWidth={1.5} />
                                     </PfButton>
                                     <PfButton
                                       type="button"
@@ -1238,7 +1238,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                                       aria-label={`${block.title} ${idx + 1}번 동작 아래로`}
                                       onClick={() => handleMoveBlockItem(block.id, idx, 'down')}
                                     >
-                                      <ArrowDown size={13} />
+                                      <ArrowDown size={14} strokeWidth={1.5} />
                                     </PfButton>
                                   </span>
                                 )}
@@ -1253,7 +1253,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                               aria-label={`${block.title} 블록에 현재 동작 추가`}
                               onClick={() => handleAddToExistingReusableBlock(block.id)}
                             >
-                              <Plus size={14} /> 이 블록에 현재 동작 추가
+                              <Plus size={14} strokeWidth={1.5} /> 이 블록에 현재 동작 추가
                             </PfButton>
                             <PfButton
                               type="button"
@@ -1262,7 +1262,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                               aria-label={`${block.title} 수업 시퀀스에 블록 복사해 넣기`}
                               onClick={() => handleInsertBlockToClass(block.id)}
                             >
-                              <Play size={14} /> 수업 시퀀스에 블록 복사해 넣기
+                              <Play size={14} strokeWidth={1.5} /> 수업 시퀀스에 블록 복사해 넣기
                             </PfButton>
                           </div>
                         </PfCard>
@@ -1343,7 +1343,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                   size="sm"
                   onClick={handleResetFormForNewIdea}
                 >
-                  <RotateCcw size={14} /> 새 초안 쓰기
+                  <RotateCcw size={14} strokeWidth={1.5} /> 새 초안 쓰기
                 </PfButton>
               )}
             </div>
@@ -1357,7 +1357,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 data-testid="idea-save-and-add"
                 onClick={() => handleSaveDraft(true)}
               >
-                <Play size={15} />
+                <Play size={15} strokeWidth={1.5} />
                 {isAlreadyInClass ? '수정 후 수업에 반영' : '저장하고 수업에 넣기'}
               </PfButton>
             </div>
@@ -1428,7 +1428,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                           }
                         }}
                       >
-                        <Plus size={14} /> {inClass ? '수업에 반영됨' : '수업에 넣기'}
+                        <Plus size={14} strokeWidth={1.5} /> {inClass ? '수업에 반영됨' : '수업에 넣기'}
                       </PfButton>
                     </div>
                   </PfCard>
