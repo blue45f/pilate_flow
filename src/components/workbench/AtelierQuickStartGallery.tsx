@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { PilatesExercise } from '../../types/pilates';
 import {
   ATELIER_QUICK_START_RECIPES,
@@ -30,9 +30,7 @@ export const AtelierQuickStartGallery: React.FC<AtelierQuickStartGalleryProps> =
     >
       <div className="pf-quickstart-gallery__header">
         <div>
-          <span className="pf-quickstart-gallery__kicker">
-            <Sparkles size={13} aria-hidden="true" /> 1-CLICK ATELIER RECIPES
-          </span>
+          <span className="pf-quickstart-gallery__kicker">원탭 추천 수업 템플릿</span>
           <h2 className="pf-quickstart-gallery__title">
             복잡한 조건 설정 없이, 카드 한 번 눌러 바로 시작하세요
           </h2>
@@ -58,9 +56,9 @@ export const AtelierQuickStartGallery: React.FC<AtelierQuickStartGalleryProps> =
             </div>
             <div className="pf-quickstart-card__body">
               <h3>{recipe.titleKo}</h3>
-              <div className="pf-class-badges-strip" style={{ margin: '2px 0 6px' }}>
-                <span className="pf-studio3d-chip is-muscle" style={{ fontSize: '0.7rem' }}>
-                  ● {recipe.muscleFocusKo}
+              <div className="pf-class-badges-strip" style={{ margin: '4px 0 8px' }}>
+                <span className="pf-studio3d-chip is-muscle" style={{ fontSize: '0.75rem' }}>
+                  {recipe.muscleFocusKo}
                 </span>
                 <SpringVisualPills springs={recipe.springs} />
               </div>
@@ -73,7 +71,7 @@ export const AtelierQuickStartGallery: React.FC<AtelierQuickStartGalleryProps> =
                 aria-label={`${recipe.titleKo} 바로 시작`}
                 onClick={() => handleStartRecipe(recipe)}
               >
-                바로 시작 <ArrowRight size={15} aria-hidden="true" />
+                바로 시작 <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
               </button>
             </div>
           </article>

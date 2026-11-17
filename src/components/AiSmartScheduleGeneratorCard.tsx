@@ -1,7 +1,7 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
 import { StudioMotionImage } from './StudioMotionImage';
 import React, { useCallback, useMemo, useState } from 'react';
-import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles, Wand2 } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, RotateCcw, Wand2 } from 'lucide-react';
 import { getEquipmentFamilies } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
@@ -348,9 +348,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
     >
       <div className="pf-ai-smart-schedule-card__head">
         <div>
-          <span className="pf-studio-kicker-pill">
-            <Sparkles size={13} aria-hidden="true" /> SMART FLOW &amp; SCHEDULE
-          </span>
+          <span className="pf-studio-kicker-pill">맞춤 수업·일정 자동 배정</span>
           <h3>주간 수업 &amp; 맞춤 시퀀스 1탭 자동 편성</h3>
           <p>
             장소별 보유 기구와 최근 수업 이력을 대조해 중복 없이 시퀀스를 배정하거나 주간 시간표를
@@ -364,14 +362,14 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
             data-testid="ai-smart-schedule-undo-btn"
             onClick={handleUndo}
           >
-            <RotateCcw size={14} aria-hidden="true" /> 방금 편성 되돌리기
+            <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" /> 방금 편성 되돌리기
           </button>
         )}
       </div>
 
       {feedback && (
         <p className="pf-ai-smart-feedback" role="status">
-          <CheckCircle2 size={15} aria-hidden="true" />
+          <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" />
           <span>{feedback}</span>
         </p>
       )}
@@ -389,7 +387,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
               data-testid="ai-auto-assign-unlinked-btn"
               onClick={handleAutoLinkUnassigned}
             >
-              <Wand2 size={15} aria-hidden="true" /> 미연결 {unlinkedProposals.length}건 원탭 플로우 배정
+              <Wand2 size={16} strokeWidth={1.5} aria-hidden="true" /> 미연결 {unlinkedProposals.length}건 원탭 플로우 배정
             </button>
           </div>
           <div className="pf-ai-unlinked-list">
@@ -432,7 +430,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
                 data-testid={`apply-weekly-preset-${preset.id}`}
                 onClick={() => handleApplyWeeklyPreset(preset)}
               >
-                <CalendarPlus size={14} aria-hidden="true" /> 주간 일정 + 시퀀스 1탭 편성
+                <CalendarPlus size={15} strokeWidth={1.5} aria-hidden="true" /> 주간 일정 + 시퀀스 1탭 편성
               </button>
             </div>
           </div>

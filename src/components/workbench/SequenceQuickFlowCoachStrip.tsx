@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ArrowDownUp, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowDownUp, CheckCircle2 } from 'lucide-react';
 import type { PilatesExercise, SequenceStep, SpinalPlane } from '../../types/pilates';
 import { isRestStep } from '../../utils/sequenceEngine';
 import { getSequenceStepClassSection } from '../../utils/sequenceMotionBinding';
@@ -48,6 +48,7 @@ function countSetupTransitions(
   return { springTransitions, positionTransitions, boxTransitions };
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function analyzeAndOptimizeFlowSteps(
   steps: readonly SequenceStep[],
   exercisesById: ReadonlyMap<string, PilatesExercise>,
@@ -227,11 +228,11 @@ export const SequenceQuickFlowCoachStrip: React.FC<SequenceQuickFlowCoachStripPr
               )
             }
           >
-            <ArrowDownUp size={13} aria-hidden="true" /> 전환 {analysis.savedTransitionsCount}회 줄이기 자동 정렬
+            <ArrowDownUp size={14} strokeWidth={1.5} aria-hidden="true" /> 전환 {analysis.savedTransitionsCount}회 줄이기 자동 정렬
           </button>
         ) : (
           <span className="pf-quick-flow-coach__ok">
-            <CheckCircle2 size={13} aria-hidden="true" /> 기구·체위 전환 동선 최적
+            <CheckCircle2 size={14} strokeWidth={1.5} aria-hidden="true" /> 기구·체위 전환 동선 최적
           </span>
         )}
         {analysis.missingActionPlanes.length > 0 && onOpenFinderForMissingPlane && (
@@ -241,7 +242,7 @@ export const SequenceQuickFlowCoachStrip: React.FC<SequenceQuickFlowCoachStripPr
             data-testid="quick-flow-add-missing-plane-btn"
             onClick={onOpenFinderForMissingPlane}
           >
-            <Sparkles size={13} aria-hidden="true" /> 미포함 면(
+            미포함 면(
             {analysis.missingActionPlanes
               .slice(0, 2)
               .map((p) => p.labelKo)

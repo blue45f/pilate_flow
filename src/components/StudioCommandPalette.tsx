@@ -13,8 +13,8 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
-  Sparkles,
   Ticket,
+  Wand2,
   X,
 } from 'lucide-react';
 import { LightDismissDialog } from './LightDismissDialog';
@@ -119,7 +119,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'workbench',
       label: '오늘의 수업 설계',
       detail: '3D 동작 배치 · 시간 밸런스',
-      icon: <CalendarDays size={16} aria-hidden="true" />,
+      icon: <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('workbench');
         onClose();
@@ -129,7 +129,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'atlas',
       label: '동작 라이브러리 · 3D 비교',
       detail: `${exercises.length}종 동작 · 360° 비교함`,
-      icon: <Library size={16} aria-hidden="true" />,
+      icon: <Library size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('atlas');
         onClose();
@@ -139,7 +139,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'stage',
       label: canStartLiveStage ? '수업 진행하기' : '수업 준비하기',
       detail: canStartLiveStage ? '타이머와 다음 동작 확인' : '동작을 추가하고 수업 구성',
-      icon: <Play size={16} aria-hidden="true" />,
+      icon: <Play size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab(canStartLiveStage ? 'stage' : 'workbench');
         onClose();
@@ -149,7 +149,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'schedule',
       label: '강사 주간 일정 · AI 편성',
       detail: '미연결 수업 자동 구성',
-      icon: <CalendarRange size={16} aria-hidden="true" />,
+      icon: <CalendarRange size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('schedule');
         onClose();
@@ -159,7 +159,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'binder',
       label: '저장한 수업',
       detail: `수업안 ${savedSequences.length}개`,
-      icon: <Bookmark size={16} aria-hidden="true" />,
+      icon: <Bookmark size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('binder');
         onClose();
@@ -169,7 +169,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'history',
       label: '수업 진행 기록 · 인사이트',
       detail: '최근 진행 내역 확인',
-      icon: <Clock3 size={16} aria-hidden="true" />,
+      icon: <Clock3 size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('history');
         onClose();
@@ -179,7 +179,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'member',
       label: '회원 수업 예약 · 기구 자리 포털',
       detail: '회원 시점 360° 미리보기 확인',
-      icon: <Ticket size={16} aria-hidden="true" />,
+      icon: <Ticket size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onSwitchPortalRole('member');
         onClose();
@@ -189,7 +189,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       id: 'idea',
       label: '새 동작 아이디어 메모 작성',
       detail: '나만의 변형 동작 빠른 기록',
-      icon: <Sparkles size={16} aria-hidden="true" />,
+      icon: <Wand2 size={16} strokeWidth={1.5} aria-hidden="true" />,
       onSelect: () => {
         onClose();
         onOpenNewIdea();
@@ -269,12 +269,13 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       open={open}
       onClose={onClose}
       title="스튜디오 빠른 실행 · 통합 검색"
-      subtitle="동작 3D 확인·수업 즉시 추가·화면 이동·기구 브랜드 스프링 기준을 한곳에서 제어합니다 (단축키 ⌘K / Ctrl+K)."
+      subtitle="동작 3D 확인·수업 즉시 추가·화면 이동·기구 브랜드 스프링 기준을 한곳에서 제어합니다 (단축키 ⌘K / Ctrl+K)"
       maxWidth="680px"
+      className="pf-cmdk-dialog"
     >
       <div className="pf-cmdk-palette" data-testid="studio-command-palette">
         <label className="pf-cmdk-search-box">
-          <Search size={18} aria-hidden="true" />
+          <Search size={16} strokeWidth={1.5} aria-hidden="true" />
           <span className="sr-only">동작·저장한 수업·메뉴 통합 검색</span>
           <input
             ref={inputRef}
@@ -306,7 +307,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                 }
               }
             }}
-            placeholder="동작 이름(예: 헌드레드, 풋워크, 스완), 부위, 기구, 저장한 수업 검색..."
+            placeholder="동작 이름(헌드레드, 풋워크), 부위, 기구, 저장한 수업 검색"
           />
           {query ? (
             <button
@@ -319,7 +320,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                 inputRef.current?.focus();
               }}
             >
-              <X size={15} aria-hidden="true" />
+              <X size={15} strokeWidth={1.5} aria-hidden="true" />
             </button>
           ) : (
             <span className="pf-cmdk-kbd-hint" aria-hidden="true">
@@ -330,7 +331,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
 
         {feedback && (
           <p className="pf-cmdk-feedback" role="status" aria-live="polite">
-            <Check size={15} aria-hidden="true" />
+            <Check size={15} strokeWidth={1.5} aria-hidden="true" />
             <span>{feedback}</span>
           </p>
         )}
@@ -338,7 +339,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
         <section className="pf-cmdk-section" aria-label="스튜디오 리포머 브랜드 스프링 기준">
           <div className="pf-cmdk-section__head">
             <span>
-              <SlidersHorizontal size={13} aria-hidden="true" /> 스튜디오 리포머 스프링 환산 기준
+              <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden="true" /> 스튜디오 리포머 스프링 환산 기준
             </span>
             <small>수업 큐시트 · 라이브 · 동작 비교함에 즉시 반영</small>
           </div>
@@ -402,7 +403,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                           onInspectExercise3D(ex);
                         }}
                       >
-                        <Compass size={14} aria-hidden="true" />
+                        <Compass size={14} strokeWidth={1.5} aria-hidden="true" />
                         <span>3D·360°</span>
                       </button>
                       <button
@@ -412,9 +413,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                         onClick={() => handleQuickAddExercise(ex)}
                       >
                         {inSeq ? (
-                          <Check size={14} aria-hidden="true" />
+                          <Check size={14} strokeWidth={1.5} aria-hidden="true" />
                         ) : (
-                          <Plus size={14} aria-hidden="true" />
+                          <Plus size={14} strokeWidth={1.5} aria-hidden="true" />
                         )}
                         <span>{inSeq ? '담김' : '수업 추가'}</span>
                       </button>
@@ -455,7 +456,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                         {seq.steps.filter((st) => !isRestStep(st)).length}개
                       </small>
                     </div>
-                    <ArrowRight size={15} aria-hidden="true" />
+                    <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 );
               })}

@@ -211,6 +211,7 @@ interface PoseRigKeyframe {
   readonly trapezeStrap?: boolean;
   readonly withDumbbells?: boolean;
   readonly withTheraband?: boolean;
+  readonly withFoamRollerUnderSpine?: boolean;
   readonly trajectoryFocus?: Universal3DPoseRig['trajectoryFocus'];
   readonly poseFeatureKo?: string;
   readonly rigScope?: Universal3DPoseRig['rigScope'];
@@ -697,6 +698,8 @@ function samplePoseRig(signatureId: Studio3DSignatureId, rawT: number): PoseRigK
   }
 }
 
+export type StudioMaterialRole = 'skin' | 'fabric' | 'wood' | 'leather' | 'chrome' | 'brass';
+
 interface QuadFace {
   readonly verts: readonly [Vec3, Vec3, Vec3, Vec3];
   readonly vNormals?: readonly [Vec3, Vec3, Vec3, Vec3];
@@ -707,6 +710,7 @@ interface QuadFace {
   readonly spec: number;
   readonly shininess?: number;
   readonly emissive?: number;
+  readonly materialRole?: StudioMaterialRole;
 }
 
 interface StrokeLine3D {
@@ -732,12 +736,18 @@ function makeSubdividedBoxQuads(
   alpha = 1,
   spec = 0.22,
   shininess = 22,
+  materialRole?: StudioMaterialRole,
+  bevelWeight = 0.22,
+  minSubdivXY = 1,
 ): QuadFace[] {
   const [cx, cy, cz] = center;
   const [wx, wy, wz] = dims;
-  const nx = Math.max(1, Math.min(10, Math.ceil(wx / 0.24)));
-  const ny = Math.max(1, Math.min(5, Math.ceil(wy / 0.24)));
+  const nx = Math.max(minSubdivXY, Math.min(10, Math.ceil(wx / 0.24)));
+  const ny = Math.max(minSubdivXY, Math.min(5, Math.ceil(wy / 0.24)));
   const nz = Math.max(1, Math.min(4, Math.ceil(wz / 0.24)));
+  const hx = Math.max(1e-5, wx * 0.5);
+  const hy = Math.max(1e-5, wy * 0.5);
+  const hz = Math.max(1e-5, wz * 0.5);
   const x0 = cx - wx * 0.5;
   const y0 = cy - wy * 0.5;
   const z0 = cz - wz * 0.5;
@@ -746,38 +756,52 @@ function makeSubdividedBoxQuads(
   const dz = wz / nz;
   const out: QuadFace[] = [];
 
+  const bevelN = (v: Vec3, faceNormal: Vec3): Vec3 => {
+    const ux = (v[0] - cx) / hx;
+    const uy = (v[1] - cy) / hy;
+    const uz = (v[2] - cz) / hz;
+    const cornerOutwardDir = norm3([ux * ux * ux, uy * uy * uy, uz * uz * uz]);
+    return norm3(add3(faceNormal, mul3(cornerOutwardDir, bevelWeight)));
+  };
+
+  const pushBoxQuad = (
+    v0: Vec3,
+    v1: Vec3,
+    v2: Vec3,
+    v3: Vec3,
+    faceNormal: Vec3,
+  ): void => {
+    out.push({
+      verts: [v0, v1, v2, v3],
+      vNormals: [
+        bevelN(v0, faceNormal),
+        bevelN(v1, faceNormal),
+        bevelN(v2, faceNormal),
+        bevelN(v3, faceNormal),
+      ],
+      cullBackface: true,
+      baseRgb: rgb,
+      alpha,
+      spec,
+      shininess,
+      materialRole,
+    });
+  };
+
   for (let ix = 0; ix < nx; ix++) {
     for (let iy = 0; iy < ny; iy++) {
       const xa = x0 + ix * dx;
       const xb = xa + dx;
       const ya = y0 + iy * dy;
       const yb = ya + dy;
-      out.push({
-        verts: [
-          [xa, ya, z0 + wz],
-          [xb, ya, z0 + wz],
-          [xb, yb, z0 + wz],
-          [xa, yb, z0 + wz],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
-      out.push({
-        verts: [
-          [xa, yb, z0],
-          [xb, yb, z0],
-          [xb, ya, z0],
-          [xa, ya, z0],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
+      pushBoxQuad(
+        [xa, ya, z0 + wz],
+        [xb, ya, z0 + wz],
+        [xb, yb, z0 + wz],
+        [xa, yb, z0 + wz],
+        [0, 0, 1],
+      );
+      pushBoxQuad([xa, yb, z0], [xb, yb, z0], [xb, ya, z0], [xa, ya, z0], [0, 0, -1]);
     }
   }
   for (let ix = 0; ix < nx; ix++) {
@@ -786,32 +810,14 @@ function makeSubdividedBoxQuads(
       const xb = xa + dx;
       const za = z0 + iz * dz;
       const zb = za + dz;
-      out.push({
-        verts: [
-          [xa, y0, za],
-          [xb, y0, za],
-          [xb, y0, zb],
-          [xa, y0, zb],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
-      out.push({
-        verts: [
-          [xb, y0 + wy, za],
-          [xa, y0 + wy, za],
-          [xa, y0 + wy, zb],
-          [xb, y0 + wy, zb],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
+      pushBoxQuad([xa, y0, za], [xb, y0, za], [xb, y0, zb], [xa, y0, zb], [0, -1, 0]);
+      pushBoxQuad(
+        [xb, y0 + wy, za],
+        [xa, y0 + wy, za],
+        [xa, y0 + wy, zb],
+        [xb, y0 + wy, zb],
+        [0, 1, 0],
+      );
     }
   }
   for (let iy = 0; iy < ny; iy++) {
@@ -820,39 +826,21 @@ function makeSubdividedBoxQuads(
       const yb = ya + dy;
       const za = z0 + iz * dz;
       const zb = za + dz;
-      out.push({
-        verts: [
-          [x0 + wx, ya, za],
-          [x0 + wx, yb, za],
-          [x0 + wx, yb, zb],
-          [x0 + wx, ya, zb],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
-      out.push({
-        verts: [
-          [x0, yb, za],
-          [x0, ya, za],
-          [x0, ya, zb],
-          [x0, yb, zb],
-        ],
-        cullBackface: true,
-        baseRgb: rgb,
-        alpha,
-        spec,
-        shininess,
-      });
+      pushBoxQuad(
+        [x0 + wx, ya, za],
+        [x0 + wx, yb, za],
+        [x0 + wx, yb, zb],
+        [x0 + wx, ya, zb],
+        [1, 0, 0],
+      );
+      pushBoxQuad([x0, yb, za], [x0, ya, za], [x0, ya, zb], [x0, yb, zb], [-1, 0, 0]);
     }
   }
   return out;
 }
 
 /**
- * Upholstered cushion with two-tier chamfered top crown and contrast ivory seam piping.
+ * Upholstered cushion with crowned micro-bevel normals and contrast ivory seam piping.
  */
 function makePipedCushion(
   center: Vec3,
@@ -860,10 +848,10 @@ function makePipedCushion(
   leatherRgb: Rgb,
   pipingHex: string,
   alpha: number,
+  svgFastMode = false,
 ): { quads: QuadFace[]; piping: StrokeLine3D } {
   const [cx, cy, cz] = center;
   const [wx, wy, wz] = dims;
-  // Single non-overlapping solid cushion volume (prevents coplanar Z-fighting across all angles)
   const cushionQuads = makeSubdividedBoxQuads(
     [cx, cy, cz],
     [wx, wy, wz],
@@ -873,8 +861,11 @@ function makePipedCushion(
       Math.min(255, leatherRgb[2] + 5),
     ],
     alpha,
-    0.28,
+    0.22,
     26,
+    'leather',
+    0.28,
+    svgFastMode ? 1 : 3,
   );
   const hwx = wx * 0.488;
   const hwy = wy * 0.488;
@@ -909,9 +900,9 @@ function makeBarrelArchVaultQuads(
   leatherRgb: Rgb,
   oakRgb: Rgb,
   alpha: number,
+  segs = 26,
 ): QuadFace[] {
   const [cx, cy, cz] = center;
-  const segs = 22;
   const ySlices = 3;
   const halfArc = (arcDeg * 0.5 * Math.PI) / 180;
   const out: QuadFace[] = [];
@@ -943,35 +934,59 @@ function makeBarrelArchVaultQuads(
         vNormals: [no0, no1, no1, no0],
         baseRgb: leatherRgb,
         alpha,
-        spec: 0.3,
+        spec: 0.24,
         shininess: 26,
+        materialRole: 'leather',
       });
     }
 
     // Upholstered edge rims + Curved White Oak side cheeks down to base rail
     for (const sy of [cy - widthY * 0.48, cy + widthY * 0.48]) {
-      out.push({
-        verts: [
+      const sideSign = sy < cy ? -1 : 1;
+      const sideN: Vec3 = [0, sideSign, 0];
+      const rimN0 = norm3(add3(sideN, mul3(no0, 0.22)));
+      const rimN1 = norm3(add3(sideN, mul3(no1, 0.22)));
+      out.push(
+        makeOutwardQuad(
           [xi0, sy, zi0],
           [xo0, sy, zo0],
           [xo1, sy, zo1],
           [xi1, sy, zi1],
-        ],
-        baseRgb: leatherRgb,
-        alpha,
-        spec: 0.24,
-      });
-      out.push({
-        verts: [
-          [xi0, sy, 0.055],
-          [xi1, sy, 0.055],
-          [xi1, sy, zi1],
-          [xi0, sy, zi0],
-        ],
-        baseRgb: oakRgb,
-        alpha,
-        spec: 0.22,
-      });
+          sideN,
+          leatherRgb,
+          alpha,
+          0.22,
+          24,
+          'leather',
+          [cx, cy, cz * 0.5],
+        ),
+        {
+          verts:
+            sideSign < 0
+              ? [
+                  [xi0, sy, 0.055],
+                  [xi1, sy, 0.055],
+                  [xi1, sy, zi1],
+                  [xi0, sy, zi0],
+                ]
+              : [
+                  [xi1, sy, 0.055],
+                  [xi0, sy, 0.055],
+                  [xi0, sy, zi0],
+                  [xi1, sy, zi1],
+                ],
+          vNormals:
+            sideSign < 0
+              ? [sideN, sideN, rimN1, rimN0]
+              : [sideN, sideN, rimN0, rimN1],
+          cullBackface: true,
+          baseRgb: oakRgb,
+          alpha,
+          spec: 0.24,
+          shininess: 26,
+          materialRole: 'wood',
+        },
+      );
     }
   }
   return out;
@@ -981,7 +996,7 @@ function makeTaperedTubeQuads(
   pts: readonly Vec3[],
   radii: readonly [number, number][],
   rgb: Rgb,
-  sides = 14,
+  sides = 16,
   alpha = 1,
   spec = 0.24,
   emissive = 0,
@@ -989,6 +1004,7 @@ function makeTaperedTubeQuads(
   refNormal?: Vec3,
   capStart = 0,
   capEnd = 0,
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   if (pts.length < 2) return [];
   const tangents: Vec3[] = pts.map((_, i) => {
@@ -1049,6 +1065,7 @@ function makeTaperedTubeQuads(
         spec,
         emissive,
         shininess,
+        materialRole,
       });
     }
   }
@@ -1069,7 +1086,7 @@ function makeTaperedTubeQuads(
       const vNormals: readonly [Vec3, Vec3, Vec3, Vec3] = isEnd
         ? [baseNrm[k]!, baseNrm[kn]!, tanOut, tanOut]
         : [tanOut, tanOut, baseNrm[kn]!, baseNrm[k]!];
-      quads.push({ verts, vNormals, baseRgb: rgb, alpha, spec, emissive, shininess });
+      quads.push({ verts, vNormals, baseRgb: rgb, alpha, spec, emissive, shininess, materialRole });
     }
   };
   emitDomeCap(false, capStart);
@@ -1092,13 +1109,14 @@ interface LoftStation3D {
 function makeStationLoftQuads(
   stations: readonly LoftStation3D[],
   rgb: Rgb,
-  radialSegs = 14,
+  radialSegs = 18,
   alpha = 1,
   spec = 0.22,
   emissive = 0,
   shininess = 22,
   capStart = 0,
   capEnd = 0,
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   if (stations.length < 2) return [];
   const rings: Vec3[][] = [];
@@ -1155,6 +1173,7 @@ function makeStationLoftQuads(
         spec,
         emissive,
         shininess,
+        materialRole,
       });
     }
   }
@@ -1187,6 +1206,7 @@ function makeStationLoftQuads(
         spec,
         emissive,
         shininess,
+        materialRole,
       });
     }
   };
@@ -1214,10 +1234,26 @@ function makeOutwardQuad(
   alpha: number,
   spec = 0.25,
   shininess = 24,
+  materialRole?: StudioMaterialRole,
+  bevelCenter?: Vec3,
 ): QuadFace {
   const n = cross3(sub3(v1, v0), sub3(v3, v0));
   const verts: readonly [Vec3, Vec3, Vec3, Vec3] =
     dot3(n, outwardHint) >= 0 ? [v0, v1, v2, v3] : [v0, v3, v2, v1];
+  if (bevelCenter) {
+    const fn = norm3(cross3(sub3(verts[1], verts[0]), sub3(verts[3], verts[0])));
+    const bv = (v: Vec3): Vec3 => norm3(add3(fn, mul3(norm3(sub3(v, bevelCenter)), 0.22)));
+    return {
+      verts,
+      vNormals: [bv(verts[0]), bv(verts[1]), bv(verts[2]), bv(verts[3])],
+      cullBackface: true,
+      baseRgb: rgb,
+      alpha,
+      spec,
+      shininess,
+      materialRole,
+    };
+  }
   return {
     verts,
     cullBackface: true,
@@ -1225,6 +1261,7 @@ function makeOutwardQuad(
     alpha,
     spec,
     shininess,
+    materialRole,
   };
 }
 
@@ -1271,14 +1308,39 @@ function makeOpenCFramePanelQuads(
 
   const cMidX = cx - 0.12;
   const cMidZ = (zBot + zTop) * 0.5;
+  const bevC: Vec3 = [cMidX, yPos, cMidZ];
   const out: QuadFace[] = [];
 
   for (let i = 0; i < ptsOuter.length - 1; i++) {
     out.push(
-      makeOutwardQuad(voL[i]!, voL[i + 1]!, viL[i + 1]!, viL[i]!, [0, -1, 0], oakRgb, alpha, 0.25),
+      makeOutwardQuad(
+        voL[i]!,
+        voL[i + 1]!,
+        viL[i + 1]!,
+        viL[i]!,
+        [0, -1, 0],
+        oakRgb,
+        alpha,
+        0.25,
+        26,
+        'wood',
+        bevC,
+      ),
     );
     out.push(
-      makeOutwardQuad(voR[i]!, voR[i + 1]!, viR[i + 1]!, viR[i]!, [0, 1, 0], oakRgb, alpha, 0.25),
+      makeOutwardQuad(
+        voR[i]!,
+        voR[i + 1]!,
+        viR[i + 1]!,
+        viR[i]!,
+        [0, 1, 0],
+        oakRgb,
+        alpha,
+        0.25,
+        26,
+        'wood',
+        bevC,
+      ),
     );
     const outMidX = (ptsOuter[i]![0] + ptsOuter[i + 1]![0]) * 0.5;
     const outMidZ = (ptsOuter[i]![1] + ptsOuter[i + 1]![1]) * 0.5;
@@ -1292,6 +1354,9 @@ function makeOpenCFramePanelQuads(
         oakRgb,
         alpha,
         0.27,
+        28,
+        'wood',
+        bevC,
       ),
     );
     const inMidX = (ptsInner[i]![0] + ptsInner[i + 1]![0]) * 0.5;
@@ -1306,15 +1371,44 @@ function makeOpenCFramePanelQuads(
         oakRgb,
         alpha,
         0.24,
+        24,
+        'wood',
+        bevC,
       ),
     );
   }
 
   // Front top & bottom C-arch end caps
-  out.push(makeOutwardQuad(voL[0]!, viL[0]!, viR[0]!, voR[0]!, [1, 0, 0], oakRgb, alpha, 0.26));
+  out.push(
+    makeOutwardQuad(
+      voL[0]!,
+      viL[0]!,
+      viR[0]!,
+      voR[0]!,
+      [1, 0, 0],
+      oakRgb,
+      alpha,
+      0.26,
+      26,
+      'wood',
+      bevC,
+    ),
+  );
   const last = ptsOuter.length - 1;
   out.push(
-    makeOutwardQuad(voL[last]!, viL[last]!, viR[last]!, voR[last]!, [1, 0, 0], oakRgb, alpha, 0.26),
+    makeOutwardQuad(
+      voL[last]!,
+      viL[last]!,
+      viR[last]!,
+      voR[last]!,
+      [1, 0, 0],
+      oakRgb,
+      alpha,
+      0.26,
+      26,
+      'wood',
+      bevC,
+    ),
   );
 
   return out;
@@ -1338,6 +1432,7 @@ function makeHexPrismBellQuads(
     ring0.push([px, y0, pz]);
     ring1.push([px, y1, pz]);
   }
+  const bevC: Vec3 = [cx, (y0 + y1) * 0.5, cz];
   const quads: QuadFace[] = [];
   for (let k = 0; k < 6; k++) {
     const kn = (k + 1) % 6;
@@ -1352,17 +1447,67 @@ function makeHexPrismBellQuads(
         [mx, 0, mz],
         rgb,
         alpha,
-        0.28,
+        0.24,
         24,
+        'leather',
+        bevC,
       ),
     );
   }
   // 2 quads cover each 6-gon hexagonal face cleanly (0-1-2-3 and 0-3-4-5)
   quads.push(
-    makeOutwardQuad(ring0[0]!, ring0[1]!, ring0[2]!, ring0[3]!, [0, -1, 0], rgb, alpha, 0.26, 22),
-    makeOutwardQuad(ring0[0]!, ring0[3]!, ring0[4]!, ring0[5]!, [0, -1, 0], rgb, alpha, 0.26, 22),
-    makeOutwardQuad(ring1[0]!, ring1[1]!, ring1[2]!, ring1[3]!, [0, 1, 0], rgb, alpha, 0.26, 22),
-    makeOutwardQuad(ring1[0]!, ring1[3]!, ring1[4]!, ring1[5]!, [0, 1, 0], rgb, alpha, 0.26, 22),
+    makeOutwardQuad(
+      ring0[0]!,
+      ring0[1]!,
+      ring0[2]!,
+      ring0[3]!,
+      [0, -1, 0],
+      rgb,
+      alpha,
+      0.24,
+      22,
+      'leather',
+      bevC,
+    ),
+    makeOutwardQuad(
+      ring0[0]!,
+      ring0[3]!,
+      ring0[4]!,
+      ring0[5]!,
+      [0, -1, 0],
+      rgb,
+      alpha,
+      0.24,
+      22,
+      'leather',
+      bevC,
+    ),
+    makeOutwardQuad(
+      ring1[0]!,
+      ring1[1]!,
+      ring1[2]!,
+      ring1[3]!,
+      [0, 1, 0],
+      rgb,
+      alpha,
+      0.24,
+      22,
+      'leather',
+      bevC,
+    ),
+    makeOutwardQuad(
+      ring1[0]!,
+      ring1[3]!,
+      ring1[4]!,
+      ring1[5]!,
+      [0, 1, 0],
+      rgb,
+      alpha,
+      0.24,
+      22,
+      'leather',
+      bevC,
+    ),
   );
   return quads;
 }
@@ -1394,9 +1539,21 @@ function makeBrassStarKnobQuads(
   for (let k = 0; k < segs; k++) {
     const kn = (k + 1) % segs;
     quads.push(
-      makeOutwardQuad(rL[k]!, rL[kn]!, rR[kn]!, rR[k]!, nRad[k]!, brassRgb, alpha, 0.6, 42),
-      makeOutwardQuad(rL[k]!, rL[kn]!, cL, cL, [0, -1, 0], brassRgb, alpha, 0.6, 42),
-      makeOutwardQuad(rR[k]!, rR[kn]!, cR, cR, [0, 1, 0], brassRgb, alpha, 0.6, 42),
+      makeOutwardQuad(
+        rL[k]!,
+        rL[kn]!,
+        rR[kn]!,
+        rR[k]!,
+        nRad[k]!,
+        brassRgb,
+        alpha,
+        0.64,
+        64,
+        'brass',
+        center,
+      ),
+      makeOutwardQuad(rL[k]!, rL[kn]!, cL, cL, [0, -1, 0], brassRgb, alpha, 0.64, 64, 'brass', center),
+      makeOutwardQuad(rR[k]!, rR[kn]!, cR, cR, [0, 1, 0], brassRgb, alpha, 0.64, 64, 'brass', center),
     );
   }
   return quads;
@@ -1411,12 +1568,13 @@ function makeOrientedEllipsoidQuads(
   ry: number,
   rz: number,
   rgb: Rgb,
-  segs = 12,
+  segs = 14,
   ringsCount = 8,
   alpha = 1,
   spec = 0.24,
   shininess = 24,
   twistLobes = 0,
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   const rings: Vec3[][] = [];
   const ringNormals: Vec3[][] = [];
@@ -1477,6 +1635,7 @@ function makeOrientedEllipsoidQuads(
         alpha,
         spec,
         shininess,
+        materialRole,
       });
     }
   }
@@ -1492,10 +1651,9 @@ function makeAnatomicalHeadWithHairQuads(
   hairRgb: Rgb,
   scrunchieRgb: Rgb,
   alpha = 1,
+  segs = 20,
+  ringsCount = 12,
 ): QuadFace[] {
-  const segs = 18;
-  const ringsCount = 11;
-
   const skinGrid: Vec3[][] = [];
   const hairGrid: Vec3[][] = [];
   const nrmGrid: Vec3[][] = [];
@@ -1595,8 +1753,9 @@ function makeAnatomicalHeadWithHairQuads(
         vNormals: flip ? [n0, n3, n2, n1] : [n0, n1, n2, n3],
         baseRgb: isHair ? hairRgb : skinRgb,
         alpha,
-        spec: isHair ? 0.32 : 0.2,
-        shininess: isHair ? 30 : 18,
+        spec: isHair ? 0.32 : 0.14,
+        shininess: isHair ? 30 : 20,
+        materialRole: isHair ? undefined : 'skin',
       });
     }
   }
@@ -1617,11 +1776,13 @@ function makeAnatomicalHeadWithHairQuads(
         0.013,
         0.022,
         skinRgb,
-        6,
+        segs >= 18 ? 8 : 6,
         5,
         alpha,
-        0.18,
-        18,
+        0.14,
+        20,
+        0,
+        'skin',
       ),
     );
   }
@@ -1639,11 +1800,13 @@ function makeAnatomicalHeadWithHairQuads(
       0.016,
       0.029,
       scrunchieRgb,
-      10,
+      segs >= 18 ? 12 : 8,
       5,
       alpha,
-      0.24,
-      22,
+      0.05,
+      16,
+      0,
+      'fabric',
     ),
     ...makeOrientedEllipsoidQuads(
       bunPos,
@@ -1654,7 +1817,7 @@ function makeAnatomicalHeadWithHairQuads(
       0.035,
       0.041,
       hairRgb,
-      12,
+      segs >= 18 ? 14 : 10,
       7,
       alpha,
       0.32,
@@ -1678,6 +1841,7 @@ function makeSculptedHandQuads(
   antN: Vec3,
   skinRgb: Rgb,
   alpha: number,
+  svgFastMode = false,
 ): QuadFace[] {
   const fdir = norm3(forearmDir);
   const sign = side === 'L' ? -1 : 1;
@@ -1705,8 +1869,20 @@ function makeSculptedHandQuads(
     profile: (th: number) => [Math.cos(th) * wx, Math.sin(th) * wy] as const,
   }));
 
+  const fingerSides = svgFastMode ? 5 : 8;
   const quads: QuadFace[] = [
-    ...makeStationLoftQuads(palmStations, skinRgb, 10, alpha, 0.19, 0, 18, 0, 0.006),
+    ...makeStationLoftQuads(
+      palmStations,
+      skinRgb,
+      svgFastMode ? 8 : 12,
+      alpha,
+      0.14,
+      0,
+      20,
+      0,
+      0.006,
+      'skin',
+    ),
   ];
 
   // Opposable Thumb
@@ -1724,14 +1900,15 @@ function makeSculptedHandQuads(
         [0.0054, 0.0052],
       ],
       skinRgb,
-      6,
+      fingerSides,
       alpha,
-      0.19,
+      0.14,
       0,
-      18,
+      20,
       dorsal,
       0,
       0.0045,
+      'skin',
     ),
   );
 
@@ -1757,14 +1934,15 @@ function makeSculptedHandQuads(
           [frad * 0.68, frad * 0.66],
         ],
         skinRgb,
-        6,
+        fingerSides,
         alpha,
-        0.19,
+        0.14,
         0,
-        18,
+        20,
         dorsal,
         0,
         frad * 0.65,
+        'skin',
       ),
     );
   }
@@ -1788,6 +1966,7 @@ function makeSculptedGripFootQuads(
   sockRgb: Rgb,
   strapRgb: Rgb,
   alpha: number,
+  svgFastMode = false,
 ): QuadFace[] {
   const shinVec = sub3(ankle, knee);
   const shinDown: Vec3 = len3(shinVec) > 1e-4 ? norm3(shinVec) : [0, 0, -1];
@@ -1870,8 +2049,30 @@ function makeSculptedGripFootQuads(
   const strapR = add3(archBase, mul3(footLat, 0.034));
 
   return [
-    ...makeStationLoftQuads(cuffStations, sockRgb, 12, alpha, 0.18, 0, 18, 0.004, 0),
-    ...makeStationLoftQuads(footStations, sockRgb, 14, alpha, 0.2, 0, 20, 0.012, 0.014),
+    ...makeStationLoftQuads(
+      cuffStations,
+      sockRgb,
+      svgFastMode ? 10 : 16,
+      alpha,
+      0.04,
+      0,
+      16,
+      0.004,
+      0,
+      'fabric',
+    ),
+    ...makeStationLoftQuads(
+      footStations,
+      sockRgb,
+      svgFastMode ? 10 : 16,
+      alpha,
+      0.04,
+      0,
+      16,
+      0.012,
+      0.014,
+      'fabric',
+    ),
     ...makeTaperedTubeQuads(
       [strapL, strapCrown, strapR],
       [
@@ -1880,12 +2081,15 @@ function makeSculptedGripFootQuads(
         [0.0052, 0.0042],
       ],
       strapRgb,
-      8,
+      svgFastMode ? 6 : 10,
       alpha,
-      0.22,
+      0.04,
       0,
-      20,
+      16,
       footUp,
+      0,
+      0,
+      'fabric',
     ),
   ];
 }
@@ -1895,10 +2099,11 @@ function makeCylinder3D(
   p1: Vec3,
   radius: number,
   rgb: Rgb,
-  sides = 10,
+  sides = 16,
   alpha = 1,
   spec = 0.46,
   shininess = 36,
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   const segCount = Math.max(2, Math.min(8, Math.ceil(len3(sub3(p1, p0)) / 0.34)));
   const pts: Vec3[] = [];
@@ -1907,7 +2112,20 @@ function makeCylinder3D(
     pts.push(vlerp(p0, p1, i / segCount));
     radii.push([radius, radius]);
   }
-  return makeTaperedTubeQuads(pts, radii, rgb, sides, alpha, spec, 0, shininess);
+  return makeTaperedTubeQuads(
+    pts,
+    radii,
+    rgb,
+    sides,
+    alpha,
+    spec,
+    0,
+    shininess,
+    undefined,
+    0,
+    0,
+    materialRole,
+  );
 }
 
 function makeSphereQuads(
@@ -1916,12 +2134,13 @@ function makeSphereQuads(
   ry: number,
   rz: number,
   rgb: Rgb,
-  segs = 14,
-  ringsCount = 8,
+  segs = 16,
+  ringsCount = 10,
   alpha = 1,
   spec = 0.26,
   emissive = 0,
   shininess = 26,
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   const rings: Vec3[][] = [];
   const ringNormals: Vec3[][] = [];
@@ -1960,6 +2179,7 @@ function makeSphereQuads(
         spec,
         emissive,
         shininess,
+        materialRole,
       });
     }
   }
@@ -1972,9 +2192,10 @@ function makeTorusQuads(
   minorR: number,
   rgb: Rgb,
   alpha = 1,
-  segs = 22,
+  segs = 24,
   tubeSegs = 8,
   axis: 'X' | 'Y' | 'Z' = 'X',
+  materialRole?: StudioMaterialRole,
 ): QuadFace[] {
   const rings: Vec3[][] = [];
   const ringNormals: Vec3[][] = [];
@@ -2017,10 +2238,155 @@ function makeTorusQuads(
         ],
         baseRgb: rgb,
         alpha,
-        spec: 0.42,
-        shininess: 34,
+        spec: 0.48,
+        shininess: 56,
+        materialRole,
       });
     }
+  }
+  return quads;
+}
+
+/**
+ * High-Craft Studio Box Prop (Short Box / Long Box):
+ * Walnut base skirt + piped sage leather upholstered cushion + recessed end carry handles.
+ */
+function makeStudioBoxProp(
+  center: Vec3,
+  dims: Vec3,
+  leatherRgb: Rgb,
+  walnutRgb: Rgb,
+  charcoalRgb: Rgb,
+  pipingHex: string,
+  alpha: number,
+  svgFastMode: boolean,
+): { quads: QuadFace[]; piping: StrokeLine3D } {
+  const [cx, cy, cz] = center;
+  const [wx, wy, wz] = dims;
+  const baseH = wz * 0.24;
+  const topH = wz * 0.76;
+  const baseZ = cz - wz * 0.5 + baseH * 0.5;
+  const topZ = cz - wz * 0.5 + baseH + topH * 0.5;
+  const topCush = makePipedCushion(
+    [cx, cy, topZ],
+    [wx, wy, topH],
+    leatherRgb,
+    pipingHex,
+    alpha,
+    svgFastMode,
+  );
+  const quads: QuadFace[] = [
+    ...makeSubdividedBoxQuads(
+      [cx, cy, baseZ],
+      [wx * 0.992, wy * 0.992, baseH],
+      walnutRgb,
+      alpha,
+      0.26,
+      28,
+      'wood',
+    ),
+    ...topCush.quads,
+  ];
+  for (const sx of [cx - wx * 0.502, cx + wx * 0.502]) {
+    quads.push(
+      ...makeSubdividedBoxQuads(
+        [sx, cy, cz + wz * 0.04],
+        [0.008, Math.min(0.14, wy * 0.28), 0.032],
+        charcoalRgb,
+        alpha,
+        0.18,
+        20,
+        'leather',
+      ),
+    );
+  }
+  return { quads, piping: topCush.piping };
+}
+
+/**
+ * High-Craft Spring-Steel Pilates Magic Circle with Dual Curved Moulded Side Pads & Brass Rivets.
+ */
+function makeMagicCircle3D(
+  center: Vec3,
+  majorR: number,
+  ringAxis: 'X' | 'Y' | 'Z',
+  steelRgb: Rgb,
+  charcoalRgb: Rgb,
+  brassRgb: Rgb,
+  alpha: number,
+  svgFastMode: boolean,
+): QuadFace[] {
+  const segs = svgFastMode ? 16 : 26;
+  const tubeSegs = svgFastMode ? 6 : 10;
+  const quads: QuadFace[] = [
+    ...makeTorusQuads(center, majorR, 0.0075, steelRgb, alpha, segs, tubeSegs, ringAxis, 'chrome'),
+  ];
+
+  // Dual moulded crescent side pads (outer & inner grip pads on opposite poles + brass center rivets)
+  const padArcRad = 0.28;
+  const padSteps = svgFastMode ? 3 : 5;
+  for (const poleSign of [-1, 1] as const) {
+    for (const layerOffset of [-0.015, 0.015] as const) {
+      const rPad = majorR + layerOffset;
+      const pts: Vec3[] = [];
+      const radii: [number, number][] = [];
+      for (let i = 0; i <= padSteps; i++) {
+        const u = -padArcRad + (2 * padArcRad * i) / padSteps;
+        const baseAng = poleSign > 0 ? 0 : Math.PI;
+        const ang = baseAng + u;
+        const taper = 1 - 0.28 * Math.pow(Math.abs(u) / padArcRad, 2);
+        const ca = Math.cos(ang) * rPad;
+        const sa = Math.sin(ang) * rPad;
+        if (ringAxis === 'Z') {
+          pts.push([center[0] + sa, center[1] + ca, center[2]]);
+        } else if (ringAxis === 'Y') {
+          pts.push([center[0] + ca, center[1], center[2] + sa]);
+        } else {
+          pts.push([center[0], center[1] + ca, center[2] + sa]);
+        }
+        radii.push([0.022 * taper, 0.012 * taper]);
+      }
+      const refN: Vec3 =
+        ringAxis === 'Z' ? [0, 0, 1] : ringAxis === 'Y' ? [0, 1, 0] : [1, 0, 0];
+      quads.push(
+        ...makeTaperedTubeQuads(
+          pts,
+          radii,
+          charcoalRgb,
+          svgFastMode ? 6 : 10,
+          alpha,
+          0.2,
+          0,
+          22,
+          refN,
+          0.008,
+          0.008,
+          'leather',
+        ),
+      );
+    }
+    const rivetPos: Vec3 =
+      ringAxis === 'Z'
+        ? [center[0], center[1] + poleSign * majorR, center[2] + 0.012]
+        : ringAxis === 'Y'
+          ? [center[0] + poleSign * majorR, center[1] + 0.012, center[2]]
+          : [center[0] + 0.012, center[1] + poleSign * majorR, center[2]];
+    quads.push(
+      ...makeSphereQuads(
+        rivetPos,
+        0.006,
+        0.006,
+        0.006,
+        brassRgb,
+        svgFastMode ? 6 : 10,
+        6,
+        alpha,
+        0.62,
+        0,
+        64,
+        'brass',
+      ),
+    );
   }
   return quads;
 }
@@ -2123,6 +2489,7 @@ function buildStudio3DScene(options: {
   footbarOverride?: 'default' | FootbarState;
   headrestOverride?: 'default' | HeadrestState;
   propOverride?: Studio3DPropOverride;
+  svgFastMode?: boolean;
 }): Built3DScene {
   const {
     exercise,
@@ -2134,6 +2501,7 @@ function buildStudio3DScene(options: {
     footbarOverride = 'default',
     headrestOverride = 'default',
     propOverride = 'default',
+    svgFastMode = false,
   } = options;
 
   const spec = resolveStudio3DMotionForExercise(exercise);
@@ -2173,6 +2541,22 @@ function buildStudio3DScene(options: {
   const lines: StrokeLine3D[] = [];
   const callouts: LabelCallout3D[] = [];
   const shadowAnchors: { pos: Vec3; rx: number; ry: number }[] = [];
+
+  const mirrorSign = mirrored ? -1 : 1;
+  const segTorso = svgFastMode ? 12 : 20;
+  const segLimb = svgFastMode ? 10 : 18;
+  const segNeck = svgFastMode ? 10 : 16;
+  const segHead = svgFastMode ? 12 : 20;
+  const ringsHead = svgFastMode ? 8 : 12;
+  const segCyl = svgFastMode ? 8 : 16;
+  const segBolt = svgFastMode ? 6 : 10;
+  const ringsBolt = svgFastMode ? 5 : 6;
+  const segSphere = svgFastMode ? 10 : 18;
+  const ringsSphere = svgFastMode ? 6 : 11;
+  const segTorus = svgFastMode ? 12 : 20;
+  const tubeSegTorus = svgFastMode ? 5 : 8;
+  const segVault = svgFastMode ? 16 : 26;
+  const segStrap = svgFastMode ? 6 : 12;
 
   const isClay = shader === 'clay-wire';
   const oakRgb: Rgb = isClay
@@ -2226,6 +2610,12 @@ function buildStudio3DScene(options: {
     propOverride === 'mini-ball' ||
     (propOverride === 'default' && exercise.props.includes('mini-ball'));
 
+  const boxMountedOnReformer =
+    apparatus === 'reformer' &&
+    (Boolean(rig.withLongbox) || Boolean(rig.withShortbox) || rig.pelvis[2] >= 0.62);
+  const boxMountedOnCadillac =
+    apparatus === 'cadillac' && rig.pelvis[2] >= 0.76 && Math.abs(rig.pelvis[0]) < 0.55;
+
   let springStretchPct = Math.round(smoothstep(phaseT) * 100);
 
   // 1. Flagship Industrial Studio Apparatus Geometry
@@ -2241,7 +2631,15 @@ function buildStudio3DScene(options: {
     // Routed European White-Oak Side & End Rails + Recessed Brushed-Steel C-Tracks
     for (const sy of [-0.3, 0.3]) {
       quads.push(
-        ...makeSubdividedBoxQuads([0, sy, 0.31], [2.34, 0.048, 0.125], oakRgb, appAlpha, 0.25),
+        ...makeSubdividedBoxQuads(
+          [0, sy, 0.31],
+          [2.34, 0.048, 0.125],
+          oakRgb,
+          appAlpha,
+          0.25,
+          28,
+          'wood',
+        ),
       );
       const innerY = sy < 0 ? -0.268 : 0.268;
       const lipIn = sy < 0 ? 0.006 : -0.006;
@@ -2251,30 +2649,49 @@ function buildStudio3DScene(options: {
           [2.18, 0.012, 0.026],
           steelRgb,
           appAlpha,
-          0.52,
-          42,
+          0.56,
+          64,
+          'chrome',
         ),
         ...makeSubdividedBoxQuads(
           [0, innerY + lipIn, 0.343],
           [2.18, 0.016, 0.006],
           steelRgb,
           appAlpha,
-          0.54,
-          44,
+          0.58,
+          64,
+          'chrome',
         ),
         ...makeSubdividedBoxQuads(
           [0, innerY + lipIn, 0.321],
           [2.18, 0.016, 0.006],
           steelRgb,
           appAlpha,
-          0.54,
-          44,
+          0.58,
+          64,
+          'chrome',
         ),
       );
     }
     quads.push(
-      ...makeSubdividedBoxQuads([-1.15, 0, 0.31], [0.052, 0.648, 0.125], oakRgb, appAlpha, 0.25),
-      ...makeSubdividedBoxQuads([1.15, 0, 0.31], [0.052, 0.648, 0.125], oakRgb, appAlpha, 0.25),
+      ...makeSubdividedBoxQuads(
+        [-1.15, 0, 0.31],
+        [0.052, 0.648, 0.125],
+        oakRgb,
+        appAlpha,
+        0.25,
+        28,
+        'wood',
+      ),
+      ...makeSubdividedBoxQuads(
+        [1.15, 0, 0.31],
+        [0.052, 0.648, 0.125],
+        oakRgb,
+        appAlpha,
+        0.25,
+        28,
+        'wood',
+      ),
     );
 
     // Walnut Corner Splines + Champagne Brass Bolts
@@ -2287,6 +2704,8 @@ function buildStudio3DScene(options: {
             walnutRgb,
             appAlpha,
             0.28,
+            30,
+            'wood',
           ),
           ...makeSphereQuads(
             [sx * 1.018, sy, 0.31],
@@ -2294,12 +2713,13 @@ function buildStudio3DScene(options: {
             0.009,
             0.009,
             brassRgb,
-            8,
-            6,
+            segBolt,
+            ringsBolt,
             appAlpha,
-            0.6,
+            0.62,
             0,
-            42,
+            64,
+            'brass',
           ),
           ...makeSphereQuads(
             [sx, sy * 1.06, 0.31],
@@ -2307,12 +2727,13 @@ function buildStudio3DScene(options: {
             0.006,
             0.009,
             brassRgb,
-            8,
-            6,
+            segBolt,
+            ringsBolt,
             appAlpha,
-            0.6,
+            0.62,
             0,
-            42,
+            64,
+            'brass',
           ),
         );
       }
@@ -2322,18 +2743,39 @@ function buildStudio3DScene(options: {
     for (const sx of [-1.08, 1.08]) {
       for (const sy of [-0.28, 0.28]) {
         quads.push(
-          ...makeCylinder3D([sx, sy, 0.04], [sx, sy, 0.252], 0.029, oakRgb, 12, appAlpha, 0.24),
+          ...makeCylinder3D(
+            [sx, sy, 0.04],
+            [sx, sy, 0.252],
+            0.029,
+            oakRgb,
+            segCyl,
+            appAlpha,
+            0.24,
+            28,
+            'wood',
+          ),
           ...makeCylinder3D(
             [sx, sy, 0.008],
             [sx, sy, 0.044],
             0.03,
             brassRgb,
-            12,
+            segCyl,
             appAlpha,
-            0.58,
-            42,
+            0.62,
+            64,
+            'brass',
           ),
-          ...makeCylinder3D([sx, sy, 0], [sx, sy, 0.01], 0.032, charcoalRgb, 10, appAlpha, 0.15),
+          ...makeCylinder3D(
+            [sx, sy, 0],
+            [sx, sy, 0.01],
+            0.032,
+            charcoalRgb,
+            segCyl,
+            appAlpha,
+            0.16,
+            20,
+            'leather',
+          ),
         );
       }
     }
@@ -2346,6 +2788,8 @@ function buildStudio3DScene(options: {
         walnutRgb,
         appAlpha,
         0.26,
+        28,
+        'wood',
       ).filter((q) => q.verts[0][2] < 0.378 || q.verts[2][2] < 0.378),
       ...makeSubdividedBoxQuads(
         [1.04, 0, 0.383],
@@ -2353,16 +2797,19 @@ function buildStudio3DScene(options: {
         charcoalRgb,
         appAlpha,
         0.18,
+        20,
+        'leather',
       ),
       ...makeCylinder3D(
         [0.915, -0.27, 0.335],
         [0.915, 0.27, 0.335],
         0.011,
         steelRgb,
-        10,
+        segCyl,
         appAlpha,
-        0.54,
-        42,
+        0.58,
+        64,
+        'chrome',
       ),
     );
     for (const hSy of [-0.12, -0.06, 0, 0.06, 0.12]) {
@@ -2373,12 +2820,13 @@ function buildStudio3DScene(options: {
           0.007,
           0.012,
           brassRgb,
-          8,
-          6,
+          segBolt,
+          ringsBolt,
           appAlpha,
-          0.6,
+          0.62,
           0,
-          42,
+          64,
+          'brass',
         ),
       );
     }
@@ -2392,12 +2840,22 @@ function buildStudio3DScene(options: {
           walnutRgb,
           appAlpha,
           0.26,
+          28,
+          'wood',
         ),
       );
     }
     for (const sx of [cx - 0.3, cx + 0.46]) {
       quads.push(
-        ...makeSubdividedBoxQuads([sx, 0, 0.354], [0.024, 0.53, 0.024], walnutRgb, appAlpha, 0.26),
+        ...makeSubdividedBoxQuads(
+          [sx, 0, 0.354],
+          [0.024, 0.53, 0.024],
+          walnutRgb,
+          appAlpha,
+          0.26,
+          28,
+          'wood',
+        ),
       );
     }
     const carriageCush = makePipedCushion(
@@ -2406,6 +2864,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
+      svgFastMode,
     );
     quads.push(...carriageCush.quads);
     lines.push(carriageCush.piping);
@@ -2417,6 +2876,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
+      svgFastMode,
     );
     quads.push(...headrestCush.quads);
     lines.push(headrestCush.piping);
@@ -2428,9 +2888,11 @@ function buildStudio3DScene(options: {
           [cx - 0.22, sy, 0.48],
           0.011,
           steelRgb,
-          8,
+          segCyl,
           appAlpha,
-          0.5,
+          0.58,
+          64,
+          'chrome',
         ),
       );
       const sb = makePipedCushion(
@@ -2439,35 +2901,68 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
+        svgFastMode,
       );
       quads.push(...sb.quads);
     }
 
-    if (useLongBox) {
-      const box = makePipedCushion(
-        [cx + 0.06, 0, 0.528],
-        [0.69, 0.395, 0.22],
+    if (boxMountedOnReformer && (useLongBox || useShortBox)) {
+      const box = makeStudioBoxProp(
+        useLongBox ? [cx + 0.06, 0, 0.528] : [cx + 0.08, 0, 0.528],
+        useLongBox ? [0.69, 0.395, 0.22] : [0.43, 0.545, 0.22],
         leatherRgb,
+        walnutRgb,
+        charcoalRgb,
         pipingHex,
         appAlpha,
+        svgFastMode,
       );
       quads.push(...box.quads);
       lines.push(box.piping);
-    } else if (useShortBox) {
-      const box = makePipedCushion(
-        [cx + 0.08, 0, 0.528],
-        [0.43, 0.545, 0.22],
-        leatherRgb,
-        pipingHex,
-        appAlpha,
-      );
-      quads.push(...box.quads);
-      lines.push(box.piping);
+      if (useShortBox && !useLongBox && (rig.lFoot[0] > 0.72 || rig.rFoot[0] > 0.72)) {
+        quads.push(
+          ...makeTorusQuads(
+            [0.88, 0, 0.4],
+            0.046,
+            0.006,
+            charcoalRgb,
+            appAlpha,
+            segTorus,
+            tubeSegTorus,
+            'X',
+            'leather',
+          ),
+        );
+      }
     }
 
     if (useJumpboard) {
+      for (const sy of [-0.19, 0.19]) {
+        quads.push(
+          ...makeCylinder3D(
+            [0.985, sy, 0.31],
+            [0.985, sy, 0.44],
+            0.012,
+            steelRgb,
+            segCyl,
+            appAlpha,
+            0.58,
+            64,
+            'chrome',
+          ),
+          ...makeBrassStarKnobQuads([0.996, sy * 1.18, 0.335], 0.015, 0.01, brassRgb, appAlpha),
+        );
+      }
       quads.push(
-        ...makeSubdividedBoxQuads([0.985, 0, 0.6], [0.026, 0.54, 0.5], oakRgb, appAlpha, 0.25),
+        ...makeSubdividedBoxQuads(
+          [0.985, 0, 0.6],
+          [0.026, 0.54, 0.5],
+          oakRgb,
+          appAlpha,
+          0.25,
+          28,
+          'wood',
+        ),
       );
       const jb = makePipedCushion(
         [0.962, 0, 0.61],
@@ -2475,6 +2970,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
+        svgFastMode,
       );
       quads.push(...jb.quads);
       lines.push(jb.piping);
@@ -2488,9 +2984,11 @@ function buildStudio3DScene(options: {
             [fbX, sy, fbZ],
             0.013,
             steelRgb,
-            10,
+            segCyl,
             appAlpha,
-            0.52,
+            0.58,
+            64,
+            'chrome',
           ),
           ...makeSphereQuads(
             [0.955, sy * 1.08, 0.335],
@@ -2498,10 +2996,13 @@ function buildStudio3DScene(options: {
             0.012,
             0.016,
             brassRgb,
-            8,
-            6,
+            segBolt,
+            ringsBolt,
             appAlpha,
-            0.6,
+            0.62,
+            0,
+            64,
+            'brass',
           ),
         );
       }
@@ -2511,18 +3012,22 @@ function buildStudio3DScene(options: {
           [fbX, 0.282, fbZ],
           0.015,
           steelRgb,
-          10,
+          segCyl,
           appAlpha,
-          0.52,
+          0.58,
+          64,
+          'chrome',
         ),
         ...makeCylinder3D(
           [fbX, -0.255, fbZ],
           [fbX, 0.255, fbZ],
           0.022,
           charcoalRgb,
-          12,
+          segCyl,
           appAlpha,
-          0.24,
+          0.2,
+          24,
+          'leather',
         ),
       );
     }
@@ -2546,9 +3051,11 @@ function buildStudio3DScene(options: {
           [-1.13, ry, 0.665],
           0.013,
           steelRgb,
-          10,
+          segCyl,
           appAlpha,
-          0.52,
+          0.58,
+          64,
+          'chrome',
         ),
         ...makeSphereQuads(
           [-1.13, ry, 0.672],
@@ -2556,29 +3063,80 @@ function buildStudio3DScene(options: {
           0.016,
           0.012,
           brassRgb,
-          10,
-          6,
+          segBolt,
+          ringsBolt,
           appAlpha,
-          0.6,
+          0.62,
           0,
-          42,
+          64,
+          'brass',
         ),
-        ...makeTorusQuads([-1.095, ry, 0.64], 0.022, 0.006, brassRgb, appAlpha, 14, 6, 'Y'),
+        ...makeTorusQuads(
+          [-1.095, ry, 0.64],
+          0.022,
+          0.006,
+          brassRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'brass',
+        ),
       );
     }
     if (rig.ropeToFeet) {
       lines.push({ pts: [[-1.095, -0.275, 0.64], rig.lFoot], stroke: '#4A5852', width: 2.0 });
       lines.push({ pts: [[-1.095, 0.275, 0.64], rig.rFoot], stroke: '#4A5852', width: 2.0 });
       quads.push(
-        ...makeTorusQuads(rig.lFoot, 0.036, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'),
-        ...makeTorusQuads(rig.rFoot, 0.036, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'),
+        ...makeTorusQuads(
+          rig.lFoot,
+          0.036,
+          0.0055,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'fabric',
+        ),
+        ...makeTorusQuads(
+          rig.rFoot,
+          0.036,
+          0.0055,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'fabric',
+        ),
       );
     } else if (rig.ropeToHands) {
       lines.push({ pts: [[-1.095, -0.275, 0.64], rig.lHand], stroke: '#4A5852', width: 2.0 });
       lines.push({ pts: [[-1.095, 0.275, 0.64], rig.rHand], stroke: '#4A5852', width: 2.0 });
       quads.push(
-        ...makeTorusQuads(rig.lHand, 0.032, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'),
-        ...makeTorusQuads(rig.rHand, 0.032, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'),
+        ...makeTorusQuads(
+          rig.lHand,
+          0.032,
+          0.0055,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'fabric',
+        ),
+        ...makeTorusQuads(
+          rig.rHand,
+          0.032,
+          0.0055,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'fabric',
+        ),
       );
     } else {
       lines.push({
@@ -2607,29 +3165,73 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
+      svgFastMode,
     );
     quads.push(...bed.quads);
     lines.push(bed.piping);
 
+    if (boxMountedOnCadillac && (useLongBox || useShortBox)) {
+      const box = makeStudioBoxProp(
+        [0, 0, 0.688],
+        useLongBox ? [0.69, 0.395, 0.22] : [0.43, 0.545, 0.22],
+        leatherRgb,
+        walnutRgb,
+        charcoalRgb,
+        pipingHex,
+        appAlpha,
+        svgFastMode,
+      );
+      quads.push(...box.quads);
+      lines.push(box.piping);
+    }
+
     // Heavy Oak Trapeze Table Frame + Lower Oak H-Stretcher Rails (z = 0.14)
     for (const sy of [-0.32, 0.32]) {
       quads.push(
-        ...makeSubdividedBoxQuads([0, sy, 0.475], [2.14, 0.046, 0.094], oakRgb, appAlpha, 0.24),
+        ...makeSubdividedBoxQuads(
+          [0, sy, 0.475],
+          [2.14, 0.046, 0.094],
+          oakRgb,
+          appAlpha,
+          0.24,
+          28,
+          'wood',
+        ),
         ...makeCylinder3D(
           [-1.04, sy * 0.97, 0.14],
           [1.04, sy * 0.97, 0.14],
           0.018,
           oakRgb,
-          10,
+          segCyl,
           appAlpha,
           0.24,
+          28,
+          'wood',
         ),
       );
     }
     for (const sx of [-1.05, 1.05]) {
       quads.push(
-        ...makeSubdividedBoxQuads([sx, 0, 0.475], [0.048, 0.686, 0.094], oakRgb, appAlpha, 0.24),
-        ...makeCylinder3D([sx, -0.31, 0.14], [sx, 0.31, 0.14], 0.018, oakRgb, 10, appAlpha, 0.24),
+        ...makeSubdividedBoxQuads(
+          [sx, 0, 0.475],
+          [0.048, 0.686, 0.094],
+          oakRgb,
+          appAlpha,
+          0.24,
+          28,
+          'wood',
+        ),
+        ...makeCylinder3D(
+          [sx, -0.31, 0.14],
+          [sx, 0.31, 0.14],
+          0.018,
+          oakRgb,
+          segCyl,
+          appAlpha,
+          0.24,
+          28,
+          'wood',
+        ),
       );
     }
 
@@ -2637,36 +3239,88 @@ function buildStudio3DScene(options: {
     for (const sx of [-1.05, 1.05]) {
       for (const sy of [-0.31, 0.31]) {
         quads.push(
-          ...makeCylinder3D([sx, sy, 0.038], [sx, sy, 0.44], 0.03, oakRgb, 10, appAlpha, 0.24),
-          ...makeCylinder3D([sx, sy, 0], [sx, sy, 0.04], 0.032, brassRgb, 10, appAlpha, 0.58),
-          ...makeCylinder3D([sx, sy, 0.51], [sx, sy, 1.95], 0.016, steelRgb, 10, appAlpha, 0.52),
+          ...makeCylinder3D(
+            [sx, sy, 0.038],
+            [sx, sy, 0.44],
+            0.03,
+            oakRgb,
+            segCyl,
+            appAlpha,
+            0.24,
+            28,
+            'wood',
+          ),
+          ...makeCylinder3D(
+            [sx, sy, 0],
+            [sx, sy, 0.04],
+            0.032,
+            brassRgb,
+            segCyl,
+            appAlpha,
+            0.62,
+            64,
+            'brass',
+          ),
+          ...makeCylinder3D(
+            [sx, sy, 0.51],
+            [sx, sy, 1.95],
+            0.016,
+            steelRgb,
+            segCyl,
+            appAlpha,
+            0.58,
+            64,
+            'chrome',
+          ),
           ...makeSubdividedBoxQuads(
             [sx, sy, 0.515],
             [0.048, 0.048, 0.032],
             brassRgb,
             appAlpha,
-            0.58,
-            42,
+            0.62,
+            64,
+            'brass',
           ),
           ...makeSubdividedBoxQuads(
             [sx, sy, 1.95],
             [0.046, 0.046, 0.046],
             brassRgb,
             appAlpha,
-            0.6,
-            42,
+            0.64,
+            64,
+            'brass',
           ),
         );
       }
     }
     for (const sy of [-0.31, 0.31]) {
       quads.push(
-        ...makeCylinder3D([-1.05, sy, 1.95], [1.05, sy, 1.95], 0.015, steelRgb, 10, appAlpha, 0.52),
+        ...makeCylinder3D(
+          [-1.05, sy, 1.95],
+          [1.05, sy, 1.95],
+          0.015,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
       );
     }
     for (const sx of [-1.05, 0.18, 0.62, 1.05]) {
       quads.push(
-        ...makeCylinder3D([sx, -0.31, 1.95], [sx, 0.31, 1.95], 0.014, steelRgb, 8, appAlpha, 0.52),
+        ...makeCylinder3D(
+          [sx, -0.31, 1.95],
+          [sx, 0.31, 1.95],
+          0.014,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
       );
       if (sx === 0.18 || sx === 0.62) {
         for (const sy of [-0.31, 0.31]) {
@@ -2676,12 +3330,50 @@ function buildStudio3DScene(options: {
               [0.038, 0.038, 0.038],
               brassRgb,
               appAlpha,
-              0.58,
-              42,
+              0.62,
+              64,
+              'brass',
             ),
           );
         }
       }
+    }
+
+    if (useJumpboard) {
+      for (const sy of [-0.31, 0.31]) {
+        quads.push(
+          ...makeSubdividedBoxQuads(
+            [-1.05, sy, 0.78],
+            [0.044, 0.044, 0.058],
+            brassRgb,
+            appAlpha,
+            0.62,
+            64,
+            'brass',
+          ),
+        );
+      }
+      quads.push(
+        ...makeSubdividedBoxQuads(
+          [-1.035, 0, 0.78],
+          [0.026, 0.58, 0.46],
+          oakRgb,
+          appAlpha,
+          0.25,
+          28,
+          'wood',
+        ),
+      );
+      const jbCad = makePipedCushion(
+        [-1.01, 0, 0.78],
+        [0.036, 0.54, 0.42],
+        leatherRgb,
+        pipingHex,
+        appAlpha,
+        svgFastMode,
+      );
+      quads.push(...jbCad.quads);
+      lines.push(jbCad.piping);
     }
 
     // Plush Ivory Sheepskin Fuzzy Hanging Loops
@@ -2700,11 +3392,23 @@ function buildStudio3DScene(options: {
           [0.18, sy, 1.6],
           0.027,
           [238, 234, 224],
-          10,
+          segCyl,
           appAlpha,
-          0.16,
+          0.05,
+          16,
+          'fabric',
         ),
-        ...makeTorusQuads([0.18, sy, 1.42], 0.032, 0.007, charcoalRgb, appAlpha, 12, 6, 'X'),
+        ...makeTorusQuads(
+          [0.18, sy, 1.42],
+          0.032,
+          0.007,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'X',
+          'fabric',
+        ),
       );
     }
 
@@ -2712,10 +3416,32 @@ function buildStudio3DScene(options: {
       const [bx, bz] = rig.rolldownBar;
       const anchX = rig.rolldownBarAnchorX ?? 1.05;
       quads.push(
-        ...makeCylinder3D([bx, -0.27, bz], [bx, 0.27, bz], 0.017, walnutRgb, 10, appAlpha, 0.3),
+        ...makeCylinder3D(
+          [bx, -0.27, bz],
+          [bx, 0.27, bz],
+          0.017,
+          walnutRgb,
+          segCyl,
+          appAlpha,
+          0.28,
+          28,
+          'wood',
+        ),
       );
       for (const sy of [-0.24, 0.24]) {
-        quads.push(...makeTorusQuads([bx, sy, bz], 0.02, 0.004, brassRgb, appAlpha, 10, 6, 'Y'));
+        quads.push(
+          ...makeTorusQuads(
+            [bx, sy, bz],
+            0.02,
+            0.004,
+            brassRgb,
+            appAlpha,
+            segTorus,
+            tubeSegTorus,
+            'Y',
+            'brass',
+          ),
+        );
         lines.push({
           pts: makeSpringPolyline([anchX, sy, 1.74], [bx, sy, bz], 13),
           stroke: '#D49A24',
@@ -2731,20 +3457,72 @@ function buildStudio3DScene(options: {
       const mx = (0.62 + ex) * 0.5;
       const mz = (1.84 + ez) * 0.5;
       quads.push(
-        ...makeCylinder3D([0.62, -0.27, 1.94], [ex, -0.27, ez], 0.013, steelRgb, 8, appAlpha, 0.52),
-        ...makeCylinder3D([0.62, 0.27, 1.94], [ex, 0.27, ez], 0.013, steelRgb, 8, appAlpha, 0.52),
-        ...makeCylinder3D([mx, -0.27, mz], [mx, 0.27, mz], 0.011, steelRgb, 8, appAlpha, 0.52),
-        ...makeCylinder3D([ex, -0.27, ez], [ex, 0.27, ez], 0.014, steelRgb, 8, appAlpha, 0.52),
-        ...makeCylinder3D([ex, -0.21, ez], [ex, 0.21, ez], 0.019, charcoalRgb, 10, appAlpha, 0.22),
+        ...makeCylinder3D(
+          [0.62, -0.27, 1.94],
+          [ex, -0.27, ez],
+          0.013,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
+        ...makeCylinder3D(
+          [0.62, 0.27, 1.94],
+          [ex, 0.27, ez],
+          0.013,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
+        ...makeCylinder3D(
+          [mx, -0.27, mz],
+          [mx, 0.27, mz],
+          0.011,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
+        ...makeCylinder3D(
+          [ex, -0.27, ez],
+          [ex, 0.27, ez],
+          0.014,
+          steelRgb,
+          segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
+        ...makeCylinder3D(
+          [ex, -0.21, ez],
+          [ex, 0.21, ez],
+          0.019,
+          charcoalRgb,
+          segCyl,
+          appAlpha,
+          0.2,
+          24,
+          'leather',
+        ),
         // Authentic Overhead Safety Strap on Push-Through Bar
         ...makeCylinder3D(
           [1.05, -0.26, 1.94],
           [ex, -0.26, ez],
           0.005,
           [64, 72, 68],
-          6,
+          svgFastMode ? 6 : 10,
           appAlpha,
-          0.18,
+          0.05,
+          16,
+          'fabric',
         ),
       );
       lines.push(
@@ -2774,7 +3552,19 @@ function buildStudio3DScene(options: {
           stroke: '#D49A24',
           width: 2.2,
         });
-        quads.push(...makeTorusQuads(ft, 0.036, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'));
+        quads.push(
+          ...makeTorusQuads(
+            ft,
+            0.036,
+            0.0055,
+            charcoalRgb,
+            appAlpha,
+            segTorus,
+            tubeSegTorus,
+            'Y',
+            'fabric',
+          ),
+        );
       }
     } else if (rig.sideLegSpring) {
       const targetFoot = rig.sideLegSpring === 'right' ? rig.rFoot : rig.lFoot;
@@ -2784,7 +3574,19 @@ function buildStudio3DScene(options: {
         stroke: '#D49A24',
         width: 2.2,
       });
-      quads.push(...makeTorusQuads(targetFoot, 0.036, 0.0055, charcoalRgb, appAlpha, 12, 6, 'Y'));
+      quads.push(
+        ...makeTorusQuads(
+          targetFoot,
+          0.036,
+          0.0055,
+          charcoalRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Y',
+          'fabric',
+        ),
+      );
     }
 
     if (rig.armSpringsFrom) {
@@ -2804,9 +3606,11 @@ function buildStudio3DScene(options: {
             [hd[0], hd[1] + 0.045, hd[2]],
             0.011,
             walnutRgb,
-            8,
+            segCyl,
             appAlpha,
             0.28,
+            28,
+            'wood',
           ),
         );
       }
@@ -2825,6 +3629,8 @@ function buildStudio3DScene(options: {
         walnutRgb,
         appAlpha,
         0.26,
+        28,
+        'wood',
       ),
       ...makeSubdividedBoxQuads(
         [cx + 0.03, 0.252, 0.021],
@@ -2832,24 +3638,30 @@ function buildStudio3DScene(options: {
         walnutRgb,
         appAlpha,
         0.26,
+        28,
+        'wood',
       ),
       ...makeCylinder3D(
         [cx + 0.34, -0.25, 0.055],
         [cx + 0.34, 0.25, 0.055],
         0.016,
         oakRgb,
-        10,
+        segCyl,
         appAlpha,
         0.24,
+        28,
+        'wood',
       ),
       ...makeCylinder3D(
         [cx - 0.28, -0.25, 0.08],
         [cx - 0.28, 0.25, 0.08],
         0.016,
         oakRgb,
-        10,
+        segCyl,
         appAlpha,
         0.24,
+        28,
+        'wood',
       ),
     );
 
@@ -2860,10 +3672,11 @@ function buildStudio3DScene(options: {
         [cx - 0.24, 0, 0.5],
         0.016,
         steelRgb,
-        10,
+        segCyl,
         appAlpha,
-        0.54,
-        42,
+        0.58,
+        64,
+        'chrome',
       ),
     );
     for (const hz of [0.26, 0.33, 0.4, 0.47]) {
@@ -2873,10 +3686,11 @@ function buildStudio3DScene(options: {
           [cx - 0.24, 0.09, hz],
           0.0065,
           brassRgb,
-          8,
+          segCyl,
           appAlpha,
-          0.6,
-          42,
+          0.62,
+          64,
+          'brass',
         ),
       );
     }
@@ -2887,6 +3701,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
+      svgFastMode,
     );
     quads.push(...seat.quads);
     lines.push(seat.piping);
@@ -2911,18 +3726,22 @@ function buildStudio3DScene(options: {
           [pxSide, py, pzSide],
           0.021,
           walnutRgb,
-          10,
+          segCyl,
           appAlpha,
           0.28,
+          28,
+          'wood',
         ),
         ...makeCylinder3D(
           [pxSide, py - 0.085, pzSide + 0.012],
           [pxSide, py + 0.085, pzSide + 0.012],
           0.022,
           charcoalRgb,
-          10,
+          segCyl,
           appAlpha,
-          0.22,
+          0.2,
+          24,
+          'leather',
         ),
       );
     }
@@ -2933,10 +3752,11 @@ function buildStudio3DScene(options: {
           [rPx, 0.045, rPz + 0.012],
           0.01,
           brassRgb,
-          8,
+          segCyl,
           appAlpha,
-          0.6,
-          42,
+          0.62,
+          64,
+          'brass',
         ),
       );
     }
@@ -2970,8 +3790,9 @@ function buildStudio3DScene(options: {
             [0.046, 0.036, 0.16],
             steelRgb,
             appAlpha,
-            0.52,
-            40,
+            0.58,
+            64,
+            'chrome',
           ),
           ...makeBrassStarKnobQuads([cx - 0.04, sy * 1.11, 0.3], 0.017, 0.012, brassRgb, appAlpha),
           ...makeCylinder3D(
@@ -2979,27 +3800,33 @@ function buildStudio3DScene(options: {
             [cx - 0.04, sy, 1.24],
             0.014,
             steelRgb,
-            10,
+            segCyl,
             appAlpha,
-            0.52,
+            0.58,
+            64,
+            'chrome',
           ),
           ...makeCylinder3D(
             [cx - 0.04, sy, 1.24],
             [cx + 0.02, sy, 1.265],
             0.014,
             steelRgb,
-            8,
+            segCyl,
             appAlpha,
-            0.52,
+            0.58,
+            64,
+            'chrome',
           ),
           ...makeCylinder3D(
             [cx + 0.01, sy, 1.26],
             [cx + 0.13, sy, 1.28],
             0.021,
             charcoalRgb,
-            10,
+            segCyl,
             appAlpha,
-            0.22,
+            0.2,
+            24,
+            'leather',
           ),
         );
       }
@@ -3017,6 +3844,7 @@ function buildStudio3DScene(options: {
           leatherRgb,
           oakRgb,
           appAlpha,
+          segVault,
         ),
       );
       const stepSeat = makePipedCushion(
@@ -3025,6 +3853,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
+        svgFastMode,
       );
       quads.push(...stepSeat.quads);
       lines.push(stepSeat.piping);
@@ -3036,6 +3865,8 @@ function buildStudio3DScene(options: {
             oakRgb,
             appAlpha,
             0.24,
+            28,
+            'wood',
           ),
           ...makeBrassStarKnobQuads([-0.16, sy * 1.12, 0.16], 0.016, 0.012, brassRgb, appAlpha),
         );
@@ -3047,9 +3878,11 @@ function buildStudio3DScene(options: {
             [sx, 0.22, 0.032],
             0.014,
             oakRgb,
-            8,
+            segCyl,
             appAlpha,
             0.24,
+            28,
+            'wood',
           ),
         );
       }
@@ -3065,28 +3898,39 @@ function buildStudio3DScene(options: {
           leatherRgb,
           oakRgb,
           appAlpha,
+          segVault,
         ),
       );
       // Whaleback French piping along left & right barrel arch edges
       const halfArc = (74 * Math.PI) / 180;
       for (const sy of [-0.275, 0.275]) {
         const archPts: Vec3[] = [];
-        for (let i = 0; i <= 12; i++) {
-          const a = -halfArc + (2 * halfArc * i) / 12;
+        for (let i = 0; i <= 14; i++) {
+          const a = -halfArc + (2 * halfArc * i) / 14;
           archPts.push([-0.3 + Math.sin(a) * 0.333, sy, 0.55 + Math.cos(a) * 0.333]);
         }
         lines.push({ pts: archPts, stroke: pipingHex, width: 1.4, depthBias: -0.02 });
         quads.push(
-          ...makeSubdividedBoxQuads([0.08, sy, 0.03], [1.12, 0.052, 0.058], oakRgb, appAlpha, 0.24),
+          ...makeSubdividedBoxQuads(
+            [0.08, sy, 0.03],
+            [1.12, 0.052, 0.058],
+            oakRgb,
+            appAlpha,
+            0.24,
+            28,
+            'wood',
+          ),
           ...makeBrassStarKnobQuads([-0.28, sy * 1.13, 0.045], 0.019, 0.014, brassRgb, appAlpha),
           ...makeCylinder3D(
             [0.52, sy, 0.04],
             [0.48, sy, 1.03],
             0.025,
             walnutRgb,
-            10,
+            segCyl,
             appAlpha,
             0.28,
+            28,
+            'wood',
           ),
           ...makeSphereQuads(
             [0.48, sy, 1.038],
@@ -3094,25 +3938,46 @@ function buildStudio3DScene(options: {
             0.027,
             0.014,
             brassRgb,
-            10,
-            6,
+            segBolt,
+            ringsBolt,
             appAlpha,
-            0.6,
+            0.62,
             0,
-            42,
+            64,
+            'brass',
           ),
         );
       }
       // Lower Oak Cross-Stretchers + 5 Turned Oak Ladder Rungs
       for (const sx of [-0.42, 0.5]) {
         quads.push(
-          ...makeCylinder3D([sx, -0.27, 0.03], [sx, 0.27, 0.03], 0.018, oakRgb, 10, appAlpha, 0.24),
+          ...makeCylinder3D(
+            [sx, -0.27, 0.03],
+            [sx, 0.27, 0.03],
+            0.018,
+            oakRgb,
+            segCyl,
+            appAlpha,
+            0.24,
+            28,
+            'wood',
+          ),
         );
       }
       for (const rz of [0.22, 0.4, 0.58, 0.76, 0.94]) {
         const rx = 0.52 - (rz - 0.04) * 0.04;
         quads.push(
-          ...makeCylinder3D([rx, -0.28, rz], [rx, 0.28, rz], 0.016, oakRgb, 10, appAlpha, 0.26),
+          ...makeCylinder3D(
+            [rx, -0.28, rz],
+            [rx, 0.28, rz],
+            0.016,
+            oakRgb,
+            segCyl,
+            appAlpha,
+            0.26,
+            28,
+            'wood',
+          ),
         );
       }
     }
@@ -3121,12 +3986,28 @@ function buildStudio3DScene(options: {
     // Non-overlapping cork perimeter border around the upholstered studio mat (zero coplanar Z-fighting)
     for (const sy of [-0.37, 0.37]) {
       quads.push(
-        ...makeSubdividedBoxQuads([0, sy, 0.015], [2.06, 0.06, 0.026], corkRgb, appAlpha, 0.16),
+        ...makeSubdividedBoxQuads(
+          [0, sy, 0.015],
+          [2.06, 0.06, 0.026],
+          corkRgb,
+          appAlpha,
+          0.18,
+          24,
+          'wood',
+        ),
       );
     }
     for (const sx of [-0.995, 0.995]) {
       quads.push(
-        ...makeSubdividedBoxQuads([sx, 0, 0.015], [0.07, 0.68, 0.026], corkRgb, appAlpha, 0.16),
+        ...makeSubdividedBoxQuads(
+          [sx, 0, 0.015],
+          [0.07, 0.68, 0.026],
+          corkRgb,
+          appAlpha,
+          0.18,
+          24,
+          'wood',
+        ),
       );
     }
     const matCush = makePipedCushion(
@@ -3135,6 +4016,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
+      svgFastMode,
     );
     quads.push(...matCush.quads);
     lines.push(matCush.piping);
@@ -3149,102 +4031,331 @@ function buildStudio3DScene(options: {
     });
     for (const ey of [-0.22, 0.22]) {
       quads.push(
-        ...makeTorusQuads([-0.89, ey, 0.048], 0.013, 0.0038, brassRgb, appAlpha, 12, 6, 'Z'),
+        ...makeTorusQuads(
+          [-0.89, ey, 0.048],
+          0.013,
+          0.0038,
+          brassRgb,
+          appAlpha,
+          segTorus,
+          tubeSegTorus,
+          'Z',
+          'brass',
+        ),
       );
     }
   }
 
-  // Optional High-Craft 3D Studio Props (Dual-Pad Magic Circle, EVA Foam Roller, Staged Mini Ball, Hex Dumbbells)
-  const propRgb: Rgb = isClay ? [190, 175, 165] : [199, 102, 77];
+  // Orthonormal Spine & Cranial Basis + 2-Bone Analytical Limb IK (solved ahead of props for exact contact alignment)
+  const spUp = norm3(sub3(rig.chest, rig.pelvis));
+  const antProj = sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp)));
+  const antN = norm3(len3(antProj) > 1e-4 ? antProj : sub3([1, 0, 0], mul3(spUp, spUp[0])));
+  const bodyRight = norm3(cross3(spUp, antN));
+
+  const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.086));
+  const rHip = add3(rig.pelvis, mul3(bodyRight, 0.086));
+  const lSh = sub3(rig.chest, mul3(bodyRight, 0.15));
+  const rSh = add3(rig.chest, mul3(bodyRight, 0.15));
+
+  const [lKnee, lAnkle, lKneeBend] = solve2BoneIK(lHip, rig.lFoot, 0.4, 0.39, rig.lKneePole);
+  const [rKnee, rAnkle, rKneeBend] = solve2BoneIK(rHip, rig.rFoot, 0.4, 0.39, rig.rKneePole);
+  const [lElb, lWr, lElbowBend] = solve2BoneIK(lSh, rig.lHand, 0.28, 0.26, rig.lElbowPole);
+  const [rElb, rWr, rElbowBend] = solve2BoneIK(rSh, rig.rHand, 0.28, 0.26, rig.rElbowPole);
+
+  // Optional High-Craft 3D Studio Props Across All 5 Apparatuses (Zero-Float, Zero-Clip Grounding)
+  if ((useLongBox || useShortBox) && !boxMountedOnReformer && !boxMountedOnCadillac) {
+    const boxDims: Vec3 = useLongBox ? [0.68, 0.38, 0.22] : [0.43, 0.52, 0.22];
+    const boxPos: Vec3 = [
+      apparatus === 'barrel' ? -0.06 : -0.18,
+      -0.66 * mirrorSign,
+      boxDims[2] * 0.5,
+    ];
+    const floorBox = makeStudioBoxProp(
+      boxPos,
+      boxDims,
+      leatherRgb,
+      walnutRgb,
+      charcoalRgb,
+      pipingHex,
+      appAlpha,
+      svgFastMode,
+    );
+    quads.push(...floorBox.quads);
+    lines.push(floorBox.piping);
+    shadowAnchors.push({
+      pos: [boxPos[0], boxPos[1], 0.004],
+      rx: boxDims[0] * 0.56,
+      ry: boxDims[1] * 0.56,
+    });
+  }
+
+  if (useJumpboard && apparatus !== 'reformer' && apparatus !== 'cadillac') {
+    const jbX = apparatus === 'chair' ? -0.64 : -0.7;
+    const jbY = -0.62 * mirrorSign;
+    quads.push(
+      ...makeSubdividedBoxQuads(
+        [jbX, jbY, 0.018],
+        [0.18, 0.56, 0.036],
+        walnutRgb,
+        appAlpha,
+        0.26,
+        28,
+        'wood',
+      ),
+      ...makeCylinder3D(
+        [jbX + 0.012, jbY - 0.18, 0.036],
+        [jbX + 0.012, jbY - 0.18, 0.14],
+        0.011,
+        steelRgb,
+        segCyl,
+        appAlpha,
+        0.58,
+        64,
+        'chrome',
+      ),
+      ...makeCylinder3D(
+        [jbX + 0.012, jbY + 0.18, 0.036],
+        [jbX + 0.012, jbY + 0.18, 0.14],
+        0.011,
+        steelRgb,
+        segCyl,
+        appAlpha,
+        0.58,
+        64,
+        'chrome',
+      ),
+      ...makeSubdividedBoxQuads(
+        [jbX + 0.014, jbY, 0.28],
+        [0.026, 0.52, 0.44],
+        oakRgb,
+        appAlpha,
+        0.25,
+        28,
+        'wood',
+      ),
+    );
+    const jbStandPad = makePipedCushion(
+      [jbX - 0.012, jbY, 0.28],
+      [0.034, 0.49, 0.41],
+      leatherRgb,
+      pipingHex,
+      appAlpha,
+      svgFastMode,
+    );
+    quads.push(...jbStandPad.quads);
+    lines.push(jbStandPad.piping);
+    shadowAnchors.push({ pos: [jbX, jbY, 0.004], rx: 0.15, ry: 0.3 });
+  }
+
+  const handSpan = len3(sub3(rig.lHand, rig.rHand));
+  const handMid = vlerp(rig.lHand, rig.rHand, 0.5);
+  const footSpan = len3(sub3(rig.lFoot, rig.rFoot));
+  const footMid = vlerp(rig.lFoot, rig.rFoot, 0.5);
+  const kneeSpan = len3(sub3(lKnee, rKnee));
+  const kneeMid = vlerp(lKnee, rKnee, 0.5);
+
   if (useRing) {
-    const ringCenter = vlerp(rig.lFoot, rig.rFoot, 0.5);
-    const rc: Vec3 = [ringCenter[0] - 0.03, ringCenter[1], ringCenter[2] + 0.03];
-    quads.push(...makeTorusQuads(rc, 0.165, 0.0085, steelRgb, appAlpha, 24, 8, 'X'));
-    for (const sy of [-0.165, 0.165]) {
+    const surfaceZ =
+      apparatus === 'reformer' ? 0.425 : apparatus === 'cadillac' ? 0.585 : 0.055;
+    if (
+      !rig.ropeToHands &&
+      !rig.rolldownBar &&
+      handSpan >= 0.22 &&
+      handSpan <= 0.44 &&
+      Math.abs(rig.lHand[0] - rig.rHand[0]) < 0.12 &&
+      Math.abs(rig.lHand[2] - rig.rHand[2]) < 0.12 &&
+      handMid[2] >= 0.34
+    ) {
+      const majorR = Math.max(0.135, Math.min(0.17, handSpan * 0.5));
       quads.push(
-        ...makeSubdividedBoxQuads(
-          [rc[0], rc[1] + sy * 1.05, rc[2]],
-          [0.048, 0.022, 0.105],
+        ...makeMagicCircle3D(
+          handMid,
+          majorR,
+          'X',
+          steelRgb,
           charcoalRgb,
+          brassRgb,
           appAlpha,
-          0.22,
-        ),
-        ...makeSubdividedBoxQuads(
-          [rc[0], rc[1] + sy * 0.94, rc[2]],
-          [0.042, 0.018, 0.092],
-          charcoalRgb,
-          appAlpha,
-          0.22,
+          svgFastMode,
         ),
       );
+    } else if (
+      !rig.ropeToFeet &&
+      footSpan >= 0.18 &&
+      footSpan <= 0.44 &&
+      Math.abs(rig.lFoot[0] - rig.rFoot[0]) < 0.12 &&
+      footMid[2] >= surfaceZ + 0.22
+    ) {
+      const ankleMid = vlerp(lAnkle, rAnkle, 0.5);
+      const majorR = Math.max(0.13, Math.min(0.165, footSpan * 0.5));
+      quads.push(
+        ...makeMagicCircle3D(
+          [ankleMid[0], ankleMid[1], Math.max(ankleMid[2], surfaceZ + majorR + 0.01)],
+          majorR,
+          'X',
+          steelRgb,
+          charcoalRgb,
+          brassRgb,
+          appAlpha,
+          svgFastMode,
+        ),
+      );
+    } else if (
+      kneeSpan >= 0.17 &&
+      kneeSpan <= 0.38 &&
+      Math.abs(lKnee[0] - rKnee[0]) < 0.1 &&
+      Math.min(lKnee[2], rKnee[2]) >= surfaceZ + 0.08
+    ) {
+      const majorR = Math.max(0.115, Math.min(0.155, kneeSpan * 0.5));
+      quads.push(
+        ...makeMagicCircle3D(
+          [kneeMid[0], kneeMid[1], Math.max(kneeMid[2], surfaceZ + majorR + 0.012)],
+          majorR,
+          'X',
+          steelRgb,
+          charcoalRgb,
+          brassRgb,
+          appAlpha,
+          svgFastMode,
+        ),
+      );
+    } else {
+      const floorRingPos: Vec3 = [0.46, 0.58 * mirrorSign, 0.015];
+      quads.push(
+        ...makeMagicCircle3D(
+          floorRingPos,
+          0.165,
+          'Z',
+          steelRgb,
+          charcoalRgb,
+          brassRgb,
+          appAlpha,
+          svgFastMode,
+        ),
+      );
+      shadowAnchors.push({
+        pos: [floorRingPos[0], floorRingPos[1], 0.004],
+        rx: 0.19,
+        ry: 0.19,
+      });
     }
   }
+
   if (useRoller) {
-    const rY = (apparatus === 'mat' ? -0.49 : -0.44) * (mirrored ? -1 : 1);
-    const rZ = 0.072;
+    const rollerRgb: Rgb = isClay ? [184, 180, 174] : [74, 114, 96];
+    const rollerRadius = 0.068;
+    const onSpine = apparatus === 'mat' && Boolean(rig.withFoamRollerUnderSpine);
+    const rX0 = onSpine ? -0.62 : -0.44;
+    const rX1 = onSpine ? 0.28 : 0.44;
+    const rY = onSpine ? 0 : (apparatus === 'mat' ? -0.54 : -0.58) * mirrorSign;
+    const rZ = onSpine ? 0.113 : rollerRadius;
     quads.push(
       ...makeTaperedTubeQuads(
         [
-          [-0.44, rY, rZ],
-          [0, rY, rZ],
-          [0.44, rY, rZ],
+          [rX0, rY, rZ],
+          [(rX0 + rX1) * 0.5, rY, rZ],
+          [rX1, rY, rZ],
         ],
         [
-          [0.068, 0.068],
-          [0.068, 0.068],
-          [0.068, 0.068],
+          [rollerRadius, rollerRadius],
+          [rollerRadius, rollerRadius],
+          [rollerRadius, rollerRadius],
         ],
-        leatherRgb,
-        16,
+        rollerRgb,
+        svgFastMode ? 12 : 20,
         appAlpha,
-        0.26,
+        0.18,
+        0,
+        24,
+        [0, 0, 1],
+        0.008,
+        0.008,
+        'leather',
       ),
       ...makeSphereQuads(
-        [-0.444, rY, rZ],
-        0.008,
-        0.064,
-        0.064,
+        [rX0 - 0.003, rY, rZ],
+        0.006,
+        0.054,
+        0.054,
         [235, 230, 220],
-        12,
+        svgFastMode ? 10 : 16,
         6,
         appAlpha,
-        0.24,
+        0.18,
+        0,
+        24,
+        'leather',
       ),
       ...makeSphereQuads(
-        [0.444, rY, rZ],
-        0.008,
-        0.064,
-        0.064,
+        [rX1 + 0.003, rY, rZ],
+        0.006,
+        0.054,
+        0.054,
         [235, 230, 220],
-        12,
+        svgFastMode ? 10 : 16,
         6,
         appAlpha,
-        0.24,
+        0.18,
+        0,
+        24,
+        'leather',
       ),
     );
+    if (!onSpine) {
+      shadowAnchors.push({ pos: [(rX0 + rX1) * 0.5, rY, 0.004], rx: 0.48, ry: 0.085 });
+    }
   }
+
   if (useMiniBall) {
-    // Stage neatly on studio mat corner (0.58, 0.48, 0.096) so it never clips moving thighs/calves
-    const ballPos: Vec3 =
-      apparatus === 'mat'
-        ? mirrorVec([0.58, 0.48, 0.096])
-        : add3(vlerp(rig.lFoot, rig.rFoot, 0.5), [0, 0, 0.06]);
+    const miniBallRgb: Rgb = isClay
+      ? [188, 185, 178]
+      : shader === 'studio-pbr'
+        ? [114, 154, 134]
+        : [68, 118, 98];
+    const surfaceZ =
+      apparatus === 'reformer' ? 0.425 : apparatus === 'cadillac' ? 0.585 : 0.055;
+    let ballPos: Vec3;
+    let ballR = 0.095;
+    if (
+      !rig.ropeToHands &&
+      !rig.rolldownBar &&
+      handSpan >= 0.14 &&
+      handSpan <= 0.34 &&
+      Math.abs(rig.lHand[0] - rig.rHand[0]) < 0.1 &&
+      handMid[2] >= 0.44
+    ) {
+      ballR = Math.max(0.076, Math.min(0.096, handSpan * 0.52));
+      ballPos = handMid;
+    } else if (
+      kneeSpan >= 0.13 &&
+      kneeSpan <= 0.28 &&
+      Math.abs(lKnee[0] - rKnee[0]) < 0.08 &&
+      Math.min(lKnee[2], rKnee[2]) >= surfaceZ + 0.07
+    ) {
+      ballR = Math.max(0.072, Math.min(0.095, kneeSpan * 0.52));
+      ballPos = kneeMid;
+    } else {
+      ballPos = [0.54, 0.56 * mirrorSign, ballR];
+      shadowAnchors.push({ pos: [ballPos[0], ballPos[1], 0.004], rx: 0.11, ry: 0.11 });
+    }
     quads.push(
       ...makeSphereQuads(
         ballPos,
-        0.096,
-        0.096,
-        0.096,
-        propRgb,
-        16,
-        10,
-        appAlpha * 0.96,
-        0.38,
+        ballR,
+        ballR,
+        ballR,
+        miniBallRgb,
+        segSphere,
+        ringsSphere,
+        appAlpha,
+        0.14,
         0,
-        32,
+        22,
+        'leather',
       ),
     );
   }
+
   if (propOverride !== 'none' && (rig.withDumbbells || exercise.props.includes('dumbbell'))) {
     for (const handPt of [rig.lHand, rig.rHand]) {
       quads.push(
@@ -3253,9 +4364,11 @@ function buildStudio3DScene(options: {
           [handPt[0], handPt[1] + 0.065, handPt[2]],
           0.01,
           steelRgb,
-          8,
+          segCyl,
           appAlpha,
-          0.54,
+          0.58,
+          64,
+          'chrome',
         ),
         ...makeHexPrismBellQuads(
           handPt[0],
@@ -3279,7 +4392,6 @@ function buildStudio3DScene(options: {
     }
   }
   if (propOverride !== 'none' && (rig.withTheraband || exercise.props.includes('theraband'))) {
-    const footMid = vlerp(rig.lFoot, rig.rFoot, 0.5);
     lines.push({
       pts: [rig.lHand, [rig.lFoot[0] + 0.03, rig.lFoot[1], rig.lFoot[2]], footMid],
       stroke: isClay ? '#8F9690' : '#2F855A',
@@ -3332,12 +4444,6 @@ function buildStudio3DScene(options: {
         ]
       : cropTopBaseRgb;
 
-  // Orthonormal Spine & Cranial Basis
-  const spUp = norm3(sub3(rig.chest, rig.pelvis));
-  const antProj = sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp)));
-  const antN = norm3(len3(antProj) > 1e-4 ? antProj : sub3([1, 0, 0], mul3(spUp, spUp[0])));
-  const bodyRight = norm3(cross3(spUp, antN));
-
   const spineFrame = (uClamped: number): { pt: Vec3; rAx: Vec3; fAx: Vec3; tan: Vec3 } => {
     const uc = Math.max(0, Math.min(1, uClamped));
     let pt = bezier3(rig.pelvis, rig.spineMid, rig.chest, uc);
@@ -3386,7 +4492,18 @@ function buildStudio3DScene(options: {
     },
   );
   quads.push(
-    ...makeStationLoftQuads(leggingStations, leggingRgb, 16, bodyAlpha, 0.21, 0, 20, 0.024, 0),
+    ...makeStationLoftQuads(
+      leggingStations,
+      leggingRgb,
+      segTorso,
+      bodyAlpha,
+      0.04,
+      0,
+      18,
+      0.024,
+      0,
+      'fabric',
+    ),
   );
 
   // 2B) Toned Natural Midriff Sweep (u = 0.36 .. 0.56 — deeply embedded into legging & crop-top hems!)
@@ -3409,7 +4526,20 @@ function buildStudio3DScene(options: {
       },
     };
   });
-  quads.push(...makeStationLoftQuads(midriffStations, skinRgb, 16, bodyAlpha, 0.2, 0, 18, 0, 0));
+  quads.push(
+    ...makeStationLoftQuads(
+      midriffStations,
+      skinRgb,
+      segTorso,
+      bodyAlpha,
+      0.14,
+      0,
+      20,
+      0,
+      0,
+      'skin',
+    ),
+  );
 
   // 2C) Botanical Sage Scoop-Neck Studio Crop Top Sweep (u = 0.53 .. 1.03) + Ivory Underbust Piping + Twin Straps
   const topSpecs: readonly [number, number, number, number, number][] = [
@@ -3442,21 +4572,22 @@ function buildStudio3DScene(options: {
     ...makeStationLoftQuads(
       topStations,
       cropTopTone,
-      16,
+      segTorso,
       bodyAlpha,
-      0.22,
+      0.04,
       coreActive && !isClay ? phaseT * 0.32 : 0,
-      22,
+      18,
       0,
       0.02,
+      'fabric',
     ),
   );
 
   // Crisp Ivory Underbust Piping Line around Crop Top Hem
   const ubFrame = spineFrame(0.535);
   const ubRingPts: Vec3[] = [];
-  for (let k = 0; k <= 16; k++) {
-    const ang = (2 * Math.PI * k) / 16;
+  for (let k = 0; k <= segTorso; k++) {
+    const ang = (2 * Math.PI * k) / segTorso;
     ubRingPts.push(
       add3(
         ubFrame.pt,
@@ -3466,12 +4597,7 @@ function buildStudio3DScene(options: {
   }
   lines.push({ pts: ubRingPts, stroke: pipingHex, width: 1.7, depthBias: -0.012 });
 
-  // Shoulder & Hip Joint Sockets + Twin Crop-Top Shoulder Straps
-  const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.086));
-  const rHip = add3(rig.pelvis, mul3(bodyRight, 0.086));
-  const lSh = sub3(rig.chest, mul3(bodyRight, 0.15));
-  const rSh = add3(rig.chest, mul3(bodyRight, 0.15));
-
+  // Twin Crop-Top Shoulder Straps
   for (const sgn of [-1, 1] as const) {
     const strapFront = add3(
       rig.chest,
@@ -3491,12 +4617,15 @@ function buildStudio3DScene(options: {
           [0.0095, 0.0055],
         ],
         cropTopTone,
-        8,
+        segStrap,
         bodyAlpha,
-        0.22,
+        0.04,
         0,
-        20,
+        18,
         spUp,
+        0,
+        0,
+        'fabric',
       ),
     );
   }
@@ -3515,14 +4644,15 @@ function buildStudio3DScene(options: {
         [0.041, 0.042],
       ],
       skinRgb,
-      14,
+      segNeck,
       bodyAlpha,
-      0.2,
+      0.14,
       0,
-      18,
+      20,
       antN,
       0.01,
       0.01,
+      'skin',
     ),
     ...makeAnatomicalHeadWithHairQuads(
       headPos,
@@ -3533,6 +4663,8 @@ function buildStudio3DScene(options: {
       hairCol,
       pipingTrimRgb,
       bodyAlpha,
+      segHead,
+      ringsHead,
     ),
   );
 
@@ -3549,9 +4681,6 @@ function buildStudio3DScene(options: {
           lerp(leggingRgb[2], coralRgb[2], phaseT * 0.22),
         ]
       : leggingRgb;
-
-  const [lKnee, lAnkle, lKneeBend] = solve2BoneIK(lHip, rig.lFoot, 0.4, 0.39, rig.lKneePole);
-  const [rKnee, rAnkle, rKneeBend] = solve2BoneIK(rHip, rig.rFoot, 0.4, 0.39, rig.rKneePole);
 
   const legProfileTable: readonly [number, number, number, number][] = [
     [0.0, 0.08, 0.084, 0.008], // Hip/glute blend
@@ -3586,14 +4715,15 @@ function buildStudio3DScene(options: {
         legPts,
         legRadii,
         legCol,
-        16,
+        segLimb,
         bodyAlpha,
-        0.2,
+        0.04,
         legActive && !isClay ? phaseT * 0.22 : 0,
-        20,
+        18,
         kBend,
         0.02,
         0.006,
+        'fabric',
       ),
       ...makeSculptedGripFootQuads(
         hipPt,
@@ -3604,14 +4734,12 @@ function buildStudio3DScene(options: {
         sockCol,
         leggingRgb,
         bodyAlpha,
+        svgFastMode,
       ),
     );
   }
 
   // 2F) Continuous 9-Station Deltoid-to-Wrist Muscle-Contoured Arm Sweep + 5-Digit Sculpted Hand
-  const [lElb, lWr, lElbowBend] = solve2BoneIK(lSh, rig.lHand, 0.28, 0.26, rig.lElbowPole);
-  const [rElb, rWr, rElbowBend] = solve2BoneIK(rSh, rig.rHand, 0.28, 0.26, rig.rElbowPole);
-
   const armProfileTable: readonly [number, number, number][] = [
     [0.0, 0.048, 0.046], // Clavicle/shoulder socket embed
     [0.11, 0.047, 0.045], // Rounded deltoid cap
@@ -3643,16 +4771,26 @@ function buildStudio3DScene(options: {
         armPts,
         armRadii,
         skinRgb,
-        16,
+        segLimb,
         bodyAlpha,
-        0.19,
+        0.14,
         0,
-        18,
+        20,
         eBend,
         0.018,
         0.006,
+        'skin',
       ),
-      ...makeSculptedHandQuads(side, wrPt, forearmDir, bodyRight, antN, skinRgb, bodyAlpha),
+      ...makeSculptedHandQuads(
+        side,
+        wrPt,
+        forearmDir,
+        bodyRight,
+        antN,
+        skinRgb,
+        bodyAlpha,
+        svgFastMode,
+      ),
     );
   }
 
@@ -3840,6 +4978,134 @@ function buildStudio3DScene(options: {
   };
 }
 
+function evalStudioPbrLitRgb(
+  normal3: Vec3,
+  pos3: Vec3,
+  camPos: Vec3,
+  keyDir: Vec3,
+  fillDir: Vec3,
+  bounceDir: Vec3,
+  q: QuadFace,
+  shader: Studio3DShaderPreset,
+): { r: number; g: number; b: number; lum: number } {
+  let n = normal3;
+  const viewDir = norm3(sub3(camPos, pos3));
+  if (dot3(n, viewDir) < 0) n = mul3(n, -1);
+
+  const ndv = Math.max(0, dot3(n, viewDir));
+  const diffKey = Math.max(0, dot3(n, keyDir));
+  const diffFill = Math.max(0, dot3(n, fillDir));
+  const diffBounce = Math.max(0, dot3(n, bounceDir)) * 0.1;
+  const ao = Math.min(1, 0.84 + Math.max(0, pos3[2]) * 0.19);
+  const halfVec = norm3(add3(keyDir, viewDir));
+  const ndh = Math.max(0, dot3(n, halfVec));
+  const emissiveLift = (q.emissive ?? 0) * 0.24;
+
+  if (shader === 'clay-wire' || shader === 'biomech-xray') {
+    const rim = Math.pow(1 - ndv, 2.6) * 0.18;
+    const specPow = Math.pow(ndh, q.shininess ?? 24) * q.spec;
+    const shade = (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + emissiveLift) * ao;
+    const r = Math.max(0, Math.min(255, Math.round(q.baseRgb[0] * shade + specPow * 232)));
+    const g = Math.max(0, Math.min(255, Math.round(q.baseRgb[1] * shade + specPow * 229)));
+    const b = Math.max(0, Math.min(255, Math.round(q.baseRgb[2] * shade + specPow * 222)));
+    return { r, g, b, lum: r * 0.3 + g * 0.59 + b * 0.11 };
+  }
+
+  const role: StudioMaterialRole | undefined =
+    q.materialRole ??
+    (q.spec >= 0.55
+      ? q.baseRgb[0] > q.baseRgb[2] + 35
+        ? 'brass'
+        : 'chrome'
+      : q.spec <= 0.06
+        ? 'fabric'
+        : undefined);
+
+  let rF: number;
+  let gF: number;
+  let bF: number;
+
+  if (role === 'skin') {
+    const wrap = Math.max(0, (dot3(n, keyDir) + 0.35) / 1.35);
+    const midMask = Math.max(0, 1 - Math.abs(wrap - 0.5) * 1.85);
+    const sssScale = 0.58 + 0.42 * midMask;
+    const skinRim = Math.pow(1 - ndv, 2.8) * 0.12;
+    const specPow = Math.pow(ndh, q.shininess ?? 20) * Math.min(q.spec, 0.16);
+    const shade =
+      (0.42 + wrap * 0.46 + diffFill * 0.2 + diffBounce * 0.85 + skinRim + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + 10 * sssScale + specPow * 238;
+    gF = q.baseRgb[1] * shade + 4 * sssScale + specPow * 228;
+    bF = q.baseRgb[2] * shade + 1 * sssScale + specPow * 218;
+  } else if (role === 'wood') {
+    const grain = 1 + 0.035 * Math.sin(pos3[0] * 38 + pos3[1] * 11);
+    const coatRim = Math.pow(1 - ndv, 3.0) * 0.12;
+    const baseSpec = Math.pow(ndh, q.shininess ?? 28) * (q.spec * 0.65);
+    const coatSpec = Math.pow(ndh, 52) * 0.22;
+    const shade =
+      (0.45 + diffKey * 0.43 + diffFill * 0.22 + diffBounce + coatRim + emissiveLift) * ao * grain;
+    const specTotal = baseSpec + coatSpec;
+    rF = q.baseRgb[0] * shade + specTotal * 238;
+    gF = q.baseRgb[1] * shade + specTotal * 232;
+    bF = q.baseRgb[2] * shade + specTotal * 220;
+  } else if (role === 'fabric') {
+    const velvetSheen = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 3.0) * 0.14;
+    const specPow = Math.pow(ndh, q.shininess ?? 16) * Math.min(q.spec, 0.05);
+    const shade = (0.46 + diffKey * 0.42 + diffFill * 0.23 + diffBounce + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + velvetSheen * (q.baseRgb[0] * 0.45 + 142) + specPow * 220;
+    gF = q.baseRgb[1] * shade + velvetSheen * (q.baseRgb[1] * 0.45 + 148) + specPow * 222;
+    bF = q.baseRgb[2] * shade + velvetSheen * (q.baseRgb[2] * 0.45 + 140) + specPow * 216;
+  } else if (role === 'chrome' || role === 'brass') {
+    const skyT = Math.max(-1, Math.min(1, n[2] * 0.72 + (2 * ndv * n[2] - viewDir[2]) * 0.28));
+    let envR: number;
+    let envG: number;
+    let envB: number;
+    if (skyT >= 0) {
+      envR = lerp(214, 250, skyT);
+      envG = lerp(210, 247, skyT);
+      envB = lerp(202, 240, skyT);
+    } else {
+      const gndT = -skyT;
+      envR = lerp(214, 146, gndT);
+      envG = lerp(210, 142, gndT);
+      envB = lerp(202, 134, gndT);
+    }
+    const dirBoost = (0.68 + diffKey * 0.34 + diffFill * 0.18) * ao;
+    const fresnel = Math.pow(1 - ndv, 3.2) * 0.16;
+    const fillHalf = norm3(add3(fillDir, viewDir));
+    const anisoSpec =
+      (Math.pow(ndh, 64) * 0.68 + Math.pow(Math.max(0, dot3(n, fillHalf)), 64) * 0.2) *
+      Math.max(0.55, q.spec);
+    rF =
+      (q.baseRgb[0] / 235) * envR * dirBoost +
+      (anisoSpec + fresnel) * (role === 'brass' ? 252 : 246);
+    gF =
+      (q.baseRgb[1] / 235) * envG * dirBoost +
+      (anisoSpec + fresnel) * (role === 'brass' ? 236 : 248);
+    bF =
+      (q.baseRgb[2] / 235) * envB * dirBoost +
+      (anisoSpec + fresnel) * (role === 'brass' ? 196 : 250);
+  } else if (role === 'leather') {
+    const edgeCatchlight = Math.pow(1 - ndv, 2.8) * 0.15;
+    const specPow = Math.pow(ndh, q.shininess ?? 26) * Math.min(q.spec, 0.22);
+    const shade = (0.46 + diffKey * 0.41 + diffFill * 0.22 + diffBounce + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + edgeCatchlight * 168 + specPow * 226;
+    gF = q.baseRgb[1] * shade + edgeCatchlight * 182 + specPow * 228;
+    bF = q.baseRgb[2] * shade + edgeCatchlight * 172 + specPow * 220;
+  } else {
+    const rim = Math.pow(1 - ndv, 2.6) * 0.18;
+    const specPow = Math.pow(ndh, q.shininess ?? 24) * q.spec;
+    const shade = (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + specPow * 232;
+    gF = q.baseRgb[1] * shade + specPow * 229;
+    bF = q.baseRgb[2] * shade + specPow * 222;
+  }
+
+  const r = Math.max(0, Math.min(255, Math.round(rF)));
+  const g = Math.max(0, Math.min(255, Math.round(gF)));
+  const b = Math.max(0, Math.min(255, Math.round(bF)));
+  return { r, g, b, lum: r * 0.3 + g * 0.59 + b * 0.11 };
+}
+
 function drawSceneRegion(params: {
   ctx: CanvasRenderingContext2D;
   scene: Built3DScene;
@@ -4001,7 +5267,7 @@ function drawSceneRegion(params: {
           { x: number; y: number },
         ];
         readonly fill: string | CanvasGradient;
-        readonly stroke: string;
+        readonly stroke: string | CanvasGradient;
         readonly strokeW: number;
       }
     | {
@@ -4020,24 +5286,8 @@ function drawSceneRegion(params: {
     normal3: Vec3,
     pos3: Vec3,
     q: QuadFace,
-  ): { r: number; g: number; b: number; lum: number } => {
-    let n = normal3;
-    const viewDir = norm3(sub3(camPos, pos3));
-    if (dot3(n, viewDir) < 0) n = mul3(n, -1);
-    const diffKey = Math.max(0, dot3(n, keyDir));
-    const diffFill = Math.max(0, dot3(n, fillDir));
-    const diffBounce = Math.max(0, dot3(n, bounceDir)) * 0.1;
-    const ao = Math.min(1, 0.84 + Math.max(0, pos3[2]) * 0.19);
-    const rim = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 2.6) * 0.18;
-    const halfVec = norm3(add3(keyDir, viewDir));
-    const specPow = Math.pow(Math.max(0, dot3(n, halfVec)), q.shininess ?? 24) * q.spec;
-    const shade =
-      (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + (q.emissive ?? 0) * 0.24) * ao;
-    const r = Math.min(255, Math.round(q.baseRgb[0] * shade + specPow * 232));
-    const g = Math.min(255, Math.round(q.baseRgb[1] * shade + specPow * 229));
-    const b = Math.min(255, Math.round(q.baseRgb[2] * shade + specPow * 222));
-    return { r, g, b, lum: r * 0.3 + g * 0.59 + b * 0.11 };
-  };
+  ): { r: number; g: number; b: number; lum: number } =>
+    evalStudioPbrLitRgb(normal3, pos3, camPos, keyDir, fillDir, bounceDir, q, shader);
 
   const toCssColor = (c: { r: number; g: number; b: number }, alpha: number): string =>
     alpha < 0.999 ? `rgba(${c.r},${c.g},${c.b},${alpha.toFixed(2)})` : `rgb(${c.r},${c.g},${c.b})`;
@@ -4059,15 +5309,15 @@ function drawSceneRegion(params: {
 
     // Backface cull closed opaque solids so thin mats/rails/cushions & rear limb hemispheres never bleed through
     if (q.alpha >= 0.99) {
-      if (q.vNormals) {
+      if (q.cullBackface) {
+        if (dot3(faceN, viewDir) <= 0) continue;
+      } else if (q.vNormals) {
         const avgOutward = norm3([
           q.vNormals[0][0] + q.vNormals[1][0] + q.vNormals[2][0] + q.vNormals[3][0],
           q.vNormals[0][1] + q.vNormals[1][1] + q.vNormals[2][1] + q.vNormals[3][1],
           q.vNormals[0][2] + q.vNormals[1][2] + q.vNormals[2][2] + q.vNormals[3][2],
         ]);
         if (dot3(avgOutward, viewDir) < -0.06) continue;
-      } else if (q.cullBackface && dot3(faceN, viewDir) <= 0) {
-        continue;
       }
     }
 
@@ -4082,7 +5332,7 @@ function drawSceneRegion(params: {
     const flatCss = toCssColor(centerLit, q.alpha);
     let fillStyle: string | CanvasGradient = flatCss;
 
-    // Gouraud smooth shading across curved organic & cylindrical quads via 2-stop gradient
+    // Gouraud smooth shading across curved organic, cylindrical & micro-beveled quads via 2-stop gradient
     if (q.vNormals && shader !== 'clay-wire' && typeof ctx.createLinearGradient === 'function') {
       const pts2d = [p0, p1, p2, p3] as const;
       const vLits = [
@@ -4099,7 +5349,7 @@ function drawSceneRegion(params: {
       }
       const dxG = pts2d[maxI]!.x - pts2d[minI]!.x;
       const dyG = pts2d[maxI]!.y - pts2d[minI]!.y;
-      if (vLits[maxI]!.lum - vLits[minI]!.lum >= 5.5 && dxG * dxG + dyG * dyG > 2.2) {
+      if (vLits[maxI]!.lum - vLits[minI]!.lum >= 2.2 && dxG * dxG + dyG * dyG > 1.2) {
         const gGrad = ctx.createLinearGradient(
           pts2d[minI]!.x,
           pts2d[minI]!.y,
@@ -4122,8 +5372,8 @@ function drawSceneRegion(params: {
           ? 'rgba(42, 58, 50, 0.28)'
           : q.alpha < 0.999
             ? 'rgba(110,231,183,0.18)'
-            : flatCss,
-      strokeW: shader === 'clay-wire' ? 0.72 : 0.66,
+            : fillStyle,
+      strokeW: shader === 'clay-wire' ? 0.72 : 0.55,
     });
   }
 
@@ -4464,6 +5714,7 @@ export function projectStudio3DSceneForSvg(
     shader: 'studio-pbr',
     mirrored: false,
     showBiomechOverlay: false,
+    svgFastMode: true,
   });
 
   const yawDeg = -34;
@@ -4536,37 +5787,37 @@ export function projectStudio3DSceneForSvg(
     const viewDir = norm3(sub3(camPos, center3));
     const faceN = norm3(cross3(sub3(q.verts[1], q.verts[0]), sub3(q.verts[3], q.verts[0])));
     if (q.alpha >= 0.99) {
-      if (q.vNormals) {
+      if (q.cullBackface) {
+        if (dot3(faceN, viewDir) <= 0) continue;
+      } else if (q.vNormals) {
         const avgOut = norm3([
           q.vNormals[0][0] + q.vNormals[1][0] + q.vNormals[2][0] + q.vNormals[3][0],
           q.vNormals[0][1] + q.vNormals[1][1] + q.vNormals[2][1] + q.vNormals[3][1],
           q.vNormals[0][2] + q.vNormals[1][2] + q.vNormals[2][2] + q.vNormals[3][2],
         ]);
         if (dot3(avgOut, viewDir) < -0.06) continue;
-      } else if (q.cullBackface && dot3(faceN, viewDir) <= 0) {
-        continue;
       }
     }
-    let n = q.vNormals
+    const shadingN = q.vNormals
       ? norm3([
           q.vNormals[0][0] + q.vNormals[1][0] + q.vNormals[2][0] + q.vNormals[3][0],
           q.vNormals[0][1] + q.vNormals[1][1] + q.vNormals[2][1] + q.vNormals[3][1],
           q.vNormals[0][2] + q.vNormals[1][2] + q.vNormals[2][2] + q.vNormals[3][2],
         ])
       : faceN;
-    if (dot3(n, viewDir) < 0) n = mul3(n, -1);
-    const diffKey = Math.max(0, dot3(n, keyDir));
-    const diffFill = Math.max(0, dot3(n, fillDir));
-    const diffBounce = Math.max(0, dot3(n, bounceDir)) * 0.1;
-    const ao = Math.min(1, 0.84 + Math.max(0, center3[2]) * 0.19);
-    const rim = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 2.6) * 0.18;
-    const halfVec = norm3(add3(keyDir, viewDir));
-    const specPow = Math.pow(Math.max(0, dot3(n, halfVec)), q.shininess ?? 24) * q.spec;
-    const shade =
-      (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + (q.emissive ?? 0) * 0.24) * ao;
-    const r = Math.min(255, Math.round((q.baseRgb[0] * shade + specPow * 232) / 14) * 14);
-    const g = Math.min(255, Math.round((q.baseRgb[1] * shade + specPow * 229) / 14) * 14);
-    const b = Math.min(255, Math.round((q.baseRgb[2] * shade + specPow * 222) / 14) * 14);
+    const lit = evalStudioPbrLitRgb(
+      shadingN,
+      center3,
+      camPos,
+      keyDir,
+      fillDir,
+      bounceDir,
+      q,
+      'studio-pbr',
+    );
+    const r = Math.min(255, Math.round(lit.r / 12) * 12);
+    const g = Math.min(255, Math.round(lit.g / 12) * 12);
+    const b = Math.min(255, Math.round(lit.b / 12) * 12);
     const css = `rgb(${r},${g},${b})`;
     queue.push({
       isPoly: true,
@@ -4574,7 +5825,7 @@ export function projectStudio3DSceneForSvg(
       subD: `M${p0.x},${p0.y}L${p1.x},${p1.y}L${p2.x},${p2.y}L${p3.x},${p3.y}Z`,
       fill: css,
       stroke: css,
-      strokeWidth: 0.7,
+      strokeWidth: 0.6,
     });
   }
 
@@ -4596,8 +5847,8 @@ export function projectStudio3DSceneForSvg(
 
   queue.sort((a, b) => b.depth - a.depth);
 
-  // Batch across 3 depth slices by quantized style (~18 <path> DOM nodes instead of ~1500)
-  const BAND_SIZE = Math.max(256, Math.ceil(queue.length / 3));
+  // Batch across 4 depth slices by quantized style for crisp SVG Z-order & fast DOM mounting
+  const BAND_SIZE = Math.max(160, Math.ceil(queue.length / 4));
   const batched: Projected3DSvgElement[] = [];
   for (let bandStart = 0; bandStart < queue.length; bandStart += BAND_SIZE) {
     const bandEnd = Math.min(queue.length, bandStart + BAND_SIZE);

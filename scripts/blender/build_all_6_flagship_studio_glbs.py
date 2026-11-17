@@ -1,5 +1,5 @@
 """
-Builds ALL 6 Flagship Precision Pilates Studio `.glb` Hero Rigs in Blender 5.2 LTS:
+Builds ALL 6 Flagship Precision v2 Pilates Studio `.glb` Hero Rigs in Blender 5.2 LTS:
 1. `reformer-studio-rig.glb`
 2. `cadillac-studio-rig.glb`
 3. `chair-studio-rig.glb`
@@ -7,10 +7,11 @@ Builds ALL 6 Flagship Precision Pilates Studio `.glb` Hero Rigs in Blender 5.2 L
 5. `mat-studio-rig.glb`
 6. `practitioner-studio-rig.glb`
 
-Each asset uses `pilates_3d_modeling_kernel.py` (continuous anatomical torso/limb/hand/foot lofts +
-industrial apparatus joinery, open C-frame chair, flanged Cadillac hardware, 3D helical coil springs),
-applies modifiers cleanly, verifies manifold topology, grounds `min Z = 0.0`, and batches into 2 PBR
-materials (`MAT_StudioDielectric` + `MAT_StudioMetallic`) bound to `StudioFlagshipAtlas` (`256x256`).
+Enforces `blender-headless-asset-ops` & `blender-52-hero-modeling` hygiene before export:
+- 0 `true_nonmanifold` edges, 0 `boundary` edges, 0 `loose_verts`, 0 `wire_edges`
+- Applied transforms (`scale == (1, 1, 1)`), floor grounded at `Z = 0.0`
+- Non-degenerate isotropic UVs via `uv.smart_project` + `uv.pack_islands` (margin >= 0.004) inside `[0, 1]`
+- Triangle count strictly inside the `25,000–35,000` flagship sweet spot (2 draw calls, 2 PBR materials)
 """
 from __future__ import annotations
 
@@ -31,11 +32,13 @@ from pilates_3d_modeling_kernel import (
     add_cylinder_rod,
     add_ellipsoid,
     add_torus,
-    assign_atlas_band_uvs,
+    atlas_tile_bounds,
     build_apparatus_and_props,
     build_glb_pbr_atlas,
     build_sculpted_practitioner,
+    compute_hand_frame,
     set_bsdf_input,
+    solve_2bone_ik_with_bend,
 )
 
 
@@ -50,11 +53,12 @@ def clear_all_blender_data():
 def make_glb_materials(atlas_img):
     mats = {}
     for key, mname, rough, metal, sheen, coat in [
-        ("glb_diel", "MAT_StudioDielectric", 0.48, 0.0, 0.22, 0.16),
-        ("glb_metal", "MAT_StudioMetallic", 0.22, 1.0, 0.0, 0.0),
+        ("glb_diel", "MAT_StudioDielectric", 0.46, 0.0, 0.22, 0.14),
+        ("glb_metal", "MAT_StudioMetallic", 0.21, 1.0, 0.0, 0.0),
     ]:
         mat = bpy.data.materials.new(mname)
-        mat.use_nodes = True
+        if mat.node_tree is None:
+            mat.use_nodes = True
         nt = mat.node_tree
         bsdf = nt.nodes.get("Principled BSDF")
         set_bsdf_input(bsdf, "Roughness", rough)
@@ -68,14 +72,49 @@ def make_glb_materials(atlas_img):
     return mats
 
 
+def extract_object_band(obj: bpy.types.Object) -> int:
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    layer = bm.faces.layers.int.get("mat_band")
+    band = 6
+    if layer is not None and len(bm.faces) > 0:
+        for f in bm.faces:
+            band = int(f[layer])
+            break
+    bm.free()
+    return band
+
+
 def bake_modifiers_and_join(group_name: str, objs: list[bpy.types.Object]) -> bpy.types.Object | None:
     if not objs:
         return None
     deps = bpy.context.evaluated_depsgraph_get()
     baked_objs = []
     for o in objs:
+        part_band = extract_object_band(o)
         eval_obj = o.evaluated_get(deps)
         new_mesh = bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=deps)
+
+        # Clean each individual watertight shell BEFORE join so adjacent shells never cross-weld into non-manifold edges!
+        bm_part = bmesh.new()
+        bm_part.from_mesh(new_mesh)
+        bmesh.ops.remove_doubles(bm_part, verts=bm_part.verts, dist=1e-6)
+        degen_f = [f for f in bm_part.faces if f.calc_area() < 1e-12]
+        if degen_f:
+            bmesh.ops.delete(bm_part, geom=degen_f, context="FACES")
+        wire_e = [e for e in bm_part.edges if not e.link_faces]
+        if wire_e:
+            bmesh.ops.delete(bm_part, geom=wire_e, context="EDGES")
+        loose_v = [v for v in bm_part.verts if not v.link_faces]
+        if loose_v:
+            bmesh.ops.delete(bm_part, geom=loose_v, context="VERTS")
+        bmesh.ops.recalc_face_normals(bm_part, faces=bm_part.faces)
+        band_layer = bm_part.faces.layers.int.get("mat_band") or bm_part.faces.layers.int.new("mat_band")
+        for f in bm_part.faces:
+            f[band_layer] = part_band
+        bm_part.to_mesh(new_mesh)
+        bm_part.free()
+
         new_obj = bpy.data.objects.new(o.name + "_baked", new_mesh)
         new_obj.matrix_world = o.matrix_world.copy()
         bpy.context.scene.collection.objects.link(new_obj)
@@ -93,22 +132,95 @@ def bake_modifiers_and_join(group_name: str, objs: list[bpy.types.Object]) -> bp
     joined.name = group_name
     joined.data.name = group_name + "_Mesh"
 
-    # Clean topology pass: remove degenerate/loose geometry & ensure outward normals
-    bm = bmesh.new()
-    bm.from_mesh(joined.data)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
-    loose_v = [v for v in bm.verts if not v.link_faces]
-    if loose_v:
-        bmesh.ops.delete(bm, geom=loose_v, context="VERTS")
-    degen_f = [f for f in bm.faces if f.calc_area() < 1e-9]
-    if degen_f:
-        bmesh.ops.delete(bm, geom=degen_f, context="FACES")
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(joined.data)
-    bm.free()
     for p in joined.data.polygons:
         p.use_smooth = True
     return joined
+
+
+def uv_polygon_area(uvs: list[tuple[float, float]]) -> float:
+    area2 = 0.0
+    n = len(uvs)
+    for i in range(n):
+        x1, y1 = uvs[i]
+        x2, y2 = uvs[(i + 1) % n]
+        area2 += x1 * y2 - x2 * y1
+    return abs(area2) * 0.5
+
+
+def unwrap_and_pack_atlas_uvs(obj: bpy.types.Object) -> None:
+    """
+    Runs `bpy.ops.uv.smart_project` + per-swatch `bpy.ops.uv.pack_islands` (preserving margin >= 0.0045
+    in global `[0, 1]` UV space) so every island is isotropic, non-overlapping, and strictly inside `[0, 1]`.
+    """
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.context.scene.tool_settings.use_uv_select_sync = True
+
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_mode(type="FACE")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(
+        angle_limit=math.radians(66.0),
+        island_margin=0.006,
+        area_weight=0.0,
+        correct_aspect=True,
+        scale_to_bounds=False,
+    )
+
+    bm = bmesh.from_edit_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+    uv_layer = bm.loops.layers.uv.verify()
+    band_layer = bm.faces.layers.int.get("mat_band")
+    used_bands = sorted({int(f[band_layer]) for f in bm.faces}) if band_layer is not None else [6]
+
+    for band_idx in used_bands:
+        for f in bm.faces:
+            f.select = (int(f[band_layer]) == band_idx) if band_layer is not None else True
+        bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+        # Tile span is ~0.232; margin=0.022 inside [0,1] maps to 0.022 * 0.232 = 0.0051 >= 0.004 in [0,1]!
+        bpy.ops.uv.pack_islands(rotate=True, margin=0.022)
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        uv_layer = bm.loops.layers.uv.verify()
+        band_layer = bm.faces.layers.int.get("mat_band")
+        u_min, u_max, v_min, v_max = atlas_tile_bounds(band_idx, pad=0.008)
+        # Reserve tiny 0.006 top-right corner inside the swatch for any edge-on micro-faces
+        pack_u_span = (u_max - u_min) - 0.008
+        pack_v_span = (v_max - v_min) - 0.008
+
+        for f in bm.faces:
+            if band_layer is not None and int(f[band_layer]) != band_idx:
+                continue
+            mapped = []
+            for loop in f.loops:
+                u0 = max(0.0, min(1.0, float(loop[uv_layer].uv.x)))
+                v0 = max(0.0, min(1.0, float(loop[uv_layer].uv.y)))
+                um = u_min + u0 * pack_u_span
+                vm = v_min + v0 * pack_v_span
+                loop[uv_layer].uv = (um, vm)
+                mapped.append((um, vm))
+            if uv_polygon_area(mapped) < 1e-11:
+                n_l = len(f.loops)
+                uc = u_max - 0.0035
+                vc = v_max - 0.0035
+                for l_i, loop in enumerate(f.loops):
+                    ang = 2.0 * math.pi * l_i / max(3, n_l)
+                    loop[uv_layer].uv = (uc + 0.0022 * math.cos(ang), vc + 0.0022 * math.sin(ang))
+
+        bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    # Strip temporary face attribute before glTF export
+    bm_clean = bmesh.new()
+    bm_clean.from_mesh(obj.data)
+    bl = bm_clean.faces.layers.int.get("mat_band")
+    if bl is not None:
+        bm_clean.faces.layers.int.remove(bl)
+    bm_clean.to_mesh(obj.data)
+    bm_clean.free()
 
 
 def ground_scene_objects(objs: list[bpy.types.Object]):
@@ -118,12 +230,90 @@ def ground_scene_objects(objs: list[bpy.types.Object]):
         if o is not None
         for v in o.data.vertices
     )
-    if abs(min_z) > 1e-5:
+    if abs(min_z) > 1e-6:
         for o in objs:
             if o is not None:
                 o.location.z -= min_z
         bpy.ops.object.select_all(action="SELECT")
-        bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+
+def verify_strict_hygiene(fname: str, objs: list[bpy.types.Object]) -> tuple[int, int]:
+    """
+    Verifies on every mesh before export:
+    - 0 `true_nonmanifold` edges (`not e.is_manifold and not e.is_boundary`)
+    - 0 `boundary` edges (100% closed watertight solids)
+    - 0 `loose_verts`
+    - 0 `wire_edges`
+    - `scale == (1, 1, 1)`
+    - Standing floor grounded at `Z = 0`
+    - Non-degenerate UVs packed cleanly inside `[0, 1]`
+    - Total triangles inside `25,000–35,000`
+    """
+    total_tris = 0
+    total_verts = 0
+    min_z = float("inf")
+
+    for o in objs:
+        sx, sy, sz = (round(float(c), 6) for c in o.scale)
+        if (sx, sy, sz) != (1.0, 1.0, 1.0):
+            raise RuntimeError(f"[{fname}] {o.name} unapplied scale: {(sx, sy, sz)}")
+
+        for v in o.data.vertices:
+            wz = (o.matrix_world @ v.co).z
+            if wz < min_z:
+                min_z = wz
+
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        true_nonmanifold = sum(1 for e in bm.edges if not e.is_manifold and not e.is_boundary)
+        boundary_edges = sum(1 for e in bm.edges if e.is_boundary)
+        loose_verts = sum(1 for v in bm.verts if not v.link_edges or not v.link_faces)
+        wire_edges = sum(1 for e in bm.edges if not e.link_faces)
+
+        uv_layer = bm.loops.layers.uv.active
+        if uv_layer is None:
+            bm.free()
+            raise RuntimeError(f"[{fname}] {o.name} missing active UV layer!")
+
+        uv_out_of_bounds = 0
+        degen_uv_faces = 0
+        for f in bm.faces:
+            pts = []
+            for lp in f.loops:
+                u, v = float(lp[uv_layer].uv.x), float(lp[uv_layer].uv.y)
+                if u < -1e-5 or u > 1.0 + 1e-5 or v < -1e-5 or v > 1.0 + 1e-5:
+                    uv_out_of_bounds += 1
+                pts.append((u, v))
+            if uv_polygon_area(pts) < 1e-12:
+                degen_uv_faces += 1
+
+        tris_o = sum(len(f.verts) - 2 for f in bm.faces)
+        verts_o = len(bm.verts)
+        bm.free()
+
+        if true_nonmanifold != 0 or loose_verts != 0 or wire_edges != 0 or boundary_edges != 0:
+            raise RuntimeError(
+                f"[{fname}] {o.name} failed topology hygiene: "
+                f"true_nonmanifold={true_nonmanifold}, boundary={boundary_edges}, "
+                f"loose_verts={loose_verts}, wire_edges={wire_edges}"
+            )
+        if uv_out_of_bounds != 0 or degen_uv_faces != 0:
+            raise RuntimeError(
+                f"[{fname}] {o.name} failed UV hygiene: "
+                f"out_of_bounds={uv_out_of_bounds}, degen_uv_faces={degen_uv_faces}"
+            )
+
+        total_tris += tris_o
+        total_verts += verts_o
+
+    if abs(min_z) > 1e-5:
+        raise RuntimeError(f"[{fname}] scene not grounded at Z=0: min_z={min_z:.6f}")
+
+    if not (25000 <= total_tris <= 35000):
+        raise RuntimeError(f"[{fname}] triangle count {total_tris} outside 25,000..35,000 target window!")
+
+    return total_tris, total_verts
 
 
 def export_raw_glb(out_path: str):
@@ -139,34 +329,47 @@ def export_raw_glb(out_path: str):
 
 
 def build_practitioner_hero_spec(mc: MeshCollector):
-    # Walnut & Champagne Brass Sculptural Pedestal (Z = 0..0.034)
-    bm_ped = bmesh.new()
-    bmesh.ops.create_cone(bm_ped, cap_ends=True, cap_tris=False, segments=40, radius1=0.35, radius2=0.335, depth=0.034)
-    bmesh.ops.translate(bm_ped, vec=(0.0, 0.0, 0.017), verts=bm_ped.verts)
-    assign_atlas_band_uvs(bm_ped, 6)
-    mc.emit_bmesh("Pedestal_Walnut", bm_ped, "walnut")
-    add_torus(mc, "Pedestal_BrassRim", (0.0, 0.0, 0.017), 0.344, 0.0075, "brass", axis="Z", segs=40, tsegs=10)
+    # Multi-Tier Sculpted American Walnut & Satin Champagne Brass Studio Pedestal (Z = 0.0 .. 0.038)
+    add_cylinder_rod(mc, "Pedestal_BrassPlinth", (0.0, 0.0, 0.0), (0.0, 0.0, 0.010), 0.362, "brass", segs=48, r2=0.356)
+    add_cylinder_rod(mc, "Pedestal_WalnutDeck", (0.0, 0.0, 0.008), (0.0, 0.0, 0.038), 0.354, "walnut", segs=48, r2=0.338)
+    add_torus(mc, "Pedestal_BrassRim", (0.0, 0.0, 0.020), 0.348, 0.0065, "brass", axis="Z", segs=48, tsegs=10)
+    add_torus(mc, "Pedestal_BrassInlay", (0.0, 0.0, 0.038), 0.285, 0.0030, "brass", axis="Z", segs=44, tsegs=8)
 
-    # Graceful Standing Pilates Arabesque Balance Pose (true direction poles: knees & elbows anatomically poised)
+    # Standing Pilates Arabesque Balance Pose (standing sole grounded directly on Pedestal_WalnutDeck z = 0.038!)
     rig = {
-        "pelvis": [0.02, 0.0, 0.89],
-        "spineMid": [0.08, 0.0, 1.08],
-        "chest": [0.16, 0.0, 1.27],
+        "pelvis": [0.02, 0.0, 0.892],
+        "spineMid": [0.08, 0.0, 1.082],
+        "chest": [0.16, 0.0, 1.272],
         "antHint": [0.96, 0.0, -0.20],
-        "lFoot": [0.02, -0.06, 0.072],
-        "rFoot": [-0.64, 0.06, 0.78],
+        "lFoot": [0.02, -0.06, 0.074],
+        "rFoot": [-0.64, 0.06, 0.782],
         "lKneePole": [1.0, -0.04, 0.08],
         "rKneePole": [-0.18, 0.06, -1.0],
-        "lHand": [0.54, -0.24, 1.24],
-        "rHand": [0.54, 0.24, 1.24],
+        "lHand": [0.54, -0.24, 1.242],
+        "rHand": [0.54, 0.24, 1.242],
         "lElbowPole": [-0.10, -0.85, -0.52],
         "rElbowPole": [-0.10, 0.85, -0.52],
+        "supinatePalms": True,
     }
     build_sculpted_practitioner(mc, rig, subsurf=1)
 
-    # Pair of Satin Champagne Brass Toning Spheres cradled cleanly in sculpted palms
-    for side, hp in [("L", Vector((0.59, -0.24, 1.255))), ("R", Vector((0.59, 0.24, 1.255)))]:
-        add_ellipsoid(mc, f"BrassToningOrb_{side}", hp, 0.028, 0.028, 0.028, "brass", u_seg=16, v_seg=12)
+    # Compute exact upward-cupped Palmar Arch center for both supinated hands so Brass Toning Orbs sit cradled in the palms!
+    pelvis = Vector(rig["pelvis"])
+    chest = Vector(rig["chest"])
+    sp_up = (chest - pelvis).normalized()
+    ant_hint = Vector(rig["antHint"])
+    ant_n = (ant_hint - sp_up * ant_hint.dot(sp_up)).normalized()
+    body_right = sp_up.cross(ant_n).normalized()
+    for side, sign, hd_key, ep_key in [
+        ("L", -1.0, "lHand", "lElbowPole"),
+        ("R", 1.0, "rHand", "rElbowPole"),
+    ]:
+        sh = chest + body_right * (sign * 0.150)
+        elb, wr, _ = solve_2bone_ik_with_bend(sh, Vector(rig[hd_key]), 0.28, 0.26, Vector(rig[ep_key]))
+        forearm_dir = (wr - elb).normalized()
+        fdir, _, dorsal = compute_hand_frame(side, forearm_dir, body_right, ant_n, supinate_up=True)
+        orb_center = wr + fdir * 0.062 - dorsal * 0.033
+        add_ellipsoid(mc, f"BrassToningOrb_{side}", orb_center, 0.027, 0.027, 0.027, "brass", u_seg=20, v_seg=14)
 
 
 def main():
@@ -189,7 +392,7 @@ def main():
 
     for fname, ex_id, phase_key, extra_props in targets:
         clear_all_blender_data()
-        atlas = build_glb_pbr_atlas(256)
+        atlas = build_glb_pbr_atlas(512)
         mats = make_glb_materials(atlas)
         mc = MeshCollector(bpy.context.scene.collection, mats, glb_mode=True)
 
@@ -205,13 +408,19 @@ def main():
         diel_joined = bake_modifiers_and_join("SM_Studio_Dielectric", mc.diel_objs)
         metal_joined = bake_modifiers_and_join("SM_Studio_Metallic", mc.metal_objs)
         final_objs = [o for o in (diel_joined, metal_joined) if o is not None]
-        ground_scene_objects(final_objs)
 
-        tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in final_objs)
-        verts = sum(len(o.data.vertices) for o in final_objs)
+        ground_scene_objects(final_objs)
+        for o in final_objs:
+            unwrap_and_pack_atlas_uvs(o)
+
+        tris, verts = verify_strict_hygiene(fname, final_objs)
         out_raw = os.path.join(raw_dir, fname)
         export_raw_glb(out_raw)
-        print(f"[Flagship GLB Raw] {fname}: {tris} tris, {verts} verts, {os.path.getsize(out_raw)} bytes", flush=True)
+        print(
+            f"[Flagship v2 Verified] {fname}: {tris} tris, {verts} verts, "
+            f"0 non-manifold, 0 loose, 0 wire, Z_min=0.0, {os.path.getsize(out_raw)} raw bytes",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

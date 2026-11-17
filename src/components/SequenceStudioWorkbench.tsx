@@ -760,6 +760,9 @@ export function SequenceStudioWorkbench(props: Props) {
               (composed.intent.apparatus === 'mixed' ||
                 opt.apparatusFamily === composed.intent.apparatus),
           ).map((opt) => opt.id);
+          if (nextAvailableEquipment.length === 0) {
+            setEligibleOnly(false);
+          }
           const baseCriteria = getActiveSequencePlanningCriteria(current);
           const nextCriteria: AutoGenerateCriteria = {
             ...baseCriteria,
@@ -979,9 +982,14 @@ export function SequenceStudioWorkbench(props: Props) {
               <div className="flow-no-results">
                 <Search size={24} strokeWidth={1.5} />
                 <strong>조건에 맞는 동작이 없어요</strong>
-                <p>검색어를 줄이거나 수업 조건을 확인해 주세요</p>
+                <p>
+                  {eligibleOnly
+                    ? "현재 '내 보유 장비만 보기' 조건이 켜져 있어 표시할 동작이 없어요."
+                    : '검색어를 줄이거나 수업 조건을 확인해 주세요'}
+                </p>
                 <button
-                  className="flow-button"
+                  type="button"
+                  className="flow-button flow-button--primary"
                   onClick={() => {
                     setQuery('');
                     setCategory('all');
@@ -990,7 +998,11 @@ export function SequenceStudioWorkbench(props: Props) {
                 >
                   검색 범위 넓히기
                 </button>
-                <button className="flow-text-button" onClick={() => setConditionsOpen(true)}>
+                <button
+                  type="button"
+                  className="flow-text-button"
+                  onClick={() => setConditionsOpen(true)}
+                >
                   기구·소도구 조건 보기
                 </button>
               </div>

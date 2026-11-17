@@ -13,7 +13,6 @@ import {
   Play,
   RotateCcw,
   SlidersHorizontal,
-  Sparkles,
   X,
   ZoomIn,
   ZoomOut,
@@ -491,9 +490,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             aria-live="polite"
           >
             <div className="pf-orbit3d-hotspot-card__head">
-              <strong>
-                <Sparkles size={12} aria-hidden="true" /> {selectedHotspot.labelKo}
-              </strong>
+              <strong>{selectedHotspot.labelKo}</strong>
               <span className="pf-orbit3d-hotspot-card__metric">{selectedHotspot.metricKo}</span>
               <button
                 type="button"

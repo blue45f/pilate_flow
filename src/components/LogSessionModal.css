@@ -1,26 +1,35 @@
-/* Private layout: the form content scrolls; actions never cover a field. */
+/* Unslop 9-Pass Layer for LogSessionModal (CC BY 4.0 @heydamir)
+   - Private layout: the form content scrolls; actions never cover a field.
+   - Zero 999px stadium pills -> 6px keycaps, 8px chips, 10px controls, 12px sections.
+   - >= 44px touch targets on mobile & coarse pointers, >= 4.5:1 contrast, tabular-nums. */
+
 .class-log-modal.light-dismiss-dialog .atelier-modal-body {
   display: flex;
   padding: 0;
   overflow: hidden;
 }
+
 .class-log-modal .atelier-modal-header > div {
   min-width: 0;
 }
+
 .class-log-modal .atelier-modal-subtitle {
   overflow-wrap: anywhere;
   max-height: 4.5em;
   overflow-y: auto;
 }
+
 .class-log-modal .atelier-modal-header > button {
   flex-shrink: 0;
 }
+
 .class-log-modal .teaching-log-form {
   flex: 1;
   min-width: 0;
   min-height: 0;
   gap: 0;
 }
+
 .class-log-content {
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -30,135 +39,204 @@
   flex-direction: column;
   gap: 20px;
 }
+
 .class-log-modal :is(button, summary, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #14665e;
+  outline: 2px solid var(--pf-unslop-accent, #1f4435);
   outline-offset: 2px;
 }
+
+.class-log-modal .pf-step-guide-bar {
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
 .class-log-modal .pf-step-guide-chip,
 .class-log-modal .pf-step-nav-btn {
   min-height: 44px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
 }
+
 .class-log-modal .teaching-log-summary {
   display: grid;
   gap: 12px;
   padding: 0;
   background: transparent;
 }
+
 .class-log-summary-heading {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: 8px 16px;
 }
+
 .class-log-modal .class-log-plan-badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: #def4e9;
-  color: #14665e;
-  font-size: 14px;
-  font-weight: 650;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
+
 .class-log-plan-badge > svg,
 .class-log-info > svg,
 .class-log-privacy-hint > svg {
   flex-shrink: 0;
 }
+
 .class-log-modal .class-log-info {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid #e0e7e3;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
   border-radius: 10px;
-  background: #f6f8f7;
+  background: var(--pf-unslop-subtle, #faf8f4);
 }
+
 .class-log-info > svg {
   margin-top: 2px;
 }
+
 .class-log-summary-status:empty {
   display: none;
 }
+
 .class-log-summary-status {
   min-width: 0;
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
+
 .class-log-modal .teaching-log-summary p,
 .class-log-modal .teaching-duration-field > p,
 .class-log-modal .form-field small {
   font-size: 12px;
   line-height: 1.65;
 }
+
 .class-log-provenance {
   min-width: 0;
   flex: 1 1 160px;
 }
+
 .class-log-provenance[open] {
   flex-basis: 100%;
 }
+
 .class-log-provenance summary {
   min-height: 44px;
   cursor: pointer;
   font-size: 12px;
   display: list-item;
   align-content: center;
+  color: var(--pf-unslop-text-secondary, #5e554a);
 }
+
 .class-log-provenance .teaching-log-badge-row {
   flex-wrap: wrap;
+  gap: 6px;
 }
+
+.class-log-provenance .teaching-record-kind-badge,
+.class-log-provenance .teaching-record-source-badge {
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  background: var(--pf-unslop-subtle, #faf8f4);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
 .class-log-modal .teaching-log-link {
   min-height: 44px;
   align-self: flex-start;
   margin: 0;
-  color: #14665e;
+  color: var(--pf-unslop-accent, #1f4435);
+  font-weight: 500;
   text-decoration: none;
 }
+
 .class-log-group-column {
   min-width: 0;
 }
+
 .class-log-modal .class-log-group-fields {
   align-items: start;
   row-gap: 8px;
 }
+
 .class-log-modal .teaching-inline-group {
   flex-wrap: wrap;
   padding: 12px;
+  border-radius: 12px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
 }
+
 .class-log-modal .teaching-inline-group > .form-field {
   flex-basis: 100%;
 }
+
 .class-log-modal .teaching-inline-group > button {
   margin-left: auto;
 }
+
 .class-log-modal .teaching-form-two {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
+
 .class-log-modal .teaching-form-two .form-field {
   grid-column: auto;
 }
+
 .class-log-modal .teaching-duration-field {
   border: 0;
-  border-top: 1px solid #e4ebe6;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
   border-radius: 0;
   padding: 12px 0 0;
+  font-variant-numeric: tabular-nums;
 }
+
 .class-log-modal .teaching-duration-field legend {
   padding: 0 8px 0 0;
   font-size: 13px;
+  font-weight: 500;
+  color: var(--pf-unslop-text-primary, #1f1b16);
 }
+
 .class-log-modal .teaching-duration-field > div {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
+
 .class-log-modal .teaching-duration-field .form-field {
   grid-column: auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
+
+.class-log-modal .teaching-log-steps {
+  border-radius: 12px;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  background: var(--pf-unslop-subtle, #faf8f4);
+  padding: 8px 12px;
+  font-variant-numeric: tabular-nums;
+}
+
 .class-log-modal .teaching-log-steps summary {
   min-height: 44px;
   display: flex;
@@ -166,116 +244,143 @@
   justify-content: space-between;
   gap: 12px;
   list-style: none;
+  font-weight: 500;
 }
-.class-log-modal .teaching-log-steps {
-  background: #f6f8f7;
-}
+
 .class-log-modal .teaching-log-steps.has-step-error {
   border-color: #c96f5b;
   background: #fdf8f6;
 }
+
 .class-log-modal .teaching-log-steps summary::-webkit-details-marker {
   display: none;
 }
+
 .class-log-modal .teaching-log-steps summary > svg {
   flex-shrink: 0;
 }
+
 .class-log-modal .teaching-log-steps[open] summary > svg {
   transform: rotate(180deg);
 }
+
 .class-log-modal .teaching-log-steps > .teaching-log-steps-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  padding: 0 0 10px;
+  padding: 0 0 8px;
   margin: 0 0 8px;
-  border-bottom: 1px solid #e1e8e4;
+  border-bottom: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
 }
+
 .teaching-log-steps-status {
   font-size: 12px;
   line-height: 1.5;
-  color: #465b51;
+  color: var(--pf-unslop-text-secondary, #5e554a);
   min-width: 0;
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
+
 .teaching-log-steps-toolbar-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
+
 .teaching-log-steps-quick-btn {
   min-height: 44px;
-  padding: 6px 11px;
+  padding: 8px 12px;
+  border-radius: 8px;
   font-size: 12px;
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
 .class-log-modal .teaching-log-steps label {
   min-height: 44px;
   overflow-wrap: anywhere;
 }
+
+.class-log-modal input:not([type='checkbox']):not([type='radio']),
+.class-log-modal select {
+  min-height: 44px;
+  border-radius: 10px;
+}
+
 .class-log-modal input,
 .class-log-modal select,
 .class-log-modal textarea {
   max-width: 100%;
   min-width: 0;
 }
+
 .class-log-privacy-hint {
   display: flex;
   align-items: flex-start;
   gap: 6px;
 }
+
 .class-log-privacy-hint > svg {
   margin-top: 3px;
 }
+
 .class-log-footer {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px 16px;
-  padding: 14px 24px 16px;
-  background: #fff;
-  border-top: 1px solid #dce6e1;
+  gap: 12px 16px;
+  padding: 16px 24px;
+  background: var(--pf-unslop-card, #ffffff);
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
 }
+
 .class-log-discard-guard {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  padding: 10px 12px;
+  padding: 12px;
   border-radius: 10px;
-  background: #f4f1e3;
+  background: #fff7ee;
+  border: 1px solid #d9b4a7;
   color: #6b4010;
-  font-size: 0.86rem;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
+
 .class-log-discard-guard > span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .class-log-discard-guard-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
+
 .class-log-modal .class-log-footer .teaching-form-actions {
   position: static;
   margin: 0;
   padding: 0;
   background: transparent;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: flex-end;
   grid-column: 2;
   grid-row: 1;
 }
+
 .class-log-modal .class-log-footer button {
   min-height: 44px;
+  border-radius: 10px;
 }
+
 .class-log-modal .teaching-log-footnote {
   margin: 0;
   font-size: 12px;
@@ -283,64 +388,78 @@
   grid-column: 1;
   grid-row: 1;
 }
+
 @media (max-width: 600px) {
   .class-log-content {
     padding: 16px;
-    gap: 18px;
+    gap: 16px;
   }
+
   .class-log-modal .teaching-form-two {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .class-log-footer {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     padding: 12px 16px max(12px, env(safe-area-inset-bottom));
   }
+
   .class-log-modal .class-log-footer button {
     flex: 1;
-    padding-inline: 10px;
+    padding-inline: 12px;
   }
+
   .class-log-modal .teaching-log-footnote {
     text-align: center;
   }
+
   .class-log-modal .teaching-inline-group {
     flex-wrap: wrap;
   }
+
   .teaching-log-steps-toolbar-actions,
   .class-log-discard-guard-actions {
     width: 100%;
   }
+
   .teaching-log-steps-toolbar-actions > button,
   .class-log-discard-guard-actions > button {
     flex: 1 1 auto;
     justify-content: center;
   }
 }
+
 @media (max-width: 390px) {
   .class-log-content {
-    padding: 14px 12px;
+    padding: 16px 12px;
     gap: 16px;
   }
+
   .class-log-modal .teaching-duration-field > div {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
 @media (max-height: 600px) {
   .class-log-modal .atelier-modal-header {
     padding-block: 12px;
   }
+
   .class-log-modal .atelier-modal-subtitle {
     max-height: 3em;
   }
 }
+
 .class-log-modal .class-log-footer > [role='alert'] {
   grid-column: 1 / -1;
   grid-row: 1;
   max-height: 20vh;
   overflow-y: auto;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
 }
+
 .class-log-modal .class-log-content .form-field {
   margin: 0;
 }
@@ -355,12 +474,15 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px 16px;
+  gap: 8px 16px;
   padding: 10px 12px;
-  border: 1px solid currentColor;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
   border-radius: 8px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+
 .log-planned-vs-actual-delta {
   font-weight: 600;
 }
@@ -368,30 +490,38 @@
 .log-quick-note-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 6px 0 8px;
+  gap: 8px;
+  margin: 8px 0;
 }
 
+/* 8px calm filter chips instead of 999px stadium pills */
 .log-quick-note-chip {
   min-height: 44px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #d5d0c3;
-  background: #faf8f4;
-  color: #1f4d3f;
-  font-size: 0.82rem;
-  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  background: var(--pf-unslop-subtle, #faf8f4);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
 
+.log-quick-note-chip:hover:not(.is-selected) {
+  background: var(--pf-unslop-raised, #efe9df);
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+}
+
 .log-quick-note-chip.is-selected {
-  background: #1f4d3f;
-  border-color: #1f4d3f;
+  background: var(--pf-unslop-accent, #1f4435);
+  border-color: var(--pf-unslop-accent, #1f4435);
   color: #ffffff;
+  font-weight: 600;
 }
 
 .log-quick-note-chip:focus-visible {
-  outline: 2px solid #1f4d3f;
+  outline: 2px solid var(--pf-unslop-accent, #1f4435);
   outline-offset: 2px;
 }
 

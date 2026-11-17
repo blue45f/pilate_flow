@@ -200,6 +200,18 @@ const formatSideSeconds = (seconds: number) =>
 
 const LAYER_LABELS = { easy: '가볍게', standard: '기본', hard: '도전' };
 const BOX_LABELS = { none: '없음', 'long-box': '롱박스', 'short-box': '숏박스' };
+const FOOTBAR_LABELS = {
+  none: '해당 없음',
+  down: '내림',
+  low: '낮음',
+  mid: '중간',
+  high: '높음',
+} as const;
+const HEADREST_LABELS = {
+  flat: '평평하게',
+  up: '올림',
+  down: '내림',
+} as const;
 
 export const LiveStageView: React.FC<LiveStageViewProps> = ({
   onOpenLogModal,
@@ -1528,7 +1540,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`teaching-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
+      className={`teaching-stage live-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
       data-presentation={presentationMode}
     >
       <header className="teaching-stage-header">
@@ -2029,9 +2041,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                         박스 · {BOX_LABELS[nextExercise.box]}
                       </span>
                     )}
-                    <span className="teaching-transition-chip is-footbar">
-                      풋바/헤드 · {nextExercise.footbar} / {nextExercise.headrest}
-                    </span>
+                    {nextExercise.footbar !== 'none' && (
+                      <span className="teaching-transition-chip is-footbar">
+                        풋바/헤드 · {FOOTBAR_LABELS[nextExercise.footbar]} /{' '}
+                        {HEADREST_LABELS[nextExercise.headrest]}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -2548,7 +2563,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <dl>
                 <div>
                   <dt>스프링 원문</dt>
-                  <dd>{current.customSpringOverride || exercise.springs || '기구 세팅 확인'}</dd>
+                  <dd>
+                    {(current.customSpringOverride || exercise.springs) === 'Bodyweight'
+                      ? '맨몸'
+                      : current.customSpringOverride || exercise.springs || '기구 세팅 확인'}
+                  </dd>
                 </div>
                 <div>
                   <dt>박스</dt>
@@ -2557,7 +2576,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 <div>
                   <dt>풋바 / 헤드레스트</dt>
                   <dd>
-                    {exercise.footbar} / {exercise.headrest}
+                    {FOOTBAR_LABELS[exercise.footbar]} / {HEADREST_LABELS[exercise.headrest]}
                   </dd>
                 </div>
                 <div>
@@ -2625,12 +2644,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   <div className="teaching-next-setup">
                     <span>스프링 원문</span>
                     <strong>
-                      {next.customSpringOverride || nextExercise.springs || '별도 세팅 확인'}
+                      {(next.customSpringOverride || nextExercise.springs) === 'Bodyweight'
+                        ? '맨몸'
+                        : next.customSpringOverride || nextExercise.springs || '별도 세팅 확인'}
                     </strong>
                     <span>박스 · 풋바 · 헤드레스트</span>
                     <strong>
-                      {BOX_LABELS[nextExercise.box]} · {nextExercise.footbar} ·{' '}
-                      {nextExercise.headrest}
+                      {BOX_LABELS[nextExercise.box]} · {FOOTBAR_LABELS[nextExercise.footbar]} ·{' '}
+                      {HEADREST_LABELS[nextExercise.headrest]}
                     </strong>
                   </div>
                   <p className="teaching-next-cue">{nextExercise.cues[0]}</p>

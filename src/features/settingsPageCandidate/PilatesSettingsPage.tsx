@@ -394,7 +394,7 @@ export function PilatesSettingsPage({
       data-auth-security-mutation="disabled"
     >
       <header className="pf-settings-page__header">
-        <span className="pf-settings-page__eyebrow">PILATES STUDIO SETTINGS</span>
+        <span className="pf-settings-page__eyebrow">스튜디오 환경 및 보관 설정</span>
         <h2 className="pf-settings-page__title" id={`${instanceId}-title`}>
           나의 스튜디오 설정
         </h2>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Sparkles } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { deriveExerciseUserIntent } from '../utils/exerciseUserIntent';
 import type { PilatesExercise } from '../types/pilates';
 
@@ -28,12 +28,11 @@ export const PageIntentBanner: React.FC<PageIntentBannerProps> = ({
     >
       <div className="pf-page-intent-banner__top">
         <span className="pf-page-intent-banner__badge">
-          <Compass size={13} aria-hidden="true" />
+          <Compass size={14} strokeWidth={1.5} aria-hidden="true" />
           <span>{stepBadge}</span>
         </span>
         {singleActionHint && (
           <span className="pf-page-intent-banner__action-pill">
-            <Sparkles size={12} aria-hidden="true" />
             <span>핵심 행동 · {singleActionHint}</span>
           </span>
         )}

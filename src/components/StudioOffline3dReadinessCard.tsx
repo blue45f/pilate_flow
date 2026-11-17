@@ -67,7 +67,7 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
     >
       <div className="pf-offline-3d-card__head">
         <div>
-          <span className="eyebrow">OFFLINE STUDIO PWA · P16</span>
+          <span className="eyebrow">오프라인 모션 보관</span>
           <h4 className="pf-offline-3d-card__title">
             현장 오프라인 &amp; {totalCuts}컷 3D 모션 미리 보관
           </h4>

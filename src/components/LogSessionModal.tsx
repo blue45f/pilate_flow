@@ -686,7 +686,7 @@ const SessionLogForm: React.FC<
           <div
             className="pf-spot-dialog-3d-banner"
             data-testid="log-session-3d-banner"
-            style={{ marginBottom: '10px' }}
+            style={{ marginBottom: '12px' }}
           >
             <ClassMotionArtwork firstExerciseId={logVisualMeta.firstExerciseId} exercises={exercisesAtOpen} fallbackSrc={logVisualMeta.studio3dThumbUrl}
               className="pf-spot-dialog-3d-banner__img" />
@@ -704,14 +704,14 @@ const SessionLogForm: React.FC<
           <div className="teaching-log-summary">
             <div className="class-log-summary-heading">
               <strong className="class-log-plan-badge">
-                <Clock3 size={16} aria-hidden="true" />
+                <Clock3 size={16} strokeWidth={1.5} aria-hidden="true" />
                 계획 {Number(planned.toFixed(2))}분 · {exerciseCount}개 동작
               </strong>
               <details className="class-log-provenance">
                 <summary>완료 이력 보관 방식</summary>
                 <div className="teaching-log-badge-row">
                   <span className="teaching-record-kind-badge is-history">
-                    <ShieldCheck size={13} /> 진행 완료 이력 스냅샷
+                    <ShieldCheck size={14} strokeWidth={1.5} /> 진행 완료 이력 스냅샷
                   </span>
                   <span className="teaching-record-source-badge">
                     {sourceKind === 'saved-sequence'
@@ -726,7 +726,7 @@ const SessionLogForm: React.FC<
               </details>
             </div>
             <p className="class-log-info muted">
-              <Info size={16} aria-hidden="true" />
+              <Info size={16} strokeWidth={1.5} aria-hidden="true" />
               <span>계획 시간과 실제 진행 시간은 별도로 보관됩니다.</span>
             </p>
             <div className="class-log-summary-status">
@@ -787,7 +787,7 @@ const SessionLogForm: React.FC<
                   if (!nextOpen) clearFieldErrorIfMatching('newGroup');
                 }}
               >
-                <Plus size={15} />
+                <Plus size={15} strokeWidth={1.5} />
                 수업 그룹 추가
               </button>
               {showGroup && (
@@ -936,7 +936,7 @@ const SessionLogForm: React.FC<
               <span>
                 실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
               </span>
-              <ChevronDown size={18} aria-hidden="true" />
+              <ChevronDown size={18} strokeWidth={1.5} aria-hidden="true" />
             </summary>
             <p className="muted">
               {context?.taughtStepIds !== undefined
@@ -1022,7 +1022,7 @@ const SessionLogForm: React.FC<
             className={`teaching-form-grid teaching-form-two ${logStep === 3 ? 'is-step-focused' : ''}`}
             onFocusCapture={() => setLogStep(3)}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <PfField label="강사가 느낀 강도">
                 <PfSelect
                   value={intensity}
@@ -1065,7 +1065,7 @@ const SessionLogForm: React.FC<
                 ))}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <PfField label="강사의 수업 평가">
                 <PfSelect
                   value={rating}
@@ -1115,7 +1115,7 @@ const SessionLogForm: React.FC<
             className="class-log-reflection"
           >
             <small id={reflectionHintId} className="class-log-privacy-hint muted">
-              <Info size={14} aria-hidden="true" />
+              <Info size={14} strokeWidth={1.5} aria-hidden="true" />
               <span>학생 실명이나 건강 정보는 적지 않아도 돼요.</span>
             </small>
             <div
@@ -1209,7 +1209,7 @@ const SessionLogForm: React.FC<
               variant="primary"
               disabled={submitted || classGroups.length === 0}
             >
-              <Check size={17} />
+              <Check size={16} strokeWidth={1.5} />
               수업 기록 저장
             </PfButton>
           </div>
