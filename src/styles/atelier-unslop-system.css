@@ -1256,7 +1256,7 @@ html
 
 html body #root .pf-member-view .pf-member-wallet-hero .eyebrow,
 html body #root .pf-member-view .pf-member-wallet-hero .eyebrow svg {
-  color: rgba(255, 255, 255, 0.88) !important;
+  color: var(--pf-unslop-text-secondary) !important;
 }
 
 html body #root .library-modal-footer {
@@ -1948,6 +1948,193 @@ html
   .flow-app
   :is(.desktop-nav > button > svg, .topbar .icon-btn > svg, .pf-topbar-cmdk-btn > svg, .bottom-nav > button > svg) {
   stroke-width: 1.75;
+}
+
+/* ==========================================================================
+   14. Pass 2, 5, 8 & 9 Elevation: Calm Member Wallet, 3D Reformer Showcase,
+       Korean Overflow-Wrap Hygiene & Tactile Press Micro-Interactions
+   ========================================================================== */
+html body #root .flow-app :is(p, li, dd, td, summary, label, h1, h2, h3, h4) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-style: normal;
+}
+
+/* Calm Unslop Member Wallet Surface (replaces 3-stop green decorative gradient) */
+html body #root .pf-member-view .pf-member-wallet-hero {
+  background: var(--pf-unslop-card) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+  border-radius: var(--pf-unslop-radius-card) !important;
+  box-shadow: var(--pf-unslop-shadow-card) !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .pf-member-view .pf-member-wallet-hero h2,
+html body #root .pf-member-view .pf-member-wallet-ring__label strong {
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+html body #root .pf-member-view .pf-member-wallet-metrics,
+html body #root .pf-member-view .pf-member-wallet-metrics span,
+html body #root .pf-member-view .pf-member-wallet-ring__label small {
+  color: var(--pf-unslop-text-secondary) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+html body #root .pf-member-view .pf-member-wallet-metrics strong {
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600;
+}
+
+.pf-member-wallet-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-member-wallet-hero__expired {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.pf-member-wallet-ring__track {
+  stroke: var(--pf-unslop-raised);
+}
+
+.pf-member-wallet-ring__progress {
+  stroke: var(--pf-unslop-accent);
+}
+
+.pf-member-my-bookings__heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-member-my-booking-submeta {
+  margin-left: 8px;
+  font-size: 0.84rem;
+  color: var(--pf-unslop-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-member-empty-title {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary);
+}
+
+.pf-member-empty-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--pf-unslop-text-secondary);
+}
+
+.pf-studio-spot-btn__state {
+  font-weight: 600;
+}
+
+/* Blender 3D Reformer Offline Readiness Showcase Card */
+.pf-offline-3d-card {
+  padding: 16px;
+  border-radius: var(--pf-unslop-radius-card);
+  border: 1px solid var(--pf-unslop-hairline);
+  background: var(--pf-unslop-card);
+  box-shadow: var(--pf-unslop-shadow-card);
+}
+
+.pf-offline-3d-card__grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 256px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.pf-offline-3d-card__showcase {
+  margin: 0;
+  padding: 8px;
+  border-radius: var(--pf-unslop-radius-segment);
+  border: 1px solid var(--pf-unslop-hairline);
+  background-color: #f2eee5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-offline-3d-card__showcase-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--pf-unslop-radius-row);
+  background-color: #f2eee5;
+}
+
+.pf-offline-3d-card__keycaps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.pf-offline-3d-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-offline-3d-card__progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--pf-unslop-raised);
+  overflow: hidden;
+}
+
+.pf-offline-3d-card__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--pf-unslop-accent);
+  transition: width var(--pf-unslop-menu) var(--pf-unslop-ease);
+}
+
+.pf-offline-3d-card__count {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .pf-offline-3d-card__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tactile Press Feedback (scale 0.98 on physical press, zero hover jump) */
+html
+  body
+  #root
+  .flow-app:not(.teaching-high-contrast)
+  :is(
+    .btn-primary,
+    .btn-secondary,
+    .pf-btn,
+    .pf-member-slot-cta,
+    .pf-member-chip,
+    .pf-sidebar-quick-stage,
+    .app-create-movement
+  ):active:not(:disabled) {
+  transform: scale(0.98) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

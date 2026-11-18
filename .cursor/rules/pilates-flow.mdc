@@ -1,0 +1,6 @@
+---
+description: Pilates Flow Atelier canonical repository harness adapter
+alwaysApply: true
+---
+
+작업 전에 저장소 루트 `AGENTS.md`와 `DESIGN.md`를 읽고 따른다. 세부 규칙은 해당 정본 문서에서만 관리하며 이 어댑터에 복제하지 않는다.
