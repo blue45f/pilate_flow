@@ -58,7 +58,11 @@ export function inspectGlbBinaryHeader(buffer: ArrayBuffer): GlbBinaryAuditResul
     });
   }
 
-  if (version !== 2 || declaredByteLength > actualByteLength || 20 + jsonChunkLength > actualByteLength) {
+  if (
+    version !== 2 ||
+    declaredByteLength > actualByteLength ||
+    20 + jsonChunkLength > actualByteLength
+  ) {
     return Object.freeze({
       valid: false,
       magicHex,
@@ -146,12 +150,96 @@ export function inspectGlbBinaryHeader(buffer: ArrayBuffer): GlbBinaryAuditResul
   }
 }
 
+export interface Device3dSignals {
+  readonly deviceMemoryGiB?: number | null;
+  readonly hardwareConcurrency?: number | null;
+  readonly devicePixelRatio?: number | null;
+  readonly saveData?: boolean;
+}
+
+export interface Adaptive3dFrameBudget {
+  readonly tier: 'high' | 'low-memory';
+  readonly maxDpr: number;
+  readonly effectiveDpr: number;
+  readonly targetFps: 30 | 60;
+  readonly frameIntervalMs: number;
+  readonly fillRateReductionPct: number;
+}
+
+const BASELINE_UNTHROTTLED_DPR = 2.25;
+const BASELINE_UNTHROTTLED_FPS = 60;
+
+/**
+ * Computes deterministic DPR & frame-rate caps so <=4GB mobile devices avoid
+ * thermal throttling and GC frame drops during continuous 3D motion playback.
+ */
+export function resolveAdaptive3dFrameBudget(signals: Device3dSignals = {}): Adaptive3dFrameBudget {
+  const mem =
+    typeof signals.deviceMemoryGiB === 'number' && Number.isFinite(signals.deviceMemoryGiB)
+      ? signals.deviceMemoryGiB
+      : null;
+  const cores =
+    typeof signals.hardwareConcurrency === 'number' && Number.isFinite(signals.hardwareConcurrency)
+      ? signals.hardwareConcurrency
+      : null;
+  const rawDpr =
+    typeof signals.devicePixelRatio === 'number' &&
+    Number.isFinite(signals.devicePixelRatio) &&
+    signals.devicePixelRatio > 0
+      ? signals.devicePixelRatio
+      : 1;
+
+  const isLowMemory =
+    signals.saveData === true || (mem !== null && mem <= 4) || (cores !== null && cores <= 4);
+
+  const maxDpr = isLowMemory ? 1.25 : 2;
+  const targetFps: 30 | 60 = isLowMemory ? 30 : 60;
+  const effectiveDpr = Math.min(maxDpr, rawDpr);
+  const frameIntervalMs = Number((1000 / targetFps).toFixed(2));
+
+  const baselineThroughput =
+    Math.pow(Math.min(BASELINE_UNTHROTTLED_DPR, Math.max(rawDpr, BASELINE_UNTHROTTLED_DPR)), 2) *
+    BASELINE_UNTHROTTLED_FPS;
+  const guardedThroughput = Math.pow(effectiveDpr, 2) * targetFps;
+  const fillRateReductionPct = Math.max(
+    0,
+    Number((((baselineThroughput - guardedThroughput) / baselineThroughput) * 100).toFixed(1)),
+  );
+
+  return Object.freeze({
+    tier: isLowMemory ? 'low-memory' : 'high',
+    maxDpr,
+    effectiveDpr,
+    targetFps,
+    frameIntervalMs,
+    fillRateReductionPct,
+  });
+}
+
+export function readAmbientDevice3dSignals(): Device3dSignals {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return {};
+  }
+  const nav = navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: { saveData?: boolean };
+  };
+  return {
+    deviceMemoryGiB: typeof nav.deviceMemory === 'number' ? nav.deviceMemory : null,
+    hardwareConcurrency:
+      typeof nav.hardwareConcurrency === 'number' ? nav.hardwareConcurrency : null,
+    devicePixelRatio: window.devicePixelRatio || 1,
+    saveData: nav.connection?.saveData === true,
+  };
+}
+
 export type Studio3dDisposableKind =
   | 'geometry'
   | 'material'
   | 'texture'
   | 'render-target'
-  | 'image-bitmap';
+  | 'image-bitmap'
+  | 'canvas-backing';
 
 export interface Studio3dDisposableHandle {
   readonly dispose?: () => void;
@@ -170,13 +258,20 @@ export interface Studio3dResourceGuardSnapshot {
  * out of React render state and guarantees idempotent disposal on unmount or scene swap.
  */
 export function createStudio3dResourceGuard() {
-  const active = new Map<string, { kind: Studio3dDisposableKind; handle: Studio3dDisposableHandle }>();
+  const active = new Map<
+    string,
+    { kind: Studio3dDisposableKind; handle: Studio3dDisposableHandle }
+  >();
   let disposedTotalCount = 0;
   let contextLost = false;
   let recoveryCount = 0;
 
   return {
-    track<T extends Studio3dDisposableHandle>(id: string, kind: Studio3dDisposableKind, handle: T): T {
+    track<T extends Studio3dDisposableHandle>(
+      id: string,
+      kind: Studio3dDisposableKind,
+      handle: T,
+    ): T {
       const existing = active.get(id);
       if (existing && existing.handle !== handle) {
         existing.handle.dispose?.();

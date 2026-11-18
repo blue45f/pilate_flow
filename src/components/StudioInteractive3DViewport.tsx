@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   Camera,
   Check,
@@ -46,6 +46,11 @@ import {
   type Studio3DPropOverride,
   type Studio3DShaderPreset,
 } from '../utils/realtimeStudio3dEngine';
+import {
+  createStudio3dResourceGuard,
+  readAmbientDevice3dSignals,
+  resolveAdaptive3dFrameBudget,
+} from '../utils/studio3dResourceGuard';
 
 export interface Studio3DSetupDraftPatch {
   readonly springOverride?: string;
@@ -276,20 +281,65 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const visualProgressRef = useRef<number>(0);
   const phase = sampleStudioMotionCycle(progress);
   const visualPhase = sampleStudioMotionCycle(playing ? progress : visualProgress);
+  const frameBudget = useMemo(
+    () => resolveAdaptive3dFrameBudget(readAmbientDevice3dSignals()),
+    [],
+  );
+  const resourceGuardRef = useRef<ReturnType<typeof createStudio3dResourceGuard> | null>(null);
+  if (resourceGuardRef.current === null) {
+    resourceGuardRef.current = createStudio3dResourceGuard();
+  }
   const glbAsset = getStudioApparatusGlbAsset(exercise.apparatus);
   const binding = getExpandedMovementVisualBinding(exercise);
   const dedicated3d = hasDedicated3DExerciseRig(exercise);
   const rigMeta = sampleUniversal3DExerciseRig(exercise, phase.pose);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const guard = resourceGuardRef.current;
+    if (!canvas || !guard) return;
+    guard.track('viewport-canvas-backing', 'canvas-backing', {
+      dispose: () => {
+        canvas.width = 0;
+        canvas.height = 0;
+      },
+    });
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      guard.notifyContextLost();
+    };
+    const onContextRestored = () => {
+      guard.notifyContextRestored();
+      invalidateViewport();
+    };
+    canvas.addEventListener('contextlost', onContextLost);
+    canvas.addEventListener('contextrestored', onContextRestored);
+    return () => {
+      canvas.removeEventListener('contextlost', onContextLost);
+      canvas.removeEventListener('contextrestored', onContextRestored);
+      guard.disposeAll();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!canAnimate || (!playing && !turntable)) return;
     let rafId = 0;
     let lastTs: number | null = null;
+    let lastCommitTs: number | null = null;
 
     const step = (now: number) => {
       if (document.hidden) return;
+      if (
+        frameBudget.tier === 'low-memory' &&
+        lastCommitTs !== null &&
+        now - lastCommitTs < frameBudget.frameIntervalMs - 1
+      ) {
+        rafId = window.requestAnimationFrame(step);
+        return;
+      }
       const dt = lastTs === null ? 0 : Math.min(0.06, Math.max(0, now - lastTs) / 1000);
       lastTs = now;
+      lastCommitTs = now;
       if (playing) {
         progressRef.current =
           (progressRef.current + (dt * 1000 * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
@@ -307,7 +357,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     };
     rafId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(rafId);
-  }, [playing, turntable, speed, canAnimate]);
+  }, [playing, turntable, speed, canAnimate, frameBudget.tier, frameBudget.frameIntervalMs]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -355,7 +405,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     }
     if (!ctx) return;
 
-    const dpr = typeof window !== 'undefined' ? Math.min(2.25, window.devicePixelRatio || 1) : 1;
+    const dpr =
+      typeof window !== 'undefined'
+        ? resolveAdaptive3dFrameBudget(readAmbientDevice3dSignals()).effectiveDpr
+        : 1;
     const cssW = canvas.clientWidth || 640;
     const cssH = canvas.clientHeight || 416;
     if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
@@ -574,6 +627,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-mirrored={String(mirrored)}
       data-motion-playing={playing && canAnimate}
       data-motion-phase={phase.id}
+      data-frame-budget-tier={frameBudget.tier}
+      data-target-fps={String(frameBudget.targetFps)}
       data-3d-rig-scope={dedicated3d ? 'dedicated-3d-rig' : 'procedural-3d-synthesis'}
       data-3d-pose-feature={rigMeta.poseFeatureKo}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}

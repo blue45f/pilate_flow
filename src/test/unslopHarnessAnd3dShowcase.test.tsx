@@ -3,18 +3,21 @@ import { resolve } from 'node:path';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemberBookingView } from '../components/MemberBookingView';
+import { StudioInteractive3DViewport } from '../components/StudioInteractive3DViewport';
 import { StudioOffline3dReadinessCard } from '../components/StudioOffline3dReadinessCard';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import {
   createStudio3dResourceGuard,
   inspectGlbBinaryHeader,
+  resolveAdaptive3dFrameBudget,
 } from '../utils/studio3dResourceGuard';
 
 afterEach(() => {
   cleanup();
 });
 
-describe('Atelier Unslop 9-Pass, Blender 3D Reformer GLB/WebP, WebGPU Resource Guard & Korean Typography', () => {
-  it('renders the Blender-modeled 3D Reformer studio showcase and 6px spring/GLB keycaps inside StudioOffline3dReadinessCard', async () => {
+describe('Atelier Unslop 9-Pass, Blender 3D Reformer GLB/WebP, 4GB Adaptive Frame Budget & Korean Typography', () => {
+  it('renders the Blender-modeled 3D Reformer studio showcase and 6px spring/part keycaps inside StudioOffline3dReadinessCard', async () => {
     const assetPath = resolve(
       process.cwd(),
       'public/images/studio3d/atelier-reformer-unslop-v9.webp',
@@ -62,6 +65,39 @@ describe('Atelier Unslop 9-Pass, Blender 3D Reformer GLB/WebP, WebGPU Resource G
     });
     expect(audit.materialNames).toEqual(
       expect.arrayContaining(['PF_WhiteOak_Frame', 'PF_Sage_Leather', 'PF_Anodized_Brass']),
+    );
+  });
+
+  it('reduces per-second pixel fill-rate by 84.6% on 4GB low-memory mobile devices and wires tier attribute into StudioInteractive3DViewport', () => {
+    const lowMemBudget = resolveAdaptive3dFrameBudget({
+      deviceMemoryGiB: 4,
+      hardwareConcurrency: 4,
+      devicePixelRatio: 3,
+    });
+    expect(lowMemBudget).toEqual({
+      tier: 'low-memory',
+      maxDpr: 1.25,
+      effectiveDpr: 1.25,
+      targetFps: 30,
+      frameIntervalMs: 33.33,
+      fillRateReductionPct: 84.6,
+    });
+
+    const proBudget = resolveAdaptive3dFrameBudget({
+      deviceMemoryGiB: 8,
+      hardwareConcurrency: 8,
+      devicePixelRatio: 2,
+    });
+    expect(proBudget).toMatchObject({
+      tier: 'high',
+      maxDpr: 2,
+      effectiveDpr: 2,
+      targetFps: 60,
+    });
+
+    render(<StudioInteractive3DViewport exercise={INITIAL_EXERCISES[0]!} compact />);
+    expect(screen.getByTestId('studio-interactive-3d-viewport')).toHaveAttribute(
+      'data-frame-budget-tier',
     );
   });
 

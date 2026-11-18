@@ -47,8 +47,13 @@ import {
 } from '../utils/memberBookingBridge';
 import { LightDismissDialog } from './LightDismissDialog';
 import { SpringVisualPills } from './SpringVisualPills';
-import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 import { VisualApparatusSpotGlyph } from './VisualFlowComponents';
+
+const LazyMember3DViewport = React.lazy(() =>
+  import('./StudioInteractive3DViewport').then((m) => ({
+    default: m.StudioInteractive3DViewport,
+  })),
+);
 import {
   buildMemberPostClassRecap,
   computePassDdaySummary,
@@ -82,9 +87,9 @@ type MemberFocusFilter = 'all' | 'core' | 'lower' | 'stretch' | 'props';
 
 const FOCUS_PROP_FILTERS: ReadonlyArray<{ value: MemberFocusFilter; label: string }> = [
   { value: 'all', label: '전체 포커스' },
-  { value: 'core', label: '코어·골반 정렬' },
-  { value: 'lower', label: '둔근·하지 집중' },
-  { value: 'stretch', label: '흉추·스트레치' },
+  { value: 'core', label: '코어·바른 자세' },
+  { value: 'lower', label: '힙·하체 탄력' },
+  { value: 'stretch', label: '어깨·등 스트레칭' },
   { value: 'props', label: '소도구 활용' },
 ];
 
@@ -1038,7 +1043,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 
       <section
         id="member-wallet-section"
-        className="pf-member-wallet-hero"
+        className={`pf-member-wallet-hero ${activeSection !== 'wallet' ? 'is-compact-schedule-mode' : ''}`.trim()}
         aria-label="내 수강권 현황"
       >
         <div className="pf-member-wallet-hero__main">
@@ -1058,7 +1063,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               <strong>유효기간:</strong> {portalState.pass.expiresAtIso}까지
             </span>
             <span>
-              <strong>수업 별칭:</strong> {portalState.pass.participantAlias}
+              <strong>예약 닉네임:</strong> {portalState.pass.participantAlias}
             </span>
           </div>
           <p
@@ -1674,8 +1679,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       </div>
 
       <details className="pf-member-pass-card">
-        <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
-          개인정보 보호·안전 안내 및 연결 상태 점검
+        <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+          개인정보 보호 및 수업 전 안전 안내
         </summary>
         <p style={{ marginTop: '8px', fontSize: '0.88rem', lineHeight: 1.55 }}>
           <ShieldCheck
@@ -1684,20 +1689,25 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             aria-hidden="true"
             style={{ verticalAlign: 'middle', marginRight: '8px' }}
           />
-          실명·연락처·민감 건강정보 대신 수업 별칭({portalState.pass.participantAlias})으로만 이
+          실명·연락처·민감 건강정보 대신 예약 닉네임({portalState.pass.participantAlias})으로만 이
           기기에 예약 상태를 기록합니다. 임신·수술 이력·급성 통증이 있는 경우 수업 시작 전 담당
           강사에게 직접 알려 주세요.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-          <button
-            type="button"
-            className="pf-member-chip"
-            aria-pressed={simulateOffline}
-            onClick={() => setSimulateOffline((prev) => !prev)}
-          >
-            {simulateOffline ? '오프라인 미리보기 해제' : '오프라인 읽기 전용 미리보기'}
-          </button>
-        </div>
+        <details style={{ marginTop: '8px' }}>
+          <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#5c6b62' }}>
+            연결 끊김 화면 미리보기 (점검용)
+          </summary>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+            <button
+              type="button"
+              className="pf-member-chip"
+              aria-pressed={simulateOffline}
+              onClick={() => setSimulateOffline((prev) => !prev)}
+            >
+              {simulateOffline ? '오프라인 미리보기 해제' : '오프라인 읽기 전용 미리보기'}
+            </button>
+          </div>
+        </details>
       </details>
 
       {pendingAction && (
@@ -1808,10 +1818,18 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       동작 3D 미리보기 · 드래그 회전
                     </summary>
                     <div className="pf-member-360-drawer__body">
-                      <StudioInteractive3DViewport
-                        exercise={pendingRepresentativeExercise}
-                        compact
-                      />
+                      <React.Suspense
+                        fallback={
+                          <p className="pf-member-360-drawer__note" role="status">
+                            3D 기구 미리보기를 불러오는 중입니다…
+                          </p>
+                        }
+                      >
+                        <LazyMember3DViewport
+                          exercise={pendingRepresentativeExercise}
+                          compact
+                        />
+                      </React.Suspense>
                       <small className="pf-member-360-drawer__note">
                         기구 움직임 방향 이해를 돕는 참고용 3D 시뮬레이션이며 실제 수업 동작·스프링
                         강도는 현장 강사가 회원 컨디션에 맞춰 안내합니다.
