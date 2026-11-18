@@ -629,3 +629,43 @@ describe('single-canvas sequence studio journeys', () => {
     denied.mockRestore();
   });
 });
+
+describe('스프링 타임라인의 장력 추정 방지', () => {
+  it.each(['balanced-body', 'stott'] as const)(
+    '%s 선택도 혼합·미확인 표기를 장력으로 환산하지 않는다',
+    (brand) => {
+      seedReformer();
+      const authored = '현장 A 전용 스프링 / 제조사·모델 미확인, 강사 메모 그대로';
+      const steps = usePilatesStore.getState().activeSteps.map((step, index) => ({
+        ...step,
+        customSpringOverride: index === 0 ? '1G 1R' : authored,
+      }));
+      usePilatesStore.setState({ reformerBrand: brand, activeSteps: steps });
+      showStudio();
+      const ribbon = screen.getByTestId('spring-timeline-ribbon');
+      const blocks = ribbon.querySelectorAll('.pf-spring-ribbon-block');
+      expect(blocks).toHaveLength(2);
+      expect(blocks[0]).toHaveClass('is-sage');
+      expect(blocks[1]).toHaveClass('is-sage');
+      expect(within(ribbon).getByText('1G 1R')).toBeVisible();
+      expect(within(ribbon).getByText(authored)).toBeVisible();
+      expect(ribbon).not.toHaveTextContent(/특강|미세 장력|Red\(강\)|Blue\(중\)/);
+      expect(ribbon).toHaveTextContent('장력의 강약을 뜻하지 않습니다');
+      expect(usePilatesStore.getState().activeSteps).toEqual(steps);
+    },
+  );
+
+  it('단색은 색상만 표시하고 저장된 원문은 그대로 둔다', () => {
+    seedReformer([first]);
+    const steps = usePilatesStore
+      .getState()
+      .activeSteps.map((step) => ({ ...step, customSpringOverride: '1B' }));
+    usePilatesStore.setState({ activeSteps: steps });
+    showStudio();
+    const ribbon = screen.getByTestId('spring-timeline-ribbon');
+    expect(ribbon.querySelector('.pf-spring-ribbon-block')).toHaveClass('is-blue');
+    expect(within(ribbon).getByText('1B')).toBeVisible();
+    expect(within(ribbon).getByTitle('스프링 표기: 1B')).toBeVisible();
+    expect(usePilatesStore.getState().activeSteps).toEqual(steps);
+  });
+});

@@ -106,6 +106,27 @@ describe('step repetitions and anatomical side semantics', () => {
     expect(() => fitSequenceDuration([step(), { ...rest, repetitions: 3 }], 50)).toThrow();
   });
 
+  it.each(['balanced-body', 'stott'] as const)(
+    '수업 전 자료는 %s 선택에서도 미확인 설정 원문을 보존한다',
+    (brand) => {
+      const exercise = fixtures[0];
+      const authored = '현장 B: 1G 1R / 모델 미확인, 강사 직접 확인';
+      const savedStep = { ...step(), customSpringOverride: authored };
+      const sheet = formatSequenceAsStudioSheet(
+        '현장별 수업',
+        '',
+        [savedStep],
+        new Map([[exercise.id, exercise]]),
+        brand,
+      );
+      expect(sheet).toContain(authored);
+      expect(sheet).toContain('모델 미확인');
+      expect(sheet).toContain('수업 전 실제 기구에서 확인');
+      expect(sheet).not.toMatch(/Green\(특강\)|Red\(강\)|Blue\(중\)/);
+      expect(savedStep.customSpringOverride).toBe(authored);
+    },
+  );
+
   it('exports explicit anatomical order and counts without a false both-sides tag on a single side', () => {
     const exercise = { ...fixtures[0], isUnilateral: true };
     const map = new Map([[exercise.id, exercise]]);

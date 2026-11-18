@@ -1,3 +1,4 @@
+import { parseSpringVisualChips } from '../utils/springVisualParser';
 import {
   Fragment,
   lazy,
@@ -170,13 +171,7 @@ const minutesTweened = (seconds: number) => {
   return `${Math.floor(s / 60)}분${s % 60 ? ` ${s % 60}초` : ''}`;
 };
 
-/**
- * Spring-timeline tone. Ported from the legacy workbench ribbon, with the
- * yellow catch-all fixed: green/white get their own tones and anything
- * unrecognized falls back to neutral sage, never yellow.
- * Mixed springs resolve to the strongest tension present (Balanced Body
- * order: green 특강 > red 강 > blue 중 > yellow 약 > white 미세).
- */
+/** Color identifies a written setup only, never resistance or a brand/model. */
 type SpringTone = 'is-red' | 'is-blue' | 'is-green' | 'is-yellow' | 'is-white' | 'is-sage';
 const SPRING_TONE_STYLES: Record<SpringTone, { background: string; borderColor: string }> = {
   'is-red': { background: '#faeae5', borderColor: '#e4b6a9' },
@@ -187,24 +182,31 @@ const SPRING_TONE_STYLES: Record<SpringTone, { background: string; borderColor: 
   'is-sage': { background: '#edf4f0', borderColor: '#bfd3c6' },
 };
 function springToneClass(rawSprings: string | undefined): SpringTone {
-  const text = (rawSprings ?? '').toLowerCase();
-  if (!text) return 'is-sage';
-  const has = (pattern: RegExp) => pattern.test(text);
-  if (has(/green|그린|초록|녹색|\d\s*g\b/)) return 'is-green';
-  if (has(/red|레드|빨강|적색|\d\s*r\b/)) return 'is-red';
-  if (has(/blue|블루|파랑|청색|\d\s*b\b/)) return 'is-blue';
-  if (has(/yellow|옐로우?|노랑|황색|\d\s*y\b/)) return 'is-yellow';
-  if (has(/white|화이트|하양|백색|\d\s*w\b/)) return 'is-white';
-  return 'is-sage';
+  const chips = parseSpringVisualChips(rawSprings);
+  const color = chips.length === 1 ? chips[0].key : '';
+  switch (color) {
+    case 'red':
+      return 'is-red';
+    case 'blue':
+      return 'is-blue';
+    case 'green':
+      return 'is-green';
+    case 'yellow':
+      return 'is-yellow';
+    case 'white':
+      return 'is-white';
+    default:
+      return 'is-sage';
+  }
 }
 
-/** Provisional tension tiers (SpringBadge labels); exact tension varies by manufacturer/model. */
-const SPRING_TENSION_LEGEND = [
-  { swatch: '#D9A426', label: '노랑', tier: 'Yellow(약)', meaning: '가벼운 장력' },
-  { swatch: '#2E6F9E', label: '파랑', tier: 'Blue(중)', meaning: '중간 장력' },
-  { swatch: '#C84B31', label: '빨강', tier: 'Red(강)', meaning: '강한 장력' },
-  { swatch: '#2F855A', label: '초록', tier: 'Green(특강)', meaning: '특강 장력' },
-  { swatch: '#CBD5E1', label: '하양', tier: 'White(미세)', meaning: '미세 장력' },
+const SPRING_COLOR_LEGEND = [
+  { swatch: '#D9A426', label: '노랑 (Y)' },
+  { swatch: '#2E6F9E', label: '파랑 (B)' },
+  { swatch: '#C84B31', label: '빨강 (R)' },
+  { swatch: '#2F855A', label: '초록 (G)' },
+  { swatch: '#CBD5E1', label: '하양 (W)' },
+  { swatch: '#94A39B', label: '혼합·기타 표기' },
 ] as const;
 
 /** Valid keystrokes persist immediately. Incomplete number/title input stays local. */
@@ -2054,8 +2056,8 @@ export function SequenceStudioWorkbench(props: Props) {
               >
                 <span className="pf-step-kicker-badge">타임라인 & 스프링 흐름 뷰</span>
                 <p style={{ margin: '0 0 8px', fontSize: '0.84rem', color: '#56685f' }}>
-                  가로 블록 너비는 소요 시간에 비례하며, 색상으로 스프링 장력 전환 지점을 한눈에
-                  확인합니다.
+                  가로 블록 너비는 소요 시간에 비례합니다. 색상은 입력된 스프링 표기를 구분하며,
+                  장력의 강약을 뜻하지 않습니다.
                 </p>
                 <div
                   className="pf-spring-ribbon-track"
@@ -2098,7 +2100,12 @@ export function SequenceStudioWorkbench(props: Props) {
                           {isRestStep(step) ? '중간 휴식' : (exercise?.nameKo ?? '동작')}
                         </strong>
                         {!isRestStep(step) && rawSpring && (
-                          <SpringVisualPills springs={rawSpring} />
+                          <>
+                            <SpringVisualPills springs={rawSpring} />
+                            <span style={{ fontSize: '0.78rem', whiteSpace: 'pre-wrap' }}>
+                              {rawSpring}
+                            </span>
+                          </>
                         )}
                       </>
                     );
@@ -2131,9 +2138,7 @@ export function SequenceStudioWorkbench(props: Props) {
                     paddingTop: '10px',
                   }}
                 >
-                  <strong style={{ fontSize: '0.84rem' }}>
-                    스프링 색상 범례(임시 정의 — 확인 필요)
-                  </strong>
+                  <strong style={{ fontSize: '0.84rem' }}>스프링 표기 범례</strong>
                   <ul
                     style={{
                       display: 'flex',
@@ -2144,7 +2149,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       padding: 0,
                     }}
                   >
-                    {SPRING_TENSION_LEGEND.map((item) => (
+                    {SPRING_COLOR_LEGEND.map((item) => (
                       <li
                         key={item.label}
                         style={{
@@ -2165,13 +2170,13 @@ export function SequenceStudioWorkbench(props: Props) {
                             display: 'inline-block',
                           }}
                         />
-                        {item.label} = {item.meaning} ({item.tier})
+                        {item.label}
                       </li>
                     ))}
                   </ul>
                   <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#56685f' }}>
-                    임시 정의입니다. 제조사·모델별 실제 장력은 다를 수 있으니 현장에서 확인해
-                    주세요.
+                    제조사·모델이 확인되지 않은 표기에서 장력을 추정하지 않습니다. 실제 장력과
+                    세팅은 수업 전 현장 기구에서 확인해 주세요.
                   </p>
                 </div>
               </section>
