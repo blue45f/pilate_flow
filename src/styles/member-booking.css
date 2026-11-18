@@ -851,6 +851,51 @@ html body #root .pf-member-view .pf-member-steps li.is-active {
   }
 }
 
+.pf-member-wallet-hero.is-compact-schedule-mode {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.pf-member-wallet-hero.is-compact-schedule-mode h2 {
+  font-size: 1rem;
+  margin: 0 0 2px;
+}
+
+.pf-member-wallet-hero.is-compact-schedule-mode .pf-member-wallet-hero__eyebrow {
+  display: none;
+}
+
+.pf-member-wallet-hero.is-compact-schedule-mode .pf-member-wallet-ring {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+}
+
+.pf-member-wallet-hero.is-compact-schedule-mode .pf-member-wallet-ring svg {
+  width: 56px;
+  height: 56px;
+}
+
+.pf-member-quick-status-strip {
+  padding: 8px 14px;
+  margin-bottom: 8px;
+}
+
+.pf-member-steps {
+  margin-bottom: 10px;
+}
+
+.pf-member-dialog-actions {
+  position: sticky;
+  bottom: -24px;
+  z-index: 4;
+  background: #ffffff;
+  padding: 10px 0 16px;
+  margin-bottom: -12px;
+  border-top: 1px solid rgba(31, 27, 22, 0.08);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pf-member-chip,
   .pf-member-quick-spot-btn,

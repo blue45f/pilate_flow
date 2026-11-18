@@ -1001,8 +1001,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setReviewOpen(true);
   };
   const pauseForExit = () => {
+    const liveClock = clockRef.current;
+    const liveSteps = stepsRef.current;
+    const hasSessionData =
+      liveClock.running ||
+      liveClock.elapsedMs > 0 ||
+      liveClock.index > 0 ||
+      JSON.stringify(liveSteps) !== JSON.stringify(activeSteps);
     runningIntent.current = false;
     classVoice.pause();
+    if (!hasSessionData) {
+      navigate('workbench');
+      return;
+    }
     setExitTarget(null);
     applyClock((value) => ({
       ...sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
@@ -2010,14 +2021,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               className="teaching-timer-eyebrow"
               style={{
                 display: 'block',
-                fontSize: '0.6875rem',
-                fontWeight: 600,
-                letterSpacing: '0.16em',
-                opacity: 0.75,
-                marginBottom: 6,
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                letterSpacing: '0',
+                opacity: 0.82,
+                marginBottom: 4,
               }}
             >
-              딥 포레스트 타이머
+              현재 동작 타이머
             </span>
             <span
               className={`teaching-timer-status ${clock.running ? 'running' : ''} ${
@@ -2051,8 +2062,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </div>
             <p className="teaching-timer-sub" style={{ fontVariantNumeric: 'tabular-nums' }}>
               남은 전체 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
-              {currentSpringRaw ? ` · ${currentSpringRaw}` : ''}
-              {!currentIsRest && exercise?.breathPattern ? ` · ${exercise.breathPattern}` : ''}
+              {currentSpringRaw
+                ? ` · ${currentSpringRaw === 'Bodyweight' ? '맨몸' : currentSpringRaw}`
+                : ''}
             </p>
             <details
               className="teaching-presentation-details teaching-secondary-timing"
@@ -2083,7 +2095,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 className="teaching-breath-glance-pill"
                 data-testid="live-stage-breath-callout"
               >
-                호흡 콜아웃 · {exercise.breathPattern}
+                호흡 · {exercise.breathPattern}
               </p>
             )}
             <div
@@ -2839,90 +2851,96 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     ? '음성 켜짐 · 일시정지·화면 이탈·탭 숨김 시 소리를 멈춥니다.'
                     : '음성 꺼짐 · 수업마다 직접 켜 주세요.')}
             </p>
-            <div className="teaching-voice-command-box">
-              <div className="button-row">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  data-testid="live-sensory-cue-toggle"
-                  aria-pressed={sensoryCueEnabled}
-                  onClick={() => {
-                    const nextEnabled = !sensoryCueEnabled;
-                    setSensoryCueEnabled(nextEnabled);
-                    if (!nextEnabled) {
-                      silenceLiveSensoryCue();
-                      setLastSensoryStatus('구간 전환 차임·진동 알림을 껐습니다.');
-                    } else {
-                      setLastSensoryStatus(
-                        '구간 전환·반대쪽 교대·10초 전 세팅 예고 시 로컬 차임과 진동으로 알려드립니다.',
-                      );
-                    }
-                  }}
-                >
-                  <Bell size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
-                  {sensoryCueEnabled ? '진동·차임 전환 알림 끄기' : '진동·차임 전환 알림 켜기'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  data-testid="live-sensory-cue-test-btn"
-                  onClick={() => {
-                    triggerLiveSensoryCue('manual-test');
-                    setLastSensoryStatus('벨·진동 미리듣기를 실행했습니다.');
-                  }}
-                >
-                  벨·진동 미리듣기
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  data-testid="live-voice-command-toggle"
-                  aria-pressed={voiceCommandEnabled}
-                  onClick={toggleVoiceCommand}
-                >
-                  <Volume2 size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
-                  {voiceCommandEnabled
-                    ? '음성 명령으로 타이머 제어 끄기'
-                    : '음성 명령으로 타이머 제어 (핸즈프리)'}
-                </button>
-              </div>
-              <div className="pf-handsfree-remote-strip" data-testid="live-remote-ready-strip">
-                <span className="pf-handsfree-remote-badge">블루투스 리모컨·풋페달 상시 활성</span>
-                <span className="pf-handsfree-remote-keys">
-                  PageDown/→ 다음 · PageUp/← 이전 · Space 재생 · ] +15초 · + +30초 · C 큐시트
-                </span>
-              </div>
-              {lastSensoryStatus && (
-                <p className="muted" data-testid="live-sensory-cue-status">
-                  {lastSensoryStatus}
-                </p>
-              )}
-              {lastVoiceCommandStatus && (
-                <p
-                  className="pf-handsfree-live-status"
-                  data-testid="live-voice-command-status"
-                  role="status"
-                >
-                  {lastVoiceCommandStatus}
-                </p>
-              )}
-              <details
-                className="pf-handsfree-guide-drawer"
-                data-testid="live-handsfree-guide-drawer"
-              >
-                <summary>음성 명령어·블루투스 포인터/풋페달 단축키 표 보기</summary>
-                <div className="pf-handsfree-guide-grid">
-                  {LIVE_HANDSFREE_COMMAND_GUIDE.map((item) => (
-                    <div key={item.effectKo} className="pf-handsfree-guide-item">
-                      <span className="pf-handsfree-guide-cat">{item.categoryKo}</span>
-                      <strong>{item.effectKo}</strong>
-                      <span>음성: {item.voicePhrasesKo}</span>
-                      <span>리모컨/키: {item.remoteKeysKo}</span>
-                    </div>
-                  ))}
+            <details className="teaching-voice-details">
+              <summary>
+                전환 벨 · 핸즈프리 명령 · 리모컨 설정
+                {sensoryCueEnabled || voiceCommandEnabled ? ' (켜짐)' : ''}
+              </summary>
+              <div className="teaching-voice-command-box">
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    data-testid="live-sensory-cue-toggle"
+                    aria-pressed={sensoryCueEnabled}
+                    onClick={() => {
+                      const nextEnabled = !sensoryCueEnabled;
+                      setSensoryCueEnabled(nextEnabled);
+                      if (!nextEnabled) {
+                        silenceLiveSensoryCue();
+                        setLastSensoryStatus('구간 전환 차임·진동 알림을 껐습니다.');
+                      } else {
+                        setLastSensoryStatus(
+                          '구간 전환·반대쪽 교대·10초 전 세팅 예고 시 로컬 차임과 진동으로 알려드립니다.',
+                        );
+                      }
+                    }}
+                  >
+                    <Bell size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
+                    {sensoryCueEnabled ? '진동·차임 전환 알림 끄기' : '진동·차임 전환 알림 켜기'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    data-testid="live-sensory-cue-test-btn"
+                    onClick={() => {
+                      triggerLiveSensoryCue('manual-test');
+                      setLastSensoryStatus('벨·진동 미리듣기를 실행했습니다.');
+                    }}
+                  >
+                    벨·진동 미리듣기
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    data-testid="live-voice-command-toggle"
+                    aria-pressed={voiceCommandEnabled}
+                    onClick={toggleVoiceCommand}
+                  >
+                    <Volume2 size={16} strokeWidth={1.5} aria-hidden="true" />{' '}
+                    {voiceCommandEnabled
+                      ? '음성 명령으로 타이머 제어 끄기'
+                      : '음성 명령으로 타이머 제어 (핸즈프리)'}
+                  </button>
                 </div>
-              </details>
-            </div>
+                <div className="pf-handsfree-remote-strip" data-testid="live-remote-ready-strip">
+                  <span className="pf-handsfree-remote-badge">블루투스 리모컨·풋페달 상시 활성</span>
+                  <span className="pf-handsfree-remote-keys">
+                    PageDown/→ 다음 · PageUp/← 이전 · Space 재생 · ] +15초 · + +30초 · C 큐시트
+                  </span>
+                </div>
+                {lastSensoryStatus && (
+                  <p className="muted" data-testid="live-sensory-cue-status">
+                    {lastSensoryStatus}
+                  </p>
+                )}
+                {lastVoiceCommandStatus && (
+                  <p
+                    className="pf-handsfree-live-status"
+                    data-testid="live-voice-command-status"
+                    role="status"
+                  >
+                    {lastVoiceCommandStatus}
+                  </p>
+                )}
+                <details
+                  className="pf-handsfree-guide-drawer"
+                  data-testid="live-handsfree-guide-drawer"
+                >
+                  <summary>음성 명령어·블루투스 포인터/풋페달 단축키 표 보기</summary>
+                  <div className="pf-handsfree-guide-grid">
+                    {LIVE_HANDSFREE_COMMAND_GUIDE.map((item) => (
+                      <div key={item.effectKo} className="pf-handsfree-guide-item">
+                        <span className="pf-handsfree-guide-cat">{item.categoryKo}</span>
+                        <strong>{item.effectKo}</strong>
+                        <span>음성: {item.voicePhrasesKo}</span>
+                        <span>리모컨/키: {item.remoteKeysKo}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            </details>
           </section>
           {exercise && !currentIsRest ? (
             <details className="teaching-cue-section teaching-stage-details">

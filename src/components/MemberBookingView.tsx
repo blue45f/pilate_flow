@@ -1679,7 +1679,15 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       </div>
 
       <details className="pf-member-pass-card">
-        <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+        <summary
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: '44px',
+            cursor: 'pointer',
+            fontWeight: 500,
+          }}
+        >
           개인정보 보호 및 수업 전 안전 안내
         </summary>
         <p style={{ marginTop: '8px', fontSize: '0.88rem', lineHeight: 1.55 }}>
@@ -1694,7 +1702,16 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           강사에게 직접 알려 주세요.
         </p>
         <details style={{ marginTop: '8px' }}>
-          <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#5c6b62' }}>
+          <summary
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              color: '#5c6b62',
+            }}
+          >
             연결 끊김 화면 미리보기 (점검용)
           </summary>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>

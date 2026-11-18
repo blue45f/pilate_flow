@@ -668,7 +668,7 @@ html body #root .flow-app .pf-studio-spring-meter {
   gap: 8px;
   margin-left: 8px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   background: var(--pf-unslop-card);
   border: 1px solid var(--pf-unslop-hairline);
   color: var(--pf-unslop-accent);
@@ -1267,6 +1267,16 @@ html
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
+  color: #1f241f !important;
+}
+
+html body #root .flow-app .teaching-saved-quick-filters > button.active {
+  color: #ffffff !important;
+}
+
+html body #root .flow-app .teaching-saved-quick-filters .pf-seg-pill {
+  background: #355441;
+  border-color: #355441;
 }
 
 html body #root .flow-app .pf-seg-pill {

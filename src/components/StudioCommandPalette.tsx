@@ -326,7 +326,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                 }
               }
             }}
-            placeholder="동작 이름, 안정화 근육·보상 패턴, #루틴태그, 저장한 수업 검색"
+            placeholder="동작 이름, 기구, 부위, #태그, 저장한 수업 검색"
           />
           {query ? (
             <button
@@ -354,31 +354,6 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
             <span>{feedback}</span>
           </p>
         )}
-
-        <section className="pf-cmdk-section" aria-label="스튜디오 리포머 브랜드 스프링 기준">
-          <div className="pf-cmdk-section__head">
-            <span>
-              <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden="true" /> 스튜디오 리포머 스프링 환산 기준
-            </span>
-            <small>수업 큐시트 · 라이브 · 동작 비교함에 즉시 반영</small>
-          </div>
-          <div className="pf-cmdk-brand-pills" role="group" aria-label="리포머 브랜드 선택">
-            {BRAND_SPRING_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`pf-cmdk-brand-chip ${reformerBrand === opt.id ? 'is-active' : ''}`.trim()}
-                aria-pressed={reformerBrand === opt.id}
-                onClick={() => {
-                  setReformerBrand(opt.id);
-                  setFeedback(`기구 스프링 환산 기준을 '${opt.fullLabelKo}'로 전환했습니다.`);
-                }}
-              >
-                {opt.shortLabelKo}
-              </button>
-            ))}
-          </div>
-        </section>
 
         <section className="pf-cmdk-section" aria-label="동작 검색 및 즉시 추가">
           <div className="pf-cmdk-section__head">
@@ -512,6 +487,37 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
             </div>
           </section>
         )}
+
+        <details className="pf-cmdk-section pf-cmdk-brand-disclosure">
+          <summary className="pf-cmdk-section__head" style={{ cursor: 'pointer' }}>
+            <span>
+              <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden="true" /> 리포머 스프링 기준 ·{' '}
+              {BRAND_SPRING_OPTIONS.find((opt) => opt.id === reformerBrand)?.shortLabelKo ?? '국내 표준'}
+            </span>
+            <small>변경하기</small>
+          </summary>
+          <div
+            className="pf-cmdk-brand-pills"
+            role="group"
+            aria-label="리포머 브랜드 선택"
+            style={{ marginTop: '8px' }}
+          >
+            {BRAND_SPRING_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`pf-cmdk-brand-chip ${reformerBrand === opt.id ? 'is-active' : ''}`.trim()}
+                aria-pressed={reformerBrand === opt.id}
+                onClick={() => {
+                  setReformerBrand(opt.id);
+                  setFeedback(`기구 스프링 환산 기준을 '${opt.fullLabelKo}'로 전환했습니다.`);
+                }}
+              >
+                {opt.shortLabelKo}
+              </button>
+            ))}
+          </div>
+        </details>
       </div>
     </LightDismissDialog>
   );

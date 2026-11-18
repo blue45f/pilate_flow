@@ -88,7 +88,8 @@
 #root .teaching-collection--history .teaching-history-meta-pill {
   background: #eff5f2;
   color: #35594e;
-  border-radius: 999px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
 }
 #root .teaching-collection--history .teaching-history-card h2 {
   font-size: 18px; line-height: 1.5; margin: 0; white-space: normal; overflow-wrap: anywhere;
@@ -162,8 +163,9 @@
 }
 #root .teaching-collection--history .teaching-active-filter-chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px;
-  border-radius: 999px; border: 1px solid #c6d6cf; background: #f4f8f6; color: #24473e;
-  cursor: pointer; font-size: 13px; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere;
+  border-radius: 8px; border: 1px solid #c6d6cf; background: #f4f8f6; color: #24473e;
+  cursor: pointer; font-size: 13px; line-height: 1.4; font-variant-numeric: tabular-nums;
+  word-break: keep-all; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-active-filter-chip:hover {
   background: #e7f0ec; border-color: #8aa498;
@@ -501,4 +503,42 @@ body:has(.teaching-collection--history) { min-width: 0; }
   .teaching-history-detail-modal .teaching-history-snapshot-item {
     transition: none !important;
   }
+}
+
+.pf-balance-criteria-details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e4eae5;
+}
+.pf-balance-criteria-details > summary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4f6359;
+  cursor: pointer;
+  word-break: keep-all;
+}
+.pf-balance-criteria-details__body {
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+}
+.pf-balance-criteria-details__body p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+#root .teaching-collection--history .teaching-history-secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#root .teaching-collection--history .teaching-history-secondary-actions button {
+  flex: 1 1 132px;
+  font-size: 13px;
+  color: #465d53;
 }

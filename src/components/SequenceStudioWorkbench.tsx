@@ -640,21 +640,6 @@ function StepEditor({
                 )}
               </details>
             )}
-            {exercise && (
-              <ExerciseKinesiologyCard
-                exercise={exercise}
-                compact
-                onInsertCorrectionCueToNote={(cueText) => {
-                  setNote((prev) =>
-                    prev.includes(cueText)
-                      ? prev
-                      : prev.trim()
-                        ? `${prev.trim()}\n${cueText}`
-                        : cueText,
-                  );
-                }}
-              />
-            )}
             <label className="flow-field">
               수업 메모
               <textarea
@@ -664,6 +649,26 @@ function StepEditor({
                 placeholder="회원에게 전달할 큐, 변형, 준비물"
               />
             </label>
+            {exercise && (
+              <details className="flow-step-3d-disclosure">
+                <summary>근육 쓰임 · 보상 동작 코칭 큐 참고 (메모에 바로 추가)</summary>
+                <div className="flow-step-3d-disclosure__body">
+                  <ExerciseKinesiologyCard
+                    exercise={exercise}
+                    compact
+                    onInsertCorrectionCueToNote={(cueText) => {
+                      setNote((prev) =>
+                        prev.includes(cueText)
+                          ? prev
+                          : prev.trim()
+                            ? `${prev.trim()}\n${cueText}`
+                            : cueText,
+                      );
+                    }}
+                  />
+                </div>
+              </details>
+            )}
           </>
         )}
         {pendingDiscardClose && (
@@ -1406,8 +1411,8 @@ export function SequenceStudioWorkbench(props: Props) {
       {s.instructorSchedule.locations.length > 0 && s.activeSteps.length > 0 && (
         <div className="flow-location-copy-bar" data-testid="flow-location-copy-bar">
           <span>
-            <MapPin size={14} strokeWidth={1.5} aria-hidden="true" /> 다른 장소 기구 기준으로 사본
-            만들기 (원본 불변)
+            <MapPin size={14} strokeWidth={1.5} aria-hidden="true" /> 다른 장소 기구에 맞춰 사본
+            만들기
           </span>
           <div className="flow-location-copy-bar__controls">
             <select
@@ -1514,15 +1519,17 @@ export function SequenceStudioWorkbench(props: Props) {
           <Settings2 size={16} strokeWidth={1.5} />
           <span>수업 조건</span>
         </button>
+        <div className="flow-class-brief-tags">
+          <RoutineTagInlineStrip
+            routineId={s.activeSequenceId || ACTIVE_DRAFT_TAG_TARGET_ID}
+            routineTitle={s.activeTitle || '현재 수업 초안'}
+            onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
+          />
+        </div>
       </div>
 
-      <RoutineTagInlineStrip
-        routineId={s.activeSequenceId || ACTIVE_DRAFT_TAG_TARGET_ID}
-        routineTitle={s.activeTitle || '현재 수업 초안'}
-        onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
-      />
-
       <AiQuickSequenceBar
+        compact={s.activeSteps.length > 0}
         onApplied={(composed) => {
           const current = usePilatesStore.getState();
           const preUndoSnapshot = createSequenceSnapshot(current);
@@ -1715,7 +1722,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       {LEVELS[exercise.level]} · {exercise.defaultDurationMin}분
                       {exercise.isUnilateral ? ' · 양쪽' : ''}
                       {exercise.springs && !exercise.springs.includes('기구별 설정')
-                        ? ` · ${exercise.springs}`
+                        ? ` · ${exercise.springs === 'Bodyweight' ? '맨몸' : exercise.springs}`
                         : ''}
                     </span>
                     {!eligible(exercise) && <small>기구·소도구·난이도 조건 확인</small>}
@@ -1932,8 +1939,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   {minutes(simulation.totals.teachingSec + simulation.totals.transitionSec)}
                   {simulation.totals.restSec > 0
                     ? ` · 휴식 ${minutes(simulation.totals.restSec)}`
-                    : ''}{' '}
-                  · 중복 합산 없음
+                    : ''}
                 </p>
               )}
               <p>
@@ -2038,186 +2044,6 @@ export function SequenceStudioWorkbench(props: Props) {
                   </div>
                 </div>
               )}
-            {s.activeSteps.length > 0 && (
-              <section
-                className="pf-spring-ribbon-board"
-                data-testid="spring-timeline-ribbon"
-                role="region"
-                aria-label="타임라인 및 스프링 흐름 보드"
-                style={{
-                  margin: '8px 0 16px',
-                  padding: '16px',
-                  borderRadius: '18px',
-                  background: '#fcfbf8',
-                  border: '1px solid #dad5c8',
-                }}
-              >
-                <span className="pf-step-kicker-badge">타임라인 & 스프링 흐름 뷰</span>
-                <p style={{ margin: '0 0 8px', fontSize: '0.84rem', color: '#56685f' }}>
-                  가로 블록 너비는 소요 시간에 비례하며, 색상으로 스프링 장력 전환 지점을 한눈에
-                  확인합니다.
-                </p>
-                <div
-                  className="pf-spring-ribbon-track"
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                    overflowX: 'auto',
-                    padding: '8px 0 4px',
-                  }}
-                >
-                  {s.activeSteps.map((step, index) => {
-                    const exercise = !isRestStep(step) ? byId.get(step.exerciseId) : undefined;
-                    const rawSpring = step.customSpringOverride || exercise?.springs || '';
-                    const tone = isRestStep(step) ? 'is-sage' : springToneClass(rawSpring);
-                    const toneStyle = SPRING_TONE_STYLES[tone];
-                    const durationSec = getStepTiming(step).totalSec;
-                    const blockStyle: CSSProperties = {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      gap: '6px',
-                      minHeight: '82px',
-                      padding: '10px 12px',
-                      borderRadius: '14px',
-                      border: '1px solid',
-                      borderColor: toneStyle.borderColor,
-                      background: toneStyle.background,
-                      textAlign: 'left',
-                      flexShrink: 0,
-                      color: '#1d201c',
-                      width: `${Math.max(132, Math.round((durationSec / 60) * 26))}px`,
-                    };
-                    const inner = (
-                      <>
-                        <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
-                          {String(index + 1).padStart(2, '0')} · {minutes(durationSec)}
-                        </small>
-                        <strong style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>
-                          {isRestStep(step) ? '중간 휴식' : (exercise?.nameKo ?? '동작')}
-                        </strong>
-                        {!isRestStep(step) && rawSpring && (
-                          <SpringVisualPills springs={rawSpring} />
-                        )}
-                      </>
-                    );
-                    return isRestStep(step) ? (
-                      <span
-                        key={step.stepId}
-                        className={`pf-spring-ribbon-block ${tone}`}
-                        style={{ ...blockStyle, cursor: 'default' }}
-                      >
-                        {inner}
-                      </span>
-                    ) : (
-                      <button
-                        key={step.stepId}
-                        type="button"
-                        className={`pf-spring-ribbon-block ${tone}`}
-                        style={{ ...blockStyle, cursor: 'pointer' }}
-                        onClick={() => revealStep(step.stepId)}
-                        aria-label={`${index + 1}번 ${exercise?.nameKo ?? '동작'} 위치로 이동`}
-                      >
-                        {inner}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div
-                  style={{
-                    marginTop: '12px',
-                    borderTop: '1px solid #dad5c8',
-                    paddingTop: '10px',
-                  }}
-                >
-                  <strong style={{ fontSize: '0.84rem' }}>
-                    스프링 색상 범례(임시 정의 — 확인 필요)
-                  </strong>
-                  <ul
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '6px 14px',
-                      listStyle: 'none',
-                      margin: '6px 0 0',
-                      padding: 0,
-                    }}
-                  >
-                    {SPRING_TENSION_LEGEND.map((item) => (
-                      <li
-                        key={item.label}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.82rem',
-                        }}
-                      >
-                        <i
-                          aria-hidden="true"
-                          style={{
-                            width: '12px',
-                            height: '12px',
-                            borderRadius: '50%',
-                            background: item.swatch,
-                            border: '1px solid rgba(0,0,0,0.15)',
-                            display: 'inline-block',
-                          }}
-                        />
-                        {item.label} = {item.meaning} ({item.tier})
-                      </li>
-                    ))}
-                  </ul>
-                  <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#56685f' }}>
-                    임시 정의입니다. 제조사·모델별 실제 장력은 다를 수 있으니 현장에서 확인해
-                    주세요.
-                  </p>
-                </div>
-              </section>
-            )}
-            {s.activeSteps.length > 0 && spinalBalanceSummary.totalExerciseCount > 0 && (
-              <section
-                className="pf-class-balance-mini-strip"
-                data-testid="workbench-spinal-balance-strip"
-                aria-label="수업 척추 움직임 및 양측 대칭 요약"
-              >
-                <div className="pf-class-balance-mini-strip__pills">
-                  <strong style={{ fontSize: '0.78rem', color: '#1f4435' }}>
-                    척추 4면 {spinalBalanceSummary.coveredPlanesCount}/4
-                  </strong>
-                  {(
-                    [
-                      ['flexion', '굴곡'],
-                      ['extension', '신전'],
-                      ['lateral', '측굴'],
-                      ['rotation', '회전'],
-                    ] as const
-                  ).map(([plane, labelKo]) => {
-                    const count = spinalBalanceSummary.planeCounts[plane];
-                    return (
-                      <span
-                        key={plane}
-                        className={`pf-plane-chip ${count > 0 ? 'is-covered' : ''}`}
-                      >
-                        {labelKo} {count}
-                      </span>
-                    );
-                  })}
-                  <span className="pf-plane-chip">
-                    양측 수행 {spinalBalanceSummary.unilateralStepCount}개
-                  </span>
-                  <span className="pf-plane-chip">
-                    스프링 변경 {spinalBalanceSummary.springChangeCount}회
-                  </span>
-                </div>
-                {spinalBalanceSummary.missingPlaneHintKo && (
-                  <small style={{ color: '#55685e', fontWeight: 600 }}>
-                    {spinalBalanceSummary.missingPlaneHintKo}
-                  </small>
-                )}
-              </section>
-            )}
             <div
               className="flow-sequence-list"
               onDragOver={(e) => e.preventDefault()}
@@ -2485,7 +2311,7 @@ export function SequenceStudioWorkbench(props: Props) {
                             aria-label={`${title} 30초 줄이기`}
                             onClick={() => s.adjustStepDuration(index, -0.5)}
                           >
-                            -0.5
+                            -30초
                           </button>
                           <button
                             className="flow-row-time"
@@ -2503,7 +2329,7 @@ export function SequenceStudioWorkbench(props: Props) {
                             aria-label={`${title} 30초 늘리기`}
                             onClick={() => s.adjustStepDuration(index, 0.5)}
                           >
-                            +0.5
+                            +30초
                           </button>
                         </div>
                         <div className="flow-row-actions">
@@ -2609,6 +2435,203 @@ export function SequenceStudioWorkbench(props: Props) {
                 </button>
               </div>
             )}
+            {s.activeSteps.length > 0 && spinalBalanceSummary.totalExerciseCount > 0 && (
+              <section
+                className="pf-class-balance-mini-strip"
+                data-testid="workbench-spinal-balance-strip"
+                aria-label="수업 척추 움직임 및 양측 대칭 요약"
+              >
+                <div className="pf-class-balance-mini-strip__pills">
+                  <strong style={{ fontSize: '0.78rem', color: '#1f4435' }}>
+                    척추 4면 {spinalBalanceSummary.coveredPlanesCount}/4
+                  </strong>
+                  {(
+                    [
+                      ['flexion', '굴곡'],
+                      ['extension', '신전'],
+                      ['lateral', '측굴'],
+                      ['rotation', '회전'],
+                    ] as const
+                  ).map(([plane, labelKo]) => {
+                    const count = spinalBalanceSummary.planeCounts[plane];
+                    return (
+                      <span
+                        key={plane}
+                        className={`pf-plane-chip ${count > 0 ? 'is-covered' : ''}`}
+                      >
+                        {labelKo} {count}
+                      </span>
+                    );
+                  })}
+                  <span className="pf-plane-chip">
+                    양측 수행 {spinalBalanceSummary.unilateralStepCount}개
+                  </span>
+                  <span className="pf-plane-chip">
+                    스프링 변경 {spinalBalanceSummary.springChangeCount}회
+                  </span>
+                </div>
+                {spinalBalanceSummary.missingPlaneHintKo && (
+                  <small style={{ color: '#55685e', fontWeight: 600 }}>
+                    {spinalBalanceSummary.missingPlaneHintKo}
+                  </small>
+                )}
+              </section>
+            )}
+            {s.activeSteps.length > 0 && (
+              <section
+                className="pf-spring-ribbon-board"
+                data-testid="spring-timeline-ribbon"
+                role="region"
+                aria-label="타임라인 및 스프링 흐름 보드"
+                style={{
+                  margin: '10px 0 12px',
+                  padding: '14px 16px',
+                  borderRadius: '16px',
+                  background: '#fcfbf8',
+                  border: '1px solid rgba(31, 27, 22, 0.08)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '6px',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <span className="pf-step-kicker-badge">스프링 흐름 · 시간 비율</span>
+                  <small style={{ fontSize: '0.78rem', color: '#56685f' }}>
+                    카드를 누르면 해당 순서로 이동합니다
+                  </small>
+                </div>
+                <div
+                  className="pf-spring-ribbon-track"
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    overflowX: 'auto',
+                    overscrollBehavior: 'contain',
+                    padding: '6px 0 4px',
+                  }}
+                >
+                  {s.activeSteps.map((step, index) => {
+                    const exercise = !isRestStep(step) ? byId.get(step.exerciseId) : undefined;
+                    const rawSpring = step.customSpringOverride || exercise?.springs || '';
+                    const tone = isRestStep(step) ? 'is-sage' : springToneClass(rawSpring);
+                    const toneStyle = SPRING_TONE_STYLES[tone];
+                    const durationSec = getStepTiming(step).totalSec;
+                    const blockStyle: CSSProperties = {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                      minHeight: '76px',
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid',
+                      borderColor: toneStyle.borderColor,
+                      background: toneStyle.background,
+                      textAlign: 'left',
+                      flexShrink: 0,
+                      color: '#1d201c',
+                      width: `${Math.max(128, Math.round((durationSec / 60) * 24))}px`,
+                    };
+                    const inner = (
+                      <>
+                        <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
+                          {String(index + 1).padStart(2, '0')} · {minutes(durationSec)}
+                        </small>
+                        <strong style={{ fontSize: '0.86rem', lineHeight: 1.3 }}>
+                          {isRestStep(step) ? '중간 휴식' : (exercise?.nameKo ?? '동작')}
+                        </strong>
+                        {!isRestStep(step) && rawSpring && (
+                          <SpringVisualPills springs={rawSpring} />
+                        )}
+                      </>
+                    );
+                    return isRestStep(step) ? (
+                      <span
+                        key={step.stepId}
+                        className={`pf-spring-ribbon-block ${tone}`}
+                        style={{ ...blockStyle, cursor: 'default' }}
+                      >
+                        {inner}
+                      </span>
+                    ) : (
+                      <button
+                        key={step.stepId}
+                        type="button"
+                        className={`pf-spring-ribbon-block ${tone}`}
+                        style={{ ...blockStyle, cursor: 'pointer' }}
+                        onClick={() => revealStep(step.stepId)}
+                        aria-label={`${index + 1}번 ${exercise?.nameKo ?? '동작'} 위치로 이동`}
+                      >
+                        {inner}
+                      </button>
+                    );
+                  })}
+                </div>
+                <details
+                  style={{
+                    marginTop: '10px',
+                    borderTop: '1px solid rgba(31, 27, 22, 0.08)',
+                    paddingTop: '8px',
+                  }}
+                >
+                  <summary
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: '44px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: '#4c6155',
+                    }}
+                  >
+                    스프링 색상 안내 보기 (기구 제조사별 장력은 현장에서 확인)
+                  </summary>
+                  <ul
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px 14px',
+                      listStyle: 'none',
+                      margin: '8px 0 0',
+                      padding: 0,
+                    }}
+                  >
+                    {SPRING_TENSION_LEGEND.map((item) => (
+                      <li
+                        key={item.label}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        <i
+                          aria-hidden="true"
+                          style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            background: item.swatch,
+                            border: '1px solid rgba(0,0,0,0.15)',
+                            display: 'inline-block',
+                          }}
+                        />
+                        {item.label} = {item.meaning} ({item.tier})
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </section>
+            )}
             <div className="flow-plan-footer">
               <span>
                 <i />
@@ -2644,9 +2667,9 @@ export function SequenceStudioWorkbench(props: Props) {
                     JSON 백업 내보내기
                   </button>
                 </div>
-              ) : (
+              ) : s.activeSteps.length > 1 ? (
                 <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
-              )}
+              ) : null}
             </div>
           </div>
 

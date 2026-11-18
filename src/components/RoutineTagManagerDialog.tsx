@@ -141,7 +141,7 @@ export const RoutineTagSheetDialog: React.FC<RoutineTagSheetDialogProps> = ({
                   event.preventDefault();
                 }
               }}
-              placeholder="새 태그 이름 (예: 수요일오전, 김서연회원, 점프보드)"
+              placeholder="새 태그 이름 (예: 수요일오전, 저녁A반, 점프보드)"
               aria-label="새 루틴 태그 이름"
             />
             <button

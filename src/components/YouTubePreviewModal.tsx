@@ -900,10 +900,10 @@ const MovementDetails: React.FC<{
   };
   const previewStepGuidance =
     previewStep === 1
-      ? '지금 할 일 (1/2): 동작 흐름과 티칭 포인트를 가볍게 살펴보세요.'
+      ? '지금 할 일 (1/2): 3D 동작과 핵심 큐를 살펴보세요.'
       : hasUnsavedReview || draftRestoredNotice
-        ? '지금 할 일 (2/2): 수정한 구간·큐 메모를 저장하거나 초기화해 주세요.'
-        : '지금 할 일 (2/2): 필요할 때만 영상 구간과 내 티칭 메모를 다듬어 저장하세요.';
+        ? '지금 할 일 (2/2): 수정한 메모를 저장하거나 초기화하세요.'
+        : '지금 할 일 (2/2): 필요할 때만 영상 구간과 내 메모를 다듬으세요.';
   const source = getMovementProvenance(exercise);
   const primarySourceResult = sourceReferenceSchema.safeParse(exercise.sourceReference);
   const primarySource = primarySourceResult.success ? primarySourceResult.data : null;
@@ -1035,38 +1035,9 @@ const MovementDetails: React.FC<{
           <Studio3DMotionHeroCard exercise={exercise} compact />
         </div>
       )}
-      <details
-        ref={step2Ref}
-        className="optional-review-details"
-        open={previewStep === 2 || restoredDraft !== null ? true : undefined}
-      >
-        <summary>내 검토 기록 (선택)</summary>
-        <LocalInstructorReview
-          key={`${currentRevision}-${draftResetVersion}`}
-          exercise={exercise}
-          initialRestoredDraft={restoredDraft}
-          reviewerAlias={reviewerAlias}
-          onReviewerAliasChange={setReviewerAlias}
-          editorOpen={previewStep === 2 || reviewEditorOpen}
-          onEditorOpenChange={(open) => {
-            setReviewEditorOpen(open);
-            if (open) {
-              setPreviewStep(2);
-            }
-          }}
-          canAddToSequence={
-            Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
-          }
-          onDraftStatusChange={onDraftStatusChange}
-          onDraftSaved={() => {
-            setRestoredDraft(null);
-            setDraftRestoredNotice(false);
-          }}
-        />
-      </details>
       <div className="pf-preview-secondary-group" aria-label="보조 학습 및 출처 자료">
         <p className="pf-preview-secondary-group__heading">
-          심화 가이드 · 출처 정보 (필요할 때 펼쳐보기)
+          상세 가이드 · 내 검토 기록 (필요할 때 펼쳐보기)
         </p>
         <details
           className="pf-detail-progressive-drawer"
@@ -1135,6 +1106,35 @@ const MovementDetails: React.FC<{
               />
             </div>
           )}
+        </details>
+        <details
+          ref={step2Ref}
+          className="optional-review-details pf-detail-progressive-drawer"
+          open={previewStep === 2 || restoredDraft !== null ? true : undefined}
+        >
+          <summary>내 검토 기록 (선택)</summary>
+          <LocalInstructorReview
+            key={`${currentRevision}-${draftResetVersion}`}
+            exercise={exercise}
+            initialRestoredDraft={restoredDraft}
+            reviewerAlias={reviewerAlias}
+            onReviewerAliasChange={setReviewerAlias}
+            editorOpen={previewStep === 2 || reviewEditorOpen}
+            onEditorOpenChange={(open) => {
+              setReviewEditorOpen(open);
+              if (open) {
+                setPreviewStep(2);
+              }
+            }}
+            canAddToSequence={
+              Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
+            }
+            onDraftStatusChange={onDraftStatusChange}
+            onDraftSaved={() => {
+              setRestoredDraft(null);
+              setDraftRestoredNotice(false);
+            }}
+          />
         </details>
         <details
           className="pending-instruction-notes pf-detail-progressive-drawer"

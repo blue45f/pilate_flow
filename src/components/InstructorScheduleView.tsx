@@ -1068,9 +1068,37 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           <span className="flow-schedule-next-label">
-            <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 다음 수업
+            {!data.locations.length ? (
+              <>
+                <MapPin size={16} strokeWidth={1.5} aria-hidden="true" /> 첫 시작 · 1단계
+              </>
+            ) : (
+              <>
+                <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 다음 수업
+              </>
+            )}
           </span>
-          {nextScheduledRow ? (
+          {!data.locations.length ? (
+            <>
+              <h2>수업할 장소를 먼저 등록해 주세요</h2>
+              <p>
+                수업하는 룸·센터 이름과 보유 기구를 먼저 등록하면 바로 시간표를 추가하고 준비물을
+                점검할 수 있어요.
+              </p>
+              <div className="flow-schedule-next-actions">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    setFormError('');
+                    setLocationsOpen(true);
+                  }}
+                >
+                  첫 장소 등록 <ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" />
+                </button>
+              </div>
+            </>
+          ) : nextScheduledRow ? (
             <>
               <h2>
                 {formatScheduleTime(nextScheduledRow.startTime)} · {nextScheduledRow.title}
@@ -1122,7 +1150,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         >
           <span
             className="flow-schedule-today-label"
-            style={{ letterSpacing: '0.01em', fontSize: '12px', fontWeight: 500 }}
+            style={{ letterSpacing: '0', fontSize: '12px', fontWeight: 500 }}
           >
             오늘 요약
           </span>
@@ -1467,40 +1495,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 </button>
               )}
             </div>
-          </div>
-        )}
-        <StudioCarePlaybookPanel
-          briefing={studioCareBriefing}
-          onJumpToOccurrencePrep={({ classId, originalDate }) => {
-            const target = scheduledRows.find(
-              (r) => r.classId === classId && r.originalDate === originalDate,
-            );
-            if (target) {
-              setHighlightedRowId(target.id);
-              document
-                .querySelector(`[data-schedule-row-id="${target.id}"]`)
-                ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-            }
-          }}
-        />
-        {!data.locations.length && (
-          <div className="schedule-empty">
-            <MapPin size={20} strokeWidth={1.5} />
-            <h2>수업할 장소를 먼저 등록해 주세요</h2>
-            <p>
-              장소 별칭과 그곳에 있는 정확한 기구·소도구를 저장하면 연결한 계획의 준비물을 확인할 수
-              있어요.
-            </p>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => {
-                setFormError('');
-                setLocationsOpen(true);
-              }}
-            >
-              첫 장소 등록
-            </button>
           </div>
         )}
         <div className="schedule-agenda-workspace" data-has-change-scope={!!changeTarget}>
@@ -2124,6 +2118,20 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </div>
         </div>
       </div>
+      <StudioCarePlaybookPanel
+        briefing={studioCareBriefing}
+        onJumpToOccurrencePrep={({ classId, originalDate }) => {
+          const target = scheduledRows.find(
+            (r) => r.classId === classId && r.originalDate === originalDate,
+          );
+          if (target) {
+            setHighlightedRowId(target.id);
+            document
+              .querySelector(`[data-schedule-row-id="${target.id}"]`)
+              ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+          }
+        }}
+      />
       <aside className="schedule-planning-entry" aria-label="수업 준비 도구">
         <div className="schedule-planning-copy">
           <CalendarDays size={20} aria-hidden="true" />

@@ -1126,11 +1126,11 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                     }}
                   >
                     <option value="">동작 기본 (양쪽 함께)</option>
-                    <option value="together">양쪽 함께 (together)</option>
-                    <option value="left-then-right">왼쪽 먼저 → 오른쪽 (left-then-right)</option>
-                    <option value="right-then-left">오른쪽 먼저 → 왼쪽 (right-then-left)</option>
-                    <option value="left">왼쪽만 (left)</option>
-                    <option value="right">오른쪽만 (right)</option>
+                    <option value="together">양쪽 함께</option>
+                    <option value="left-then-right">왼쪽 먼저 → 오른쪽</option>
+                    <option value="right-then-left">오른쪽 먼저 → 왼쪽</option>
+                    <option value="left">왼쪽만</option>
+                    <option value="right">오른쪽만</option>
                   </PfSelect>
                 </PfField>
                 <PfField label="설명 시간 · 초 (선택)">
@@ -1306,11 +1306,11 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                   }}
                 >
                   <option value="">현재 수업 기구에 자동 맞춤</option>
-                  <option value="mat">매트 (Mat)</option>
-                  <option value="reformer">리포머 (Reformer)</option>
-                  <option value="cadillac">캐딜락 (Cadillac)</option>
-                  <option value="chair">체어 (Chair)</option>
-                  <option value="barrel">바렐 (Barrel)</option>
+                  <option value="mat">매트</option>
+                  <option value="reformer">리포머</option>
+                  <option value="cadillac">캐딜락</option>
+                  <option value="chair">체어</option>
+                  <option value="barrel">바렐</option>
                 </PfSelect>
               </PfField>
               <PfField label="예상 시간 · 분 (선택)">

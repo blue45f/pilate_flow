@@ -1731,6 +1731,10 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                 ? '계획용 동작 도해'
                 : '3D 동작 설명';
             const previewHintId = `flow-atlas-preview-${exercise.id}`;
+            const quietSummary = idea
+              ? previewLabel
+              : exercise.targetMuscles.slice(0, 2).join(' · ') ||
+                POSITION_LABELS[exercise.bodyPosition].ko;
             return (
               <article
                 className={`flow-atlas__card ${state.inSequence ? 'is-in-sequence' : ''}`}
@@ -1781,7 +1785,10 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                       </button>
                     </h2>
                     <p className="flow-atlas__quiet-caption">
-                      <span id={previewHintId}>{previewLabel}</span>
+                      <span id={previewHintId} className={idea ? undefined : 'sr-only'}>
+                        {previewLabel}
+                      </span>
+                      {!idea ? <span>{quietSummary}</span> : null}
                       {state.note ? (
                         <span className="flow-atlas__quiet-note"> · {state.note}</span>
                       ) : null}
@@ -2346,7 +2353,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             inSequence: readiness.status === 'in-sequence',
             orderNumber: readiness.status === 'in-sequence' ? readiness.orderNumber : undefined,
             note:
-              readiness.status === 'criteria-mismatch' || readiness.status === 'family-conflict'
+              sequenceMovementSteps.length > 0 &&
+              (readiness.status === 'criteria-mismatch' || readiness.status === 'family-conflict')
                 ? readiness.label
                 : undefined,
           };
@@ -3118,7 +3126,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 <dt>기구·스프링</dt>
                                 <dd>
                                   {APPARATUS_LABELS[item.apparatus].ko}
-                                  {item.springs?.trim() ? ` · ${item.springs}` : ''}
+                                  {item.springs?.trim()
+                                    ? ` · ${item.springs.trim() === 'Bodyweight' ? '맨몸' : item.springs}`
+                                    : ''}
                                   {!itemBrandSpring.isNonSpringApparatus &&
                                     ` (${itemBrandSpring.brandShortLabelKo}: ${itemBrandSpring.equivalentLabelKo})`}
                                   {itemEqMeta.requiredProps.length > 0
@@ -3311,7 +3321,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                   ?.nameKo ?? '본운동'}
                               </span>
                               {exercise.springs && (
-                                <span className="pf-b05-pill is-light">{exercise.springs}</span>
+                                <span className="pf-b05-pill is-light">
+                                  {exercise.springs === 'Bodyweight' ? '맨몸' : exercise.springs}
+                                </span>
                               )}
                             </span>
                             <span className="pf-b05-card-overlay-bottom" aria-hidden="true">

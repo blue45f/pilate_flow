@@ -209,6 +209,7 @@ export function App() {
   }>({ open: false, exercise: null });
   const [clipperOpen, setClipperOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSummaryOpen, setSettingsSummaryOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const workbenchDetailAddRef = useRef<
@@ -892,12 +893,24 @@ export function App() {
                 </button>
               </div>
             )}
+            {state.activeTab !== 'stage' && (
+              <button
+                type="button"
+                className="app-quick-guide-btn"
+                aria-label="처음 사용 안내 열기"
+                onClick={() => setStudyOpen({ mode: 'guide' })}
+              >
+                <CircleHelp size={16} strokeWidth={1.5} aria-hidden="true" />
+                <span>사용법</span>
+              </button>
+            )}
             <button
               className="icon-btn"
               onClick={() => setSettingsOpen(true)}
               aria-label="데이터 백업과 사용 안내"
+              title="내 보유 장비 · 데이터 백업"
             >
-              <CircleHelp size={18} strokeWidth={1.5} aria-hidden="true" />
+              <Settings2 size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -921,15 +934,17 @@ export function App() {
           ) : (
             <>
               {(state.activeTab === 'binder' || state.activeTab === 'history') && (
-                <MobileSubPageBar
-                  ariaLabel="저장한 수업과 진행 기록"
-                  activeId={state.activeTab}
-                  options={[
-                    { id: 'binder', label: '저장한 수업', badge: state.savedSequences.length },
-                    { id: 'history', label: '수업 기록', badge: state.historyLogs.length },
-                  ]}
-                  onSelect={changeTab}
-                />
+                <div className="pf-auto-mobile-only">
+                  <MobileSubPageBar
+                    ariaLabel="저장한 수업과 진행 기록"
+                    activeId={state.activeTab}
+                    options={[
+                      { id: 'binder', label: '저장한 수업', badge: state.savedSequences.length },
+                      { id: 'history', label: '수업 기록', badge: state.historyLogs.length },
+                    ]}
+                    onSelect={changeTab}
+                  />
+                </div>
               )}
               {state.activeTab === 'workbench' && (
                 <SequenceStudioWorkbench
@@ -1011,7 +1026,14 @@ export function App() {
                       컨디션과 기구·스프링 장력을 직접 확인하세요. 검토 여부나 AI 제안은 의학적
                       판단·운동 적합성 보장이 아닙니다.
                     </p>
-                    <button className="text-button" onClick={() => changeTab('atlas')}>
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => {
+                        changeTab('atlas');
+                        setWorkspaceFocusRequest((n) => n + 1);
+                      }}
+                    >
                       동작 자료·기록 보기
                     </button>
                   </details>
@@ -1232,37 +1254,35 @@ export function App() {
         maxWidth="560px"
       >
         <PwaInstallPanel />
-        <StudioOffline3dReadinessCard />
+        {installOpen && <StudioOffline3dReadinessCard />}
       </LightDismissDialog>
       <LightDismissDialog
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         title="나의 스튜디오"
-        subtitle="수업 자료를 안전하게 보관하고 다른 기기로 옮기세요."
+        subtitle="보유 장비를 고르고 수업 자료를 안전하게 보관하세요."
         maxWidth="640px"
       >
-        {settingsOpen && <StudioOffline3dReadinessCard />}
-        {settingsOpen && (
-          <DeferredPanelBoundary>
-            <Suspense
-              fallback={
-                <p className="status" role="status">
-                  계정 백업을 열고 있어요…
-                </p>
-              }
-            >
-              <CloudSyncPanel />
-            </Suspense>
-          </DeferredPanelBoundary>
-        )}
+        <div className="button-row" style={{ marginBottom: '12px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setSettingsOpen(false);
+              setStudyOpen({ mode: 'guide' });
+            }}
+          >
+            <BookOpen size={16} strokeWidth={1.5} aria-hidden="true" />
+            <span>처음 오셨나요? 3단계 사용법 보기</span>
+          </button>
+        </div>
         <InventoryPanel />
         <section className="settings-section">
           <span className="eyebrow">브라우저 기본 보관</span>
           <h3>이 브라우저에 보관됩니다</h3>
           <p>
-            시퀀스, 동작, 수업 기록은 이 브라우저에 자동 보관됩니다. Google 로그인만으로 자료가
-            서버에 저장되거나 다른 기기와 동기화되지는 않습니다. 다른 기기로 옮길 때는 JSON 파일을
-            사용하고, 브라우저 데이터를 삭제하기 전 백업해 주세요.
+            시퀀스, 동작, 수업 기록은 이 브라우저에 자동 보관됩니다. 다른 기기로 옮길 때는 JSON
+            백업 파일을 사용하고, 브라우저 데이터를 삭제하기 전 백업해 주세요.
           </p>
           <div className="button-row">
             <button className="btn-primary" onClick={exportData}>
@@ -1289,27 +1309,36 @@ export function App() {
             </p>
           )}
         </section>
-        <section className="settings-section">
-          <h3>추천·AI 보조와 동작 자료 안내</h3>
+        {settingsOpen && (
+          <details className="settings-section">
+            <summary>계정 연결 · 오프라인 3D 동작 미리 저장</summary>
+            <DeferredPanelBoundary>
+              <Suspense
+                fallback={
+                  <p className="status" role="status">
+                    계정 백업을 열고 있어요…
+                  </p>
+                }
+              >
+                <CloudSyncPanel />
+              </Suspense>
+            </DeferredPanelBoundary>
+            <StudioOffline3dReadinessCard />
+          </details>
+        )}
+        <details className="settings-section safety-notes">
+          <summary>무료 추천 기준 · 골반 목표 및 운동 전 확인</summary>
           <p>
             기본 추천은 기구·시간·난이도·이력을 바탕으로 이 기기에서 추가 비용 없이(0원 확인됨) 바로
-            조합됩니다. 서버 무료 조건 AI 보조는 설정된 서버 환경의 확인된 한도 안에서만 동작하며,
-            한도 도달·연결 오류 시에는 기기 내 규칙 추천으로 자동 전환되어 시퀀스 작성이 중단되지
-            않습니다. 개인 구독·개발도구 크레딧과 외부 종량제 API 크레딧은 동일 크레딧으로 가정하지
-            않으며, 브라우저 비밀키 노출·저장과 동의 없는 유료 과금 호출은 차단됩니다.
+            조합됩니다. 서버 무료 조건 AI 보조는 확인된 한도 안에서만 동작하며, 한도 도달·연결 오류
+            시에는 기기 내 규칙 추천으로 자동 전환되어 작성이 중단되지 않습니다. 동의 없는 유료 과금
+            호출이나 브라우저 비밀키 노출·저장은 차단됩니다.
           </p>
-          <p>
-            모든 추천·도해·창작 메모는 수업 준비 참고 자료이며 의학적 진단이나 치료·안전성을
-            보장하지 않습니다. 수업 전 강사가 대상자 컨디션과 스프링 장력을 직접 확인하고, 통증 발생
-            시 즉시 중단하세요.
-          </p>
-        </section>
-        <details className="settings-section safety-notes">
-          <summary>골반 목표와 운동 전 확인</summary>
           <p>
             전방·후방 골반경사는 강사의 관찰 메모입니다. 외형만으로 통증 원인이나 특정 근육의
-            약화·단축을 판정하지 않으며 교정·치료 효과를 보장하지 않습니다. 인지·조절, 몸통과 고관절
-            협응, 가동성, 근력처럼 검토 가능한 수업 목표를 사용하세요.
+            약화·단축을 판정하지 않으며 교정·치료 효과를 보장하지 않습니다. 모든 추천·도해·창작
+            메모는 수업 준비 참고 자료이므로, 수업 전 강사가 대상자 컨디션과 스프링 장력을 직접
+            확인하고 통증 발생 시 즉시 중단하세요.
           </p>
           <p>
             새로 생기거나 악화하는 통증·저림·근력 저하는 전문가에게 평가받으세요. 허리 통증과 함께
@@ -1319,34 +1348,41 @@ export function App() {
             NHS 허리 통증·응급 증상 안내
           </a>
         </details>
-        <details className="settings-section">
-          <summary>4그룹 통합 설정 요약 (계정 · 음성 · 설치 · 데이터)</summary>
-          <Suspense
-            fallback={
-              <p className="status" role="status">
-                통합 설정 요약을 열고 있어요…
-              </p>
-            }
-          >
-            <PilatesSettingsPage
-              snapshot={{
-                data: {
-                  savedSequenceCount: state.savedSequences.length,
-                  exerciseCount: state.exercises.length,
-                  historyLogCount: state.historyLogs.length,
-                  ownedEquipmentIds: state.ownedEquipment,
-                  ownedPropIds: state.ownedProps,
-                  persistenceError: state.persistenceError,
-                  backupMessage,
-                },
-              }}
-              port={{
-                onExportBackupJson: exportData,
-                onToggleOwnedEquipment: state.toggleOwnedEquipment,
-                onToggleOwnedProp: (propId) => state.toggleOwnedProp(propId as PropType),
-              }}
-            />
-          </Suspense>
+        <details
+          className="settings-section"
+          onToggle={(event) => setSettingsSummaryOpen(event.currentTarget.open)}
+        >
+          <summary onClick={() => setSettingsSummaryOpen(true)}>
+            4그룹 통합 설정 요약 (계정 · 음성 · 설치 · 데이터)
+          </summary>
+          {settingsSummaryOpen && (
+            <Suspense
+              fallback={
+                <p className="status" role="status">
+                  통합 설정 요약을 열고 있어요…
+                </p>
+              }
+            >
+              <PilatesSettingsPage
+                snapshot={{
+                  data: {
+                    savedSequenceCount: state.savedSequences.length,
+                    exerciseCount: state.exercises.length,
+                    historyLogCount: state.historyLogs.length,
+                    ownedEquipmentIds: state.ownedEquipment,
+                    ownedPropIds: state.ownedProps,
+                    persistenceError: state.persistenceError,
+                    backupMessage,
+                  },
+                }}
+                port={{
+                  onExportBackupJson: exportData,
+                  onToggleOwnedEquipment: state.toggleOwnedEquipment,
+                  onToggleOwnedProp: (propId) => state.toggleOwnedProp(propId as PropType),
+                }}
+              />
+            </Suspense>
+          )}
         </details>
         {(import.meta.env.DEV || import.meta.env.MODE === 'test') && (
           <section className="settings-section" aria-label="개발용 내부 검수">
