@@ -88,168 +88,170 @@
 /* ============================================================================
  * UNIFIED ATELIER STUDIO KINEMATIC PALETTE HARMONIZATION
  * Harmonizes all 22 authored SVG pattern figures (MotionDraftFigure,
- * MotionAuthoringBatchFigure, SupineReachFigure) with the 98-exercise
+ * MotionAuthoringBatchFigure, SupineReachFigure) AND the catalog player /
+ * thumbnail (CatalogMotionInteractivePlayer, CatalogMotionThumbnailContent)
+ * with the 98-exercise
  * MovementPhaseDiagramSvg palette (#fdfcf8 -> #efe9dc canvas, #cfe0d5 sage
  * volume, #cca477 white-oak apparatus, #1a3b32 deep forest bone axis,
  * #bf5a41 terracotta active vectors) WITHOUT touching SHA-256 geometry files!
  * ============================================================================ */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   > rect:first-of-type,
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg > rect:first-of-type {
+.motion-pattern-thumbnail > svg > rect:first-of-type {
   fill: #f9f6ee !important;
   stroke: #dcd4c3;
   stroke-width: 1px;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   g[stroke-linecap='round'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg g[stroke-linecap='round'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-thumbnail > svg g[stroke-linecap='round'],
+.motion-pattern-preview
   .mpp-figure
   > svg
   g[data-layer='kinematic-figure'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg g[data-layer='kinematic-figure'] {
+.motion-pattern-thumbnail > svg g[data-layer='kinematic-figure'] {
   filter: drop-shadow(0 3px 7px rgba(26, 59, 50, 0.08));
 }
 
 /* Unify Mat / Support Surfaces across all families */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#dbe4d9'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#e2e4d9'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#e6eddf'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#e7eddf'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#e4ebe2'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   path[fill='#e1e6d9'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#dbe4d9'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#e2e4d9'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#e6eddf'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#e7eddf'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#e4ebe2'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg path[fill='#e1e6d9'] {
+.motion-pattern-thumbnail > svg polygon[fill='#dbe4d9'],
+.motion-pattern-thumbnail > svg polygon[fill='#e2e4d9'],
+.motion-pattern-thumbnail > svg polygon[fill='#e6eddf'],
+.motion-pattern-thumbnail > svg polygon[fill='#e7eddf'],
+.motion-pattern-thumbnail > svg polygon[fill='#e4ebe2'],
+.motion-pattern-thumbnail > svg path[fill='#e1e6d9'] {
   fill: #dce7de !important;
   stroke: #7a9988 !important;
   stroke-width: 1.6px;
 }
 
 /* Unify White-Oak Wooden Frames & Chairs across all families */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#ba9f7a'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#bf9f77'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#e7d3b2'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   path[fill='#b99b75'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#ba9f7a'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#bf9f77'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#e7d3b2'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg path[fill='#b99b75'] {
-  fill: #cca477 !important;
+.motion-pattern-thumbnail > svg polygon[fill='#ba9f7a'],
+.motion-pattern-thumbnail > svg polygon[fill='#bf9f77'],
+.motion-pattern-thumbnail > svg polygon[fill='#e7d3b2'],
+.motion-pattern-thumbnail > svg path[fill='#b99b75'] {
+  fill: var(--pf-atelier-oak, #cca477) !important;
   stroke: #87633b !important;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#aa8963'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#aa8963'] {
+.motion-pattern-thumbnail > svg polygon[fill='#aa8963'] {
   fill: #b68d5f !important;
   stroke: #7e5b36 !important;
 }
 
 /* Unify Upholstered Carriage / Seat Pads */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#768e87'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#6e8c81'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#768e87'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#6e8c81'] {
+.motion-pattern-thumbnail > svg polygon[fill='#768e87'],
+.motion-pattern-thumbnail > svg polygon[fill='#6e8c81'] {
   fill: #4b685d !important;
   stroke: #24443a !important;
 }
 
 /* Unify Torso / Trunk Envelope to Atelier Sage-Forest */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#a6bba8'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#87a18e'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#779b86'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   path[fill='#cedbc9'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#bdd1c2'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#a6bba8'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#87a18e'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#779b86'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg path[fill='#cedbc9'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail)
+.motion-pattern-thumbnail > svg polygon[fill='#a6bba8'],
+.motion-pattern-thumbnail > svg polygon[fill='#87a18e'],
+.motion-pattern-thumbnail > svg polygon[fill='#779b86'],
+.motion-pattern-thumbnail > svg path[fill='#cedbc9'],
+.motion-pattern-thumbnail
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#bdd1c2'] {
-  fill: #cfe0d5;
+  fill: var(--pf-atelier-sage, #cfe0d5);
   stroke: #295043;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#bdd1c2'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail)
+.motion-pattern-thumbnail
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#bdd1c2'] {
   fill: none !important;
-  stroke: #cfe0d5 !important;
+  stroke: var(--pf-atelier-sage, #cfe0d5) !important;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#41685e'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail)
+.motion-pattern-thumbnail
   > svg
   g[data-body-part='segmented-trunk']
   path[stroke='#41685e'] {
@@ -257,66 +259,66 @@
 }
 
 /* Unify Cranium / Head Silhouette */
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   circle[fill='#dfc6aa'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   circle[fill='#d4a891'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   circle[fill='#efd5b4'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   ellipse[fill='#d4ad94'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#eee1ce'],
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   polygon[fill='#efdfc9'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg circle[fill='#dfc6aa'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg circle[fill='#d4a891'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg circle[fill='#efd5b4'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg ellipse[fill='#d4ad94'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#eee1ce'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg polygon[fill='#efdfc9'] {
+.motion-pattern-thumbnail > svg circle[fill='#dfc6aa'],
+.motion-pattern-thumbnail > svg circle[fill='#d4a891'],
+.motion-pattern-thumbnail > svg circle[fill='#efd5b4'],
+.motion-pattern-thumbnail > svg ellipse[fill='#d4ad94'],
+.motion-pattern-thumbnail > svg polygon[fill='#eee1ce'],
+.motion-pattern-thumbnail > svg polygon[fill='#efdfc9'] {
   fill: #e7ede8 !important;
-  stroke: #1a3b32 !important;
+  stroke: var(--pf-atelier-forest, #1a3b32) !important;
 }
 
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   [data-limb-role='active']
   polyline[stroke='#d49a77'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail)
+.motion-pattern-thumbnail
   > svg
   [data-limb-role='active']
   polyline[stroke='#d49a77'] {
   stroke: #d9a482;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   [data-limb-role='support'],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg [data-limb-role='support'] {
+.motion-pattern-thumbnail > svg [data-limb-role='support'] {
   opacity: 0.84;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   circle[data-contact-id],
-.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg circle[data-contact-id] {
+.motion-pattern-thumbnail > svg circle[data-contact-id] {
   stroke-width: 1.8px;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player) .mpp-figure > svg text {
+.motion-pattern-preview .mpp-figure > svg text {
   font-family:
     'Pretendard Variable',
     'Plus Jakarta Sans',
@@ -330,7 +332,7 @@
   stroke-linejoin: round;
   letter-spacing: -0.01em;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   text[data-leg-label='left'] {
@@ -338,7 +340,7 @@
   fill: #1d4b3d;
   font-weight: 700;
 }
-.motion-pattern-preview:not(.catalog-motion-interactive-player)
+.motion-pattern-preview
   .mpp-figure
   > svg
   text[data-leg-label='right'] {

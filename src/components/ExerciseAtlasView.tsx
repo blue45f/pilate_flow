@@ -1749,7 +1749,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                           onError={() => onPhotoError(exercise.id)}
                         />
                       ) : (
-                        <ExerciseMotionArtwork exercise={exercise} />
+                        <ExerciseMotionArtwork exercise={exercise} hoverPreview />
                       )}
                     </div>
                     {state.inSequence ? (

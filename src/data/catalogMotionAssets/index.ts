@@ -3,7 +3,6 @@ import {
   CANONICAL_BLOCKS,
   INITIAL_EXERCISES,
   POSITION_LABELS,
-  SPINAL_PLANE_LABELS,
 } from '../pilatesCatalog';
 import {
   buildMovementVisualAssetForExercise,
@@ -555,37 +554,31 @@ function previewPhaseDurations(
 }
 
 function buildPhasesForExercise(
-  exercise: PilatesExercise,
+  _exercise: PilatesExercise,
   visualAsset: CatalogMovementVisualAsset,
   durations: PhaseDurations,
   finishBehavior: CatalogContinuousMotionAsset['finishBehavior'],
   override?: CatalogMotionOverrideNote,
 ): CatalogContinuousMotionAsset['phases'] {
-  const appKo = APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus;
-  const posKo = POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition;
-  const planesKo = exercise.spinalPlanes.map((p) => SPINAL_PLANE_LABELS[p]?.ko ?? p).join(' · ');
+  // Phase display labels use the doc's words (준비 → 진행 → 정점 → 복귀 → 마무리).
+  // Internal phase keys (setup/move/turn/return/finish) and the detailed cueKo text
+  // are unchanged. Per-exercise authored labels from an override still win below;
+  // those live in the per-apparatus override files, not in this builder.
   const defaultLabels: Record<CatalogMotionPhaseId, string> = {
-    setup: `${appKo} ${posKo} 시작 정렬 세팅`,
-    move: `${planesKo} 가동 구간 진행`,
-    turn: `${visualAsset.phases.middle.shortTitleKo} 확인`,
-    return: '다음 자세로 제어하며 연결',
-    finish: '시작 자세에서 마무리 확인',
+    setup: '준비',
+    move: '진행',
+    turn: '정점',
+    return: '복귀',
+    finish: '마무리',
   };
   const labels = override?.phaseLabelsKo ?? defaultLabels;
-  const endIsSetup = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints) <= 8;
-  const continuesBeyondMiddle = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints)
-    > maximumJointTravel(visualAsset.phases.middle.joints, visualAsset.phases.start.joints) + 8;
   const durationMs = durations.reduce((sum, value) => sum + value, 0);
   const descriptors = [
     ['setup', labels.setup, visualAsset.phases.start.summaryKo, 'hold'],
     ['move', labels.move, visualAsset.poseDeltaSummary.startToMiddleKo, 'move'],
-    ['turn', continuesBeyondMiddle ? `${visualAsset.phases.middle.shortTitleKo} · 중간 자세 확인` : labels.turn,
-      visualAsset.phases.middle.summaryKo, 'hold'],
-    ['return', endIsSetup ? labels.return : `${visualAsset.phases.end.shortTitleKo}로 연결`,
-      visualAsset.poseDeltaSummary.middleToEndKo, 'move'],
-    ['finish',
-      finishBehavior === 'alternate-side' ? '반대쪽 연결 · 시작 자세로 마무리'
-        : finishBehavior === 'return-to-setup' ? '마무리 자세 → 다음 반복 준비' : labels.finish,
+    ['turn', labels.turn, visualAsset.phases.middle.summaryKo, 'hold'],
+    ['return', labels.return, visualAsset.poseDeltaSummary.middleToEndKo, 'move'],
+    ['finish', labels.finish,
       finishBehavior === 'alternate-side' ? '양쪽 동작을 연결한 뒤 시작 자세로 돌아옵니다.'
         : finishBehavior === 'return-to-setup' ? '마지막 자세를 확인하고 시작 자세로 천천히 돌아옵니다.' : visualAsset.phases.end.summaryKo,
       finishBehavior === 'hold-return' ? 'hold' : 'move'],

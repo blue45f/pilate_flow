@@ -1,5 +1,5 @@
 export type DraftSpeed = 0.5 | 0.75 | 1;
-export type DraftRepeatCount = 1 | 2 | 3;
+export type DraftRepeatCount = 1 | 2 | 3 | 'loop';
 export interface DraftPlaybackState {
   progress: number;
   speed: DraftSpeed;
@@ -13,7 +13,9 @@ export interface DraftControllerOptions {
   cycleMs?: number;
 }
 
-/** Illustration timing only. Repetition, cadence and exercise duration are never inferred. */
+/** Illustration timing only. Repetition, cadence and exercise duration are never inferred.
+ * 'loop' repeats forever (연속): the rAF clock wraps progress with modulo, mirroring the
+ * catalog player's clock, instead of stopping at the final cycle boundary. */
 export class DraftPlaybackController {
   private progress = 0;
   private speed: DraftSpeed = 1;
@@ -40,6 +42,7 @@ export class DraftPlaybackController {
     return this.repeat;
   }
   currentCycle(): number {
+    if (this.repeat === 'loop') return this.completedCycles + 1;
     return Math.min(this.repeat, this.completedCycles + 1);
   }
   private emit() {
@@ -73,10 +76,14 @@ export class DraftPlaybackController {
     this.speed = value as DraftSpeed;
     this.emit();
   }
-  setRepeatCount(value: number) {
-    if (![1, 2, 3].includes(value))
+  setRepeatCount(value: number | 'loop') {
+    if (value === 'loop') {
+      this.repeat = 'loop';
+    } else if ([1, 2, 3].includes(value)) {
+      this.repeat = value as DraftRepeatCount;
+    } else {
       throw new RangeError("Unsupported illustration repeat count");
-    this.repeat = value as DraftRepeatCount;
+    }
     this.seek(0);
   }
   play() {
@@ -101,15 +108,22 @@ export class DraftPlaybackController {
       return;
     }
     if (this.lastTime !== null) {
-      let nextProgress =
+      const rawNext =
         this.progress +
         (Math.max(0, time - this.lastTime) * this.speed) /
           (this.options.cycleMs ?? 8000);
-      while (nextProgress >= 1 && this.completedCycles + 1 < this.repeat) {
-        this.completedCycles += 1;
-        nextProgress -= 1;
+      if (this.repeat === 'loop') {
+        // Continuous loop: wrap like the catalog player's rAF clock; never stop at 1.
+        this.completedCycles += Math.floor(rawNext);
+        this.progress = rawNext % 1;
+      } else {
+        let nextProgress = rawNext;
+        while (nextProgress >= 1 && this.completedCycles + 1 < this.repeat) {
+          this.completedCycles += 1;
+          nextProgress -= 1;
+        }
+        this.progress = Math.min(1, nextProgress);
       }
-      this.progress = Math.min(1, nextProgress);
     }
     this.lastTime = time;
     if (this.progress >= 1) {

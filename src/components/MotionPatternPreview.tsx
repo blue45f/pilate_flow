@@ -210,6 +210,9 @@ function PatternPlayback({
   const [mirrored, setMirrored] = useState(false);
   const [staticOnly, setStaticOnly] = useState(false);
   const [repeatCount, setRepeatCount] = useState<DraftRepeatCount>(1);
+  const isLoopRepeat = repeatCount === 'loop';
+  // Narrowed by the check above: the right side only sees 1 | 2 | 3.
+  const isMultiRepeat = isLoopRepeat || repeatCount > 1;
   const [state, setState] = useState<DraftPlaybackState>({ progress: 0, speed: 1, playing: false });
   const [preference] = useState(() =>
     typeof window !== 'undefined'
@@ -348,9 +351,11 @@ function PatternPlayback({
           )}
           {state.playing
             ? '일시정지'
-            : repeatCount > 1
-              ? `${repeatCount}회 반복 재생`
-              : '한 주기 재생'}
+            : isLoopRepeat
+              ? '연속 반복 재생'
+              : isMultiRepeat
+                ? `${repeatCount}회 반복 재생`
+                : '한 주기 재생'}
         </button>
         <button
           type="button"
@@ -364,9 +369,11 @@ function PatternPlayback({
           반복
           <select
             aria-label="관련 패턴 도해 반복"
-            value={repeatCount}
+            value={String(repeatCount)}
             onChange={(event) => {
-              const next = Number(event.target.value) as DraftRepeatCount;
+              const raw = event.target.value;
+              const next: DraftRepeatCount =
+                raw === 'loop' ? 'loop' : (Number(raw) as DraftRepeatCount);
               setRepeatCount(next);
               controller.setRepeatCount(next);
             }}
@@ -374,6 +381,7 @@ function PatternPlayback({
             <option value="1">1회</option>
             <option value="2">2회</option>
             <option value="3">3회</option>
+            <option value="loop">연속</option>
           </select>
         </label>
         <label>
@@ -487,16 +495,22 @@ function PatternPlayback({
           : staticOnly
             ? '정지 화면 모드 · 단계나 위치를 선택하세요.'
             : state.playing
-              ? repeatCount > 1
-                ? `도해 반복 재생 중 (${controller.currentCycle()} / ${repeatCount}회)`
-                : '도해 한 주기를 재생합니다.'
+              ? isLoopRepeat
+                ? '도해를 연속 반복 재생합니다.'
+                : isMultiRepeat
+                  ? `도해 반복 재생 중 (${controller.currentCycle()} / ${repeatCount}회)`
+                  : '도해 한 주기를 재생합니다.'
               : state.progress >= 1
-                ? repeatCount > 1
-                  ? `반복 재생 끝 (${repeatCount}회) · 일시정지`
-                  : '한 주기 끝 · 일시정지'
-                : repeatCount > 1
-                  ? `일시정지 · ${repeatCount}회 반복 설정 · 자동 재생 없음`
-                  : '일시정지 · 자동 재생 없음'}
+                ? isLoopRepeat
+                  ? '연속 반복 재생 중 · 일시정지'
+                  : isMultiRepeat
+                    ? `반복 재생 끝 (${repeatCount}회) · 일시정지`
+                    : '한 주기 끝 · 일시정지'
+                : isLoopRepeat
+                  ? '일시정지 · 연속 반복 설정 · 자동 재생 없음'
+                  : isMultiRepeat
+                    ? `일시정지 · ${repeatCount}회 반복 설정 · 자동 재생 없음`
+                    : '일시정지 · 자동 재생 없음'}
       </p>
       <details className="mpp-source-details">
         <summary>변형 차이·제작 근거 보기</summary>

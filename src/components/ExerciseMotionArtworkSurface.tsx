@@ -12,6 +12,15 @@ export interface ExerciseMotionArtworkProps {
   label?: string;
   style?: CSSProperties;
   'data-testid'?: string;
+  /**
+   * Opt-in only: on mouse hover, swap the static WebP frame for the live
+   * continuous-motion thumbnail (CatalogMotionThumbnail, mouse-hover rAF
+   * preview). At rest the static frame stays, so native artwork and its
+   * provenance (img src, lazy loading, match scope) are preserved. Default
+   * off so the 3-frame compare strip and the 218-exercise stills keep their
+   * phase stills.
+   */
+  hoverPreview?: boolean;
 }
 type ArtworkScope =
   | 'catalog-authored-pattern'
@@ -27,6 +36,8 @@ interface SurfaceProps extends ExerciseMotionArtworkProps {
   children: ReactNode;
   badge?: { kind: string; title: string; description: string };
   busy?: boolean;
+  onPointerEnter?: React.PointerEventHandler<HTMLSpanElement>;
+  onPointerLeave?: React.PointerEventHandler<HTMLSpanElement>;
 }
 
 /** Cached, deferred and neutral art share the same layout and accessible scope. */
@@ -43,12 +54,16 @@ export function ExerciseMotionArtworkSurface({
   children,
   badge,
   busy,
+  onPointerEnter,
+  onPointerLeave,
 }: SurfaceProps) {
   const apparatusOnly = renderer === 'apparatus-reference';
   return (
     <span
       className={('exercise-motion-artwork ' + className).trim()}
       style={style}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       aria-hidden={decorative ? 'true' : undefined}
       aria-busy={busy || undefined}
       role={apparatusOnly && !decorative ? 'img' : undefined}

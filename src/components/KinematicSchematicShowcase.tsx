@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pause, Play, Plus } from 'lucide-react';
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import {
+  CATALOG_CONTINUOUS_MOTION_ASSETS,
+  getCatalogContinuousMotionAsset,
+} from '../data/catalogMotionAssets';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import type { CatalogMovementVisualAsset } from '../data/movementVisualRigCatalog';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/kinematic-schematic-showcase.css';
 
 interface SchematicSpec {
-  readonly id: 'footwork' | 'pelvic-curl' | 'hundred' | 'swan';
+  readonly id: 'footwork' | 'pelvic-curl' | 'hundred' | 'swan' | 'selected-motion';
   readonly exerciseId: string;
   readonly titleKo: string;
   readonly titleEn: string;
@@ -15,6 +19,9 @@ interface SchematicSpec {
   readonly breath: string;
   readonly cue: string;
   readonly matchKeyword: string;
+  /** When set, these lines replace the breath/cue meta (used for selector-picked motions,
+   * whose per-motion breath/cue copy is not authored). */
+  readonly metaLines?: readonly React.ReactNode[];
 }
 
 const SCHEMATICS: readonly SchematicSpec[] = [
@@ -60,8 +67,18 @@ const SCHEMATICS: readonly SchematicSpec[] = [
   },
 ];
 
-const PHASE_NAMES = ['1 준비', '2 시작', '3 정점', '4 조절', '5 복귀'] as const;
+const PHASE_NAMES = ['1 준비', '2 진행', '3 정점', '4 복귀', '5 마무리'] as const;
 const PHASE_PROGRESS_MAP = [0.06, 0.27, 0.5, 0.73, 0.94] as const;
+
+/** Curated cards keep their authored copy; the selector default skips them so no title
+ * appears twice in the grid. */
+const CURATED_EXERCISE_IDS: ReadonlySet<string> = new Set(SCHEMATICS.map((item) => item.exerciseId));
+
+const DEFAULT_SELECTED_EXERCISE_ID: string =
+  CATALOG_CONTINUOUS_MOTION_ASSETS.find((asset) => !CURATED_EXERCISE_IDS.has(asset.exerciseId))
+    ?.exerciseId ??
+  CATALOG_CONTINUOUS_MOTION_ASSETS[0]?.exerciseId ??
+  'ex-footwork-01';
 
 export interface KinematicSchematicShowcaseProps {
   readonly onQuickSearchKeyword?: (keyword: string) => void;
@@ -79,6 +96,38 @@ export const KinematicSchematicShowcase: React.FC<KinematicSchematicShowcaseProp
   const [showGuides, setShowGuides] = useState<boolean>(true);
   const [manualPhase, setManualPhase] = useState<number>(2);
   const [cycleT, setCycleT] = useState<number>(0.5);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string>(
+    DEFAULT_SELECTED_EXERCISE_ID,
+  );
+
+  const selectedMotionAsset = useMemo(
+    () => getCatalogContinuousMotionAsset(selectedExerciseId),
+    [selectedExerciseId],
+  );
+  const selectedSpec: SchematicSpec | null = useMemo(() => {
+    if (!selectedMotionAsset) return null;
+    const exercise = INITIAL_EXERCISES.find((item) => item.id === selectedMotionAsset.exerciseId);
+    return {
+      id: 'selected-motion',
+      exerciseId: selectedMotionAsset.exerciseId,
+      titleKo: selectedMotionAsset.visualAsset.nameKo,
+      titleEn: selectedMotionAsset.titleEn,
+      springs: exercise?.springs ?? '—',
+      breath: '',
+      cue: '',
+      matchKeyword: selectedMotionAsset.visualAsset.nameKo,
+      metaLines: [selectedMotionAsset.motionSubtitleKo, selectedMotionAsset.biomechFocusKo],
+    };
+  }, [selectedMotionAsset]);
+  const motionOptions = useMemo(
+    () =>
+      CATALOG_CONTINUOUS_MOTION_ASSETS.map((asset) => (
+        <option key={asset.exerciseId} value={asset.exerciseId}>
+          {asset.visualAsset.nameKo}
+        </option>
+      )),
+    [],
+  );
 
   useEffect(() => {
     if (!playing || reducedMotion) return;
@@ -96,6 +145,93 @@ export const KinematicSchematicShowcase: React.FC<KinematicSchematicShowcaseProp
 
   const effectiveProgress =
     !playing || reducedMotion ? PHASE_PROGRESS_MAP[manualPhase] ?? 0.5 : cycleT;
+
+  const renderSchematicCard = (item: SchematicSpec) => {
+    const motionAsset = getCatalogContinuousMotionAsset(item.exerciseId);
+    const sampled = motionAsset ? motionAsset.samplePose(effectiveProgress) : null;
+    const interpolatedVisualAsset: CatalogMovementVisualAsset | null =
+      motionAsset && sampled
+        ? {
+            ...motionAsset.visualAsset,
+            phases: {
+              ...motionAsset.visualAsset.phases,
+              [sampled.visualPhaseId]: sampled.interpolatedPhaseSpec,
+            },
+          }
+        : null;
+
+    return (
+      <article key={item.id} className="pf-kine-card" data-showcase-exercise={item.exerciseId}>
+        <div className="pf-kine-card__head">
+          <div>
+            <h3>{item.titleKo}</h3>
+            <small>{item.titleEn}</small>
+          </div>
+          <SpringVisualPills springs={item.springs} />
+        </div>
+
+        <div className="pf-kine-card__canvas">
+          {interpolatedVisualAsset && sampled ? (
+            <MovementPhaseDiagramSvg
+              asset={interpolatedVisualAsset}
+              phase={sampled.visualPhaseId}
+              showAlignment={showGuides}
+              showDirection={showGuides}
+              showMuscles
+              showGhostStartPose={showGuides}
+              className="pf-kine-svg"
+              label={`${item.titleKo} 5단계 기구학 모션 도해 · ${sampled.phase.labelKo}`}
+            />
+          ) : null}
+        </div>
+
+        <div className="pf-kine-phase-strip" role="group" aria-label={`${item.titleKo} 단계 고정`}>
+          {PHASE_NAMES.map((label, idx) => {
+            const isActive = (!playing || reducedMotion) && manualPhase === idx;
+            return (
+              <button
+                key={label}
+                type="button"
+                className={`pf-kine-phase-pill ${isActive ? 'is-active' : ''}`}
+                aria-pressed={isActive}
+                onClick={() => {
+                  setPlaying(false);
+                  setManualPhase(idx);
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="pf-kine-card__meta">
+          {item.metaLines ? (
+            item.metaLines.map((line, index) => <div key={index}>{line}</div>)
+          ) : (
+            <>
+              <div>
+                <strong>호흡:</strong> {item.breath}
+              </div>
+              <div>{item.cue}</div>
+            </>
+          )}
+        </div>
+
+        {onQuickSearchKeyword && (
+          <div className="pf-kine-card__footer">
+            <button
+              type="button"
+              className="pf-kine-filter-btn"
+              onClick={() => onQuickSearchKeyword(item.matchKeyword)}
+            >
+              <Plus size={14} aria-hidden="true" /> ‘{item.matchKeyword}’ 관련 동작 노트로 바로 찾기
+            </button>
+          </div>
+        )}
+      </article>
+    );
+  };
 
   return (
     <section
@@ -159,87 +295,31 @@ export const KinematicSchematicShowcase: React.FC<KinematicSchematicShowcaseProp
         </div>
       </header>
 
+      <div
+        className="pf-kine-showcase__selector"
+        style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}
+      >
+        <label htmlFor="pf-kine-motion-select" style={{ fontWeight: 600 }}>
+          네이티브 동작 선택
+        </label>
+        <select
+          id="pf-kine-motion-select"
+          data-testid="kinematic-schematic-motion-select"
+          aria-label={`네이티브 동작 선택 · ${CATALOG_CONTINUOUS_MOTION_ASSETS.length}개 동작`}
+          value={selectedExerciseId}
+          onChange={(event) => setSelectedExerciseId(event.target.value)}
+          style={{ minHeight: 44, padding: '8px 10px', borderRadius: 10 }}
+        >
+          {motionOptions}
+        </select>
+        <span>
+          {CATALOG_CONTINUOUS_MOTION_ASSETS.length}개 네이티브 동작 · 같은 표준 엔진으로 미리보기
+        </span>
+      </div>
+
       <div className="pf-kine-showcase__grid">
-        {SCHEMATICS.map((item) => {
-          const motionAsset = getCatalogContinuousMotionAsset(item.exerciseId);
-          const sampled = motionAsset ? motionAsset.samplePose(effectiveProgress) : null;
-          const interpolatedVisualAsset: CatalogMovementVisualAsset | null =
-            motionAsset && sampled
-              ? {
-                  ...motionAsset.visualAsset,
-                  phases: {
-                    ...motionAsset.visualAsset.phases,
-                    [sampled.visualPhaseId]: sampled.interpolatedPhaseSpec,
-                  },
-                }
-              : null;
-
-          return (
-            <article key={item.id} className="pf-kine-card" data-showcase-exercise={item.exerciseId}>
-              <div className="pf-kine-card__head">
-                <div>
-                  <h3>{item.titleKo}</h3>
-                  <small>{item.titleEn}</small>
-                </div>
-                <SpringVisualPills springs={item.springs} />
-              </div>
-
-              <div className="pf-kine-card__canvas">
-                {interpolatedVisualAsset && sampled ? (
-                  <MovementPhaseDiagramSvg
-                    asset={interpolatedVisualAsset}
-                    phase={sampled.visualPhaseId}
-                    showAlignment={showGuides}
-                    showDirection={showGuides}
-                    showMuscles
-                    showGhostStartPose={showGuides}
-                    className="pf-kine-svg"
-                    label={`${item.titleKo} 5단계 기구학 모션 도해 · ${sampled.phase.labelKo}`}
-                  />
-                ) : null}
-              </div>
-
-              <div className="pf-kine-phase-strip" role="group" aria-label={`${item.titleKo} 단계 고정`}>
-                {PHASE_NAMES.map((label, idx) => {
-                  const isActive = (!playing || reducedMotion) && manualPhase === idx;
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      className={`pf-kine-phase-pill ${isActive ? 'is-active' : ''}`}
-                      aria-pressed={isActive}
-                      onClick={() => {
-                        setPlaying(false);
-                        setManualPhase(idx);
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pf-kine-card__meta">
-                <div>
-                  <strong>호흡:</strong> {item.breath}
-                </div>
-                <div>{item.cue}</div>
-              </div>
-
-              {onQuickSearchKeyword && (
-                <div className="pf-kine-card__footer">
-                  <button
-                    type="button"
-                    className="pf-kine-filter-btn"
-                    onClick={() => onQuickSearchKeyword(item.matchKeyword)}
-                  >
-                    <Plus size={14} aria-hidden="true" /> ‘{item.matchKeyword}’ 관련 동작 노트로 바로 찾기
-                  </button>
-                </div>
-              )}
-            </article>
-          );
-        })}
+        {selectedSpec ? renderSchematicCard(selectedSpec) : null}
+        {SCHEMATICS.map((item) => renderSchematicCard(item))}
       </div>
     </section>
   );

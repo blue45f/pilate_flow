@@ -590,7 +590,7 @@ export class MotionCoveragePlaybackController {
    * Sets repeat cycle count (`1 | 2 | 3`).
    * Throws `RangeError` for invalid counts, `NaN`, or `±Infinity`.
    */
-  setRepeatCount(repeatCount: number): void {
+  setRepeatCount(repeatCount: number | DraftRepeatCount): void {
     if (
       !Number.isFinite(repeatCount) ||
       !DRAFT_REPEAT_COUNTS.includes(repeatCount as DraftRepeatCount)
@@ -809,12 +809,12 @@ export class MotionCoveragePlaybackController {
       statusLabelKo = '동작 줄이기(reduced-motion) 설정 · 정지 단계와 위치를 수동으로 살펴보세요.';
     } else if (this.draftState.playing) {
       statusLabelKo =
-        this.repeatCount > 1
+        typeof this.repeatCount === 'number' && this.repeatCount > 1
           ? `미검토 연속 초안 재생 중 (${currentCycle}/${this.repeatCount}회 · ${this.draftState.speed}×)`
           : `미검토 연속 초안 한 주기 재생 중 (${Math.round((progress ?? 0) * 100)}% · ${this.draftState.speed}×)`;
     } else if (completedCycle) {
       statusLabelKo =
-        this.repeatCount > 1
+        typeof this.repeatCount === 'number' && this.repeatCount > 1
           ? `미검토 연속 초안 반복 재생 완료 (${this.repeatCount}회) · 일시정지`
           : '미검토 연속 초안 한 주기 끝 (100%) · 일시정지';
     } else {
