@@ -435,10 +435,10 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
 
   const clipperNextActionText =
     !youtubeUrl.trim() || !validReference || !channelName.trim()
-      ? '지금 할 일 (1/3): 공식 YouTube 영상 링크와 채널명, 동작/수업 이름을 먼저 입력하세요.'
+      ? '지금 할 일 (1/3): YouTube 영상 링크와 채널명, 이름을 입력해 주세요.'
       : !selectedEquipment.length || !selectedProps.length
-        ? '다음 행동 (2/3): 원본 영상에서 직접 확인한 기구와 소도구를 선택하세요.'
-        : '다음 행동 (3/3): 필요한 큐 메모를 확인한 뒤 아래 보관 버튼을 눌러 마무리하세요.';
+        ? '다음 행동 (2/3): 영상에서 확인한 기구와 소도구를 선택해 주세요.'
+        : '다음 행동 (3/3): 필요하면 큐 메모를 적고 보관 버튼을 누르세요.';
 
   const makeExercise = (
     name: string,
@@ -568,8 +568,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
         <div className="clipper-honest-note">
           <Youtube size={16} strokeWidth={1.5} aria-hidden="true" />
           <p style={{ margin: 0 }}>
-            링크와 메모를 직접 보관합니다 · 영상을 가져오지 않으며 재사용 허가와 동작 정확성은
-            별도로 확인하세요
+            영상 링크와 메모만 기기에 보관합니다 · 수업 전 실제 기구와 동작을 직접 확인하세요
           </p>
         </div>
         {saved ? (
@@ -774,8 +773,8 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
               </div>
             )}
             <div ref={step2Ref} className="clipper-section-heading">
-              <h3>내가 정하는 계획 정보</h3>
-              <p>아래 설정은 영상에서 추출하지 않습니다. 여러 구간에 같은 기본값을 적용합니다.</p>
+              <h3>기본 기구 · 난이도 설정</h3>
+              <p>구간에 공통으로 적용할 기본 기구와 난이도를 선택하세요.</p>
             </div>
             <fieldset className="clipper-required-equipment">
               <legend>원본에서 확인한 기구 · 필요한 장비 모두 선택 *</legend>
@@ -822,7 +821,6 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
                   </button>
                 ))}
               </div>
-              <p>기구·소도구는 이름으로 추정하지 않고, 영상을 직접 확인한 설정만 기록합니다.</p>
             </fieldset>
             <div className="library-form-grid clipper-metadata-grid">
               <label className="form-field">

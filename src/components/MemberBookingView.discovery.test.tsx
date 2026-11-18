@@ -92,7 +92,7 @@ describe('member schedule discovery', () => {
 
     render(<MemberBookingView />);
     fireEvent.click(screen.getByRole('button', { name: '매트' }));
-    fireEvent.click(screen.getByRole('button', { name: '코어·골반 정렬' }));
+    fireEvent.click(screen.getByRole('button', { name: '코어·바른 자세' }));
     fireEvent.click(screen.getByRole('button', { name: '예약 가능만 보기' }));
 
     const nextDay = screen.getByTestId('jump-next-class-day-btn');
@@ -104,7 +104,7 @@ describe('member schedule discovery', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: '코어·골반 정렬' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: '코어·바른 자세' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );

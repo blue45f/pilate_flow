@@ -236,6 +236,40 @@ export function LibraryMovementInspector({
             )}
           </div>
 
+          {exercise.precautions?.trim() && (
+            <section className="library-inspector-precautions">
+              <h4>
+                {reviewState === 'approved'
+                  ? '기존 주의 메모 · 내 검토 확인'
+                  : '기존 주의 메모 · 원문 확인 필요'}
+              </h4>
+              <p>{exercise.precautions}</p>
+            </section>
+          )}
+
+          <div className="library-inspector-actions library-inspector-actions--top">
+            <button
+              type="button"
+              className="btn-primary"
+              data-added={isAdded ? 'true' : 'false'}
+              aria-label="선택한 동작 수업안에 추가"
+              onClick={() => onAdd(exercise)}
+            >
+              {isAdded ? (
+                <Check size={16} aria-hidden="true" />
+              ) : (
+                <Plus size={16} aria-hidden="true" />
+              )}
+              {isAdded ? '추가됨' : '수업안에 추가'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => onOpenDetails(exercise)}>
+              전체 정보·개인 검토 열기 <ArrowUpRight size={16} aria-hidden="true" />
+            </button>
+            <span className="sr-only" role="status" aria-live="polite">
+              {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
+            </span>
+          </div>
+
           <ExerciseKinesiologyCard exercise={exercise} />
 
           {(exercise.layers.easy.trim() ||
@@ -323,17 +357,6 @@ export function LibraryMovementInspector({
             </div>
           </dl>
 
-          {exercise.precautions?.trim() && (
-            <section className="library-inspector-precautions">
-              <h4>
-                {reviewState === 'approved'
-                  ? '기존 주의 메모 · 내 검토 확인'
-                  : '기존 주의 메모 · 원문 확인 필요'}
-              </h4>
-              <p>{exercise.precautions}</p>
-            </section>
-          )}
-
           <section
             className="library-inspector-reference-step"
             data-testid="inspector-reference-step"
@@ -357,8 +380,7 @@ export function LibraryMovementInspector({
                   </a>
                 ))}
                 <p className="library-inspector-reference-note">
-                  외부 원문 링크만 열며 자동 재생이나 자동 검토 승인은 일어나지 않습니다. 원문과
-                  실제 동작 일치 여부를 직접 확인하세요.
+                  외부 원문 링크만 열며 자동 재생이나 자동 검토 승인은 일어나지 않습니다.
                 </p>
               </div>
             ) : (
@@ -385,33 +407,9 @@ export function LibraryMovementInspector({
             <p className="library-inspector-review-detail">{reviewDetail}</p>
             <p className="library-inspector-safety">
               <Info size={15} aria-hidden="true" />
-              개인 검토 완료, 동작별 원문 근거, 기구별 공통 참고 문구는 서로 다른 사실입니다. 현재
-              자료는 원문·현장 기구 확인이 필요한 참고정보입니다.
+              실제 수업 전 기구 설정과 회원 컨디션을 직접 확인해 주세요.
             </p>
           </section>
-
-          <div className="library-inspector-actions">
-            <button type="button" className="btn-secondary" onClick={() => onOpenDetails(exercise)}>
-              전체 정보·개인 검토 열기 <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              data-added={isAdded ? 'true' : 'false'}
-              aria-label="선택한 동작 수업안에 추가"
-              onClick={() => onAdd(exercise)}
-            >
-              {isAdded ? (
-                <Check size={16} aria-hidden="true" />
-              ) : (
-                <Plus size={16} aria-hidden="true" />
-              )}
-              {isAdded ? '추가됨' : '동작 추가'}
-            </button>
-            <span className="sr-only" role="status" aria-live="polite">
-              {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
-            </span>
-          </div>
 
           <details
             className="library-inspector-reference-details"

@@ -34,7 +34,7 @@
 #root .flow-binder .teaching-page-header .eyebrow {
   color: #617568;
   font-size: 12px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 #root .flow-binder .teaching-count {
   background: #e9eee5;
@@ -83,19 +83,55 @@
 }
 #root .flow-binder .teaching-saved-quick-filters {
   gap: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 #root .flow-binder .teaching-saved-filter-pill {
+  position: relative;
   border: 1px solid var(--flow-binder-line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: 8px;
+  background: #f5f4ee;
   color: #4c6155;
+  font-variant-numeric: tabular-nums;
   box-shadow: none;
 }
+#root .flow-binder .teaching-saved-filter-pill > span:not(.pf-seg-pill) {
+  position: relative;
+  z-index: 1;
+}
+#root .flow-binder .teaching-saved-filter-pill .pf-seg-pill {
+  border-radius: 7px;
+  background: #355441;
+  box-shadow: 0 1px 2px rgb(24 48 38 / 12%);
+}
 #root .flow-binder .teaching-saved-filter-pill.active {
-  border-color: #244f3e;
-  background: #244f3e;
-  color: #fff;
+  border-color: #355441;
+  background: #355441;
+  color: #ffffff;
+  font-weight: 600;
+}
+#root .flow-binder .teaching-saved-filter-pill.active .teaching-saved-filter-count {
+  color: rgba(255, 255, 255, 0.94);
+  opacity: 1;
+}
+#root .flow-binder .pf-binder-quiet-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--flow-binder-line);
+  background: #ffffff;
+  color: #345344;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#root .flow-binder .pf-binder-quiet-tag-btn:hover {
+  background: #f4f5ef;
+  border-color: #b7c4b8;
 }
 #root .flow-binder .teaching-saved-grid {
   display: grid;

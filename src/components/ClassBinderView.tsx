@@ -1390,6 +1390,18 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     : '최근 수정 순 · 기기 저장 확인 필요 (JSON 백업 권장)'
                   : '최근 수정 순 · 이 브라우저에 저장됨'}
               </span>
+              {savedSequences.length > 0 && activeRoutineTagCounts.length === 0 && (
+                <button
+                  type="button"
+                  className="pf-binder-quiet-tag-btn"
+                  data-testid="binder-open-tag-manager-btn"
+                  onClick={() =>
+                    setTagSheetTarget({ id: null, title: '스튜디오 루틴 태그 관리' })
+                  }
+                >
+                  + 태그 관리
+                </button>
+              )}
             </div>
             {showSavedQuickFilters && (
               <div
@@ -1478,7 +1490,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 )}
               </div>
             )}
-            {savedSequences.length > 0 && (
+            {savedSequences.length > 0 && activeRoutineTagCounts.length > 0 && (
               <div
                 className="pf-routine-tag-filter-bar"
                 data-testid="binder-routine-tag-filter-bar"
@@ -1486,37 +1498,31 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 aria-label="내 루틴 태그 필터"
               >
                 <span className="pf-routine-tag-filter-bar__label">내 태그</span>
-                {activeRoutineTagCounts.length > 0 ? (
-                  activeRoutineTagCounts.map((item) => {
-                    const isSelected =
-                      Boolean(effectiveSelectedRoutineTag) &&
-                      routineTagCanonicalKey(effectiveSelectedRoutineTag!) ===
-                        routineTagCanonicalKey(item.label);
-                    return (
-                      <button
-                        key={item.label}
-                        type="button"
-                        className={`pf-routine-tag-chip ${isSelected ? 'is-active' : ''}`}
-                        aria-pressed={isSelected}
-                        data-testid={`binder-filter-tag-${item.label}`}
-                        onClick={() =>
-                          setSelectedRoutineTag((prev) =>
-                            prev && routineTagCanonicalKey(prev) === routineTagCanonicalKey(item.label)
-                              ? null
-                              : item.label,
-                          )
-                        }
-                      >
-                        <span>#{item.label}</span>
-                        <span>{item.count}</span>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <span style={{ fontSize: '0.78rem', color: '#5b6c63' }}>
-                    각 수업 카드의 ‘+ 태그 추가’로 요일·대상·특징 라벨을 붙여 원탭으로 분류하세요
-                  </span>
-                )}
+                {activeRoutineTagCounts.map((item) => {
+                  const isSelected =
+                    Boolean(effectiveSelectedRoutineTag) &&
+                    routineTagCanonicalKey(effectiveSelectedRoutineTag!) ===
+                      routineTagCanonicalKey(item.label);
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={`pf-routine-tag-chip ${isSelected ? 'is-active' : ''}`}
+                      aria-pressed={isSelected}
+                      data-testid={`binder-filter-tag-${item.label}`}
+                      onClick={() =>
+                        setSelectedRoutineTag((prev) =>
+                          prev && routineTagCanonicalKey(prev) === routineTagCanonicalKey(item.label)
+                            ? null
+                            : item.label,
+                        )
+                      }
+                    >
+                      <span>#{item.label}</span>
+                      <span>{item.count}</span>
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
                   className="pf-routine-tag-add-trigger"
@@ -2879,33 +2885,33 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                               <Copy size={15} />
                               복사해 새 수업 만들기
                             </PfButton>
-                            {!isSample && (
-                              <>
-                                <PfButton
-                                  variant="secondary"
-                                  data-testid={`history-apply-next-draft-btn-${log.id}`}
-                                  onClick={() => {
-                                    const res = usePilatesStore
-                                      .getState()
-                                      .applyHistoryChangesToNextDraft(log.id, {
-                                        includeDurations: true,
-                                        includeNotes: true,
-                                      });
-                                    setMessage(res.message);
-                                  }}
-                                >
-                                  실제 변경 다음 계획 반영
-                                </PfButton>
-                                <PfButton
-                                  variant="secondary"
-                                  data-testid={`history-adaptive-btn-${log.id}`}
-                                  onClick={() => applySingleLogAdaptive(log)}
-                                >
-                                  피드백 반영 보정 생성
-                                </PfButton>
-                              </>
-                            )}
                           </div>
+                          {!isSample && (
+                            <div className="teaching-history-secondary-actions">
+                              <PfButton
+                                variant="ghost"
+                                data-testid={`history-apply-next-draft-btn-${log.id}`}
+                                onClick={() => {
+                                  const res = usePilatesStore
+                                    .getState()
+                                    .applyHistoryChangesToNextDraft(log.id, {
+                                      includeDurations: true,
+                                      includeNotes: true,
+                                    });
+                                  setMessage(res.message);
+                                }}
+                              >
+                                진행 시간·메모 반영
+                              </PfButton>
+                              <PfButton
+                                variant="ghost"
+                                data-testid={`history-adaptive-btn-${log.id}`}
+                                onClick={() => applySingleLogAdaptive(log)}
+                              >
+                                강도 자동 조절본
+                              </PfButton>
+                            </div>
+                          )}
                         </div>
                         <details className="teaching-history-details">
                           <summary>

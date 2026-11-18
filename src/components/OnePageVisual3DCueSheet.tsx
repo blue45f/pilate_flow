@@ -189,7 +189,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
     >
       <header className="pf-visual-1p-cuesheet__header">
         <div className="pf-visual-1p-cuesheet__titles">
-          <span className="eyebrow">ONE-PAGE 3D VISUAL CUE SHEET</span>
+          <span className="eyebrow">한 장 요약 큐시트</span>
           <h3>{title || '오늘의 수업 큐시트'}</h3>
           {subtitle && <p>{subtitle}</p>}
           <div className="pf-class-badges-strip">

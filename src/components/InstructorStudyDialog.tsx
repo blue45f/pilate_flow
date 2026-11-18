@@ -546,7 +546,7 @@ export function InstructorStudyDialog({
                 <header>
                   <div>
                     <div className="study-eyebrow-row">
-                      <span className="eyebrow">MOVEMENT STUDY</span>
+                      <span className="eyebrow">동작 학습 노트</span>
                       {isSelectedOutsideFilter && (
                         <span
                           className="study-outside-filter-badge"

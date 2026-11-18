@@ -118,8 +118,8 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
     <LightDismissDialog
       open={open}
       onClose={onClose}
-      title="태블릿·모바일 무서버 로컬 QR 시퀀스 공유"
-      subtitle="외부 서버 업로드·계정 로그인·비용 없이 기기 간 카메라 스캔으로 수업안을 전달합니다."
+      title="QR 코드로 다른 기기에 수업 보내기"
+      subtitle="로그인이나 서버 저장 없이 카메라 스캔만으로 수업안을 전달합니다."
       maxWidth="540px"
     >
       <div className="pf-qr-share-modal" data-testid="sequence-qr-share-dialog">
@@ -140,10 +140,7 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
               className="pf-qr-share-modal__svg-box"
               dangerouslySetInnerHTML={{ __html: shareBundle.qr.svgMarkup }}
             />
-            <small className="muted">
-              ISO/IEC 18004 표준 로컬 생성 (Version {shareBundle.qr.version} · {shareBundle.qr.size}
-              ×{shareBundle.qr.size} 모듈 · 네트워크 호출 0건)
-            </small>
+            <small className="muted">인터넷 전송 없이 이 기기에서 바로 만든 QR 코드입니다</small>
           </div>
         ) : (
           <p className="status error" role="alert">
@@ -193,9 +190,9 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
         )}
 
         <p className="pf-qr-share-modal__privacy">
-          <ShieldCheck size={15} aria-hidden="true" /> 공유 데이터는 서버로 전송되지 않고 URL 해시(
-          <code>#pf_share=…</code>) 안에만 담깁니다. 수업실 아이패드 카메라로 스캔하면 기존 초안을
-          보존(되돌리기 지원)한 채 바로 열 수 있습니다.
+          <ShieldCheck size={15} aria-hidden="true" /> 공유 내용은 서버로 전송되지 않고 링크 안에만
+          담깁니다. 수업실 태블릿 카메라로 비추면 작성 중이던 초안을 되돌리기에 보관한 채 바로
+          열립니다.
         </p>
 
         <div className="pf-member-dialog-actions">
@@ -292,7 +289,7 @@ export const SequenceQrImportDialog: React.FC<SequenceQrImportDialogProps> = ({
       <div className="pf-qr-share-modal" data-testid="sequence-qr-import-dialog">
         <div className="pf-class-badges-strip">
           <PfBadge tone="brand">
-            <QrCode size={12} aria-hidden="true" /> 로컬 QR 공유 수신
+            <QrCode size={12} aria-hidden="true" /> QR 공유 수업안
           </PfBadge>
           <span className="pf-class-apparatus-pill">{apparatusKo}</span>
           <PfBadge tone="sage">{formatDifficultyBadgeKo(sharedSequence.level)}</PfBadge>

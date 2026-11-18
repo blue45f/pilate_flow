@@ -142,7 +142,7 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
 
       {report.analyzedSessionCount === 0 ? (
         <div className="pf-balance-empty" data-testid="balance-insight-empty">
-          <p className="muted">{report.coachingSuggestionKo}</p>
+          <p className="muted">첫 수업 기록을 남기면 반별 진행 횟수와 움직임 균형이 이곳에 요약됩니다.</p>
           <PfButton variant="secondary" onClick={onJumpToWorkbench}>
             오늘 수업 계획하러 가기 <ArrowRight size={15} />
           </PfButton>
@@ -177,11 +177,6 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
               </span>
             ))}
           </div>
-          <p className="muted pf-balance-data-note">
-            현재 선택한 기록 중 최근 {report.analyzedSessionCount}회 · 시간 정보{' '}
-            {report.timedSessionCount}회 · 동작 시간 스냅샷 {report.snapshotSessionCount}회. 평균은
-            실제 기록 시간이 있으면 실제 시간, 없으면 보존된 계획 시간을 사용합니다.
-          </p>
 
           <div className="pf-balance-visual-grid">
             <VisualSpineBalanceDiagram underRepresentedPlaneId={report.underRepresentedPlaneId} />
@@ -220,11 +215,6 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
               })}
             </div>
           </div>
-          <p className="muted pf-balance-data-note">
-            보존된 계획의 동작 시간 {report.totalMovementMinutes}분 중 분류 정보 없음{' '}
-            {report.unclassifiedMovementMinutes}분. 설명·전환·휴식은 제외하며, 복수 분류 동작은
-            시간을 나누어 계산합니다.
-          </p>
 
           {report.topBlockMetrics.length > 0 && (
             <div className="pf-balance-blocks" data-testid="balance-top-blocks">
@@ -268,13 +258,28 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
               다음 수업 계획 검토하기 <ArrowRight size={15} />
             </PfButton>
           </div>
+
+          <details className="pf-balance-criteria-details">
+            <summary>집계 기준 안내</summary>
+            <div className="pf-balance-criteria-details__body">
+              <p className="muted pf-balance-data-note">
+                현재 선택한 기록 중 최근 {report.analyzedSessionCount}회 · 시간 정보{' '}
+                {report.timedSessionCount}회 · 동작 시간 스냅샷 {report.snapshotSessionCount}회. 평균은
+                실제 기록 시간이 있으면 실제 시간, 없으면 보존된 계획 시간을 사용합니다.
+              </p>
+              <p className="muted pf-balance-data-note">
+                보존된 계획의 동작 시간 {report.totalMovementMinutes}분 중 분류 정보 없음{' '}
+                {report.unclassifiedMovementMinutes}분. 설명·전환·휴식은 제외하며, 복수 분류 동작은
+                시간을 나누어 계산합니다.
+              </p>
+              <p className="muted pf-balance-disclaimer">
+                예시 기록은 제외하고 보존된 수업 스냅샷만 로컬에서 계산합니다. 시간 비중은 실제 수행량을
+                측정한 값이 아니며, 수업 구성 다양성을 돌아보는 참고 지표입니다.
+              </p>
+            </div>
+          </details>
         </>
       )}
-
-      <p className="muted pf-balance-disclaimer">
-        예시 기록은 제외하고 보존된 수업 스냅샷만 로컬에서 계산합니다. 시간 비중은 실제 수행량을
-        측정한 값이 아니며, 움직임 분류와 수업 구성 다양성을 돌아보는 참고 지표입니다.
-      </p>
     </PfCard>
   );
 };

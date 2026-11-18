@@ -1086,7 +1086,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       open
       onClose={closeOnce}
       title="주·월 시퀀스 계획"
-      subtitle="날짜별 수업 계획 사본을 관리합니다. 작성 중·준비 표시는 일정 관리용이며 전문가 검수나 실제 수업 기록과 별개입니다."
+      subtitle="날짜별 수업 회차에 사용할 시퀀스 사본을 미리 배정하고 주간 일정을 준비합니다."
       maxWidth="1020px"
       className="dated-planning-dialog"
     >
@@ -1189,7 +1189,6 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
         {mode === 'month' && (
           <p id={calendarHelpId} className="planning-calendar-help">
             날짜에서 방향키로 이동하고 Home·End로 주의 처음·끝, PageUp·PageDown으로 월을 바꿉니다.
-            준비 표시는 정리 상태이며 수업 승인이나 실제 진행 기록이 아닙니다.
           </p>
         )}
         {mode === 'month' && (
@@ -2017,8 +2016,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                         </p>
                       )}
                       <p className="dated-planning-note">
-                        수업 전 실제 장소의 기구·소도구를 직접 확인하세요. 이 교체 확인은 전문가
-                        검수나 실제 수업 기록과 별개입니다.
+                        수업 전 실제 장소의 기구·소도구를 직접 확인하세요.
                       </p>
                       <p>
                         <strong>
@@ -2085,10 +2083,6 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     </div>
                   )}
                 </details>
-                <p className="dated-planning-note">
-                  실제 소요 시간과 휴식은 수업 후 기록에서 따로 남깁니다. 날짜별 계획·준비
-                  표시·복사만으로 수업 기록을 만들지 않습니다.
-                </p>
               </>
             )}
           </section>
@@ -2364,6 +2358,9 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
             </div>
           )}
         </details>
+        <p className="dated-planning-note muted">
+          날짜별 계획과 준비 표시는 수업 전 준비용 사본이며, 실제 완료 기록은 수업 후 따로 남깁니다.
+        </p>
       </div>
     </LightDismissDialog>
   );

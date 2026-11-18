@@ -1037,20 +1037,25 @@ const SessionLogForm: React.FC<
             className={`teaching-form-grid teaching-form-two ${logStep === 3 ? 'is-step-focused' : ''}`}
             onFocusCapture={() => setLogStep(3)}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <PfField label="강사가 느낀 강도">
-                <PfSelect
-                  value={intensity}
-                  onChange={(event) => {
-                    setHasEditedDraft(true);
-                    setIntensity(event.target.value as typeof intensity);
-                  }}
-                >
-                  <option value="relaxed">가볍게</option>
-                  <option value="moderate">보통</option>
-                  <option value="intense">높게</option>
-                </PfSelect>
-              </PfField>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span className="pf-field__label" aria-hidden="true">
+                강사가 느낀 강도
+              </span>
+              <div className="sr-only">
+                <PfField label="강사가 느낀 강도">
+                  <PfSelect
+                    value={intensity}
+                    onChange={(event) => {
+                      setHasEditedDraft(true);
+                      setIntensity(event.target.value as typeof intensity);
+                    }}
+                  >
+                    <option value="relaxed">여유로움</option>
+                    <option value="moderate">적정 집중</option>
+                    <option value="intense">높은 집중</option>
+                  </PfSelect>
+                </PfField>
+              </div>
               <div
                 className="log-quick-note-chips"
                 data-testid="log-quick-intensity-chips"
@@ -1061,7 +1066,7 @@ const SessionLogForm: React.FC<
                   [
                     { value: 'relaxed' as const, label: '여유로움' },
                     { value: 'moderate' as const, label: '적정 집중' },
-                    { value: 'intense' as const, label: '고강도 챌린지' },
+                    { value: 'intense' as const, label: '높은 집중' },
                   ] as const
                 ).map((item) => (
                   <button
@@ -1080,22 +1085,27 @@ const SessionLogForm: React.FC<
                 ))}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <PfField label="강사의 수업 평가">
-                <PfSelect
-                  value={rating}
-                  onChange={(event) => {
-                    setHasEditedDraft(true);
-                    setRating(Number(event.target.value) as typeof rating);
-                  }}
-                >
-                  {([1, 2, 3, 4, 5] as const).map((value) => (
-                    <option key={value} value={value}>
-                      {value} / 5
-                    </option>
-                  ))}
-                </PfSelect>
-              </PfField>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span className="pf-field__label" aria-hidden="true">
+                강사의 수업 평가
+              </span>
+              <div className="sr-only">
+                <PfField label="강사의 수업 평가">
+                  <PfSelect
+                    value={rating}
+                    onChange={(event) => {
+                      setHasEditedDraft(true);
+                      setRating(Number(event.target.value) as typeof rating);
+                    }}
+                  >
+                    {([1, 2, 3, 4, 5] as const).map((value) => (
+                      <option key={value} value={value}>
+                        {value}점
+                      </option>
+                    ))}
+                  </PfSelect>
+                </PfField>
+              </div>
               <div
                 className="log-quick-note-chips"
                 data-testid="log-quick-rating-chips"
@@ -1196,7 +1206,7 @@ const SessionLogForm: React.FC<
               data-testid="log-apply-to-next-draft-toggle"
               onClick={() => setApplyToNextDraft((prev) => !prev)}
             >
-              {applyToNextDraft ? '✓ ' : '+ '}실제 진행한 순서·시간·회고 메모를 다음 수업 초안에 바로 선택 반영 (원본 템플릿·다른 예정 수업 불변)
+              {applyToNextDraft ? '✓ ' : '+ '}이번 진행 시간·메모를 다음 수업 초안에 반영 (저장된 원본은 그대로 유지)
             </button>
           </div>
         </div>

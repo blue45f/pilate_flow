@@ -22,7 +22,7 @@
 #root .flow-schedule .schedule-page-header .eyebrow {
   font-size: 12px;
   color: #617568;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 #root .flow-schedule .schedule-page-header p {
   font-size: 14px;
@@ -142,7 +142,7 @@
 }
 #root .flow-schedule .flow-schedule-today-label {
   font-size: 11px;
-  letter-spacing: 0.13em;
+  letter-spacing: 0;
   color: #7c8777;
 }
 #root .flow-schedule .flow-schedule-today strong {
@@ -349,15 +349,28 @@
   margin-top: 14px;
   border-top: 1px solid #e5e9de;
 }
+#root .flow-schedule .schedule-prep-actions > button.btn-secondary:not(.schedule-quick-teach-btn) {
+  background: #ffffff;
+  border-color: #dde3d7;
+  color: #4f6253;
+  font-weight: 500;
+}
 #root .flow-schedule .schedule-card-actions {
   border-top: 1px solid #e9ece3;
-  margin-top: 12px;
+  margin-top: 10px;
   padding-top: 8px;
-  gap: 8px 14px;
+  gap: 6px 10px;
 }
 #root .flow-schedule .schedule-card-actions button {
   font-size: 12px;
-  color: #68775e;
+  color: #607059;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+#root .flow-schedule .schedule-card-actions button:hover {
+  background: #f3f5ee;
+  border-color: #dce2d6;
 }
 #root .flow-schedule .schedule-planning-entry {
   margin: 20px 0;

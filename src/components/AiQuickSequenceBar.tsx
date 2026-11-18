@@ -14,11 +14,16 @@ import { getActiveSequencePlanningCriteria, usePilatesStore } from '../store/use
 export interface AiQuickSequenceBarProps {
   onApplied: (result: ComposedAiSequenceResult) => void;
   onError: (message: string) => void;
+  compact?: boolean;
 }
 
 const CAUTION_KEYS: readonly BodyCautionArea[] = ['lower-back', 'knee', 'wrist', 'neck'];
 
-export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplied, onError }) => {
+export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
+  onApplied,
+  onError,
+  compact = false,
+}) => {
   const [prompt, setPrompt] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const [cautions, setCautions] = useState<BodyCautionArea[]>([]);
@@ -77,12 +82,8 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
     );
   };
 
-  return (
-    <section
-      className="pf-ai-quick-bar"
-      data-testid="ai-quick-sequence-bar"
-      aria-label="AI 맞춤 수업 자동 구성"
-    >
+  const bodyContent = (
+    <>
       <div className="pf-ai-quick-bar__top">
         <form
           className="pf-ai-quick-bar__form"
@@ -233,6 +234,33 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({ onApplie
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (compact && !lastSummary) {
+    return (
+      <details
+        className="pf-ai-quick-bar pf-ai-quick-bar--collapsed"
+        data-testid="ai-quick-sequence-bar"
+        aria-label="AI 맞춤 수업 자동 구성"
+      >
+        <summary className="pf-ai-quick-bar__collapsed-summary">
+          <Wand2 size={15} strokeWidth={1.5} aria-hidden="true" />
+          <span>한 줄 설명·추천 테마로 수업 자동 채우기</span>
+          <small>전신 · 코어 · 하체 · 이완</small>
+        </summary>
+        <div className="pf-ai-quick-bar__collapsed-body">{bodyContent}</div>
+      </details>
+    );
+  }
+
+  return (
+    <section
+      className={`pf-ai-quick-bar ${compact ? 'is-compact' : ''}`.trim()}
+      data-testid="ai-quick-sequence-bar"
+      aria-label="AI 맞춤 수업 자동 구성"
+    >
+      {bodyContent}
     </section>
   );
 };

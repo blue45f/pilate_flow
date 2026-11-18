@@ -729,10 +729,6 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           2 구성 확인 후 수업안에 불러오기
         </li>
       </ol>
-      <p className="muted">
-        AI 없이 골라 복사하세요. 원본과 저장한 수업·이력은 그대로 두고, 동작·순서·시간을 자유롭게
-        바꿀 수 있어요.
-      </p>
       <div
         className="offline-presets-tabs"
         role="group"
