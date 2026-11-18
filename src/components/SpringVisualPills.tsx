@@ -13,7 +13,7 @@ export const SpringVisualPills: React.FC<SpringVisualPillsProps> = ({ springs })
     <span
       className="pf-spring-pills"
       data-testid="spring-visual-pills"
-      title={`스프링 장력: ${springs ?? ''}`.trim()}
+      title={`스프링 표기: ${springs ?? ''}`.trim()}
     >
       {chips.map((chip) => (
         <span key={chip.key} className="pf-spring-pill">

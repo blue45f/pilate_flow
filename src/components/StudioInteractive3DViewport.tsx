@@ -81,11 +81,11 @@ const SHADER_MODES: readonly {
 ];
 
 const SPRING_EXPERIMENT_OPTIONS: readonly { readonly value: string; readonly labelKo: string }[] = [
-  { value: 'default', labelKo: '기본 권장 스프링' },
-  { value: '2R 1B', labelKo: '빨강 2 + 파랑 1 (풋워크 강)' },
-  { value: '1R 1B', labelKo: '빨강 1 + 파랑 1 (중간 지지)' },
-  { value: '1R', labelKo: '빨강 1 (표준 컨트롤)' },
-  { value: '1B 1Y', labelKo: '파랑 1 + 노랑 1 (코어 경량)' },
+  { value: 'default', labelKo: '기존 스프링 표기' },
+  { value: '2R 1B', labelKo: '빨강 2 + 파랑 1' },
+  { value: '1R 1B', labelKo: '빨강 1 + 파랑 1' },
+  { value: '1R', labelKo: '빨강 1' },
+  { value: '1B 1Y', labelKo: '파랑 1 + 노랑 1' },
   { value: 'Bodyweight', labelKo: '무스프링 (맨몸 제어)' },
 ];
 

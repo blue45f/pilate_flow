@@ -1267,7 +1267,8 @@ export function formatSequenceAsStudioSheet(
   const header = [
     `🧘‍♀️ [Pilates Flow Atelier] ${title}`,
     `• 부제: ${subtitle}`,
-    `• 총 수업 시간: ${totalMin}분 (${steps.length}블록) | 기구 세팅 기준: ${brandName}`,
+    `• 총 수업 시간: ${totalMin}분 (${steps.length}블록) | 선택한 브랜드: ${brandName} (모델 미확인)`,
+    `• 스프링은 원문 참고값입니다. 색상으로 장력을 추정하지 말고 수업 전 실제 기구에서 확인해 주세요.`,
     `────────────────────────────────────────`,
   ];
 

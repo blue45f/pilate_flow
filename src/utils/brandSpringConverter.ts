@@ -14,25 +14,25 @@ export const BRAND_SPRING_OPTIONS: ReadonlyArray<BrandSpringOption> = [
     id: 'intopilates',
     shortLabelKo: '국내 5스프링',
     fullLabelKo: '인투필라테스 / 국내 모던 표준',
-    systemNoteKo: '빨강(강) · 파랑(중) · 노랑(약) · 초록(최강)',
+    systemNoteKo: '색상 표기 참고 · 모델별 실제 기구 확인',
   },
   {
     id: 'balanced-body',
     shortLabelKo: 'Balanced Body',
     fullLabelKo: '밸런스드 바디 (Balanced Body)',
-    systemNoteKo: 'Red(강) · Blue(중) · Yellow(약) · Green(특강)',
+    systemNoteKo: '색상 표기 참고 · 모델별 실제 기구 확인',
   },
   {
     id: 'stott',
     shortLabelKo: 'STOTT · 메리듀',
     fullLabelKo: '스탓 / 메리듀 (Merrithew)',
-    systemNoteKo: 'Red(1.0) · Blue(0.5) · White(0.25)',
+    systemNoteKo: '색상 표기 참고 · 모델별 실제 기구 확인',
   },
   {
     id: 'classical',
     shortLabelKo: 'Gratz 클래식',
     fullLabelKo: '클래식 그라츠 (4동일 스프링)',
-    systemNoteKo: '동일 장력 스프링 4개 (#1~#4)',
+    systemNoteKo: '번호 표기 참고 · 모델별 실제 기구 확인',
   },
 ] as const;
 
