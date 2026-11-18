@@ -90,7 +90,6 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
 
     if (open) {
       closingRef.current = false;
-      setSheetOffsetY(0);
       if (
         document.activeElement instanceof HTMLElement &&
         document.activeElement !== document.body &&
@@ -185,13 +184,16 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const effectiveSheetOffsetY = open ? sheetOffsetY : 0;
 
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={subtitle ? subtitleId : undefined}
-      data-sheet-offset-y={sheetOffsetY > 0 ? String(Math.round(sheetOffsetY)) : undefined}
+      data-sheet-offset-y={
+        effectiveSheetOffsetY > 0 ? String(Math.round(effectiveSheetOffsetY)) : undefined
+      }
       className={[
         'atelier-modal-dialog',
         'pf-modal-dialog',
@@ -203,8 +205,8 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
         .join(' ')}
       style={{
         maxWidth,
-        ...(sheetOffsetY > 0 && !prefersReducedMotion
-          ? { transform: `translateY(${Math.round(sheetOffsetY)}px)`, transition: 'none' }
+        ...(effectiveSheetOffsetY > 0 && !prefersReducedMotion
+          ? { transform: `translateY(${Math.round(effectiveSheetOffsetY)}px)`, transition: 'none' }
           : {}),
       }}
       {...({ closedby: 'any' } as Record<string, string>)}

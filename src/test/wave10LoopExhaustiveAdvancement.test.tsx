@@ -169,7 +169,7 @@ describe('Wave 10 Autonomous Loop-Graph Exhaustive Advancement (AC-101 .. AC-110
         <OnePageVisual3DCueSheet
           title="모바일 큐시트"
           apparatus="reformer"
-          level={1}
+          level="1.0"
           steps={[]}
           exercises={INITIAL_EXERCISES}
         />,
