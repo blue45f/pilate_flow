@@ -3,6 +3,7 @@ import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { SpringVisualPills } from './SpringVisualPills';
+import { ExerciseKinesiologyCard } from './ExerciseKinesiologyCard';
 import { useId, useState, type RefObject } from 'react';
 import { ArrowUpRight, Check, ExternalLink, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, FAVORITE_TAG_META, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -234,6 +235,43 @@ export function LibraryMovementInspector({
               </div>
             )}
           </div>
+
+          <ExerciseKinesiologyCard exercise={exercise} />
+
+          {(exercise.layers.easy.trim() ||
+            exercise.layers.standard.trim() ||
+            exercise.layers.hard.trim()) && (
+            <section
+              className="pf-inspector-layers-card"
+              data-testid="inspector-layers-progression-card"
+              aria-label="회원 수준별 완화·기본·심화 프로그레션 가이드"
+            >
+              <div className="pf-inspector-layers-card__head">
+                <strong>난이도별 변형 · 프로그레션 가이드</strong>
+                <small>{exercise.isUnilateral ? '좌·우 대칭 수행' : '양쪽 동시 수행'}</small>
+              </div>
+              <div className="pf-inspector-layers-grid">
+                {exercise.layers.easy.trim() && (
+                  <div className="pf-inspector-layer-item is-easy">
+                    <span>완화 · 안전 진입</span>
+                    <p>{exercise.layers.easy}</p>
+                  </div>
+                )}
+                {exercise.layers.standard.trim() && (
+                  <div className="pf-inspector-layer-item is-standard">
+                    <span>기본 · 표준 수행</span>
+                    <p>{exercise.layers.standard}</p>
+                  </div>
+                )}
+                {exercise.layers.hard.trim() && (
+                  <div className="pf-inspector-layer-item is-hard">
+                    <span>심화 · 가동성·저항 확장</span>
+                    <p>{exercise.layers.hard}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           <div
             className="library-inspector-fact-strip"

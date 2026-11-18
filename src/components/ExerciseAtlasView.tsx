@@ -2763,6 +2763,23 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   </select>
                 </label>
                 <label className="form-field">
+                  <span>수행 대칭 방식</span>
+                  <select
+                    aria-label="수행 대칭 방식"
+                    value={filters.sides}
+                    onChange={(event) =>
+                      update(
+                        'sides',
+                        event.target.value as 'all' | 'unilateral' | 'bilateral',
+                      )
+                    }
+                  >
+                    <option value="all">전체 수행 방식</option>
+                    <option value="unilateral">단측 대칭 · 좌/우 번갈아</option>
+                    <option value="bilateral">양쪽 동시 수행</option>
+                  </select>
+                </label>
+                <label className="form-field">
                   <span>내 강사 검토 상태</span>
                   <select
                     value={filters.review}

@@ -83,6 +83,7 @@ import {
 import {
   exerciseMatchesCriteria,
   fitSequenceDuration,
+  formatSequenceAsStudioSheet,
   getMovementKey,
   getStepSideLabels,
   getStepTiming,
@@ -103,6 +104,13 @@ import { StudioSpringHorizon } from './StudioBrandMark';
 import { CountUp } from '../motion';
 import { SpringVisualPills } from './SpringVisualPills';
 import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
+import { ExerciseKinesiologyCard } from './ExerciseKinesiologyCard';
+import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
+import {
+  ACTIVE_DRAFT_TAG_TARGET_ID,
+  copyDraftRoutineTagsToSavedSequence,
+} from '../utils/studioRoutineTags';
+import { summarizeSequenceSpinalAndFlowBalance } from '../utils/pilatesKinesiologyIntelligence';
 import '../styles/sequence-studio.css';
 
 const AdvancedWorkbench = lazy(() =>
@@ -632,6 +640,21 @@ function StepEditor({
                 )}
               </details>
             )}
+            {exercise && (
+              <ExerciseKinesiologyCard
+                exercise={exercise}
+                compact
+                onInsertCorrectionCueToNote={(cueText) => {
+                  setNote((prev) =>
+                    prev.includes(cueText)
+                      ? prev
+                      : prev.trim()
+                        ? `${prev.trim()}\n${cueText}`
+                        : cueText,
+                  );
+                }}
+              />
+            )}
             <label className="flow-field">
               수업 메모
               <textarea
@@ -743,6 +766,7 @@ export function SequenceStudioWorkbench(props: Props) {
   const [quickRehearsalOpen, setQuickRehearsalOpen] = useState(false);
   const [replacingStepIndex, setReplacingStepIndex] = useState<number | null>(null);
   const [selectedLocationCopyId, setSelectedLocationCopyId] = useState<string>('');
+  const [tagSheetTarget, setTagSheetTarget] = useState<{ id: string; title: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const passiveConflict = useSyncExternalStore(
     subscribeExternalTabConflict,
@@ -980,6 +1004,10 @@ export function SequenceStudioWorkbench(props: Props) {
     () => buildSafeTransitionOptimization(s.activeSteps, byId),
     [s.activeSteps, byId],
   );
+  const spinalBalanceSummary = useMemo(
+    () => summarizeSequenceSpinalAndFlowBalance(s.activeSteps, byId),
+    [s.activeSteps, byId],
+  );
   const nextScheduledContext = useMemo(() => {
     if (!s.instructorSchedule.classes.length) return null;
     try {
@@ -1120,6 +1148,9 @@ export function SequenceStudioWorkbench(props: Props) {
       state.saveCurrentSequenceToBinder();
       await Promise.resolve();
       const next = usePilatesStore.getState();
+      if (next.activeSequenceId) {
+        copyDraftRoutineTagsToSavedSequence(next.activeSequenceId);
+      }
       const savedObj = next.savedSequences.find((item) => item.id === next.activeSequenceId);
       const persistedOk =
         Boolean(savedObj) && isSavedSequencePersistedOnDisk(savedObj!, next.persistenceError);
@@ -1239,6 +1270,29 @@ export function SequenceStudioWorkbench(props: Props) {
               <button onClick={props.onOpenClipper}>영상에서 동작 가져오기</button>
               <button onClick={() => props.onOpenIdeaSheet?.()}>내 동작 만들기</button>
               <button onClick={props.onOpenInventory}>기구 · 소도구 관리</button>
+              {exerciseCount > 0 && (
+                <button
+                  type="button"
+                  data-testid="flow-copy-cuesheet-btn"
+                  onClick={async () => {
+                    const sheet = formatSequenceAsStudioSheet(
+                      s.activeTitle || '수업 시퀀스',
+                      s.activeSubtitle || `목표 ${s.activeTargetMinutes}분 클래스`,
+                      s.activeSteps,
+                      new Map(s.exercises.map((ex) => [ex.id, ex])),
+                      s.reformerBrand,
+                    );
+                    try {
+                      await navigator.clipboard?.writeText(sheet);
+                      setNotice('티칭 큐시트 텍스트를 클립보드에 복사했습니다.');
+                    } catch {
+                      setNotice('큐시트 복사에 실패했습니다. 저장한 수업에서 확인해 주세요.');
+                    }
+                  }}
+                >
+                  티칭 큐시트 텍스트 복사
+                </button>
+              )}
             </div>
           </details>
         </div>
@@ -1461,6 +1515,12 @@ export function SequenceStudioWorkbench(props: Props) {
           <span>수업 조건</span>
         </button>
       </div>
+
+      <RoutineTagInlineStrip
+        routineId={s.activeSequenceId || ACTIVE_DRAFT_TAG_TARGET_ID}
+        routineTitle={s.activeTitle || '현재 수업 초안'}
+        onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
+      />
 
       <AiQuickSequenceBar
         onApplied={(composed) => {
@@ -2114,6 +2174,48 @@ export function SequenceStudioWorkbench(props: Props) {
                     주세요.
                   </p>
                 </div>
+              </section>
+            )}
+            {s.activeSteps.length > 0 && spinalBalanceSummary.totalExerciseCount > 0 && (
+              <section
+                className="pf-class-balance-mini-strip"
+                data-testid="workbench-spinal-balance-strip"
+                aria-label="수업 척추 움직임 및 양측 대칭 요약"
+              >
+                <div className="pf-class-balance-mini-strip__pills">
+                  <strong style={{ fontSize: '0.78rem', color: '#1f4435' }}>
+                    척추 4면 {spinalBalanceSummary.coveredPlanesCount}/4
+                  </strong>
+                  {(
+                    [
+                      ['flexion', '굴곡'],
+                      ['extension', '신전'],
+                      ['lateral', '측굴'],
+                      ['rotation', '회전'],
+                    ] as const
+                  ).map(([plane, labelKo]) => {
+                    const count = spinalBalanceSummary.planeCounts[plane];
+                    return (
+                      <span
+                        key={plane}
+                        className={`pf-plane-chip ${count > 0 ? 'is-covered' : ''}`}
+                      >
+                        {labelKo} {count}
+                      </span>
+                    );
+                  })}
+                  <span className="pf-plane-chip">
+                    양측 수행 {spinalBalanceSummary.unilateralStepCount}개
+                  </span>
+                  <span className="pf-plane-chip">
+                    스프링 변경 {spinalBalanceSummary.springChangeCount}회
+                  </span>
+                </div>
+                {spinalBalanceSummary.missingPlaneHintKo && (
+                  <small style={{ color: '#55685e', fontWeight: 600 }}>
+                    {spinalBalanceSummary.missingPlaneHintKo}
+                  </small>
+                )}
               </section>
             )}
             <div
@@ -3073,6 +3175,13 @@ export function SequenceStudioWorkbench(props: Props) {
           />
         </Suspense>
       )}
+      <RoutineTagSheetDialog
+        open={Boolean(tagSheetTarget)}
+        targetRoutineId={tagSheetTarget?.id ?? null}
+        targetRoutineTitle={tagSheetTarget?.title ?? ''}
+        onClose={() => setTagSheetTarget(null)}
+        onFeedback={(msg) => setNotice(msg)}
+      />
     </section>
   );
 }

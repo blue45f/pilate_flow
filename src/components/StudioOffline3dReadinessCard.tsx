@@ -11,6 +11,7 @@ import { STUDIO_3D_SIGNATURES } from '../utils/studio3dMotionCatalog';
 import { ALL_LOSSLESS_MOTION_FRAME_URLS } from '../utils/motionFrameAssets';
 
 const STUDIO_REFORMER_SHOWCASE_SRC = '/images/studio3d/atelier-reformer-unslop-v9.webp';
+const STUDIO_REFORMER_GLB_SPEC = '실측 기구 3D · 32파츠';
 const STUDIO_SPRING_CODES = ['2R', '1B', '1G', '1Y'] as const;
 
 export const StudioOffline3dReadinessCard: React.FC = () => {
@@ -85,12 +86,15 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
             alt="화이트오크와 보타니컬 세이지 리포머 5스프링 스튜디오 3D 도해"
             className="pf-offline-3d-card__showcase-img"
           />
-          <figcaption className="pf-offline-3d-card__keycaps" aria-label="기본 5스프링 구성">
+          <figcaption className="pf-offline-3d-card__keycaps" aria-label="기본 5스프링 구성 및 3D 규격">
             {STUDIO_SPRING_CODES.map((code) => (
               <kbd key={code} className="pf-spring-pill">
                 {code}
               </kbd>
             ))}
+            <kbd className="pf-spring-pill" data-testid="studio-offline-3d-glb-spec">
+              {STUDIO_REFORMER_GLB_SPEC}
+            </kbd>
           </figcaption>
         </figure>
 

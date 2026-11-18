@@ -71,16 +71,19 @@ export function MotionDirector() {
       // cannot scroll further must still be able to enter.
       { rootMargin: '0px', threshold: 0.01 },
     );
+    const observed = new WeakSet<Element>();
+    const combinedRevealSelector = `${REVEAL_SELECTOR}, [${REVEAL_PENDING_ATTR}]`;
     const track = (scope: Element | Document) => {
       const visit = (element: Element) => {
-        if (element.hasAttribute(REVEAL_PENDING_ATTR) || element.hasAttribute(REVEALED_ATTR)) {
+        if (observed.has(element) || element.hasAttribute(REVEALED_ATTR)) {
           return;
         }
+        observed.add(element);
         element.setAttribute(REVEAL_PENDING_ATTR, '');
         io.observe(element);
       };
-      if (scope instanceof Element && scope.matches(REVEAL_SELECTOR)) visit(scope);
-      scope.querySelectorAll(REVEAL_SELECTOR).forEach(visit);
+      if (scope instanceof Element && scope.matches(combinedRevealSelector)) visit(scope);
+      scope.querySelectorAll(combinedRevealSelector).forEach(visit);
     };
     track(document);
 

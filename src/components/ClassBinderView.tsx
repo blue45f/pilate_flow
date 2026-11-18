@@ -103,6 +103,12 @@ import { SpringVisualPills } from './SpringVisualPills';
 import { TeachingBalanceInsightCard } from './TeachingBalanceInsightCard';
 import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import { CurriculumProgressionSheet } from './CurriculumProgressionSheet';
+import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
+import {
+  getRoutineTagsForId,
+  routineTagCanonicalKey,
+  useStudioRoutineTags,
+} from '../utils/studioRoutineTags';
 import {
   buildAdaptiveNextClassDraft,
   type AdaptiveNextClassPrescription,
@@ -537,11 +543,42 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     savedSequences.length > 0 && (savedApparatusOptions.length > 1 || taughtSavedCount > 0);
   const trimmedSavedQuery = normalizeSearchToken(query);
   const compactSavedQuery = normalizeCompactSearch(query);
-  const hasActiveSavedFilter = Boolean(trimmedSavedQuery) || effectiveSavedFilter !== 'all';
+  const routineTagState = useStudioRoutineTags();
+  const [selectedRoutineTag, setSelectedRoutineTag] = useState<string | null>(null);
+  const [tagSheetTarget, setTagSheetTarget] = useState<{
+    id: string | null;
+    title: string;
+  } | null>(null);
+  const activeRoutineTagCounts = useMemo(() => {
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const seq of savedSequences) {
+      const assigned = getRoutineTagsForId(routineTagState, seq.id);
+      for (const tag of assigned) {
+        const key = routineTagCanonicalKey(tag);
+        const existing = counts.get(key);
+        if (existing) existing.count += 1;
+        else counts.set(key, { label: tag, count: 1 });
+      }
+    }
+    return [...counts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'ko'));
+  }, [savedSequences, routineTagState]);
+  const effectiveSelectedRoutineTag = useMemo(() => {
+    if (!selectedRoutineTag) return null;
+    const key = routineTagCanonicalKey(selectedRoutineTag);
+    return activeRoutineTagCounts.some((item) => routineTagCanonicalKey(item.label) === key)
+      ? selectedRoutineTag
+      : null;
+  }, [selectedRoutineTag, activeRoutineTagCounts]);
+
+  const hasActiveSavedFilter =
+    Boolean(trimmedSavedQuery) ||
+    effectiveSavedFilter !== 'all' ||
+    Boolean(effectiveSelectedRoutineTag);
 
   const resetSavedFilters = (focusInput = false) => {
     setQuery('');
     setSavedFilter('all');
+    setSelectedRoutineTag(null);
     if (focusInput) savedSearchInputRef.current?.focus();
   };
 
@@ -585,6 +622,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           return true;
         })
         .filter((s) => {
+          if (!effectiveSelectedRoutineTag) return true;
+          const targetKey = routineTagCanonicalKey(effectiveSelectedRoutineTag);
+          const assigned = getRoutineTagsForId(routineTagState, s.id);
+          return assigned.some((item) => routineTagCanonicalKey(item) === targetKey);
+        })
+        .filter((s) => {
           if (!trimmedSavedQuery) return true;
           const stepTerms = s.steps
             .map((step) => {
@@ -594,8 +637,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             })
             .join(' ');
           const latestGroup = actualLogsBySequenceId.get(s.id)?.[0]?.groupName ?? '';
+          const customTags = getRoutineTagsForId(routineTagState, s.id).join(' ');
           const searchable = normalizeSearchToken(
-            `${s.title} ${s.subtitle} ${getApparatusSearchTerms(s.apparatus)} lv ${s.level} ${s.level} ${s.focusTags?.join(' ')} ${stepTerms} ${latestGroup}`,
+            `${s.title} ${s.subtitle} ${getApparatusSearchTerms(s.apparatus)} lv ${s.level} ${s.level} ${s.focusTags?.join(' ')} ${customTags} ${stepTerms} ${latestGroup}`,
           );
           return (
             searchable.includes(trimmedSavedQuery) ||
@@ -607,6 +651,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     [
       savedSequences,
       effectiveSavedFilter,
+      effectiveSelectedRoutineTag,
+      routineTagState,
       trimmedSavedQuery,
       compactSavedQuery,
       exercisesMap,
@@ -1432,6 +1478,57 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 )}
               </div>
             )}
+            {savedSequences.length > 0 && (
+              <div
+                className="pf-routine-tag-filter-bar"
+                data-testid="binder-routine-tag-filter-bar"
+                role="region"
+                aria-label="내 루틴 태그 필터"
+              >
+                <span className="pf-routine-tag-filter-bar__label">내 태그</span>
+                {activeRoutineTagCounts.length > 0 ? (
+                  activeRoutineTagCounts.map((item) => {
+                    const isSelected =
+                      Boolean(effectiveSelectedRoutineTag) &&
+                      routineTagCanonicalKey(effectiveSelectedRoutineTag!) ===
+                        routineTagCanonicalKey(item.label);
+                    return (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className={`pf-routine-tag-chip ${isSelected ? 'is-active' : ''}`}
+                        aria-pressed={isSelected}
+                        data-testid={`binder-filter-tag-${item.label}`}
+                        onClick={() =>
+                          setSelectedRoutineTag((prev) =>
+                            prev && routineTagCanonicalKey(prev) === routineTagCanonicalKey(item.label)
+                              ? null
+                              : item.label,
+                          )
+                        }
+                      >
+                        <span>#{item.label}</span>
+                        <span>{item.count}</span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <span style={{ fontSize: '0.78rem', color: '#5b6c63' }}>
+                    각 수업 카드의 ‘+ 태그 추가’로 요일·대상·특징 라벨을 붙여 원탭으로 분류하세요
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="pf-routine-tag-add-trigger"
+                  data-testid="binder-open-tag-manager-btn"
+                  onClick={() =>
+                    setTagSheetTarget({ id: null, title: '스튜디오 루틴 태그 관리' })
+                  }
+                >
+                  태그 관리
+                </button>
+              </div>
+            )}
             {hasActiveSavedFilter && (
               <div className="teaching-saved-filter-status">
                 <p
@@ -1523,7 +1620,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       variant="interactive"
                       className={`teaching-sequence-card flow-binder-card ${isLoadedInWorkbench ? 'is-active-plan' : ''}`}
                       data-saved-sequence-id={domKey}
-                      data-pf-r=""
+                      data-pf-reveal=""
                       data-pf-tilt=""
                       key={sequence.id}
                     >
@@ -1604,6 +1701,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       <p className="muted teaching-sequence-subtitle">
                         {sequence.subtitle || '내가 만든 수업 흐름'}
                       </p>
+                      <RoutineTagInlineStrip
+                        routineId={sequence.id}
+                        routineTitle={sequence.title}
+                        activeFilterTag={effectiveSelectedRoutineTag}
+                        onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
+                        onSelectFilterTag={(tag) =>
+                          setSelectedRoutineTag((prev) =>
+                            prev && routineTagCanonicalKey(prev) === routineTagCanonicalKey(tag)
+                              ? null
+                              : tag,
+                          )
+                        }
+                      />
                       <p
                         className="teaching-saved-glance"
                         style={{ fontVariantNumeric: 'tabular-nums' }}
@@ -2666,7 +2776,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         key={log.id}
                         variant={isSample ? 'sample' : 'default'}
                         className="teaching-history-card"
-                        data-pf-r=""
+                        data-pf-reveal=""
                         data-pf-tilt=""
                       >
                         <div
@@ -3358,6 +3468,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           </div>
         )}
       </LightDismissDialog>
+      <RoutineTagSheetDialog
+        open={Boolean(tagSheetTarget)}
+        targetRoutineId={tagSheetTarget?.id ?? null}
+        targetRoutineTitle={tagSheetTarget?.title ?? ''}
+        onClose={() => setTagSheetTarget(null)}
+        onFeedback={(msg) => setMessage(msg)}
+      />
     </div>
   );
 };

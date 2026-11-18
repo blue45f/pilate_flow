@@ -21,7 +21,13 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
+import {
+  getRoutineTagsForId,
+  presetRoutineTagTargetId,
+  useStudioRoutineTags,
+} from '../utils/studioRoutineTags';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
 import '../styles/offline-presets.css';
 import './OfflinePresetPicker.css';
 
@@ -289,6 +295,11 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
   // Confirmation is strictly bound to the exact store snapshot inspected by the user.
   const [confirmedForState, setConfirmedForState] = useState<PilatesStudioState | null>(null);
   const [message, setMessage] = useState('');
+  const routineTagState = useStudioRoutineTags();
+  const [tagDialogTarget, setTagDialogTarget] = useState<{
+    routineId: string;
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     const snapshot: PresetPickerDraftSnapshot = {
@@ -324,6 +335,10 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               item.themeLabelKo,
               apparatusLabelKo(item.apparatus),
               ...item.focusTags,
+              ...getRoutineTagsForId(
+                routineTagState,
+                presetRoutineTagTargetId('class', item.id),
+              ).flatMap((tag) => [tag, `#${tag}`]),
             ],
             query,
           ),
@@ -340,11 +355,15 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
             item.targetAudienceSummaryKo,
             item.themeLabelKo,
             apparatusLabelKo(item.apparatus),
+            ...getRoutineTagsForId(
+              routineTagState,
+              presetRoutineTagTargetId('block', item.id),
+            ).flatMap((tag) => [tag, `#${tag}`]),
           ],
           query,
         ),
     );
-  }, [kind, apparatus, theme, minutes, query]);
+  }, [kind, apparatus, theme, minutes, query, routineTagState]);
 
   const reusableMatches = useMemo(() => {
     if (kind !== 'reusable') return [];
@@ -352,11 +371,19 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       (block) =>
         (apparatus === 'all' || block.apparatus === apparatus) &&
         matchesPresetQuery(
-          [block.title, block.description, apparatusLabelKo(block.apparatus)],
+          [
+            block.title,
+            block.description,
+            apparatusLabelKo(block.apparatus),
+            ...getRoutineTagsForId(
+              routineTagState,
+              presetRoutineTagTargetId('reusable', block.id),
+            ).flatMap((tag) => [tag, `#${tag}`]),
+          ],
           query,
         ),
     );
-  }, [kind, savedReusableBlocks, apparatus, query]);
+  }, [kind, savedReusableBlocks, apparatus, query, routineTagState]);
 
   const selected =
     selection?.kind === 'class'
@@ -963,26 +990,44 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                     </button>
                   );
                 })
-              : matches.slice(0, limit).map((item) => (
-                  <button
-                    type="button"
-                    className="offline-preset-card"
-                    key={item.id}
-                    data-preset-card-id={item.id}
-                    aria-pressed={selection?.id === item.id}
-                    onClick={() => choose(item.id)}
-                  >
-                    <strong>{item.title}</strong>
-                    <small className="offline-preset-card-summary">
-                      {item.presetKind === 'class-sequence' ? item.userSummaryKo : item.description}
-                    </small>
-                    <span>
-                      {apparatusLabelKo(item.apparatus)} ·{' '}
-                      {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
-                      {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
-                    </span>
-                  </button>
-                ))}
+              : matches.slice(0, limit).map((item) => {
+                  const assignedTags = getRoutineTagsForId(
+                    routineTagState,
+                    presetRoutineTagTargetId(
+                      item.presetKind === 'class-sequence' ? 'class' : 'block',
+                      item.id,
+                    ),
+                  );
+                  return (
+                    <button
+                      type="button"
+                      className="offline-preset-card"
+                      key={item.id}
+                      data-preset-card-id={item.id}
+                      aria-pressed={selection?.id === item.id}
+                      onClick={() => choose(item.id)}
+                    >
+                      <strong>{item.title}</strong>
+                      <small className="offline-preset-card-summary">
+                        {item.presetKind === 'class-sequence' ? item.userSummaryKo : item.description}
+                      </small>
+                      <span>
+                        {apparatusLabelKo(item.apparatus)} ·{' '}
+                        {item.presetKind === 'class-sequence'
+                          ? item.durationMinutes
+                          : item.durationMin}
+                        분 ·{' '}
+                        {item.presetKind === 'class-sequence'
+                          ? item.steps.length
+                          : item.items.length}
+                        개 동작
+                        {assignedTags.length > 0
+                          ? ` · ${assignedTags.map((t) => `#${t}`).join(' ')}`
+                          : ''}
+                      </span>
+                    </button>
+                  );
+                })}
           </div>
           {!activeCount &&
             (isNoSourceData ? (
@@ -1068,6 +1113,13 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               </button>
             </div>
           </div>
+          <RoutineTagInlineStrip
+            routineId={presetRoutineTagTargetId(selection.kind, selection.id)}
+            routineTitle={previewTitle ?? selection.id}
+            onOpenTagSheet={(routineId, routineTitle) =>
+              setTagDialogTarget({ routineId, title: routineTitle })
+            }
+          />
           <p>
             복사할 계획 {formatSecondsToMMSS(totalSeconds)} · 기구:{' '}
             {previewEquipmentList
@@ -1244,6 +1296,12 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
         </section>
       )}
       {message && <p role="alert">{message}</p>}
+      <RoutineTagSheetDialog
+        open={Boolean(tagDialogTarget)}
+        onClose={() => setTagDialogTarget(null)}
+        targetRoutineId={tagDialogTarget?.routineId ?? null}
+        targetRoutineTitle={tagDialogTarget?.title ?? ''}
+      />
     </section>
   );
 }

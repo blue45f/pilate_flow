@@ -57,6 +57,8 @@ import { ScheduleChangeScopePanel, type ScheduleChangeScope } from './ScheduleCh
 import { resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
 import { formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { analyzeHistoryLogsForNextClass } from '../utils/historyAdaptiveBridge';
+import { buildStudioCareBriefing } from '../utils/studioCarePlaybookEngine';
+import { StudioCarePlaybookPanel } from './StudioCarePlaybookPanel';
 
 type MoveDraft = {
   classId: string;
@@ -296,6 +298,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     instructorSchedule: data,
     setInstructorSchedule,
     savedSequences,
+    classGroups,
     historyLogs,
     reformerBrand,
     exercises,
@@ -986,6 +989,19 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     () => findInstructorScheduleConflicts(upcomingRows),
     [upcomingRows],
   );
+  const studioCareBriefing = useMemo(
+    () =>
+      buildStudioCareBriefing({
+        selectedDate,
+        occurrences: scheduledRows,
+        schedule: data,
+        classGroups,
+        historyLogs,
+        savedSequences,
+        datedAssignments: assignments,
+      }),
+    [selectedDate, scheduledRows, data, classGroups, historyLogs, savedSequences, assignments],
+  );
   const nextPrepInfo = nextScheduledRow
     ? resolveOccurrencePrepInfo({
         row: nextScheduledRow,
@@ -1047,7 +1063,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           className="flow-schedule-next"
           aria-label="다가오는 수업"
           data-testid="schedule-next-class"
-          data-pf-r=""
+          data-pf-reveal=""
           data-pf-tilt=""
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
@@ -1453,6 +1469,20 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             </div>
           </div>
         )}
+        <StudioCarePlaybookPanel
+          briefing={studioCareBriefing}
+          onJumpToOccurrencePrep={({ classId, originalDate }) => {
+            const target = scheduledRows.find(
+              (r) => r.classId === classId && r.originalDate === originalDate,
+            );
+            if (target) {
+              setHighlightedRowId(target.id);
+              document
+                .querySelector(`[data-schedule-row-id="${target.id}"]`)
+                ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            }
+          }}
+        />
         {!data.locations.length && (
           <div className="schedule-empty">
             <MapPin size={20} strokeWidth={1.5} />
@@ -1674,7 +1704,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         className={`schedule-class schedule-class-${row.status}${isHighlighted ? ' schedule-class-prep-focus' : ''}`}
                         data-prep-status={row.status === 'scheduled' ? prepInfo?.status : undefined}
                         data-prep-highlighted={isHighlighted ? 'true' : undefined}
-                        data-pf-r=""
+                        data-pf-reveal=""
                         data-pf-tilt=""
                         key={row.id}
                         aria-label={`${row.title} ${formatScheduleTime(row.startTime)}`}
