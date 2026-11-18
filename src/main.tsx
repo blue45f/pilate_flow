@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+import '@fontsource/instrument-serif/latin-400.css';
 import './styles/studio.css';
 import './styles/atelier-v2.css';
 import './styles/atelier-vnext.css';
@@ -13,6 +15,7 @@ import './styles/flow-studio.css';
 import './styles/atelier-calm-luxury-polish.css';
 import { App } from './App';
 import './styles/atelier-unslop-system.css';
+import './styles/pf-motion-studio.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { startPwa } from './lib/pwa';

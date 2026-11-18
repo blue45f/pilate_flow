@@ -47,7 +47,7 @@ from pilates_3d_modeling_kernel import (
 def make_glb_materials(atlas_img):
     mats = {}
     for key, mname, rough, metal, sheen, coat in [
-        ("glb_diel", "MAT_StudioDielectric", 0.44, 0.0, 0.24, 0.16),
+        ("glb_diel", "MAT_StudioDielectric", 0.44, 0.0, 0.0, 0.0),
         ("glb_metal", "MAT_StudioMetallic", 0.20, 1.0, 0.0, 0.0),
     ]:
         mat = bpy.data.materials.new(mname)
@@ -287,8 +287,8 @@ def verify_strict_hygiene(fname: str, objs: list[bpy.types.Object]) -> tuple[int
     if abs(min_z) > 1e-5:
         raise RuntimeError(f"[{fname}] scene not grounded at Z=0: min_z={min_z:.6f}")
 
-    if not (25000 <= total_tris <= 35000):
-        raise RuntimeError(f"[{fname}] triangle count {total_tris} outside 25,000..35,000 target window!")
+    if not (45000 <= total_tris <= 98000):
+        raise RuntimeError(f"[{fname}] triangle count {total_tris} outside 45,000..98,000 high-density flagship window!")
 
     return total_tris, total_verts
 
@@ -331,7 +331,7 @@ def build_practitioner_hero_spec(mc: MeshCollector):
         "rElbowPole": [-0.10, 0.85, -0.52],
         "supinatePalms": True,
     }
-    build_sculpted_practitioner(mc, rig, subsurf=1)
+    build_sculpted_practitioner(mc, rig, subsurf=2)
 
     pelvis = Vector(rig["pelvis"])
     chest = Vector(rig["chest"])
@@ -377,7 +377,7 @@ def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | No
         bpy.ops.object.mode_set(mode="OBJECT")
 
     results = {}
-    atlas = build_glb_pbr_atlas(512)
+    atlas = build_glb_pbr_atlas(1024)
     mats = make_glb_materials(atlas)
     try:
         for app_key, fname, ex_id, phase_key, extra_props in targets:
@@ -395,7 +395,7 @@ def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | No
                 ex["props"] = extra_props if extra_props is not None else []
                 rig = ex["phases"][phase_key]
                 build_apparatus_and_props(mc, ex, rig)
-                build_sculpted_practitioner(mc, rig, subsurf=1)
+                build_sculpted_practitioner(mc, rig, subsurf=2)
 
             diel_joined = bake_modifiers_and_join(work_scene, "SM_Studio_Dielectric", mc.diel_objs)
             metal_joined = bake_modifiers_and_join(work_scene, "SM_Studio_Metallic", mc.metal_objs)

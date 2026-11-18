@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Box, ExternalLink, Image, Layers, ShieldAlert, Target, Wind } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
@@ -421,6 +422,9 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   const rigSample = useMemo(() => sampleUniversal3DExerciseRig(exercise, 1), [exercise]);
   const [mode, setMode] = useState<Studio3DViewMode>('motion');
   const [previewLayer, setPreviewLayer] = useState<'easy' | 'standard' | 'hard'>('standard');
+  const prefersReduced = useReducedMotion();
+  const useAnimatedPill =
+    !prefersReduced && !(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent));
   const postureMode = mode !== 'motion';
   const activePhase: VisualPhaseId = mode === 'start' ? 'start' : mode === 'end' ? 'end' : 'middle';
   const muscleLabel = exercise.targetMuscles.slice(0, 2).join(' · ') || '동작별 안내 확인';
@@ -478,7 +482,18 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             aria-pressed={mode === 'motion'}
             onClick={() => setMode('motion')}
           >
-            <Box size={15} strokeWidth={1.5} aria-hidden="true" /> 3D 모션
+            {mode === 'motion' &&
+              (useAnimatedPill ? (
+                <motion.span
+                  layoutId={`pf-hero3d-mode-${exercise.id}`}
+                  className="pf-seg-pill"
+                  aria-hidden="true"
+                  transition={{ type: 'spring', duration: 0.24, bounce: 0 }}
+                />
+              ) : (
+                <span className="pf-seg-pill" aria-hidden="true" />
+              ))}
+            <Box size={15} strokeWidth={1.5} aria-hidden="true" /> <span>3D 모션</span>
           </button>
           <button
             type="button"
@@ -486,7 +501,18 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             aria-pressed={postureMode}
             onClick={() => setMode('start')}
           >
-            <Image size={15} strokeWidth={1.5} aria-hidden="true" /> 3D 자세 프레임
+            {postureMode &&
+              (useAnimatedPill ? (
+                <motion.span
+                  layoutId={`pf-hero3d-mode-${exercise.id}`}
+                  className="pf-seg-pill"
+                  aria-hidden="true"
+                  transition={{ type: 'spring', duration: 0.24, bounce: 0 }}
+                />
+              ) : (
+                <span className="pf-seg-pill" aria-hidden="true" />
+              ))}
+            <Image size={15} strokeWidth={1.5} aria-hidden="true" /> <span>3D 자세 프레임</span>
           </button>
         </div>
       </div>

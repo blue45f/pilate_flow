@@ -62,7 +62,7 @@ FAMILY_TO_EXERCISE_ID: dict[str, str] = {
 def render_atelier_v2_hero_stills(out_dir: str | None = None):
     out_dir = out_dir or os.path.join(ROOT_DIR, "public", "images", "atelier-v2")
     os.makedirs(out_dir, exist_ok=True)
-    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=1280, res_y=720, samples=22)
+    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=1280, res_y=720, samples=26)
 
     app_specs = [
         ("reformer-studio-3d.png", "reformer", "high", "up", {"carriageX": 0.16, "lFoot": [0, 0, 0], "rFoot": [0, 0, 0], "lHand": [0, 0, 0], "rHand": [0, 0, 0]}, (-1.22, -0.38, 0.0), (1.22, 0.38, 0.72), -56.0, 22.0),
@@ -115,7 +115,7 @@ def render_family_batch(families: list[str], poses_path: str | None = None, out_
             mc = MeshCollector(subj_col, mats, glb_mode=False)
             rig = ex["phases"][phase_key]
             build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=1)
+            build_sculpted_practitioner(mc, rig, subsurf=2)
             scene.render.filepath = out_png
             bpy.ops.render.render(write_still=True)
             count += 1
@@ -254,7 +254,7 @@ def main():
         render_atelier_v2_hero_stills()
 
     t0 = time.time()
-    count = render_family_batch(targets, poses_path=args.poses, samples=12)
+    count = render_family_batch(targets, poses_path=args.poses, samples=16)
     print(f"[Studio3D 24-Families] {count} frames rendered in {time.time() - t0:.1f}s", flush=True)
 
     if not args.only:

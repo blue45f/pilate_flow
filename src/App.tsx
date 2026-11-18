@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowDownToLine,
   Bookmark,
@@ -7,7 +8,6 @@ import {
   CalendarRange,
   CircleHelp,
   Clock3,
-  Leaf,
   Library,
   Menu,
   Play,
@@ -17,6 +17,8 @@ import {
   Ticket,
   X,
 } from 'lucide-react';
+import { StudioBrandMark } from './components/StudioBrandMark';
+import { directionBetween, MotionDirector, runPageTransition } from './motion';
 import type { TeachingLogContext } from './components/LogSessionModal';
 import type { LiveStageNavigationHandle } from './components/LiveStageView';
 import { SequenceStudioWorkbench } from './components/SequenceStudioWorkbench';
@@ -54,6 +56,7 @@ import './styles/mobile-first-atelier-v3.css';
 import './styles/atelier-clean-declutter-v5.css';
 import './styles/mobile-subpages-user-first-v6.css';
 import './styles/atelier-unslop-system.css';
+import './styles/pf-motion-studio.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
@@ -132,6 +135,33 @@ const navigation = [
   { id: 'binder', label: '저장', detail: '저장한 수업', icon: Bookmark },
   { id: 'schedule', label: '일정', detail: '수업 일정', icon: CalendarRange },
 ] as const;
+
+const desktopNavigationGroups = [
+  {
+    groupLabel: '수업 설계',
+    items: [
+      { id: 'workbench' as const, detail: '수업 만들기', icon: CalendarDays },
+      { id: 'atlas' as const, detail: '동작 라이브러리', icon: Library },
+    ],
+  },
+  {
+    groupLabel: '운영 · 아카이브',
+    items: [
+      { id: 'schedule' as const, detail: '수업 일정', icon: CalendarRange },
+      { id: 'binder' as const, detail: '저장한 수업', icon: Bookmark },
+      { id: 'history' as const, detail: '진행 기록', icon: Clock3 },
+    ],
+  },
+] as const;
+
+const WORKSPACE_ORDER: readonly ActiveWorkspaceTab[] = [
+  'workbench',
+  'atlas',
+  'schedule',
+  'binder',
+  'history',
+  'stage',
+];
 
 /** Runs only when the workspace inside Suspense actually commits, including its first load. */
 function WorkspaceHeadingFocus({ tab, request }: { tab: ActiveWorkspaceTab; request: number }) {
@@ -236,16 +266,21 @@ export function App() {
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
+  const prefersReduced = useReducedMotion();
   const nonRestStepCount = useMemo(
     () => state.activeSteps.filter((step) => !isRestStep(step)).length,
     [state.activeSteps],
   );
-  const canStartLiveStage = useMemo(
-    () =>
-      buildSequenceSimulation(state.activeSteps, state.exercises, state.activeTargetMinutes).gate
-        .canRehearse,
+  const activeSimulation = useMemo(
+    () => buildSequenceSimulation(state.activeSteps, state.exercises, state.activeTargetMinutes),
     [state.activeSteps, state.exercises, state.activeTargetMinutes],
   );
+  const canStartLiveStage = activeSimulation.gate.canRehearse;
+  const plannedClassMinutes = Math.round(activeSimulation.totals.totalSec / 60);
+  const stageReadinessRatio =
+    state.activeTargetMinutes > 0
+      ? Math.min(1, activeSimulation.totals.totalSec / (state.activeTargetMinutes * 60))
+      : 0;
   const [logId, setLogId] = useState<string | null>(null);
   const [logContext, setLogContext] = useState<TeachingLogContext | undefined>();
   const [backupMessage, setBackupMessage] = useState('');
@@ -294,17 +329,35 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [state.activeTab]);
   const commitTabChange = (tab: ActiveWorkspaceTab) => {
-    setPortalRole('instructor');
-    state.setActiveTab(tab);
-    setMenuOpen(false);
-    setWorkspaceFocusRequest((value) => value + 1);
+    const prevTab = usePilatesStore.getState().activeTab;
+    const kind =
+      portalRole === 'member'
+        ? 'portal'
+        : tab === 'stage' || prevTab === 'stage'
+          ? 'stage'
+          : directionBetween(WORKSPACE_ORDER, prevTab, tab);
+    runPageTransition(
+      () => {
+        setPortalRole('instructor');
+        state.setActiveTab(tab);
+        setMenuOpen(false);
+        setWorkspaceFocusRequest((value) => value + 1);
+      },
+      { kind },
+    );
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
   const commitMemberSection = (section: 'schedule' | 'bookings' | 'wallet') => {
-    if (usePilatesStore.getState().activeTab === 'stage') state.setActiveTab('workbench');
-    setPortalRole('member');
-    setMemberSection(section);
-    setMenuOpen(false);
+    const switchingPortal = portalRole !== 'member';
+    runPageTransition(
+      () => {
+        if (usePilatesStore.getState().activeTab === 'stage') state.setActiveTab('workbench');
+        setPortalRole('member');
+        setMemberSection(section);
+        setMenuOpen(false);
+      },
+      { kind: switchingPortal ? 'portal' : 'fade' },
+    );
     requestAnimationFrame(() => {
       if (section === 'schedule') {
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -416,7 +469,9 @@ export function App() {
   return (
     <div
       className={`app-shell vnext-shell flow-app ${state.activeTab === 'stage' ? 'is-teaching' : ''}`}
+      data-active-page={portalRole === 'member' ? 'member' : state.activeTab}
     >
+      <MotionDirector />
       <a className="skip-link" href="#main-content">
         본문으로 이동
       </a>
@@ -463,7 +518,7 @@ export function App() {
             portalRole === 'member' ? 'Pilates Flow 회원 예약으로' : 'Pilates Flow 수업 만들기로'
           }
         >
-          <Leaf size={20} strokeWidth={1.5} aria-hidden="true" />
+          <StudioBrandMark size={22} />
           <span>
             Pilates Flow
             <small className="brand-tagline-deco" aria-hidden="true">
@@ -482,50 +537,43 @@ export function App() {
           <>
             <p className="sidebar-label">회원 공간</p>
             <nav className="desktop-nav" aria-label="회원 메뉴" data-testid="member-desktop-nav">
-              <button
-                type="button"
-                onClick={() => focusMemberSection('schedule')}
-                aria-current={memberSection === 'schedule' ? 'page' : undefined}
-                className={memberSection === 'schedule' ? 'active' : ''}
-              >
-                <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" />
-                시간표 · 수업 예약
-              </button>
-              <button
-                type="button"
-                onClick={() => focusMemberSection('bookings')}
-                aria-current={memberSection === 'bookings' ? 'page' : undefined}
-                className={memberSection === 'bookings' ? 'active' : ''}
-              >
-                <Bookmark size={16} strokeWidth={1.5} aria-hidden="true" />내 예약 현황
-              </button>
-              <button
-                type="button"
-                onClick={() => focusMemberSection('wallet')}
-                aria-current={memberSection === 'wallet' ? 'page' : undefined}
-                className={memberSection === 'wallet' ? 'active' : ''}
-              >
-                <Ticket size={16} strokeWidth={1.5} aria-hidden="true" />내 수강권 지갑
-              </button>
+              {(
+                [
+                  { id: 'schedule', label: '시간표 · 수업 예약', icon: CalendarDays },
+                  { id: 'bookings', label: '내 예약 현황', icon: Bookmark },
+                  { id: 'wallet', label: '내 수강권 지갑', icon: Ticket },
+                ] as const
+              ).map(({ id, label, icon: Icon }) => {
+                const isActive = memberSection === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => focusMemberSection(id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={isActive ? 'active' : ''}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId={prefersReduced ? undefined : 'pf-member-sidebar-pill'}
+                        className="pf-nav-active-pill"
+                        aria-hidden="true"
+                        transition={
+                          prefersReduced
+                            ? { duration: 0 }
+                            : { type: 'spring', duration: 0.28, bounce: 0 }
+                        }
+                      />
+                    )}
+                    <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+                    <span className="pf-nav-item-label">{label}</span>
+                  </button>
+                );
+              })}
             </nav>
           </>
         ) : (
           <>
-            <p className="sidebar-label">나의 작업실</p>
-            <nav className="desktop-nav" aria-label="주 메뉴">
-              {navigation.map(({ id, detail, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => changeTab(id)}
-                  aria-current={state.activeTab === id ? 'page' : undefined}
-                  className={state.activeTab === id ? 'active' : ''}
-                >
-                  <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
-                  {detail}
-                  {id === 'atlas' && <small>{state.exercises.length}</small>}
-                </button>
-              ))}
-            </nav>
             <button
               type="button"
               className={`pf-sidebar-quick-stage ${
@@ -535,10 +583,85 @@ export function App() {
               aria-current={state.activeTab === 'stage' ? 'page' : undefined}
               onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
             >
-              <Play size={16} strokeWidth={1.5} aria-hidden="true" />
-              <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
-              <small>{canStartLiveStage ? `동작 ${nonRestStepCount}개` : '동작 추가'}</small>
+              <span className="pf-sidebar-quick-stage__row">
+                <Play size={16} strokeWidth={1.5} aria-hidden="true" />
+                <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
+                <small>
+                  {canStartLiveStage
+                    ? `${plannedClassMinutes}분 · ${nonRestStepCount}동작`
+                    : '동작 추가'}
+                </small>
+              </span>
+              <span className="pf-sidebar-quick-stage__track" aria-hidden="true">
+                <i style={{ transform: `scaleX(${stageReadinessRatio})` }} />
+              </span>
             </button>
+            <nav className="desktop-nav" aria-label="주 메뉴">
+              {desktopNavigationGroups.map((group) => (
+                <div key={group.groupLabel} className="pf-nav-group">
+                  <p className="sidebar-label">{group.groupLabel}</p>
+                  {group.items.map(({ id, detail, icon: Icon }) => {
+                    const isActive = state.activeTab === id;
+                    const quietBadge =
+                      id === 'workbench' && nonRestStepCount > 0
+                        ? nonRestStepCount
+                        : id === 'schedule' && upcoming.length > 0
+                          ? upcoming.length
+                          : id === 'binder' && state.savedSequences.length > 0
+                            ? state.savedSequences.length
+                            : id === 'history' && state.historyLogs.length > 0
+                              ? state.historyLogs.length
+                              : null;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => changeTab(id)}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={isActive ? 'active' : ''}
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId={prefersReduced ? undefined : 'pf-instructor-sidebar-pill'}
+                            className="pf-nav-active-pill"
+                            aria-hidden="true"
+                            transition={
+                              prefersReduced
+                                ? { duration: 0 }
+                                : { type: 'spring', duration: 0.28, bounce: 0 }
+                            }
+                          />
+                        )}
+                        <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+                        <span className="pf-nav-item-label">{detail}</span>
+                        {id === 'atlas' ? (
+                          <small>{state.exercises.length}</small>
+                        ) : quietBadge !== null ? (
+                          <small aria-hidden="true">{quietBadge}</small>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </nav>
+            {upcoming[0] && (
+              <button
+                type="button"
+                className="pf-sidebar-next-peek"
+                aria-label="다가오는 예정 수업 바로가기"
+                onClick={() => changeTab('schedule')}
+              >
+                <span className="pf-sidebar-next-peek__kicker">
+                  <i aria-hidden="true" /> 다음 일정
+                </span>
+                <strong>
+                  {upcoming[0].date === today ? '오늘' : upcoming[0].date.slice(5).replace('-', '/')}{' '}
+                  {formatScheduleTime(upcoming[0].startTime)}
+                </strong>
+                <small>{upcoming[0].title}</small>
+              </button>
+            )}
             <details className="pf-sidebar-more-drawer">
               <summary>기록 · 도구 더보기</summary>
               <div className="pf-sidebar-more-drawer__body">
@@ -617,7 +740,7 @@ export function App() {
               className="sidebar-study-link"
               onClick={() => {
                 setMenuOpen(false);
-                setPortalRole('instructor');
+                runPageTransition(() => setPortalRole('instructor'), { kind: 'portal' });
               }}
             >
               <CalendarDays size={16} strokeWidth={1.5} aria-hidden="true" /> 강사 작업실로 전환
@@ -658,49 +781,39 @@ export function App() {
               <Menu size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
             <span className="vnext-wordmark">
+              <StudioBrandMark size={18} />
               Pilates Flow<small aria-hidden="true">수업 설계 · 3D 스튜디오</small>
             </span>
           </div>
           <div className="breadcrumb">
-            나의 스튜디오 <span>/</span>{' '}
-            {portalRole === 'member'
-              ? '회원 수업 예약·수강권'
-              : state.activeTab === 'stage'
-                ? '수업 진행'
-                : state.activeTab === 'history'
-                  ? '수업 기록'
-                  : navigation.find((item) => item.id === state.activeTab)?.detail}
+            <span className="pf-breadcrumb-root">나의 스튜디오</span> <span>/</span>{' '}
+            <strong>
+              {portalRole === 'member'
+                ? '회원 수업 예약·수강권'
+                : state.activeTab === 'stage'
+                  ? '수업 진행'
+                  : state.activeTab === 'history'
+                    ? '진행 기록'
+                    : navigation.find((item) => item.id === state.activeTab)?.detail}
+            </strong>
+            {portalRole === 'instructor' && state.activeTab === 'workbench' && (
+              <span className="pf-breadcrumb-meta" aria-hidden="true">
+                {plannedClassMinutes} / {state.activeTargetMinutes}분
+              </span>
+            )}
           </div>
           <div className="topbar-actions">
-            {state.activeTab !== 'stage' && (
-              <div
-                className="pf-role-switcher"
-                role="group"
-                aria-label="이용자 화면 전환"
-                data-testid="portal-role-switcher"
+            {portalRole === 'instructor' && state.activeTab !== 'stage' && canStartLiveStage && (
+              <button
+                type="button"
+                className="pf-mobile-topbar-stage-btn"
+                aria-label="모바일 수업 진행 바로가기"
+                onClick={() => changeTab('stage')}
               >
-                <button
-                  type="button"
-                  className="pf-role-switcher__btn"
-                  aria-pressed={portalRole === 'instructor'}
-                  onClick={() => setPortalRole('instructor')}
-                >
-                  강사 작업실
-                </button>
-                <button
-                  type="button"
-                  className="pf-role-switcher__btn"
-                  aria-pressed={portalRole === 'member'}
-                  onClick={() => focusMemberSection('schedule')}
-                >
-                  회원 예약
-                </button>
-              </div>
+                <Play size={14} strokeWidth={1.75} aria-hidden="true" />
+                <span>진행</span>
+              </button>
             )}
-            <span className="local-state">
-              <i />
-              개인 작업 공간
-            </span>
             {state.activeTab !== 'stage' && (
               <button
                 type="button"
@@ -710,7 +823,7 @@ export function App() {
                 onClick={() => setCommandPaletteOpen(true)}
               >
                 <Search size={16} strokeWidth={1.5} aria-hidden="true" />
-                <span>동작 검색</span>
+                <span>동작 · 수업 검색</span>
                 <kbd className="pf-topbar-cmdk-kbd" aria-hidden="true" />
               </button>
             )}
@@ -724,6 +837,59 @@ export function App() {
                 <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
                 <span>새 동작</span>
               </button>
+            )}
+            {state.activeTab !== 'stage' && (
+              <div
+                className="pf-role-switcher"
+                role="group"
+                aria-label="이용자 화면 전환"
+                data-testid="portal-role-switcher"
+              >
+                <button
+                  type="button"
+                  className="pf-role-switcher__btn"
+                  aria-pressed={portalRole === 'instructor'}
+                  onClick={() => {
+                    if (portalRole !== 'instructor') {
+                      runPageTransition(() => setPortalRole('instructor'), { kind: 'portal' });
+                    }
+                  }}
+                >
+                  {portalRole === 'instructor' && (
+                    <motion.span
+                      layoutId={prefersReduced ? undefined : 'pf-role-switcher-pill'}
+                      className="pf-role-switcher__pill"
+                      aria-hidden="true"
+                      transition={
+                        prefersReduced
+                          ? { duration: 0 }
+                          : { type: 'spring', duration: 0.25, bounce: 0 }
+                      }
+                    />
+                  )}
+                  <span className="pf-role-switcher__label">강사 작업실</span>
+                </button>
+                <button
+                  type="button"
+                  className="pf-role-switcher__btn"
+                  aria-pressed={portalRole === 'member'}
+                  onClick={() => focusMemberSection('schedule')}
+                >
+                  {portalRole === 'member' && (
+                    <motion.span
+                      layoutId={prefersReduced ? undefined : 'pf-role-switcher-pill'}
+                      className="pf-role-switcher__pill"
+                      aria-hidden="true"
+                      transition={
+                        prefersReduced
+                          ? { duration: 0 }
+                          : { type: 'spring', duration: 0.25, bounce: 0 }
+                      }
+                    />
+                  )}
+                  <span className="pf-role-switcher__label">회원 예약</span>
+                </button>
+              </div>
             )}
             <button
               className="icon-btn"
@@ -867,33 +1033,39 @@ export function App() {
           aria-label="모바일 회원 메뉴"
           data-testid="member-bottom-nav"
         >
-          <button
-            type="button"
-            onClick={() => focusMemberSection('schedule')}
-            className={memberSection === 'schedule' ? 'active' : ''}
-            aria-current={memberSection === 'schedule' ? 'page' : undefined}
-          >
-            <CalendarDays size={18} strokeWidth={1.5} aria-hidden="true" />
-            <span>시간표</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => focusMemberSection('bookings')}
-            className={memberSection === 'bookings' ? 'active' : ''}
-            aria-current={memberSection === 'bookings' ? 'page' : undefined}
-          >
-            <Bookmark size={18} strokeWidth={1.5} aria-hidden="true" />
-            <span>내 예약</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => focusMemberSection('wallet')}
-            className={memberSection === 'wallet' ? 'active' : ''}
-            aria-current={memberSection === 'wallet' ? 'page' : undefined}
-          >
-            <Ticket size={18} strokeWidth={1.5} aria-hidden="true" />
-            <span>수강권</span>
-          </button>
+          {(
+            [
+              { id: 'schedule', label: '시간표', icon: CalendarDays },
+              { id: 'bookings', label: '내 예약', icon: Bookmark },
+              { id: 'wallet', label: '수강권', icon: Ticket },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => {
+            const isActive = memberSection === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => focusMemberSection(id)}
+                className={isActive ? 'active' : ''}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId={prefersReduced ? undefined : 'pf-member-bottom-pill'}
+                    className="pf-bottom-nav-pill"
+                    aria-hidden="true"
+                    transition={
+                      prefersReduced
+                        ? { duration: 0 }
+                        : { type: 'spring', duration: 0.26, bounce: 0 }
+                    }
+                  />
+                )}
+                <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </nav>
       ) : (
         state.activeTab !== 'stage' && (
@@ -902,17 +1074,34 @@ export function App() {
             inert={menuOpen ? true : undefined}
             aria-label="모바일 주 메뉴"
           >
-            {navigation.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => changeTab(id)}
-                className={state.activeTab === id ? 'active' : ''}
-                aria-current={state.activeTab === id ? 'page' : undefined}
-              >
-                <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
-                <span>{label}</span>
-              </button>
-            ))}
+            {navigation.map(({ id, label, icon: Icon }) => {
+              const isExact = state.activeTab === id;
+              const isVisualActive = isExact || (id === 'binder' && state.activeTab === 'history');
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => changeTab(id)}
+                  className={isVisualActive ? 'active' : ''}
+                  aria-current={isExact ? 'page' : undefined}
+                >
+                  {isVisualActive && (
+                    <motion.span
+                      layoutId={prefersReduced ? undefined : 'pf-instructor-bottom-pill'}
+                      className="pf-bottom-nav-pill"
+                      aria-hidden="true"
+                      transition={
+                        prefersReduced
+                          ? { duration: 0 }
+                          : { type: 'spring', duration: 0.26, bounce: 0 }
+                      }
+                    />
+                  )}
+                  <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </nav>
         )
       )}

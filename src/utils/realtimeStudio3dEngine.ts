@@ -2753,20 +2753,20 @@ function buildStudio3DScene(options: {
   const shadowAnchors: { pos: Vec3; rx: number; ry: number }[] = [];
 
   const mirrorSign = mirrored ? -1 : 1;
-  const segTorso = svgFastMode ? 12 : 20;
-  const segLimb = svgFastMode ? 10 : 18;
-  const segNeck = svgFastMode ? 10 : 16;
-  const segHead = svgFastMode ? 12 : 20;
-  const ringsHead = svgFastMode ? 8 : 12;
-  const segCyl = svgFastMode ? 8 : 16;
-  const segBolt = svgFastMode ? 6 : 10;
-  const ringsBolt = svgFastMode ? 5 : 6;
-  const segSphere = svgFastMode ? 10 : 18;
-  const ringsSphere = svgFastMode ? 6 : 11;
-  const segTorus = svgFastMode ? 12 : 20;
-  const tubeSegTorus = svgFastMode ? 5 : 8;
-  const segVault = svgFastMode ? 16 : 26;
-  const segStrap = svgFastMode ? 6 : 12;
+  const segTorso = svgFastMode ? 14 : 26;
+  const segLimb = svgFastMode ? 12 : 22;
+  const segNeck = svgFastMode ? 10 : 18;
+  const segHead = svgFastMode ? 14 : 26;
+  const ringsHead = svgFastMode ? 9 : 16;
+  const segCyl = svgFastMode ? 8 : 18;
+  const segBolt = svgFastMode ? 6 : 12;
+  const ringsBolt = svgFastMode ? 5 : 7;
+  const segSphere = svgFastMode ? 10 : 22;
+  const ringsSphere = svgFastMode ? 6 : 14;
+  const segTorus = svgFastMode ? 12 : 24;
+  const tubeSegTorus = svgFastMode ? 5 : 9;
+  const segVault = svgFastMode ? 18 : 32;
+  const segStrap = svgFastMode ? 6 : 14;
 
   const isClay = shader === 'clay-wire';
   const oakRgb: Rgb = isClay
@@ -3295,11 +3295,13 @@ function buildStudio3DScene(options: {
       );
     }
     if (rig.ropeToFeet) {
-      lines.push({ pts: [[-1.095, -0.275, 0.64], rig.lFoot], stroke: '#4A5852', width: 2.0 });
-      lines.push({ pts: [[-1.095, 0.275, 0.64], rig.rFoot], stroke: '#4A5852', width: 2.0 });
+      const [negFoot, posFoot] =
+        rig.lFoot[1] <= rig.rFoot[1] ? [rig.lFoot, rig.rFoot] : [rig.rFoot, rig.lFoot];
+      lines.push({ pts: [[-1.095, -0.275, 0.64], negFoot], stroke: '#4A5852', width: 2.0 });
+      lines.push({ pts: [[-1.095, 0.275, 0.64], posFoot], stroke: '#4A5852', width: 2.0 });
       quads.push(
         ...makeTorusQuads(
-          rig.lFoot,
+          negFoot,
           0.036,
           0.0055,
           charcoalRgb,
@@ -3310,7 +3312,7 @@ function buildStudio3DScene(options: {
           'fabric',
         ),
         ...makeTorusQuads(
-          rig.rFoot,
+          posFoot,
           0.036,
           0.0055,
           charcoalRgb,
@@ -3322,11 +3324,13 @@ function buildStudio3DScene(options: {
         ),
       );
     } else if (rig.ropeToHands) {
-      lines.push({ pts: [[-1.095, -0.275, 0.64], rig.lHand], stroke: '#4A5852', width: 2.0 });
-      lines.push({ pts: [[-1.095, 0.275, 0.64], rig.rHand], stroke: '#4A5852', width: 2.0 });
+      const [negHand, posHand] =
+        rig.lHand[1] <= rig.rHand[1] ? [rig.lHand, rig.rHand] : [rig.rHand, rig.lHand];
+      lines.push({ pts: [[-1.095, -0.275, 0.64], negHand], stroke: '#4A5852', width: 2.0 });
+      lines.push({ pts: [[-1.095, 0.275, 0.64], posHand], stroke: '#4A5852', width: 2.0 });
       quads.push(
         ...makeTorusQuads(
-          rig.lHand,
+          negHand,
           0.032,
           0.0055,
           charcoalRgb,
@@ -3337,7 +3341,7 @@ function buildStudio3DScene(options: {
           'fabric',
         ),
         ...makeTorusQuads(
-          rig.rHand,
+          posHand,
           0.032,
           0.0055,
           charcoalRgb,
@@ -3663,9 +3667,9 @@ function buildStudio3DScene(options: {
     if (rig.pushthroughDeg !== undefined) {
       const rad = (rig.pushthroughDeg * Math.PI) / 180;
       const ex = 0.62 - Math.sin(rad) * 0.66;
-      const ez = 1.84 - Math.cos(rad) * 0.66;
+      const ez = 1.94 - Math.cos(rad) * 0.66;
       const mx = (0.62 + ex) * 0.5;
-      const mz = (1.84 + ez) * 0.5;
+      const mz = (1.94 + ez) * 0.5;
       quads.push(
         ...makeCylinder3D(
           [0.62, -0.27, 1.94],
@@ -3753,9 +3757,11 @@ function buildStudio3DScene(options: {
     }
 
     if (rig.legSprings) {
+      const [negFoot, posFoot] =
+        rig.lFoot[1] <= rig.rFoot[1] ? [rig.lFoot, rig.rFoot] : [rig.rFoot, rig.lFoot];
       for (const [sy, ft] of [
-        [-0.24, rig.lFoot],
-        [0.24, rig.rFoot],
+        [-0.24, negFoot],
+        [0.24, posFoot],
       ] as const) {
         lines.push({
           pts: makeSpringPolyline([-1.05, sy, 1.54], ft, 15),
@@ -3801,9 +3807,11 @@ function buildStudio3DScene(options: {
 
     if (rig.armSpringsFrom) {
       const [ax, az] = rig.armSpringsFrom;
+      const [negHand, posHand] =
+        rig.lHand[1] <= rig.rHand[1] ? [rig.lHand, rig.rHand] : [rig.rHand, rig.lHand];
       for (const [sy, hd] of [
-        [-0.26, rig.lHand],
-        [0.26, rig.rHand],
+        [-0.26, negHand],
+        [0.26, posHand],
       ] as const) {
         lines.push({
           pts: makeSpringPolyline([ax, sy, az], hd, 13),
@@ -4840,11 +4848,26 @@ function buildStudio3DScene(options: {
     );
   }
 
-  // 2D) Neck Column Sweep + Sculpted Head, Nose, Jaw, Ears, Parted Hair & Twisted Chignon Bun
-  const headPos = add3(rig.chest, add3(mul3(spUp, 0.192), mul3(antN, 0.015)));
-  const neckBase = sub3(rig.chest, mul3(spUp, 0.012));
-  const neckMid = vlerp(rig.chest, sub3(headPos, mul3(spUp, 0.032)), 0.42);
-  const neckTop = sub3(headPos, mul3(spUp, 0.032));
+  // 2D) Neck Column Sweep + Sculpted Head, Nose, Jaw, Ears, Parted Hair & Twisted Chignon Bun (Cervical Bezier Tangent + Floor Clearance)
+  const spTan = bezier3Tan(rig.pelvis, rig.spineMid, rig.chest, 1.0);
+  let neckUp: Vec3 =
+    antN[2] > 0.35 && spTan[2] < 0.02
+      ? norm3([spTan[0], spTan[1], Math.max(-0.02, spTan[2] * 0.15)])
+      : norm3(add3(mul3(spUp, 0.35), mul3(spTan, 0.65)));
+  let headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
+  let headAnt: Vec3 =
+    len3(headAntProj) > 1e-4 ? norm3(headAntProj) : norm3(cross3(bodyRight, neckUp));
+  const rawHeadPos = add3(rig.chest, add3(mul3(neckUp, 0.192), mul3(headAnt, 0.015)));
+  const headPos: Vec3 =
+    rawHeadPos[2] < 0.115 ? [rawHeadPos[0], rawHeadPos[1], 0.115] : rawHeadPos;
+  if (rawHeadPos[2] < 0.115) {
+    neckUp = norm3(sub3(sub3(headPos, mul3(headAnt, 0.015)), rig.chest));
+    headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
+    if (len3(headAntProj) > 1e-4) headAnt = norm3(headAntProj);
+  }
+  const neckBase = sub3(rig.chest, mul3(neckUp, 0.012));
+  const neckMid = vlerp(rig.chest, sub3(headPos, mul3(neckUp, 0.032)), 0.42);
+  const neckTop = sub3(headPos, mul3(neckUp, 0.032));
   quads.push(
     ...makeTaperedTubeQuads(
       [neckBase, neckMid, neckTop],
@@ -4859,7 +4882,7 @@ function buildStudio3DScene(options: {
       0.14,
       0,
       20,
-      antN,
+      headAnt,
       0.01,
       0.01,
       'skin',
@@ -4867,8 +4890,8 @@ function buildStudio3DScene(options: {
     ...makeAnatomicalHeadWithHairQuads(
       headPos,
       bodyRight,
-      antN,
-      spUp,
+      headAnt,
+      neckUp,
       skinRgb,
       hairCol,
       pipingTrimRgb,

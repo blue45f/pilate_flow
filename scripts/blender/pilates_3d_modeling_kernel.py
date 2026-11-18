@@ -801,8 +801,8 @@ def build_sculpted_head_and_hair(mc: MeshCollector, skull_center: Vector, up_axi
 
     # 1) Stylized Korean Webtoon V-Line Face & Cranium Sculpt
     bm = bmesh.new()
-    u_seg = 22 if mc.glb_mode else 30
-    v_seg = 16 if mc.glb_mode else 22
+    u_seg = 18 if mc.glb_mode else 36
+    v_seg = 14 if mc.glb_mode else 26
     bmesh.ops.create_uvsphere(bm, u_segments=u_seg, v_segments=v_seg, radius=1.0)
     for v in bm.verts:
         nx, ny, nz = v.co.x, v.co.y, v.co.z
@@ -1089,10 +1089,10 @@ def build_sculpted_hand(
         f"Hand_Palm_{side}",
         palm_stations,
         "skin",
-        radial_segs=12 if mc.glb_mode else 16,
+        radial_segs=14 if mc.glb_mode else 18,
         cap_start=0.006,
         cap_end=0.006,
-        subsurf_levels=0 if mc.glb_mode else 1,
+        subsurf_levels=1,
     )
 
     th_p0 = wrist + fdir * 0.014 + lat * 0.021 - dorsal * 0.005
@@ -1261,7 +1261,7 @@ def build_sculpted_grip_foot(
         f"Foot_Sculpt_{side}",
         foot_stations,
         "sock",
-        radial_segs=12 if mc.glb_mode else 18,
+        radial_segs=14 if mc.glb_mode else 22,
         cap_start=0.010,
         cap_end=0.012,
         subsurf_levels=subsurf,
@@ -1278,7 +1278,7 @@ def build_sculpted_grip_foot(
     add_swept_tube(mc, f"Sock_ArchBand_{side}", arch_loop, 0.0038, "legging", closed=True, radial_segs=8)
 
 
-def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 1):
+def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
     """
     Constructs the Flagship v3 Stylized Atelier 3D Practitioner from a `Universal3DPoseRig` sample:
     - Flush overlap transitions (`cap=0.0035`) between High-Waisted Legging -> Midriff -> Scoop Crop Top -> Clavicle Yoke
@@ -1318,7 +1318,7 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 1):
             f_ax = -f_ax
         return pt, r_ax, f_ax, tan
 
-    r_segs_torso = 18 if mc.glb_mode else 26
+    r_segs_torso = 16 if mc.glb_mode else 36
 
     # 1A) High-Waisted Sculpted Legging Pelvis & Gluteal Loft (u = -0.10 .. 0.395, flush waistband hem)
     legging_stations = []
@@ -1459,33 +1459,49 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 1):
     ]
     add_swept_tube(mc, "Torso_UnderbustPiping", ub_ring_pts, 0.0036, "suit_accent", closed=True, radial_segs=8)
 
-    # 2) Slender Graceful Neck Loft + Stylized Korean Webtoon Head & Hair
-    head_pos = chest + sp_up * 0.194 + ant_n * 0.016
+    # 2) Slender Graceful Neck Loft + Stylized Korean Webtoon Head & Hair (Cervical Bezier Tangent + Floor Clearance)
+    sp_tan = bezier3_tan(pelvis, spine_mid, chest, 1.0)
+    if ant_n.z > 0.35 and sp_tan.z < 0.02:
+        neck_up = Vector((sp_tan.x, sp_tan.y, max(-0.02, sp_tan.z * 0.15))).normalized()
+    else:
+        neck_up = (sp_up * 0.35 + sp_tan * 0.65).normalized()
+    head_ant = ant_n - neck_up * ant_n.dot(neck_up)
+    if head_ant.length < 1e-4:
+        head_ant = body_right.cross(neck_up)
+    head_ant.normalize()
+    head_pos = chest + neck_up * 0.194 + head_ant * 0.016
+    if head_pos.z < 0.115:
+        head_pos.z = 0.115
+        neck_up = (head_pos - head_ant * 0.016 - chest).normalized()
+        head_ant_proj = ant_n - neck_up * ant_n.dot(neck_up)
+        if head_ant_proj.length > 1e-4:
+            head_ant = head_ant_proj.normalized()
+
     neck_stations = []
     for u_n, r_nx, r_ny in [
         (-0.08, 0.054, 0.050),
         (0.38, 0.041, 0.040),
         (0.88, 0.039, 0.040),
     ]:
-        c = chest.lerp(head_pos - sp_up * 0.030, max(0.0, u_n)) if u_n >= 0 else chest + sp_up * (u_n * 0.14)
+        c = chest.lerp(head_pos - neck_up * 0.030, max(0.0, u_n)) if u_n >= 0 else chest + neck_up * (u_n * 0.14)
 
         def neck_prof(th, a=r_nx, b=r_ny):
             ct, st = math.cos(th), math.sin(th)
             scm = 0.0016 * math.exp(-(((abs(ct) - 0.45) / 0.22) ** 2)) * max(0.0, st)
             return ct * a, st * b + scm
 
-        neck_stations.append((c, body_right, ant_n, neck_prof))
+        neck_stations.append((c, body_right, head_ant, neck_prof))
     build_loft_from_stations(
         mc,
         "Neck_Column",
         neck_stations,
         "skin",
-        radial_segs=14 if mc.glb_mode else 16,
+        radial_segs=16 if mc.glb_mode else 22,
         cap_start=0.008,
         cap_end=0.008,
         subsurf_levels=subsurf,
     )
-    build_sculpted_head_and_hair(mc, head_pos, sp_up, ant_n, subsurf)
+    build_sculpted_head_and_hair(mc, head_pos, neck_up, head_ant, subsurf)
 
     # Continuous Arched Crop-Top Shoulder Straps
     pt_top_edge, r_te, f_te, _ = spine_frame(0.868)
@@ -1503,7 +1519,7 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 1):
         add_swept_tube(mc, f"CropStrap_{side}", [s_p0, s_p1, s_p2, s_p3, s_p4], 0.0080, "suit", closed=False, radial_segs=8)
 
     # 3) Continuous Muscle-Contoured Legging Loft
-    r_segs_limb = 12 if mc.glb_mode else 18
+    r_segs_limb = 12 if mc.glb_mode else 24
     for side, hp, ft, kpole in [
         ("L", l_hip, l_foot, Vector(rig["lKneePole"])),
         ("R", r_hip, r_foot, Vector(rig["rKneePole"])),
@@ -1607,7 +1623,7 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 1):
             f"Arm_Continuous_{side}",
             arm_stations,
             "skin",
-            radial_segs=12 if mc.glb_mode else 16,
+            radial_segs=12 if mc.glb_mode else 20,
             cap_start=0.014,
             cap_end=0.006,
             subsurf_levels=subsurf,
@@ -2060,14 +2076,16 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             add_torus(mc, f"PulleyWheel_{sy_tag}", (-1.092, ry, 0.64), 0.022, 0.006, "brass", axis="Y", segs=16, tsegs=8)
 
         if rig.get("ropeToFeet"):
-            for side_t, ry, tgt in [("L", -0.275, l_foot), ("R", 0.275, r_foot)]:
+            neg_ft, pos_ft = (l_foot, r_foot) if l_foot.y <= r_foot.y else (r_foot, l_foot)
+            for side_t, ry, tgt in [("L", -0.275, neg_ft), ("R", 0.275, pos_ft)]:
                 p0 = Vector((-1.092, ry, 0.64))
                 fdir = (tgt - p0).normalized()
                 anchor = tgt - fdir * 0.16
                 add_swept_tube(mc, f"RopeF_{side_t}", [p0, p0.lerp(anchor, 0.5), anchor], 0.0038, "strap", closed=False, radial_segs=8)
                 add_double_loop_strap(mc, f"StrapF_{side_t}", anchor, fdir, Vector((0.0, 1.0, 0.0)))
         elif rig.get("ropeToHands"):
-            for side_t, ry, tgt in [("L", -0.275, l_hand), ("R", 0.275, r_hand)]:
+            neg_hd, pos_hd = (l_hand, r_hand) if l_hand.y <= r_hand.y else (r_hand, l_hand)
+            for side_t, ry, tgt in [("L", -0.275, neg_hd), ("R", 0.275, pos_hd)]:
                 p0 = Vector((-1.092, ry, 0.64))
                 fdir = (tgt - p0).normalized()
                 anchor = tgt - fdir * 0.15
@@ -2194,7 +2212,8 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
         )
 
         if rig.get("legSprings"):
-            for sy, ft in [(-0.24, l_foot), (0.24, r_foot)]:
+            neg_ft, pos_ft = (l_foot, r_foot) if l_foot.y <= r_foot.y else (r_foot, l_foot)
+            for sy, ft in [(-0.24, neg_ft), (0.24, pos_ft)]:
                 add_helical_spring_mesh(mc, f"CadLegSp_{sy}", (-1.05, sy, 1.54), ft, "spring_gold", max_coil_len=0.42)
                 add_torus(mc, f"CadLegLoop_{sy}", ft, 0.036, 0.0055, "strap", axis="Y", segs=14, tsegs=6)
         elif rig.get("sideLegSpring"):
@@ -2204,7 +2223,8 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
 
         if rig.get("armSpringsFrom"):
             ax, az = rig["armSpringsFrom"]
-            for sy, hd in [(-0.26, l_hand), (0.26, r_hand)]:
+            neg_hd, pos_hd = (l_hand, r_hand) if l_hand.y <= r_hand.y else (r_hand, l_hand)
+            for sy, hd in [(-0.26, neg_hd), (0.26, pos_hd)]:
                 add_helical_spring_mesh(mc, f"CadArmSp_{sy}", (ax, sy, az), hd, "spring_gold", max_coil_len=0.38)
                 add_cylinder_rod(mc, f"CadArmGrip_{sy}", (hd.x, hd.y - 0.045, hd.z), (hd.x, hd.y + 0.045, hd.z), 0.011, "maple", segs=10)
 

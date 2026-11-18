@@ -11,6 +11,7 @@ import {
   getTeachingHistoryDateSource,
 } from '../utils/teachingHistoryDate';
 import React, { useId, useMemo, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -359,6 +360,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   onOpenLogModal,
   view = 'saved',
 }) => {
+  const prefersReduced = useReducedMotion();
   const storeState = usePilatesStore();
   const {
     savedSequences,
@@ -1365,7 +1367,20 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === 'all' ? 'active' : ''}`}
                   onClick={() => setSavedFilter('all')}
                 >
-                  전체 <span className="teaching-saved-filter-count">{savedSequences.length}</span>
+                  {effectiveSavedFilter === 'all' && (
+                    <motion.span
+                      layoutId={prefersReduced ? undefined : 'pf-binder-filter-pill'}
+                      className="pf-seg-pill"
+                      aria-hidden="true"
+                      transition={
+                        prefersReduced
+                          ? { duration: 0 }
+                          : { type: 'spring', duration: 0.24, bounce: 0 }
+                      }
+                    />
+                  )}
+                  <span>전체</span>{' '}
+                  <span className="teaching-saved-filter-count">{savedSequences.length}</span>
                 </button>
                 {savedApparatusOptions.length > 1 &&
                   savedApparatusOptions.map((opt) => (
@@ -1376,7 +1391,20 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === opt.id ? 'active' : ''}`}
                       onClick={() => setSavedFilter(opt.id)}
                     >
-                      {opt.label} <span className="teaching-saved-filter-count">{opt.count}</span>
+                      {effectiveSavedFilter === opt.id && (
+                        <motion.span
+                          layoutId={prefersReduced ? undefined : 'pf-binder-filter-pill'}
+                          className="pf-seg-pill"
+                          aria-hidden="true"
+                          transition={
+                            prefersReduced
+                              ? { duration: 0 }
+                              : { type: 'spring', duration: 0.24, bounce: 0 }
+                          }
+                        />
+                      )}
+                      <span>{opt.label}</span>{' '}
+                      <span className="teaching-saved-filter-count">{opt.count}</span>
                     </button>
                   ))}
                 {taughtSavedCount > 0 && (
@@ -1386,7 +1414,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === 'taught' ? 'active' : ''}`}
                     onClick={() => setSavedFilter('taught')}
                   >
-                    최근 수업 있음{' '}
+                    {effectiveSavedFilter === 'taught' && (
+                      <motion.span
+                        layoutId={prefersReduced ? undefined : 'pf-binder-filter-pill'}
+                        className="pf-seg-pill"
+                        aria-hidden="true"
+                        transition={
+                          prefersReduced
+                            ? { duration: 0 }
+                            : { type: 'spring', duration: 0.24, bounce: 0 }
+                        }
+                      />
+                    )}
+                    <span>최근 수업 있음</span>{' '}
                     <span className="teaching-saved-filter-count">{taughtSavedCount}</span>
                   </button>
                 )}
@@ -1483,6 +1523,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       variant="interactive"
                       className={`teaching-sequence-card flow-binder-card ${isLoadedInWorkbench ? 'is-active-plan' : ''}`}
                       data-saved-sequence-id={domKey}
+                      data-pf-r=""
+                      data-pf-tilt=""
                       key={sequence.id}
                     >
                       <div
@@ -2624,6 +2666,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         key={log.id}
                         variant={isSample ? 'sample' : 'default'}
                         className="teaching-history-card"
+                        data-pf-r=""
+                        data-pf-tilt=""
                       >
                         <div
                           className="pf-binder-card-3d-strip"
