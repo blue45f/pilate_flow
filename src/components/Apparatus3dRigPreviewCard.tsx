@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { getStudioApparatusGlbAsset } from '../data/blenderStudioGlbManifest';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { PfButton } from '../design-system';
@@ -54,7 +54,9 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
   const [showStudio3dRender, setShowStudio3dRender] = useState<boolean>(true);
   const [showBlenderScript, setShowBlenderScript] = useState<boolean>(false);
+  const [copyStatus, setCopyStatus] = useState<string>('');
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotionNow);
+  const svgScrubRef = useRef<boolean>(false);
   const blenderScriptId = useId();
   const carriageSliderId = useId();
 
@@ -114,6 +116,30 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   );
   const glbAsset = useMemo(() => getStudioApparatusGlbAsset(apparatus), [apparatus]);
 
+  const scrubFromSvgPointer = (event: React.PointerEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width || 320;
+    const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / width));
+    const snapped = Math.round(ratio * 20) / 20;
+    setAutoPlay(false);
+    setCarriageOffset(snapped);
+  };
+
+  const handleCopyBlenderScript = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(blenderScript);
+        setCopyStatus('Blender Python 3D 스크립트를 클립보드에 복사했습니다.');
+      } else {
+        setShowBlenderScript(true);
+        setCopyStatus('브라우저 클립보드 권한이 없어 스크립트 미리보기를 열었습니다.');
+      }
+    } catch {
+      setShowBlenderScript(true);
+      setCopyStatus('클립보드 복사에 실패해 스크립트 미리보기를 열었습니다.');
+    }
+  };
+
   const framePolygon = scene.frameVertices2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
   const carriagePolygon = scene.carriageRect2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
   const skeletonPolyline = [
@@ -149,7 +175,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           >
             {reducedMotion
               ? '모션 감소 설정 적용됨 · 자동 재생 없이 정적 단계별로 확인합니다.'
-              : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교해 보세요.'}
+              : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교하거나 도해를 좌우로 드래그해 보세요.'}
           </p>
         </div>
         <div role="group" aria-label="3D 카메라 시점 전환" className="pf-rig-preview__camera-group">
@@ -223,6 +249,14 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           <PfButton
             variant="secondary"
             className="pf-rig-preview__btn"
+            data-testid="copy-blender-script-btn"
+            onClick={() => void handleCopyBlenderScript()}
+          >
+            스크립트 복사
+          </PfButton>
+          <PfButton
+            variant="secondary"
+            className="pf-rig-preview__btn"
             onClick={() =>
               downloadBlenderSceneScript({
                 exerciseTitleKo: exerciseTitleKo ?? 'Pilates_Movement',
@@ -246,10 +280,27 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         </div>
       </div>
 
+      {copyStatus && (
+        <p
+          role="status"
+          aria-live="polite"
+          data-testid="rig-script-copy-status"
+          style={{ margin: '0 0 6px', fontSize: '0.78rem', color: '#355441', fontWeight: 500 }}
+        >
+          {copyStatus}
+        </p>
+      )}
+
       <p
         className="pf-rig-preview__glb-badge"
         data-testid="rig-glb-verified-meta"
-        style={{ margin: '0 0 6px', fontSize: '0.74rem', color: '#476253', fontWeight: 600 }}
+        style={{
+          margin: '0 0 6px',
+          fontSize: '0.74rem',
+          color: '#476253',
+          fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
+        }}
       >
         Blender 5.2 LTS · GLBForge Meshopt 검증 완료 ({glbAsset.triangles.toLocaleString()} tris ·{' '}
         {glbAsset.drawCalls} drawCall{glbAsset.drawCalls > 1 ? 's' : ''} · {glbAsset.glbForgeScore}
@@ -271,6 +322,22 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         role="img"
         aria-label={`${APPARATUS_LABELS[apparatus].ko} ${cameraPreset} 투영 도해`}
         className="pf-rig-preview__svg"
+        style={{ touchAction: 'pan-y', cursor: 'ew-resize' }}
+        onPointerDown={(event) => {
+          svgScrubRef.current = true;
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+          scrubFromSvgPointer(event);
+        }}
+        onPointerMove={(event) => {
+          if (!svgScrubRef.current) return;
+          scrubFromSvgPointer(event);
+        }}
+        onPointerUp={() => {
+          svgScrubRef.current = false;
+        }}
+        onPointerCancel={() => {
+          svgScrubRef.current = false;
+        }}
       >
         <defs>
           <marker

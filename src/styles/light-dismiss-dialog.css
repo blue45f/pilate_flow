@@ -19,8 +19,30 @@
   overflow: hidden;
 }
 .atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell > .atelier-modal-header {
+  position: relative;
   flex: 0 0 auto;
   min-width: 0;
+  touch-action: pan-x;
+}
+.atelier-modal-dialog.light-dismiss-dialog .pf-sheet-grab-bar {
+  display: none;
+}
+@media (max-width: 767px) {
+  .atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell > .atelier-modal-header {
+    padding-top: 22px !important;
+  }
+  .atelier-modal-dialog.light-dismiss-dialog .pf-sheet-grab-bar {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 4px;
+    background: rgba(31, 27, 22, 0.16);
+    pointer-events: none;
+  }
 }
 .atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell > .atelier-modal-body {
   flex: 1 1 auto;
@@ -30,5 +52,5 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
 }
-

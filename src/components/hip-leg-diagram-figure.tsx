@@ -375,6 +375,7 @@ export function HipLegDiagramTriptychSvg({
             className={`hip-leg-triptych-card${isSelected ? ' is-selected' : ''}`}
             onClick={() => onSelectPhase?.(phase)}
             onKeyDown={(e) => {
+              if (e.nativeEvent.isComposing) return;
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 onSelectPhase?.(phase);

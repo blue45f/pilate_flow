@@ -67,8 +67,10 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
   );
   const activeBrand: ReformerBrand = localBrandOverride ?? storeBrand ?? 'intopilates';
 
-  const [layoutDensity, setLayoutDensity] = useState<'two-col-print' | 'single-col-tablet'>(
-    'two-col-print',
+  const [layoutDensity, setLayoutDensity] = useState<'two-col-print' | 'single-col-tablet'>(() =>
+    typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth < 640
+      ? 'single-col-tablet'
+      : 'two-col-print',
   );
   const [showCornerQr, setShowCornerQr] = useState(false);
 

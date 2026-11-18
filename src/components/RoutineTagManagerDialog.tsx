@@ -206,7 +206,16 @@ export const RoutineTagSheetDialog: React.FC<RoutineTagSheetDialogProps> = ({
             border: '1px solid rgba(34, 62, 48, 0.1)',
           }}
         >
-          <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: '0.83rem' }}>
+          <summary
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.84rem',
+            }}
+          >
             전체 태그 이름 바꾸기 · 정리 ({tagState.catalog.length}개)
           </summary>
           <p style={{ margin: '6px 0 10px', fontSize: '0.77rem', color: '#56685f' }}>

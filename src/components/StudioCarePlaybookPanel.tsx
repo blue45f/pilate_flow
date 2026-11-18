@@ -82,7 +82,7 @@ export const StudioCarePlaybookPanel: React.FC<StudioCarePlaybookPanelProps> = (
                 gap: '8px',
               }}
             >
-              <small style={{ fontWeight: 700, color: '#3b5448' }}>
+              <small style={{ fontWeight: 600, color: '#3b5448' }}>
                 {activeItem.targetLabelKo}
               </small>
               {activeItem.relatedOccurrence && onJumpToOccurrencePrep && (

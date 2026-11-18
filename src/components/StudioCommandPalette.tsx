@@ -343,7 +343,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
             </button>
           ) : (
             <span className="pf-cmdk-kbd-hint" aria-hidden="true">
-              ↑↓ · Enter
+              / · ↑↓ · Enter
             </span>
           )}
         </label>

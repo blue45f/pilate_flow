@@ -637,10 +637,7 @@ const VerifiedReferencesSection: React.FC<{
     <section className="verified-reference-section" aria-labelledby="verified-reference-heading">
       <header className="verified-reference-header">
         <div>
-          <span
-            className="eyebrow"
-            style={{ letterSpacing: '0.01em', textTransform: 'none', fontWeight: 500 }}
-          >
+          <span className="eyebrow">
             공개 참고 모음
           </span>
           <h2 id="verified-reference-heading">

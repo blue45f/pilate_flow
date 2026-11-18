@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import '../styles/light-dismiss-dialog.css';
 
@@ -22,6 +22,8 @@ interface LightDismissDialogProps {
   children: React.ReactNode;
 }
 
+const SHEET_SWIPE_CLOSE_PX = 72;
+
 export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
   open,
   onClose,
@@ -36,8 +38,17 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const closingRef = useRef(false);
+  const sheetSwipeRef = useRef<{
+    active: boolean;
+    pointerId: number;
+    startY: number;
+    startX: number;
+    deltaY: number;
+  }>({ active: false, pointerId: -1, startY: 0, startX: 0, deltaY: 0 });
+  const [sheetOffsetY, setSheetOffsetY] = useState(0);
   const titleId = useId();
   const subtitleId = useId();
+
   const restoreOpenerFocus = useCallback((dialogElement?: HTMLDialogElement | null) => {
     const dialog = dialogElement ?? dialogRef.current;
     const active = document.activeElement;
@@ -50,12 +61,15 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
       openerRef.current.focus();
     }
   }, []);
+
   const finalizeClose = useCallback(() => {
     if (closingRef.current) return;
     closingRef.current = true;
+    setSheetOffsetY(0);
     restoreOpenerFocus();
     onClose();
   }, [onClose, restoreOpenerFocus]);
+
   const requestClose = useCallback(
     (reason: DialogCloseRequest['reason']) => {
       const dialog = dialogRef.current;
@@ -76,6 +90,7 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
 
     if (open) {
       closingRef.current = false;
+      setSheetOffsetY(0);
       if (
         document.activeElement instanceof HTMLElement &&
         document.activeElement !== document.body &&
@@ -166,11 +181,17 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
     };
   }, [finalizeClose, onBeforeClose, requestClose]);
 
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={subtitle ? subtitleId : undefined}
+      data-sheet-offset-y={sheetOffsetY > 0 ? String(Math.round(sheetOffsetY)) : undefined}
       className={[
         'atelier-modal-dialog',
         'pf-modal-dialog',
@@ -180,11 +201,65 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
       ]
         .filter(Boolean)
         .join(' ')}
-      style={{ maxWidth }}
+      style={{
+        maxWidth,
+        ...(sheetOffsetY > 0 && !prefersReducedMotion
+          ? { transform: `translateY(${Math.round(sheetOffsetY)}px)`, transition: 'none' }
+          : {}),
+      }}
       {...({ closedby: 'any' } as Record<string, string>)}
     >
       <div className="atelier-modal-shell">
-        <header className="atelier-modal-header">
+        <header
+          className="atelier-modal-header"
+          data-testid="dialog-swipe-header"
+          onPointerDown={(event) => {
+            if (event.pointerType !== 'touch') return;
+            if (
+              event.target instanceof HTMLElement &&
+              event.target.closest('button,a,input,select,textarea')
+            ) {
+              return;
+            }
+            sheetSwipeRef.current = {
+              active: true,
+              pointerId: event.pointerId,
+              startY: event.clientY,
+              startX: event.clientX,
+              deltaY: 0,
+            };
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            const st = sheetSwipeRef.current;
+            if (!st.active || st.pointerId !== event.pointerId) return;
+            const dy = event.clientY - st.startY;
+            const dx = event.clientX - st.startX;
+            if (Math.abs(dx) > Math.abs(dy) * 1.4 && dy < 16) {
+              st.active = false;
+              setSheetOffsetY(0);
+              return;
+            }
+            const clampedDy = Math.max(0, Math.min(220, dy));
+            st.deltaY = clampedDy;
+            setSheetOffsetY(clampedDy);
+          }}
+          onPointerUp={(event) => {
+            const st = sheetSwipeRef.current;
+            if (!st.active || st.pointerId !== event.pointerId) return;
+            const finalDy = Math.max(st.deltaY, event.clientY - st.startY);
+            st.active = false;
+            setSheetOffsetY(0);
+            if (finalDy >= SHEET_SWIPE_CLOSE_PX) {
+              requestClose('backdrop');
+            }
+          }}
+          onPointerCancel={() => {
+            sheetSwipeRef.current.active = false;
+            setSheetOffsetY(0);
+          }}
+        >
+          <span className="pf-sheet-grab-bar" aria-hidden="true" />
           <div>
             <h2 id={titleId} className="atelier-modal-title">
               {title}

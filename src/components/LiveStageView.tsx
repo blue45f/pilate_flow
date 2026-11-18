@@ -538,6 +538,29 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     }
   };
 
+  const timerSwipeRef = useRef<{ active: boolean; startX: number; startY: number }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+  });
+
+  useEffect(() => {
+    const reacquireWakeLockOnVisible = () => {
+      if (
+        document.visibilityState === 'visible' &&
+        !document.hidden &&
+        runningIntent.current &&
+        screenEnabled.current
+      ) {
+        void requestScreenLock();
+      }
+    };
+    document.addEventListener('visibilitychange', reacquireWakeLockOnVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', reacquireWakeLockOnVisible);
+    };
+  }, []);
+
   const toggleRunning = () => {
     const liveClock = clockRef.current;
     const liveDurations = durationsRef.current;
@@ -1696,7 +1719,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             계획으로
           </button>
           <div className="teaching-stage-kicker-row">
-            <span className="eyebrow" style={{ letterSpacing: '0.01em' }}>
+            <span className="eyebrow">
               실제 수업 진행
             </span>
             <span
@@ -2011,11 +2034,42 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           aria-label={currentIsRest ? '현재 휴식' : '현재 동작'}
         >
           <div
+            data-testid="live-stage-timer-touch-zone"
             className={`teaching-timer-area pf-p09-timer-hero ${
               clock.running && clock.remainingMs > 0 && clock.remainingMs <= 10000
                 ? 'is-final-countdown'
                 : ''
             }`.trim()}
+            onPointerDown={(event) => {
+              if (event.pointerType !== 'touch') return;
+              if (
+                event.target instanceof HTMLElement &&
+                event.target.closest('button,a,input,select,textarea,summary')
+              ) {
+                return;
+              }
+              timerSwipeRef.current = {
+                active: true,
+                startX: event.clientX,
+                startY: event.clientY,
+              };
+            }}
+            onPointerUp={(event) => {
+              if (!timerSwipeRef.current.active || event.pointerType !== 'touch') return;
+              timerSwipeRef.current.active = false;
+              const dx = event.clientX - timerSwipeRef.current.startX;
+              const dy = event.clientY - timerSwipeRef.current.startY;
+              if (Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+                if (dx < 0 && clockRef.current.index < stepsRef.current.length - 1) {
+                  selectStep(clockRef.current.index + 1);
+                } else if (dx > 0 && clockRef.current.index > 0) {
+                  selectStep(clockRef.current.index - 1);
+                }
+              }
+            }}
+            onPointerCancel={() => {
+              timerSwipeRef.current.active = false;
+            }}
           >
             <span
               className="teaching-timer-eyebrow"
@@ -2425,10 +2479,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   aria-label="다음 동작 기구 세팅 안내"
                 >
                   <div className="teaching-transition-setup-header">
-                    <span
-                      className="teaching-transition-setup-badge"
-                      style={{ letterSpacing: '0.01em' }}
-                    >
+                    <span className="teaching-transition-setup-badge">
                       다음 세팅
                     </span>
                     <ExerciseThumbnailBadge exercise={nextExercise} size="xs" decorative />

@@ -63,7 +63,7 @@
   background: var(--forest, #214e40);
   border-color: var(--forest, #214e40);
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .yt-preview-step-guide .pf-step-guide-Subrow {
@@ -132,7 +132,7 @@
   background: #214e40;
   color: #ffffff;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }

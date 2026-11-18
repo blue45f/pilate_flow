@@ -261,8 +261,8 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     expect(manifest.start_url).toBe('/');
     expect(manifest.display).toBe('standalone');
     expect(manifest.lang).toBe('ko');
-    expect(manifest.theme_color).toBe('#234c3f');
-    expect(manifest.background_color).toBe('#f6f5f0');
+    expect(manifest.theme_color).toBe('#355441');
+    expect(manifest.background_color).toBe('#faf8f4');
     expect(manifest.icons).toEqual([
       { src: '/icons/app-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icons/app-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

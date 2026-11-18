@@ -220,15 +220,44 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const dragRef = useRef<{
     active: boolean;
     moved: boolean;
+    pointerType: string;
     startX: number;
     startY: number;
     baseYaw: number;
     basePitch: number;
-  }>({ active: false, moved: false, startX: 0, startY: 0, baseYaw: -34, basePitch: 21 });
+  }>({
+    active: false,
+    moved: false,
+    pointerType: 'mouse',
+    startX: 0,
+    startY: 0,
+    baseYaw: -34,
+    basePitch: 21,
+  });
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchRef = useRef<{
+    active: boolean;
+    startDist: number;
+    baseZoom: number;
+    startMidX: number;
+    startMidY: number;
+    basePanX: number;
+    basePanY: number;
+  }>({
+    active: false,
+    startDist: 0,
+    baseZoom: 1.04,
+    startMidX: 0,
+    startMidY: 0,
+    basePanX: 0,
+    basePanY: 0,
+  });
+  const lastEmptyTapRef = useRef<{ ts: number; x: number; y: number }>({ ts: 0, x: 0, y: 0 });
 
   const [yawDeg, setYawDeg] = useState<number>(-34);
   const [pitchDeg, setPitchDeg] = useState<number>(21);
   const [zoom, setZoom] = useState<number>(1.04);
+  const [panOffset, setPanOffset] = useState<readonly [number, number]>([0, 0]);
   const [activePresetId, setActivePresetId] = useState<string>('quarter');
   const [turntable, setTurntable] = useState<boolean>(false);
   const [shader, setShader] = useState<Studio3DShaderPreset>('studio-pbr');
@@ -378,7 +407,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       setZoom((prev) =>
-        Number(Math.max(0.72, Math.min(1.65, prev - event.deltaY * 0.001)).toFixed(2)),
+        Number(Math.max(0.68, Math.min(1.85, prev - event.deltaY * 0.001)).toFixed(2)),
       );
     };
     canvas.addEventListener('wheel', handleWheel, { passive: false });
@@ -426,6 +455,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       yawDeg,
       pitchDeg,
       zoom,
+      panX: panOffset[0],
+      panY: panOffset[1],
       shader,
       mirrored,
       showBiomechOverlay,
@@ -448,6 +479,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     yawDeg,
     pitchDeg,
     zoom,
+    panOffset,
     shader,
     mirrored,
     showBiomechOverlay,
@@ -539,21 +571,25 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       setYawDeg(found.yawDeg);
       setPitchDeg(found.pitchDeg);
       setZoom(found.zoom);
+      setPanOffset([0, 0]);
       return;
     }
     if (tweenRafRef.current) window.cancelAnimationFrame(tweenRafRef.current);
     const startYaw = yawDeg;
     const startPitch = pitchDeg;
     const startZoom = zoom;
+    const startPanX = panOffset[0];
+    const startPanY = panOffset[1];
     let deltaYaw = found.yawDeg - startYaw;
     if (deltaYaw > 180) deltaYaw -= 360;
     if (deltaYaw < -180) deltaYaw += 360;
     const deltaPitch = found.pitchDeg - startPitch;
     const deltaZoom = found.zoom - startZoom;
-    if (Math.hypot(deltaYaw, deltaPitch, deltaZoom * 50) < 0.5) {
+    if (Math.hypot(deltaYaw, deltaPitch, deltaZoom * 50, startPanX * 60, startPanY * 60) < 0.5) {
       setYawDeg(found.yawDeg);
       setPitchDeg(found.pitchDeg);
       setZoom(found.zoom);
+      setPanOffset([0, 0]);
       return;
     }
     let startTs: number | null = null;
@@ -565,6 +601,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       setYawDeg(Number((startYaw + deltaYaw * eased).toFixed(2)));
       setPitchDeg(Number((startPitch + deltaPitch * eased).toFixed(2)));
       setZoom(Number((startZoom + deltaZoom * eased).toFixed(3)));
+      setPanOffset([
+        Number((startPanX * (1 - eased)).toFixed(3)),
+        Number((startPanY * (1 - eased)).toFixed(3)),
+      ]);
       if (t < 1) {
         tweenRafRef.current = window.requestAnimationFrame(step);
       } else {
@@ -572,6 +612,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         setYawDeg(found.yawDeg);
         setPitchDeg(found.pitchDeg);
         setZoom(found.zoom);
+        setPanOffset([0, 0]);
       }
     };
     tweenRafRef.current = window.requestAnimationFrame(step);
@@ -625,6 +666,11 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-shader-mode={shader}
       data-dual-view={String(dualView)}
       data-mirrored={String(mirrored)}
+      data-zoom={zoom.toFixed(2)}
+      data-pan-x={panOffset[0].toFixed(2)}
+      data-pan-y={panOffset[1].toFixed(2)}
+      data-yaw-deg={String(Math.round(yawDeg))}
+      data-pitch-deg={String(Math.round(pitchDeg))}
       data-motion-playing={playing && canAnimate}
       data-motion-phase={phase.id}
       data-frame-budget-tier={frameBudget.tier}
@@ -636,11 +682,46 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       <div
         className="pf-orbit3d-canvas-wrap"
         tabIndex={0}
-        aria-label="3D 뷰포트 조작 영역 (스페이스바 재생, 좌우 화살표 구간 이동, 관절 클릭 코칭 확인)"
+        aria-label="3D 뷰포트 조작 영역 (스페이스바 재생, 좌우 화살표 구간 이동, Shift+방향키 시점 회전, +/- 확대·축소, 두 손가락 핀치 줌, 관절 클릭 코칭 확인)"
         onKeyDown={(event) => {
           if (event.key === ' ') {
             event.preventDefault();
             if (canAnimate) setPlaying((p) => !p);
+          } else if (event.shiftKey && event.key === 'ArrowRight') {
+            event.preventDefault();
+            setTurntable(false);
+            setActivePresetId('custom');
+            setYawDeg((y) => {
+              const next = y + 12;
+              return next > 180 ? next - 360 : next;
+            });
+          } else if (event.shiftKey && event.key === 'ArrowLeft') {
+            event.preventDefault();
+            setTurntable(false);
+            setActivePresetId('custom');
+            setYawDeg((y) => {
+              const next = y - 12;
+              return next < -180 ? next + 360 : next;
+            });
+          } else if (event.shiftKey && event.key === 'ArrowUp') {
+            event.preventDefault();
+            setTurntable(false);
+            setActivePresetId('custom');
+            setPitchDeg((p) => Math.min(80, p + 8));
+          } else if (event.shiftKey && event.key === 'ArrowDown') {
+            event.preventDefault();
+            setTurntable(false);
+            setActivePresetId('custom');
+            setPitchDeg((p) => Math.max(-4, p - 8));
+          } else if (event.key === '+' || event.key === '=') {
+            event.preventDefault();
+            setZoom((z) => Math.min(1.85, Number((z + 0.14).toFixed(2))));
+          } else if (event.key === '-' || event.key === '_') {
+            event.preventDefault();
+            setZoom((z) => Math.max(0.68, Number((z - 0.14).toFixed(2))));
+          } else if (event.key === '0') {
+            event.preventDefault();
+            applyCameraPreset('quarter');
           } else if (event.key === 'ArrowRight') {
             event.preventDefault();
             jumpToProgress((progressRef.current + 0.05) % 1.0001);
@@ -657,17 +738,72 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
           ref={canvasRef}
           className="pf-orbit3d-canvas"
           onPointerDown={(event) => {
+            activePointersRef.current.set(event.pointerId, {
+              x: event.clientX,
+              y: event.clientY,
+            });
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            if (activePointersRef.current.size >= 2) {
+              const pts = Array.from(activePointersRef.current.values());
+              const pA = pts[0]!;
+              const pB = pts[1]!;
+              pinchRef.current = {
+                active: true,
+                startDist: Math.max(12, Math.hypot(pB.x - pA.x, pB.y - pA.y)),
+                baseZoom: zoom,
+                startMidX: (pA.x + pB.x) * 0.5,
+                startMidY: (pA.y + pB.y) * 0.5,
+                basePanX: panOffset[0],
+                basePanY: panOffset[1],
+              };
+              dragRef.current.active = false;
+              dragRef.current.moved = true;
+              setTurntable(false);
+              setActivePresetId('custom');
+              return;
+            }
+            pinchRef.current.active = false;
             dragRef.current = {
               active: true,
               moved: false,
+              pointerType: event.pointerType || 'mouse',
               startX: event.clientX,
               startY: event.clientY,
               baseYaw: yawDeg,
               basePitch: pitchDeg,
             };
-            event.currentTarget.setPointerCapture?.(event.pointerId);
           }}
           onPointerMove={(event) => {
+            if (activePointersRef.current.has(event.pointerId)) {
+              activePointersRef.current.set(event.pointerId, {
+                x: event.clientX,
+                y: event.clientY,
+              });
+            }
+            if (activePointersRef.current.size >= 2 && pinchRef.current.active) {
+              const pts = Array.from(activePointersRef.current.values());
+              const pA = pts[0]!;
+              const pB = pts[1]!;
+              const curDist = Math.max(12, Math.hypot(pB.x - pA.x, pB.y - pA.y));
+              const nextZoom = Math.max(
+                0.68,
+                Math.min(1.85, pinchRef.current.baseZoom * (curDist / pinchRef.current.startDist)),
+              );
+              const curMidX = (pA.x + pB.x) * 0.5;
+              const curMidY = (pA.y + pB.y) * 0.5;
+              const panScale = 0.0028 / Math.max(0.8, nextZoom);
+              const nextPanX = Math.max(
+                -0.45,
+                Math.min(0.45, pinchRef.current.basePanX + (curMidX - pinchRef.current.startMidX) * panScale),
+              );
+              const nextPanY = Math.max(
+                -0.45,
+                Math.min(0.45, pinchRef.current.basePanY + (curMidY - pinchRef.current.startMidY) * panScale),
+              );
+              setZoom(Number(nextZoom.toFixed(2)));
+              setPanOffset([Number(nextPanX.toFixed(2)), Number(nextPanY.toFixed(2))]);
+              return;
+            }
             if (!dragRef.current.active) return;
             const dx = event.clientX - dragRef.current.startX;
             const dy = event.clientY - dragRef.current.startY;
@@ -677,14 +813,40 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               setActivePresetId('custom');
             }
             if (!dragRef.current.moved) return;
-            let nextYaw = dragRef.current.baseYaw + dx * 0.55;
+            const isTouch = dragRef.current.pointerType === 'touch';
+            const yawGain = isTouch ? 0.68 : 0.55;
+            const pitchGain = isTouch ? 0.48 : 0.42;
+            let nextYaw = dragRef.current.baseYaw + dx * yawGain;
             if (nextYaw > 180) nextYaw -= 360;
             if (nextYaw < -180) nextYaw += 360;
-            const nextPitch = Math.max(-4, Math.min(80, dragRef.current.basePitch + dy * 0.42));
+            const nextPitch = Math.max(
+              -4,
+              Math.min(80, dragRef.current.basePitch + dy * pitchGain),
+            );
             setYawDeg(Math.round(nextYaw));
             setPitchDeg(Math.round(nextPitch));
           }}
           onPointerUp={(event) => {
+            activePointersRef.current.delete(event.pointerId);
+            if (pinchRef.current.active) {
+              if (activePointersRef.current.size === 1) {
+                const remaining = Array.from(activePointersRef.current.values())[0]!;
+                pinchRef.current.active = false;
+                dragRef.current = {
+                  active: true,
+                  moved: true,
+                  pointerType: event.pointerType || 'touch',
+                  startX: remaining.x,
+                  startY: remaining.y,
+                  baseYaw: yawDeg,
+                  basePitch: pitchDeg,
+                };
+              } else if (activePointersRef.current.size === 0) {
+                pinchRef.current.active = false;
+                dragRef.current.active = false;
+              }
+              return;
+            }
             const wasTap = dragRef.current.active && !dragRef.current.moved;
             dragRef.current.active = false;
             if (!wasTap) return;
@@ -692,7 +854,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             const localX = event.clientX - rect.left;
             const localY = event.clientY - rect.top;
             let best: Studio3DHotspot | null = null;
-            let bestDist = 42;
+            let bestDist = event.pointerType === 'touch' ? 48 : 42;
             for (const h of hotspotsRef.current) {
               const d = Math.hypot(h.x - localX, h.y - localY);
               if (d < bestDist) {
@@ -700,10 +862,31 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 best = h;
               }
             }
-            setSelectedHotspot((prev) => (best && prev?.id === best.id ? null : best));
+            if (best) {
+              lastEmptyTapRef.current = { ts: 0, x: 0, y: 0 };
+              setSelectedHotspot((prev) => (prev?.id === best.id ? null : best));
+              return;
+            }
+            const now = Date.now();
+            const prevEmpty = lastEmptyTapRef.current;
+            if (
+              now - prevEmpty.ts <= 320 &&
+              Math.hypot(localX - prevEmpty.x, localY - prevEmpty.y) <= 28
+            ) {
+              lastEmptyTapRef.current = { ts: 0, x: 0, y: 0 };
+              setSelectedHotspot(null);
+              applyCameraPreset('quarter');
+              return;
+            }
+            lastEmptyTapRef.current = { ts: now, x: localX, y: localY };
+            setSelectedHotspot(null);
           }}
-          onPointerCancel={() => {
-            dragRef.current.active = false;
+          onPointerCancel={(event) => {
+            activePointersRef.current.delete(event.pointerId);
+            if (activePointersRef.current.size === 0) {
+              dragRef.current.active = false;
+              pinchRef.current.active = false;
+            }
           }}
         />
         {selectedHotspot && (
@@ -730,8 +913,11 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         )}
         <div className="pf-orbit3d-hud-top">
           <span className="pf-orbit3d-badge is-emerald">
-            <Orbit size={12} aria-hidden="true" /> 드래그 회전 · {Math.round(yawDeg)}° /{' '}
-            {Math.round(pitchDeg)}°{mirrored ? ' · 반전' : ''}
+            <Orbit size={12} aria-hidden="true" />
+            <span className="pf-orbit3d-badge__hint">드래그·핀치 · </span>
+            {Math.round(yawDeg)}° / {Math.round(pitchDeg)}°
+            {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
+            {mirrored ? ' · 반전' : ''}
           </span>
           <div
             className="pf-orbit3d-shader-pills"
@@ -759,7 +945,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             type="button"
             className="pf-orbit3d-icon-btn"
             aria-label="3D 화면 확대"
-            onClick={() => setZoom((z) => Math.min(1.65, Number((z + 0.14).toFixed(2))))}
+            onClick={() => setZoom((z) => Math.min(1.85, Number((z + 0.14).toFixed(2))))}
           >
             <ZoomIn size={15} aria-hidden="true" />
           </button>
@@ -767,7 +953,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             type="button"
             className="pf-orbit3d-icon-btn"
             aria-label="3D 화면 축소"
-            onClick={() => setZoom((z) => Math.max(0.72, Number((z - 0.14).toFixed(2))))}
+            onClick={() => setZoom((z) => Math.max(0.68, Number((z - 0.14).toFixed(2))))}
           >
             <ZoomOut size={15} aria-hidden="true" />
           </button>

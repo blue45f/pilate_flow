@@ -212,7 +212,7 @@
   background: #28422c;
   border-color: #28422c;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .free-ai-step-guide-item.is-complete {
@@ -379,7 +379,7 @@
   background: #faf8f4;
   color: #1f4d3f;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -393,7 +393,7 @@
 
 .free-ai-selected-summary {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #1f4d3f;
 }
 

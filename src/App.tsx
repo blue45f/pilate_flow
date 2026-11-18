@@ -164,6 +164,53 @@ const WORKSPACE_ORDER: readonly ActiveWorkspaceTab[] = [
   'stage',
 ];
 
+export interface InitialLaunchTarget {
+  readonly portalRole: 'instructor' | 'member';
+  readonly memberSection: 'schedule' | 'bookings' | 'wallet';
+  readonly instructorTab: ActiveWorkspaceTab | null;
+}
+
+const LAUNCHABLE_TABS: readonly ActiveWorkspaceTab[] = [
+  'workbench',
+  'atlas',
+  'schedule',
+  'binder',
+  'history',
+];
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function resolveInitialLaunchTarget(search: string): InitialLaunchTarget {
+  const params = new URLSearchParams(search);
+  const utm = params.get('utm_source')?.trim().toLowerCase() ?? '';
+  const rawRole = params.get('role')?.trim().toLowerCase() ?? '';
+  const rawSection = params.get('section')?.trim().toLowerCase() ?? '';
+  const rawTab = params.get('tab')?.trim().toLowerCase() ?? '';
+
+  const memberSection:
+    | 'schedule'
+    | 'bookings'
+    | 'wallet' =
+    rawSection === 'bookings' || rawSection === 'wallet' ? rawSection : 'schedule';
+
+  if (rawRole === 'member' || utm === 'pwa-member') {
+    return { portalRole: 'member', memberSection, instructorTab: null };
+  }
+  if (utm === 'pwa-atlas') {
+    return { portalRole: 'instructor', memberSection: 'schedule', instructorTab: 'atlas' };
+  }
+  if (utm === 'pwa-workbench') {
+    return { portalRole: 'instructor', memberSection: 'schedule', instructorTab: 'workbench' };
+  }
+  if ((LAUNCHABLE_TABS as readonly string[]).includes(rawTab)) {
+    return {
+      portalRole: 'instructor',
+      memberSection: 'schedule',
+      instructorTab: rawTab as ActiveWorkspaceTab,
+    };
+  }
+  return { portalRole: 'instructor', memberSection: 'schedule', instructorTab: null };
+}
+
 /** Runs only when the workspace inside Suspense actually commits, including its first load. */
 function WorkspaceHeadingFocus({ tab, request }: { tab: ActiveWorkspaceTab; request: number }) {
   useEffect(() => {
@@ -182,6 +229,13 @@ function WorkspaceHeadingFocus({ tab, request }: { tab: ActiveWorkspaceTab; requ
 
 export function App() {
   const state = usePilatesStore();
+  const initialLaunch = useMemo(
+    () =>
+      typeof window !== 'undefined'
+        ? resolveInitialLaunchTarget(window.location.search)
+        : { portalRole: 'instructor' as const, memberSection: 'schedule' as const, instructorTab: null },
+    [],
+  );
   const today = localScheduleDate();
   const now = new Date();
   const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -216,11 +270,43 @@ export function App() {
     ((exerciseId: string) => { success: boolean; message?: string }) | null
   >(null);
   useEffect(() => {
+    if (initialLaunch.instructorTab) {
+      const cur = usePilatesStore.getState();
+      if (cur.activeTab !== initialLaunch.instructorTab) {
+        cur.setActiveTab(initialLaunch.instructorTab);
+      }
+    }
+  }, [initialLaunch.instructorTab]);
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         if (!commandPaletteOpen && document.querySelector('dialog[open]')) return;
         event.preventDefault();
         setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+      if (
+        event.key === '/' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !commandPaletteOpen &&
+        !document.querySelector('dialog[open]')
+      ) {
+        const target = event.target;
+        if (
+          target instanceof HTMLElement &&
+          (target.isContentEditable ||
+            target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.tagName === 'SELECT')
+        ) {
+          return;
+        }
+        if (usePilatesStore.getState().activeTab === 'stage') return;
+        event.preventDefault();
+        setCommandPaletteOpen(true);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -236,7 +322,9 @@ export function App() {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
-  const [portalRole, setPortalRole] = useState<'instructor' | 'member'>('instructor');
+  const [portalRole, setPortalRole] = useState<'instructor' | 'member'>(
+    initialLaunch.portalRole,
+  );
   const [incomingSharedSequence, setIncomingSharedSequence] =
     useState<DecodedSharedSequence | null>(() => {
       if (typeof window === 'undefined') return null;
@@ -264,7 +352,7 @@ export function App() {
     }
   };
   const [memberSection, setMemberSection] = useState<'schedule' | 'bookings' | 'wallet'>(
-    'schedule',
+    initialLaunch.memberSection,
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);

@@ -1265,7 +1265,16 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         className="pf-member-homecare-card"
                         data-testid={`member-homecare-recap-${slotId}`}
                       >
-                        <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
+                        <summary
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: '44px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.84rem',
+                          }}
+                        >
                           {recap.headlineKo} ({recap.workedFocusKo})
                         </summary>
                         <p style={{ margin: '4px 0', fontSize: '0.78rem', color: '#4c5f55' }}>
@@ -1875,7 +1884,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     스튜디오 창가 &amp; 전면 거울 방향 · 원하는 {pendingApparatusLabelKo} 자리를
                     선택하세요
                     {companionState.preferredSpotByApparatus[pendingAction.slot.apparatus] && (
-                      <small style={{ marginLeft: '6px', color: '#1f4435', fontWeight: 700 }}>
+                      <small style={{ marginLeft: '6px', color: '#1f4435', fontWeight: 600 }}>
                         (★ 내 최근 선호:{' '}
                         {companionState.preferredSpotByApparatus[pendingAction.slot.apparatus]}번)
                       </small>

@@ -592,6 +592,7 @@ function CatalogMotionInteractivePlayerContent({
           aria-describedby={`${id}-frame-help`}
           onChange={(event) => seek(Number(event.target.value) / 1000)}
           onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing) return;
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
             event.preventDefault();
             stepFrame(event.key === 'ArrowLeft' ? -1 : 1);

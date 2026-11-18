@@ -1995,8 +1995,15 @@ html body #root .pf-member-view .pf-member-wallet-metrics strong {
 }
 
 .pf-member-wallet-hero__expired {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin: 6px 0 0;
-  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: #fef3eb;
+  border: 1px solid #f3c6ad;
+  font-size: 0.78rem;
   font-weight: 600;
   color: #9a3412;
 }
@@ -2238,6 +2245,276 @@ html body #root .pf-ai-quick-bar__collapsed-body {
     min-height: 44px !important;
     padding: 4px 8px !important;
     font-size: 12.5px !important;
+  }
+}
+
+/* ==========================================================================
+   15. Mobile-First & Multi-Breakpoint Ergonomics Lock (320px -> 1440px)
+       - Zero horizontal overflow across 320/375/390/768/1024/1440px
+       - >= 44x44px coarse-pointer & mobile hit targets (Apple HIG / WCAG 2.5.8)
+       - >= 16px mobile form input font-size (prevents iOS Safari focus auto-zoom)
+       - Non-overlapping 3D Viewport HUD, vertical right zoom dock & hotspot card
+   ========================================================================== */
+html,
+body,
+#root,
+html body #root .flow-app,
+html body #root .flow-app .main-content {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* iOS Safari & Mobile Browser Auto-Zoom Prevention: >= 16px on all text-entry controls */
+@media (max-width: 767px) {
+  html
+    body
+    #root
+    :is(
+      input:not([type='checkbox']):not([type='radio']):not([type='range']),
+      select,
+      textarea,
+      .pf-cmdk-search-box input,
+      .pf-orbit3d-setup-field select,
+      .pf-p05-quick-memo input,
+      .pf-routine-tag-sheet__create input,
+      .sequence-title-label input
+    ) {
+    font-size: 16px !important;
+  }
+}
+
+/* Coarse Pointer & Mobile >= 44px Hit Target Contract */
+@media (pointer: coarse), (max-width: 767px) {
+  html
+    body
+    #root
+    :is(
+      .pf-orbit3d-icon-btn,
+      .pf-orbit3d-hotspot-card__close,
+      .pf-cmdk-clear-btn
+    ) {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  html
+    body
+    #root
+    :is(
+      .pf-orbit3d-shader-btn,
+      .pf-orbit3d-play-btn,
+      .pf-orbit3d-speed-btn,
+      .pf-orbit3d-tool-chip,
+      .pf-orbit3d-preset-chip,
+      .pf-orbit3d-export-btn,
+      .pf-mobile-subpage-btn,
+      .class-insights-tabs > button[role='tab'],
+      .pf-studio3d-mode-btn,
+      .pf-cmdk-brand-chip,
+      .pf-cmdk-btn-ghost,
+      .pf-cmdk-btn-add,
+      .atlas-compare-brand-chip,
+      .atlas-compare-orbit-btn,
+      .pf-p05-chip,
+      .pf-v70-option-chip,
+      .pf-member-chip,
+      .pf-member-quick-spot-btn,
+      .pf-member-slot-cta,
+      .mb-card-details > summary,
+      .pf-role-switcher__btn
+    ) {
+    min-height: 44px !important;
+  }
+}
+
+/* Non-Overlapping Mobile 3D Viewport HUD, Right Vertical Zoom Dock & Hotspot Card */
+html body #root .pf-orbit3d-zoom-readout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+@media (max-width: 639px) {
+  html body #root .pf-orbit3d-hud-top {
+    inset: 8px 8px auto 8px !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+
+  html body #root .pf-orbit3d-badge__hint {
+    display: none !important;
+  }
+
+  html body #root .pf-orbit3d-shader-pills {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body #root .pf-orbit3d-shader-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  html body #root .pf-orbit3d-zoom-controls {
+    left: auto !important;
+    right: 8px !important;
+    bottom: 56px !important;
+    flex-direction: column !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    border-radius: 12px !important;
+  }
+
+  html body #root .pf-orbit3d-zoom-readout {
+    padding: 2px 0;
+    font-size: 10.5px;
+  }
+
+  html body #root .pf-orbit3d-hotspot-card {
+    left: 8px !important;
+    right: 60px !important;
+    bottom: 8px !important;
+    max-width: calc(100% - 68px) !important;
+    padding: 10px 12px !important;
+  }
+
+  html body #root .pf-orbit3d-presets {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body #root .pf-orbit3d-presets::-webkit-scrollbar {
+    display: none;
+  }
+
+  html body #root .pf-orbit3d-preset-chip {
+    flex: 0 0 auto;
+  }
+}
+
+/* Narrow Phone Ergonomics (<= 480px): Full-Width Thumb Scrubber & 320px Zero-Overflow Grids */
+@media (max-width: 480px) {
+  html body #root .pf-orbit3d-scrubber-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  html body #root .pf-orbit3d-slider {
+    order: -1;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  html body #root .pf-orbit3d-pct {
+    margin-left: auto;
+  }
+
+  html body #root .pf-orbit3d-setup-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body #root .pf-member-week-grid {
+    gap: 4px !important;
+  }
+
+  html body #root .pf-member-day-btn {
+    min-width: 0 !important;
+    min-height: 52px !important;
+    padding: 6px 2px !important;
+    font-size: 11.5px !important;
+  }
+
+  html body #root .pf-studio-spots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+}
+/* ==========================================================================
+   16. Wave-2 Complete Service & Print Polish
+       - 1-Page Visual 3D Cue Sheet mobile auto-stack + crisp A4 2-column print
+       - Apparatus 3D Rig Preview, Motion Player & Command Palette 320px ergonomics
+   ========================================================================== */
+@media (pointer: coarse), (max-width: 767px) {
+  html
+    body
+    #root
+    :is(
+      .mpp-controls button,
+      .mpp-phases button,
+      .mpp-transitions button,
+      .mpp-phase-stepper button,
+      .mpp-compare-toggle,
+      .log-quick-note-chip,
+      .pf-rig-preview__btn
+    ) {
+    min-height: 44px !important;
+  }
+}
+
+@media screen and (max-width: 639px) {
+  html body #root .pf-visual-1p-cuesheet__header,
+  html body #root .pf-rig-preview__header,
+  html body #root .pf-rig-preview__phase-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  html body #root .pf-visual-1p-cuesheet .pf-visual-1p-cuesheet__grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body #root .pf-rig-preview__camera-group,
+  html body #root .pf-rig-preview__phase-group,
+  html body #root .pf-rig-preview__utility-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  html body #root .pf-cmdk-exercise-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  html body #root .pf-cmdk-exercise-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+}
+
+@media print {
+  .cue-sheet-no-print {
+    display: none !important;
+  }
+
+  .pf-visual-1p-cuesheet.is-two-col .pf-visual-1p-cuesheet__grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .pf-visual-1p-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 

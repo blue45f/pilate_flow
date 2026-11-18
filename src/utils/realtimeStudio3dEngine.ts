@@ -2656,6 +2656,8 @@ export interface Render3DFrameOptions {
   readonly yawDeg: number;
   readonly pitchDeg: number;
   readonly zoom: number;
+  readonly panX?: number;
+  readonly panY?: number;
   readonly shader: Studio3DShaderPreset;
   readonly mirrored?: boolean;
   readonly showBiomechOverlay?: boolean;
@@ -3041,8 +3043,9 @@ function buildStudio3DScene(options: {
       );
     }
 
-    // Walnut Carriage Perimeter Frame + Piped Sage Leather Cushion + Tilting Headrest + Sculpted Shoulder Blocks
+    // Walnut Carriage Perimeter Frame + Precision Delrin Roller Bogies + Rubber Bump Stops
     for (const sy of [-0.275, 0.275]) {
+      const wheelY = sy < 0 ? -0.264 : 0.264;
       quads.push(
         ...makeSubdividedBoxQuads(
           [cx + 0.08, sy, 0.354],
@@ -3053,7 +3056,33 @@ function buildStudio3DScene(options: {
           28,
           'wood',
         ),
+        ...makeSubdividedBoxQuads(
+          [0.895, wheelY, 0.332],
+          [0.022, 0.018, 0.022],
+          charcoalRgb,
+          appAlpha,
+          0.18,
+          22,
+          'leather',
+        ),
       );
+      if (!svgFastMode) {
+        for (const wx of [cx - 0.22, cx + 0.38]) {
+          quads.push(
+            ...makeCylinder3D(
+              [wx, wheelY - 0.006, 0.332],
+              [wx, wheelY + 0.006, 0.332],
+              0.0105,
+              charcoalRgb,
+              segBolt,
+              appAlpha,
+              0.22,
+              28,
+              'leather',
+            ),
+          );
+        }
+      }
     }
     for (const sx of [cx - 0.3, cx + 0.46]) {
       quads.push(
@@ -3104,6 +3133,17 @@ function buildStudio3DScene(options: {
           64,
           'chrome',
         ),
+        ...makeCylinder3D(
+          [cx - 0.22, sy, 0.416],
+          [cx - 0.22, sy, 0.424],
+          0.0165,
+          brassRgb,
+          segBolt,
+          appAlpha,
+          0.62,
+          64,
+          'brass',
+        ),
       );
       const sb = makePipedCushion(
         [cx - 0.195, sy, 0.474],
@@ -3114,6 +3154,7 @@ function buildStudio3DScene(options: {
         svgFastMode,
       );
       quads.push(...sb.quads);
+      lines.push(sb.piping);
     }
 
     if (boxMountedOnReformer && (useLongBox || useShortBox)) {
@@ -3189,6 +3230,15 @@ function buildStudio3DScene(options: {
       const fbX = effectiveFootbar === 'low' ? 0.88 : effectiveFootbar === 'mid' ? 0.85 : 0.825;
       for (const sy of [-0.282, 0.282]) {
         quads.push(
+          ...makeSubdividedBoxQuads(
+            [0.945, sy * 1.03, 0.332],
+            [0.068, 0.01, 0.044],
+            steelRgb,
+            appAlpha,
+            0.58,
+            64,
+            'chrome',
+          ),
           ...makeCylinder3D(
             [0.955, sy, 0.335],
             [fbX, sy, fbZ],
@@ -3200,20 +3250,7 @@ function buildStudio3DScene(options: {
             64,
             'chrome',
           ),
-          ...makeSphereQuads(
-            [0.955, sy * 1.08, 0.335],
-            0.016,
-            0.012,
-            0.016,
-            brassRgb,
-            segBolt,
-            ringsBolt,
-            appAlpha,
-            0.62,
-            0,
-            64,
-            'brass',
-          ),
+          ...makeBrassStarKnobQuads([0.955, sy * 1.12, 0.335], 0.016, 0.011, brassRgb, appAlpha),
         );
       }
       quads.push(
@@ -3247,13 +3284,13 @@ function buildStudio3DScene(options: {
     for (let idx = 0; idx < count; idx++) {
       const sy = count === 1 ? 0 : lerp(-0.09, 0.09, idx / (count - 1));
       lines.push({
-        pts: makeSpringPolyline([cx + 0.47, sy, 0.335], [0.91, sy, 0.335], 16, 0.0135),
+        pts: makeSpringPolyline([cx + 0.47, sy, 0.335], [0.91, sy, 0.335], 18, 0.0138),
         stroke: activeSpringColors[idx]!,
-        width: 2.3,
+        width: 2.35,
       });
     }
 
-    // Rear Stainless Risers + Brass Finials + Swivel Pulley Toruses + Double Cotton Loops
+    // Rear Stainless Risers + Swivel Clevis Yokes + Brass Pulley Sheaves + Double Cotton Loops
     for (const ry of [-0.28, 0.28]) {
       quads.push(
         ...makeCylinder3D(
@@ -3262,6 +3299,15 @@ function buildStudio3DScene(options: {
           0.013,
           steelRgb,
           segCyl,
+          appAlpha,
+          0.58,
+          64,
+          'chrome',
+        ),
+        ...makeSubdividedBoxQuads(
+          [-1.112, ry, 0.64],
+          [0.036, 0.016, 0.022],
+          steelRgb,
           appAlpha,
           0.58,
           64,
@@ -3291,6 +3337,20 @@ function buildStudio3DScene(options: {
           tubeSegTorus,
           'Y',
           'brass',
+        ),
+        ...makeSphereQuads(
+          [-1.095, ry, 0.64],
+          0.008,
+          0.01,
+          0.008,
+          steelRgb,
+          segBolt,
+          ringsBolt,
+          appAlpha,
+          0.58,
+          0,
+          64,
+          'chrome',
         ),
       );
     }
@@ -4815,7 +4875,7 @@ function buildStudio3DScene(options: {
   }
   lines.push({ pts: ubRingPts, stroke: pipingHex, width: 1.7, depthBias: -0.012 });
 
-  // Twin Crop-Top Shoulder Straps
+  // Twin Crop-Top Shoulder Straps + Sculpted Clavicle Anatomical Ridge
   for (const sgn of [-1, 1] as const) {
     const strapFront = add3(
       rig.chest,
@@ -4825,6 +4885,18 @@ function buildStudio3DScene(options: {
     const strapBack = add3(
       rig.chest,
       sub3(mul3(bodyRight, sgn * 0.082), add3(mul3(antN, 0.066), mul3(spUp, 0.02))),
+    );
+    const clavMedial = add3(
+      rig.chest,
+      add3(mul3(bodyRight, sgn * 0.018), add3(mul3(antN, 0.064), mul3(spUp, 0.012))),
+    );
+    const clavMid = add3(
+      rig.chest,
+      add3(mul3(bodyRight, sgn * 0.072), add3(mul3(antN, 0.058), mul3(spUp, 0.02))),
+    );
+    const clavAcromion = add3(
+      rig.chest,
+      add3(mul3(bodyRight, sgn * 0.128), add3(mul3(antN, 0.032), mul3(spUp, 0.024))),
     );
     quads.push(
       ...makeTaperedTubeQuads(
@@ -4844,6 +4916,24 @@ function buildStudio3DScene(options: {
         0,
         0,
         'fabric',
+      ),
+      ...makeTaperedTubeQuads(
+        [clavMedial, clavMid, clavAcromion],
+        [
+          [0.0065, 0.005],
+          [0.0072, 0.0055],
+          [0.0085, 0.0065],
+        ],
+        skinRgb,
+        svgFastMode ? 5 : 8,
+        bodyAlpha,
+        0.14,
+        0,
+        20,
+        antN,
+        0.004,
+        0.005,
+        'skin',
       ),
     );
   }
@@ -5339,6 +5429,15 @@ function evalStudioPbrLitRgb(
   return { r, g, b, lum: r * 0.3 + g * 0.59 + b * 0.11 };
 }
 
+const STUDIO_KEY_DIR: Vec3 = norm3([-0.48, -0.56, 0.82]);
+const STUDIO_FILL_DIR: Vec3 = norm3([0.66, -0.38, 0.54]);
+const STUDIO_BOUNCE_DIR: Vec3 = [0, 0, -1];
+const STUDIO_GIZMO_AXES: readonly { readonly vec: Vec3; readonly col: string; readonly lbl: string }[] = [
+  { vec: [1, 0, 0], col: '#E25B3B', lbl: 'X' },
+  { vec: [0, 1, 0], col: '#2B6CB0', lbl: 'Y' },
+  { vec: [0, 0, 1], col: '#1FA97C', lbl: 'Z' },
+];
+
 function drawSceneRegion(params: {
   ctx: CanvasRenderingContext2D;
   scene: Built3DScene;
@@ -5349,6 +5448,8 @@ function drawSceneRegion(params: {
   yawDeg: number;
   pitchDeg: number;
   zoom: number;
+  panX?: number;
+  panY?: number;
   shader: Studio3DShaderPreset;
   regionLabel?: string;
   selectedHotspotId?: Studio3DHotspotId | null;
@@ -5364,6 +5465,8 @@ function drawSceneRegion(params: {
     yawDeg,
     pitchDeg,
     zoom,
+    panX = 0,
+    panY = 0,
     shader,
     regionLabel,
     selectedHotspotId,
@@ -5398,16 +5501,22 @@ function drawSceneRegion(params: {
   const dist = 3.42 / Math.max(0.65, Math.min(1.85, zoom));
   const yaw = ((yawDeg - 90) * Math.PI) / 180;
   const pitch = (Math.max(-6, Math.min(82, pitchDeg)) * Math.PI) / 180;
-  const camPos: Vec3 = [
+  const baseCamPos: Vec3 = [
     scene.target[0] + dist * Math.cos(pitch) * Math.cos(yaw),
     scene.target[1] + dist * Math.cos(pitch) * Math.sin(yaw),
     scene.target[2] + dist * Math.sin(pitch),
   ];
 
-  const camFwd = norm3(sub3(scene.target, camPos));
+  const camFwd = norm3(sub3(scene.target, baseCamPos));
   const worldUp: Vec3 = [0, 0, 1];
   const camRight = norm3(cross3(camFwd, worldUp));
   const camUp = norm3(cross3(camRight, camFwd));
+  const clampedPanX = Math.max(-0.45, Math.min(0.45, panX));
+  const clampedPanY = Math.max(-0.45, Math.min(0.45, panY));
+  const camPos: Vec3 =
+    clampedPanX !== 0 || clampedPanY !== 0
+      ? add3(baseCamPos, add3(mul3(camRight, -clampedPanX), mul3(camUp, clampedPanY)))
+      : baseCamPos;
   const focal = Math.min(rw, rh * 1.48) * 1.38;
 
   const project = (pt: Vec3): { x: number; y: number; zCam: number; valid: boolean } => {
@@ -5485,9 +5594,9 @@ function drawSceneRegion(params: {
     ctx.restore();
   }
 
-  const keyDir = norm3([-0.48, -0.56, 0.82]);
-  const fillDir = norm3([0.66, -0.38, 0.54]);
-  const bounceDir: Vec3 = [0, 0, -1];
+  const keyDir = STUDIO_KEY_DIR;
+  const fillDir = STUDIO_FILL_DIR;
+  const bounceDir = STUDIO_BOUNCE_DIR;
 
   type RenderItem =
     | {
@@ -5764,11 +5873,6 @@ function drawSceneRegion(params: {
   // XYZ Orientation Axis Gizmo in Bottom-Right of Region
   const gizmoCx = rx + rw - 36;
   const gizmoCy = ry + rh - 36;
-  const axes: { vec: Vec3; col: string; lbl: string }[] = [
-    { vec: [1, 0, 0], col: '#E25B3B', lbl: 'X' },
-    { vec: [0, 1, 0], col: '#2B6CB0', lbl: 'Y' },
-    { vec: [0, 0, 1], col: '#1FA97C', lbl: 'Z' },
-  ];
   ctx.save();
   ctx.fillStyle =
     shader === 'studio-pbr' || shader === 'clay-wire'
@@ -5777,8 +5881,8 @@ function drawSceneRegion(params: {
   ctx.beginPath();
   ctx.arc(gizmoCx, gizmoCy, 24, 0, Math.PI * 2);
   ctx.fill();
-  ctx.font = '700 8.5px system-ui, -apple-system, sans-serif';
-  for (const ax of axes) {
+  ctx.font = '600 8.5px system-ui, -apple-system, sans-serif';
+  for (const ax of STUDIO_GIZMO_AXES) {
     const sx = dot3(ax.vec, camRight) * 16;
     const sy = -dot3(ax.vec, camUp) * 16;
     ctx.strokeStyle = ax.col;
@@ -5804,6 +5908,8 @@ export function renderRealtimeStudio3DFrame({
   yawDeg,
   pitchDeg,
   zoom,
+  panX = 0,
+  panY = 0,
   shader,
   mirrored = false,
   showBiomechOverlay = false,
@@ -5846,6 +5952,8 @@ export function renderRealtimeStudio3DFrame({
       yawDeg,
       pitchDeg,
       zoom,
+      panX,
+      panY,
       shader,
       regionLabel: `3D 자유 회전 (${Math.round(yawDeg)}°/${Math.round(pitchDeg)}°)`,
       selectedHotspotId,
@@ -5887,6 +5995,8 @@ export function renderRealtimeStudio3DFrame({
       yawDeg,
       pitchDeg,
       zoom,
+      panX,
+      panY,
       shader,
       selectedHotspotId,
       collectHotspots: hotspots,
@@ -5993,9 +6103,9 @@ export function projectStudio3DSceneForSvg(
     });
   }
 
-  const keyDir = norm3([-0.48, -0.56, 0.82]);
-  const fillDir = norm3([0.66, -0.38, 0.54]);
-  const bounceDir: Vec3 = [0, 0, -1];
+  const keyDir = STUDIO_KEY_DIR;
+  const fillDir = STUDIO_FILL_DIR;
+  const bounceDir = STUDIO_BOUNCE_DIR;
 
   const queue: {
     readonly isPoly: boolean;

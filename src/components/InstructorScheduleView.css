@@ -128,7 +128,7 @@
 
 .instructor-schedule .schedule-prep-counts strong {
   color: var(--pf-color-text-primary, #1e3129);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .instructor-schedule .schedule-prep-counts span {

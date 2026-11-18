@@ -233,7 +233,7 @@
   border: 1px solid #b8ded0;
   color: #105d4f;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
 }
@@ -275,7 +275,7 @@
 }
 
 .teaching-step-progress-count {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-step-progress-next {
@@ -295,14 +295,14 @@
 #root .vnext-shell .teaching-timer-status.paused {
   background: #fef3c7;
   color: #7c4a0a;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-timer-status.completed,
 #root .vnext-shell .teaching-timer-status.completed {
   background: #e0f2fe;
   color: #0c4a6e;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-play.is-resume-ready,
@@ -665,7 +665,7 @@
   background: #1f4d3f;
   color: #f7f5f0;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-glance-cue-chip {
@@ -756,7 +756,7 @@
   border: 1px solid rgba(167, 196, 178, 0.34);
   background: rgba(255, 255, 255, 0.06);
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-live-pill i {
@@ -805,7 +805,7 @@
   border: 1px solid #bfd6c8;
   color: #18473b;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   word-break: keep-all;
 }
 
@@ -817,7 +817,7 @@
   background: #ffffff;
   color: #1f3f37;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   word-break: keep-all;
 }
@@ -870,7 +870,7 @@
 
 .teaching-live-diagram-caption strong {
   color: #18473b;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .teaching-live-diagram-meta {

@@ -190,7 +190,7 @@ const STUDIO_3D_HERO_UNSLOP_CSS = `
     width: 100% !important;
   }
   .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-chip {
-    min-height: 38px !important;
+    min-height: 44px !important;
     padding: 4px 6px !important;
     font-size: 11.5px !important;
     justify-content: center !important;
@@ -209,9 +209,9 @@ const STUDIO_3D_HERO_UNSLOP_CSS = `
     font-size: 11px !important;
   }
   .pf-p07-clean-detail .yt-preview-step-guide .pf-step-nav-btn {
-    min-height: 36px !important;
-    padding: 4px 8px !important;
-    font-size: 11px !important;
+    min-height: 44px !important;
+    padding: 4px 10px !important;
+    font-size: 11.5px !important;
   }
 }
 
@@ -403,6 +403,12 @@ const STUDIO_3D_HERO_UNSLOP_CSS = `
 .pf-unslop-hero3d .pf-detail-layer-tab {
   border-radius: 7px !important;
   font-weight: 500 !important;
+}
+@media (pointer: coarse), (max-width: 767px) {
+  .pf-unslop-hero3d .pf-studio3d-mode-btn,
+  .pf-unslop-hero3d .pf-detail-layer-tab {
+    min-height: 44px !important;
+  }
 }
 .pf-unslop-hero3d .pf-detail-quick-cue-box__caution {
   border-radius: 8px !important;

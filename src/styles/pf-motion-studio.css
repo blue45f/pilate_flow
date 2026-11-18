@@ -775,7 +775,7 @@ html body #root .flow-app .flow-time-bar > span[data-section='cooldown'] {
   }
 }
 
-/* Floating Active Sequence Dock in Atlas */
+/* Floating Active Sequence Dock in Atlas (clears mobile bottom-nav cleanly) */
 html body #root .flow-app .pf-atlas-sequence-dock {
   position: sticky;
   bottom: 16px;
@@ -796,6 +796,26 @@ html body #root .flow-app .pf-atlas-sequence-dock {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1023px) {
+  html body #root .flow-app .pf-atlas-sequence-dock {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 480px) {
+  html body #root .flow-app .pf-atlas-sequence-dock {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  html body #root .flow-app .pf-atlas-sequence-dock__cta {
+    min-height: 44px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1033,14 +1053,14 @@ html body #root .flow-app .flow-schedule-next {
 }
 
 /* ==========================================================================
-   11. Page 6: Member Booking ("Embossed Studio Pass Foil & Celebration Burst")
+   11. Page 6: Member Booking ("Calm Linen Pass Card & Celebration Burst")
    ========================================================================== */
 html body #root .flow-app .pf-member-wallet-hero {
   position: relative;
   overflow: hidden;
-  background: #1a2c24 !important;
-  border: 1px solid rgba(235, 211, 164, 0.24) !important;
-  color: #f7f4ee !important;
+  background: var(--pf-unslop-card, #ffffff) !important;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08)) !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
 }
 
 html body #root .flow-app .pf-member-wallet-ring svg circle:nth-of-type(2) {
@@ -1052,6 +1072,7 @@ html body #root .flow-app .pf-member-wallet-ring__label strong {
   font-size: 24px !important;
   font-weight: 400 !important;
   letter-spacing: -0.02em;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -1059,7 +1080,7 @@ html body #root .flow-app .pf-member-wallet-ring__label strong {
     transform: perspective(1040px) rotateX(var(--pf-rx, 0deg)) rotateY(var(--pf-ry, 0deg));
     background-image: radial-gradient(
       460px circle at var(--pf-mx, 75%) var(--pf-my, 35%),
-      rgba(235, 211, 164, 0.16),
+      rgba(53, 84, 65, 0.07),
       transparent 60%
     ) !important;
   }
@@ -1160,22 +1181,35 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
   html body #root .flow-app .topbar {
     flex-wrap: nowrap !important;
     justify-content: space-between !important;
-    gap: 6px !important;
-    padding: 8px 12px !important;
+    gap: 4px !important;
+    padding: 6px 8px !important;
   }
 
   html body #root .flow-app .topbar .mobile-brand {
     min-width: 0;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   html body #root .flow-app .topbar .topbar-actions {
     flex: 0 0 auto;
-    gap: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body #root .flow-app .topbar .app-quick-guide-btn {
+    display: none !important;
   }
 
   html body #root .flow-app .topbar .pf-role-switcher {
-    display: none !important;
+    display: inline-flex !important;
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  html body #root .flow-app .topbar .pf-role-switcher__btn {
+    min-height: 44px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
   }
 
   html body #root .flow-app .topbar .app-create-movement > span {
@@ -1183,8 +1217,9 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
   }
 
   html body #root .flow-app .topbar .app-create-movement {
-    width: 38px !important;
-    min-width: 38px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     padding: 0 !important;
     justify-content: center !important;
   }
@@ -1195,9 +1230,14 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
   }
 }
 
-@media (max-width: 439px) {
+@media (max-width: 479px) {
+  html body #root .flow-app .topbar .app-create-movement {
+    display: none !important;
+  }
+
   html body #root .flow-app .topbar .vnext-wordmark {
-    font-size: 15px !important;
+    font-size: 0 !important;
+    gap: 0 !important;
   }
 
   html body #root .flow-app .topbar .pf-mobile-topbar-stage-btn > span {
@@ -1205,11 +1245,27 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
   }
 
   html body #root .flow-app .topbar .pf-mobile-topbar-stage-btn {
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
-    padding: 0;
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
     justify-content: center;
+  }
+}
+
+@media (max-width: 389px) {
+  html body #root .flow-app .topbar {
+    padding: 6px 6px !important;
+  }
+
+  html body #root .flow-app .topbar .pf-mobile-topbar-stage-btn {
+    display: none !important;
+  }
+
+  html body #root .flow-app .topbar .pf-role-switcher__btn {
+    padding: 0 6px !important;
+    font-size: 11.5px !important;
   }
 }
 

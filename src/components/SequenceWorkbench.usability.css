@@ -218,7 +218,7 @@
   background: #ffffff;
   color: #56685f;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
   transition:
@@ -259,7 +259,7 @@
   height: 22px;
   border-radius: 999px;
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   flex-shrink: 0;
   background: rgba(31, 77, 63, 0.1);
 }
@@ -298,14 +298,14 @@
   background: #f0ede4;
   color: #1f4d3f;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
 #root .vnext-workbench .pf-step-stage-title {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: #1b3129;
 }
@@ -390,7 +390,7 @@
 
 #root .vnext-workbench .workbench-quick-duration-label {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #364d44;
   margin-right: 2px;
 }
@@ -405,7 +405,7 @@
   background: #ffffff;
   color: #1b3129;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -453,7 +453,7 @@
   background: #ffffff;
   color: #1b3129;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -478,7 +478,7 @@
 #root .vnext-workbench .pf-step-secondary-shelf-label {
   display: block;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.03em;
   color: #63746b;
   margin-bottom: 10px;
@@ -576,7 +576,7 @@
   background: transparent;
   color: #56685f;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -610,7 +610,7 @@
 
 #root .vnext-workbench .pf-option-a-finder-pane__head strong {
   font-size: 1.08rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #1d201c;
 }
 
@@ -735,7 +735,7 @@
   background: #f3efe8;
   color: #355441;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -842,7 +842,7 @@
   background: #f8faf8;
   color: #1d443a;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   white-space: nowrap;
@@ -959,7 +959,7 @@
 
 #root .vnext-workbench .pf-step2-added-tray__label {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #1f4d3f;
 }
 
@@ -985,7 +985,7 @@
 
 #root .vnext-workbench .pf-step2-added-chip small {
   color: #355441;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 #root .vnext-workbench .pf-step2-added-chip__remove {
@@ -1033,7 +1033,7 @@
   background: #faf8f4;
   color: #3a4a42;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color var(--pf-motion-fast, 150ms) ease,
@@ -1078,7 +1078,7 @@
 
 #root .vnext-workbench .pf-quick-reusable-strip__label {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #1c4e41;
   white-space: nowrap;
 }
@@ -1109,7 +1109,7 @@
   background: #ffffff;
   color: #163d34;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1143,7 +1143,7 @@
   background: #f7f9f7;
   color: #2f463e;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1334,7 +1334,7 @@
   background: #fdf6e9;
   color: #6f4910;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   word-break: keep-all;
 }

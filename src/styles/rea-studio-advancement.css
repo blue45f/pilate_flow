@@ -645,8 +645,10 @@ html #root .vnext-shell .main-content:has(.live-stage-shell.is-tv-widescreen) {
 
 .pf-studio-room-mirror-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 6px 10px;
   padding: 8px 12px;
   border-radius: 10px;
   background: #ffffff;
@@ -664,9 +666,8 @@ html body #root .flow-app .pf-member-wallet-hero h3,
 html body #root .flow-app .pf-member-wallet-hero strong,
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring,
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring strong,
-html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring span,
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring text {
-  color: #f7f4ee !important;
+  color: var(--pf-unslop-text-primary, #1f1b16) !important;
   fill: currentColor;
 }
 
@@ -674,8 +675,9 @@ html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-hero__eyebrow
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-hero__eyebrow svg,
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-metrics,
 html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-metrics span,
-html body #root .flow-app .pf-member-wallet-hero p {
-  color: rgba(247, 244, 238, 0.88) !important;
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring small,
+html body #root .flow-app .pf-member-wallet-hero p:not(.pf-member-wallet-hero__expired) {
+  color: var(--pf-unslop-text-secondary, #5e554a) !important;
 }
 
 .pf-member-homecare-card {
@@ -773,6 +775,25 @@ html body #root .flow-app .pf-member-wallet-hero p {
   font-size: 0.83rem;
   line-height: 1.55;
   color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .pf-routine-tag-chip,
+  .pf-routine-tag-add-trigger,
+  .pf-studio-care-disclosure > summary {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pf-routine-tag-sheet__create {
+    flex-direction: column;
+  }
+
+  .pf-kinesiology-roles,
+  .pf-member-homecare-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
