@@ -1,13 +1,45 @@
 import '@testing-library/jest-dom';
 import { afterEach, beforeEach, vi } from 'vitest';
 
-// Polyfill HTMLDialogElement methods for jsdom environment
+// Polyfill HTMLDialogElement methods and PointerEvent for jsdom environment
 if (typeof HTMLDialogElement !== 'undefined') {
   HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
     this.setAttribute('open', '');
   });
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
     this.removeAttribute('open');
+  });
+}
+
+if (typeof window !== 'undefined' && typeof window.PointerEvent === 'undefined') {
+  class JSDOMPointerEvent extends MouseEvent {
+    readonly pointerId: number;
+    readonly pointerType: string;
+    readonly isPrimary: boolean;
+    readonly width: number;
+    readonly height: number;
+    readonly pressure: number;
+
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 0;
+      this.pointerType = params.pointerType ?? 'mouse';
+      this.isPrimary = params.isPrimary ?? true;
+      this.width = params.width ?? 1;
+      this.height = params.height ?? 1;
+      this.pressure = params.pressure ?? (this.buttons ? 0.5 : 0);
+    }
+  }
+
+  Object.defineProperty(window, 'PointerEvent', {
+    configurable: true,
+    writable: true,
+    value: JSDOMPointerEvent,
+  });
+  Object.defineProperty(globalThis, 'PointerEvent', {
+    configurable: true,
+    writable: true,
+    value: JSDOMPointerEvent,
   });
 }
 
