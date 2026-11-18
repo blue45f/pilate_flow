@@ -57,6 +57,7 @@ import './styles/atelier-clean-declutter-v5.css';
 import './styles/mobile-subpages-user-first-v6.css';
 import './styles/atelier-unslop-system.css';
 import './styles/pf-motion-studio.css';
+import './styles/rea-studio-advancement.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 

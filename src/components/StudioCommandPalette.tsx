@@ -22,7 +22,9 @@ import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { isImeComposing } from '../utils/imeGuard';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
+import { analyzeExerciseKinesiology } from '../utils/pilatesKinesiologyIntelligence';
 import { isRestStep } from '../utils/sequenceEngine';
+import { getRoutineTagsForId, useStudioRoutineTags } from '../utils/studioRoutineTags';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
@@ -54,6 +56,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
   const reformerBrand = usePilatesStore((s) => s.reformerBrand);
   const setReformerBrand = usePilatesStore((s) => s.setReformerBrand);
   const appendExerciseToSequence = usePilatesStore((s) => s.appendExerciseToSequence);
+  const routineTagState = useStudioRoutineTags();
 
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -80,19 +83,26 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       return exercises.slice(0, 6);
     }
     return exercises
-      .filter((ex) =>
-        matchesDiscoverySearch(
+      .filter((ex) => {
+        const kin = analyzeExerciseKinesiology(ex);
+        return matchesDiscoverySearch(
           [
             ex.nameKo,
             ex.nameEn,
             APPARATUS_LABELS[ex.apparatus].ko,
             ex.springs ?? '',
+            ex.isUnilateral ? '단측 편측 좌우대칭' : '양측 동시',
             ...ex.targetMuscles,
+            ...kin.stabilizersKo,
+            kin.commonFaultKo,
+            kin.correctionCueKo,
+            ex.layers.easy,
+            ex.layers.hard,
             ...ex.cues,
           ],
           trimmed,
-        ),
-      )
+        );
+      })
       .slice(0, 8);
   }, [exercises, query]);
 
@@ -100,14 +110,21 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     const trimmed = query.trim();
     if (!trimmed) return savedSequences.slice(0, 4);
     return savedSequences
-      .filter((seq) =>
-        matchesDiscoverySearch(
-          [seq.title, seq.apparatus, `Lv ${seq.level}`, `${seq.targetMinutes}분`],
+      .filter((seq) => {
+        const tags = getRoutineTagsForId(routineTagState, seq.id);
+        return matchesDiscoverySearch(
+          [
+            seq.title,
+            seq.apparatus,
+            `Lv ${seq.level}`,
+            `${seq.targetMinutes}분`,
+            ...tags.flatMap((tag) => [tag, `#${tag}`]),
+          ],
           trimmed,
-        ),
-      )
+        );
+      })
       .slice(0, 5);
-  }, [savedSequences, query]);
+  }, [savedSequences, query, routineTagState]);
 
   const quickTabs: ReadonlyArray<{
     id: string;
@@ -309,7 +326,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                 }
               }
             }}
-            placeholder="동작 이름(헌드레드, 풋워크), 부위, 기구, 저장한 수업 검색"
+            placeholder="동작 이름, 안정화 근육·보상 패턴, #루틴태그, 저장한 수업 검색"
           />
           {query ? (
             <button
@@ -442,6 +459,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
             <div className="pf-cmdk-seq-grid">
               {matchedSequences.map((seq) => {
                 const isKbActive = activeItemKey === `seq:${seq.id}`;
+                const seqTags = getRoutineTagsForId(routineTagState, seq.id);
                 return (
                   <button
                     key={seq.id}
@@ -456,6 +474,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                       <small>
                         {seq.targetMinutes}분 · Lv {seq.level} · 동작{' '}
                         {seq.steps.filter((st) => !isRestStep(st)).length}개
+                        {seqTags.length > 0 ? ` · ${seqTags.map((t) => `#${t}`).join(' ')}` : ''}
                       </small>
                     </div>
                     <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />

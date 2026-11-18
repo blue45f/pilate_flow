@@ -20,6 +20,7 @@ import type {
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { getExerciseReviewState } from '../utils/exerciseReview';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
+import { analyzeExerciseKinesiology } from '../utils/pilatesKinesiologyIntelligence';
 import { getRecentlyTaughtExerciseIds } from '../utils/sequenceEngine';
 
 /** Guest key retained for callers that inspect browsing recovery in this tab. */
@@ -32,6 +33,7 @@ export interface AtlasDiscoveryFilters {
   position: string;
   level: string;
   duration: string;
+  sides: 'all' | 'unilateral' | 'bilateral';
   favorite: string;
   review: string;
   motionDraft: string;
@@ -46,6 +48,7 @@ export const INITIAL_ATLAS_FILTERS: AtlasDiscoveryFilters = {
   position: 'all',
   level: 'all',
   duration: 'all',
+  sides: 'all',
   favorite: 'all',
   review: 'all',
   motionDraft: 'all',
@@ -74,6 +77,7 @@ export function hasActiveDiscoveryState(filters: AtlasDiscoveryFilters): boolean
     filters.position !== 'all' ||
     filters.level !== 'all' ||
     filters.duration !== 'all' ||
+    filters.sides !== 'all' ||
     filters.favorite !== 'all' ||
     filters.review !== 'all' ||
     filters.motionDraft !== 'all' ||
@@ -113,6 +117,11 @@ export function parseAtlasFilters(
     position: choice(parsed.position, ['all', ...Object.keys(POSITION_LABELS)], defaults.position),
     level: choice(parsed.level, ['all', ...Object.keys(LEVEL_NAMES)], defaults.level),
     duration: choice(parsed.duration, ['all', 'short', 'medium', 'long'], defaults.duration),
+    sides: choice(
+      parsed.sides,
+      ['all', 'unilateral', 'bilateral'],
+      defaults.sides,
+    ) as AtlasDiscoveryFilters['sides'],
     favorite: choice(
       parsed.favorite,
       ['all', 'saved', ...Object.keys(FAVORITE_TAG_META)],
@@ -197,8 +206,11 @@ export function useAtlasFilterEngine({
       )
         return false;
       if (filters.duration === 'long' && exercise.defaultDurationMin <= 5) return false;
+      if (filters.sides === 'unilateral' && !exercise.isUnilateral) return false;
+      if (filters.sides === 'bilateral' && exercise.isUnilateral) return false;
       const blockMeta = CANONICAL_BLOCKS.find((item) => item.category === exercise.blockCategory);
       const ideaDraft = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
+      const kinesiology = analyzeExerciseKinesiology(exercise);
       const fields = [
         exercise.id,
         exercise.nameKo,
@@ -208,12 +220,19 @@ export function useAtlasFilterEngine({
         POSITION_LABELS[exercise.bodyPosition].ko,
         LEVEL_NAMES[exercise.level],
         `Lv ${exercise.level}`,
+        exercise.isUnilateral ? '단측 편측 좌우대칭 한쪽씩' : '양쪽 동시 양측',
         blockMeta?.nameKo ?? '',
         blockMeta?.nameEn ?? '',
         exercise.favoriteTag !== 'none' ? FAVORITE_TAG_META[exercise.favoriteTag].label : '',
         ...equipmentMeta.requiredEquipment.map(equipmentLabel),
         ...equipmentMeta.requiredProps.map(propLabel),
         ...exercise.targetMuscles,
+        ...kinesiology.stabilizersKo,
+        kinesiology.commonFaultKo,
+        kinesiology.correctionCueKo,
+        exercise.layers.easy,
+        exercise.layers.standard,
+        exercise.layers.hard,
         ...exercise.cues,
         exercise.precautions ?? '',
         ideaDraft?.ideaLine ?? '',
@@ -298,6 +317,16 @@ export function useAtlasFilterEngine({
         key: 'duration',
         label: `시간: ${durationLabel}`,
         onClear: () => update('duration', 'all'),
+      });
+    }
+    if (filters.sides !== 'all') {
+      chips.push({
+        key: 'sides',
+        label:
+          filters.sides === 'unilateral'
+            ? '수행: 단측 대칭(좌·우)'
+            : '수행: 양쪽 동시',
+        onClear: () => update('sides', 'all'),
       });
     }
     if (filters.review !== 'all') {

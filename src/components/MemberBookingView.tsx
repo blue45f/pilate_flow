@@ -49,6 +49,13 @@ import { LightDismissDialog } from './LightDismissDialog';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 import { VisualApparatusSpotGlyph } from './VisualFlowComponents';
+import {
+  buildMemberPostClassRecap,
+  computePassDdaySummary,
+  type MemberCompanionState,
+  readMemberCompanionState,
+  writeMemberCompanionState,
+} from '../utils/memberHomeCareRecap';
 import '../styles/atelier-luxury-v2.css';
 import '../styles/member-booking.css';
 
@@ -239,6 +246,13 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   const [portalState, setPortalState] = useState<PersistedMemberBookingState>(() =>
     readPersistedMemberBookingState(todayIso),
   );
+  const [companionState, setCompanionState] = useState<MemberCompanionState>(() =>
+    readMemberCompanionState(),
+  );
+  const updateCompanionState = (next: MemberCompanionState) => {
+    setCompanionState(next);
+    writeMemberCompanionState(next);
+  };
   const livePortalRef = useRef<PersistedMemberBookingState>(portalState);
   const confirmLockRef = useRef<boolean>(false);
   const nextDialogSeqRef = useRef<number>(0);
@@ -410,6 +424,21 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     1,
     Math.max(0, portalState.pass.remainingCount / Math.max(1, portalState.pass.totalCount)),
   );
+  const passDdaySummary = useMemo(
+    () =>
+      computePassDdaySummary({
+        expiresAtIso: portalState.pass.expiresAtIso,
+        todayIso,
+        remainingCount: portalState.pass.remainingCount,
+        totalCount: portalState.pass.totalCount,
+      }),
+    [
+      portalState.pass.expiresAtIso,
+      todayIso,
+      portalState.pass.remainingCount,
+      portalState.pass.totalCount,
+    ],
+  );
   const ringCircumference = 2 * Math.PI * 36;
   const ringOffset = ringCircumference * (1 - passRatio);
 
@@ -528,10 +557,12 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       }
       if (intent === 'BOOK') {
         const spotStates = computeStudioSpotStates(latestSlot);
+        const savedFav = companionState.preferredSpotByApparatus[latestSlot.apparatus];
+        const candidatePreferred = preferredSpotId ?? savedFav;
         const validPreferred =
-          preferredSpotId &&
-          spotStates.some((item) => item.spotId === preferredSpotId && !item.occupiedByOther)
-            ? preferredSpotId
+          candidatePreferred &&
+          spotStates.some((item) => item.spotId === candidatePreferred && !item.occupiedByOther)
+            ? candidatePreferred
             : pickDefaultOpenSpotId(latestSlot);
         selectSpot(validPreferred);
       }
@@ -783,6 +814,15 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       setLateCancelAgreed(false);
       setErrorAlert(null);
       setFeedbackBanner(message);
+      if (intent === 'BOOK' || intent === 'CHANGE_SPOT') {
+        updateCompanionState({
+          ...companionState,
+          preferredSpotByApparatus: {
+            ...companionState.preferredSpotByApparatus,
+            [slot.apparatus]: activeSpotId,
+          },
+        });
+      }
       if (intent === 'BOOK') {
         burstFrom(document.getElementById('member-wallet-section'));
       }
@@ -926,7 +966,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     >
       <header className="pf-member-header">
         <div>
-          <span className="eyebrow" style={{ letterSpacing: '0.01em' }}>
+          <span className="eyebrow">
             수업 예약 · 수강권
           </span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
@@ -1002,15 +1042,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         aria-label="내 수강권 현황"
       >
         <div className="pf-member-wallet-hero__main">
-          <span
-            className="eyebrow"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              letterSpacing: '0.01em',
-            }}
-          >
+          <span className="eyebrow pf-member-wallet-hero__eyebrow">
             <Ticket size={14} strokeWidth={1.5} aria-hidden="true" /> 내 수강권 현황
           </span>
           <h2>{portalState.pass.passTitle}</h2>
@@ -1029,15 +1061,20 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               <strong>수업 별칭:</strong> {portalState.pass.participantAlias}
             </span>
           </div>
+          <p
+            data-testid="member-pass-dday-summary"
+            style={{
+              margin: '6px 0 0',
+              fontSize: '0.8rem',
+              opacity: 0.92,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            <strong>{passDdaySummary.ddayLabelKo}</strong> ·{' '}
+            {passDdaySummary.creditSimulationNoteKo}
+          </p>
           {isPassExpired && (
-            <p
-              style={{
-                margin: '6px 0 0',
-                fontSize: '0.8rem',
-                color: '#fde68a',
-                fontWeight: 600,
-              }}
-            >
+            <p className="pf-member-wallet-hero__expired">
               선택한 날짜({selectedDate})는 수강권 유효기간 이후입니다. 만료일 이전 날짜를 선택해
               주세요.
             </p>
@@ -1051,7 +1088,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               cy="44"
               r="36"
               fill="none"
-              stroke="rgba(255, 253, 248, 0.2)"
+              className="pf-member-wallet-ring__track"
               strokeWidth="7"
             />
             <circle
@@ -1059,7 +1096,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               cy="44"
               r="36"
               fill="none"
-              stroke="#ebd3a4"
+              className="pf-member-wallet-ring__progress"
               strokeWidth="7"
               strokeLinecap="round"
               strokeDasharray={ringCircumference}
@@ -1081,16 +1118,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           aria-label="내 예약 및 대기 현황"
           data-testid="member-my-bookings-strip"
         >
-          <strong
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '0.92rem',
-              color: '#183d33',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
+          <strong className="pf-member-my-bookings__heading">
             <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" />
             내가 신청한 수업 ({myActiveBookingEntries.length}건)
           </strong>
@@ -1127,14 +1155,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   />
                   <div>
                     <strong>{titleText}</strong>
-                    <span
-                      style={{
-                        marginLeft: '8px',
-                        fontSize: '0.84rem',
-                        color: '#4c5d54',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
+                    <span className="pf-member-my-booking-submeta">
                       {info.slotDate ? `${info.slotDate} ` : ''}
                       {info.slotTime ? formatScheduleTime(info.slotTime) : ''}
                       {info.state === 'BOOKED' && info.spotId
@@ -1187,6 +1208,37 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       <ArrowLeftRight size={16} strokeWidth={1.5} aria-hidden="true" /> 자리 변경
                     </button>
                   )}
+                  {info.state === 'BOOKED' && info.slotDate === todayIso && (
+                    <button
+                      type="button"
+                      className="pf-member-chip"
+                      data-testid={`member-self-checkin-${slotId}`}
+                      aria-pressed={Boolean(companionState.checkedInSlotIds[slotId])}
+                      disabled={isOfflineReadOnly}
+                      onClick={() => {
+                        const already = Boolean(companionState.checkedInSlotIds[slotId]);
+                        const nextChecked = { ...companionState.checkedInSlotIds };
+                        if (already) {
+                          delete nextChecked[slotId];
+                        } else {
+                          nextChecked[slotId] = new Date().toISOString();
+                        }
+                        updateCompanionState({
+                          ...companionState,
+                          checkedInSlotIds: nextChecked,
+                        });
+                        setFeedbackBanner(
+                          already
+                            ? `'${titleText}' 도착 체크인 표시를 취소했습니다.`
+                            : `'${titleText}' 스튜디오 도착 셀프 체크인이 완료되었습니다.`,
+                        );
+                      }}
+                    >
+                      {companionState.checkedInSlotIds[slotId]
+                        ? '✓ 도착 체크인 완료'
+                        : '스튜디오 셀프 체크인'}
+                    </button>
+                  )}
                   {isUpcomingActionable && (
                     <button
                       type="button"
@@ -1200,6 +1252,34 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     </button>
                   )}
                 </div>
+                {info.state === 'BOOKED' &&
+                  (() => {
+                    const recap = buildMemberPostClassRecap(resolvedSlot);
+                    return (
+                      <details
+                        className="pf-member-homecare-card"
+                        data-testid={`member-homecare-recap-${slotId}`}
+                      >
+                        <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {recap.headlineKo} ({recap.workedFocusKo})
+                        </summary>
+                        <p style={{ margin: '4px 0', fontSize: '0.78rem', color: '#4c5f55' }}>
+                          {recap.hydrationAndRecoveryNoteKo}
+                        </p>
+                        <div className="pf-member-homecare-list">
+                          {recap.homeExercises.map((exItem) => (
+                            <div key={exItem.titleKo} className="pf-member-homecare-item">
+                              <strong>{exItem.titleKo}</strong>
+                              <small style={{ color: '#1f4435', fontWeight: 600 }}>
+                                {exItem.durationKo}
+                              </small>
+                              <span style={{ color: '#516359' }}>{exItem.cueKo}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    );
+                  })()}
               </div>
             );
           })}
@@ -1212,10 +1292,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           data-testid="member-my-bookings-empty"
         >
           <div>
-            <strong style={{ display: 'block', marginBottom: '4px' }}>
+            <strong className="pf-member-empty-title">
               예정된 내 예약이 아직 없어요
             </strong>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: '#4c5d54' }}>
+            <p className="pf-member-empty-desc">
               아래 주간 시간표에서 원하는 기구와 빈 자리를 골라 바로 예약해 보세요.
             </p>
           </div>
@@ -1389,12 +1469,12 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             data-testid="member-empty-slots-card"
           >
             <div>
-              <strong style={{ display: 'block', marginBottom: '4px' }}>
+              <strong className="pf-member-empty-title">
                 {daySlots.length === 0
                   ? '선택한 날짜에는 개설된 수업이 없어요'
                   : '선택한 기구·포커스·예약 가능 필터에 맞는 수업이 없어요'}
               </strong>
-              <p style={{ margin: 0, fontSize: '0.88rem', color: '#4c5d54' }}>
+              <p className="pf-member-empty-desc">
                 {nextMatchingClassDate
                   ? '현재 필터에 맞는 다음 수업일을 찾았어요. 조건을 유지한 채 이동할 수 있어요.'
                   : '다음 4주에 현재 조건에 맞는 수업이 없어요. 다른 주를 살펴보거나 필터를 바꿔 보세요.'}
@@ -1740,6 +1820,16 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   </details>
                 )}
                 <div className="pf-studio-spot-map" data-testid="member-spot-map">
+                  <div
+                    className="pf-studio-room-architecture"
+                    data-testid="member-studio-architecture-bar"
+                  >
+                    <div className="pf-studio-room-mirror-bar">
+                      <span>← 채광창 라인 (1·4번)</span>
+                      <strong>전면 거울 · 강사 티칭 단상</strong>
+                      <span>거울 측면·정면 (3·6번) →</span>
+                    </div>
+                  </div>
                   <div className="pf-studio-spot-map__zone">
                     <MapPin
                       size={16}
@@ -1749,6 +1839,12 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     />{' '}
                     스튜디오 창가 &amp; 전면 거울 방향 · 원하는 {pendingApparatusLabelKo} 자리를
                     선택하세요
+                    {companionState.preferredSpotByApparatus[pendingAction.slot.apparatus] && (
+                      <small style={{ marginLeft: '6px', color: '#1f4435', fontWeight: 700 }}>
+                        (★ 내 최근 선호:{' '}
+                        {companionState.preferredSpotByApparatus[pendingAction.slot.apparatus]}번)
+                      </small>
+                    )}
                   </div>
                   <div
                     className="pf-studio-spot-grid"
@@ -1796,7 +1892,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                           />
                           <strong>{spot.spotId}</strong>
                           <small>{spot.zoneKo}</small>
-                          <small style={{ fontWeight: 700 }}>
+                          <small className="pf-studio-spot-btn__state">
                             {spot.occupiedByOther
                               ? '예약 마감'
                               : isPicked

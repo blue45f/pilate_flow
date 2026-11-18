@@ -74,6 +74,10 @@ import {
   describeStepTransitionFromPrevious,
   resolveStepSetup,
 } from '../utils/transitionSummary';
+import {
+  computeBilateralStageProgress,
+  summarizeStageSections,
+} from '../utils/liveStageBilateralTracker';
 
 export const LIVE_STAGE_CHECKPOINT_KEY = 'pf_live_stage_checkpoint_v1';
 
@@ -455,6 +459,33 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   );
   const next = steps[clock.index + 1];
   const nextExercise = next ? exerciseMap.get(next.exerciseId) : undefined;
+  const [tvWidescreenMode, setTvWidescreenMode] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [manualCheckedStepIds, setManualCheckedStepIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const checkedStepIds = useMemo(() => {
+    const merged = new Set(manualCheckedStepIds);
+    for (let i = 0; i < clock.index; i += 1) {
+      const st = steps[i];
+      if (st) merged.add(st.stepId);
+    }
+    return merged;
+  }, [manualCheckedStepIds, clock.index, steps]);
+  const stageSectionSummaries = useMemo(
+    () => summarizeStageSections(steps, checkedStepIds, clock.index),
+    [steps, checkedStepIds, clock.index],
+  );
+  const bilateralProgress = useMemo(
+    () =>
+      computeBilateralStageProgress({
+        step: current,
+        exercise,
+        remainingMs: clock.remainingMs,
+        stepDurationMs: durations[clock.index] ?? 1,
+      }),
+    [current, exercise, clock.remainingMs, durations, clock.index],
+  );
 
   useEffect(() => {
     if (!clock.running) return;
@@ -1642,8 +1673,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`teaching-stage live-stage ${highContrast ? 'teaching-high-contrast' : ''} ${clock.running ? 'is-stage-running' : ''}`.trim()}
+      className={`teaching-stage live-stage live-stage-shell ${tvWidescreenMode ? 'is-tv-widescreen' : ''} ${highContrast ? 'teaching-high-contrast' : ''} ${clock.running ? 'is-stage-running' : ''}`.trim()}
       data-presentation={presentationMode}
+      data-tv-widescreen={tvWidescreenMode ? 'true' : undefined}
       data-stage-running={clock.running ? 'true' : undefined}
     >
       <header className="teaching-stage-header">
@@ -1759,6 +1791,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           <button
             type="button"
             className="btn-secondary"
+            data-testid="live-stage-checklist-toggle"
+            aria-expanded={checklistOpen}
+            onClick={() => setChecklistOpen((value) => !value)}
+          >
+            진행 체크표 ({checkedStepIds.size}/{steps.length})
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
             aria-expanded={showCueSheet}
             onClick={() => setShowCueSheet((value) => !value)}
           >
@@ -1785,6 +1826,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           onClick={() => applyPresentationMode('reference')}
         >
           자료 함께 보기
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-tv-mode-toggle"
+          aria-pressed={tvWidescreenMode}
+          onClick={() => setTvWidescreenMode((prev) => !prev)}
+        >
+          TV 와이드 모드
         </button>
       </div>
       <div
@@ -1845,6 +1894,90 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </div>
         )}
       </div>
+      {checklistOpen && (
+        <section
+          className="pf-stage-checklist-drawer"
+          data-testid="live-stage-checklist-drawer"
+          aria-label="실시간 수업 진행 체크표"
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+            }}
+          >
+            <strong>실시간 진행 체크표 (타이머는 계속 유지됩니다)</strong>
+            <div className="pf-stage-checklist-sections">
+              {stageSectionSummaries.map((sec) => (
+                <button
+                  key={sec.role}
+                  type="button"
+                  className="pf-routine-tag-chip pf-routine-tag-chip--compact"
+                  onClick={() => selectStep(sec.firstStepIndex)}
+                >
+                  {sec.labelKo} {sec.completedCount}/{sec.stepCount}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pf-stage-checklist-items">
+            {steps.map((stepItem, idx) => {
+              const exItem = !isRestStep(stepItem)
+                ? exerciseMap.get(stepItem.exerciseId)
+                : undefined;
+              const titleKo = isRestStep(stepItem) ? '중간 휴식' : (exItem?.nameKo ?? '동작');
+              const isChecked = checkedStepIds.has(stepItem.stepId);
+              const isCurrent = idx === clock.index;
+              return (
+                <div
+                  key={stepItem.stepId}
+                  className={`pf-stage-checklist-row ${isCurrent ? 'is-current' : ''} ${
+                    isChecked ? 'is-checked' : ''
+                  }`}
+                >
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      minHeight: '36px',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      aria-label={`${idx + 1}번 ${titleKo} 완료 표시`}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setManualCheckedStepIds((prev) => {
+                          const nextSet = new Set(prev);
+                          if (checked) nextSet.add(stepItem.stepId);
+                          else nextSet.delete(stepItem.stepId);
+                          return nextSet;
+                        });
+                      }}
+                    />
+                    <strong>
+                      {String(idx + 1).padStart(2, '0')}. {titleKo}
+                    </strong>
+                  </label>
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    onClick={() => selectStep(idx)}
+                  >
+                    {isCurrent ? '현재 진행 중' : '이 순서로 이동'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
       {showCueSheet && (
         <section className="panel teaching-cue-sheet-panel" aria-label="수업 진행 큐시트">
           <ClassCueSheetPreview
@@ -1978,6 +2111,78 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 : '전체 수업 시간에 포함'}
             </span>
           </div>
+          {tvWidescreenMode &&
+            !currentIsRest &&
+            exercise &&
+            (() => {
+              const activeLayer = current?.selectedLayer ?? 'standard';
+              const layerLabelKo =
+                activeLayer === 'easy'
+                  ? '완화 레이어'
+                  : activeLayer === 'hard'
+                    ? '심화 레이어'
+                    : '기본 레이어';
+              const layerGuideKo = exercise.layers[activeLayer]?.trim() ?? '';
+              const primaryCoachCue =
+                current?.instructorNote?.trim() ||
+                exercise.cues[0] ||
+                '정렬과 호흡 리듬을 일정하게 유지하세요.';
+              const activePhaseSlot: 'start' | 'middle' | 'end' =
+                progress < 34 ? 'start' : progress < 68 ? 'middle' : 'end';
+              return (
+                <section
+                  className="pf-live-tv-companion-board"
+                  data-testid="live-stage-tv-companion-board"
+                  aria-label="스튜디오 TV 미러링 전광판 및 실시간 코칭 자막"
+                >
+                  <div className="pf-live-tv-companion-board__top">
+                    <strong>TV 미러링 전광판 · 실시간 동작 가이드</strong>
+                    <span className="pf-live-tv-setup-pills">
+                      <span>{APPARATUS_LABELS[exercise.apparatus].ko}</span>
+                      {currentSpringRaw && <span>스프링 {currentSpringRaw}</span>}
+                      <span>{layerLabelKo}</span>
+                    </span>
+                  </div>
+                  <div className="pf-live-tv-frames" role="list" aria-label="동작 단계별 시각 전광판">
+                    <div
+                      role="listitem"
+                      className={`pf-live-tv-frame ${
+                        activePhaseSlot === 'start' ? 'is-active-phase' : ''
+                      }`}
+                    >
+                      <ExerciseMotionArtwork exercise={exercise} phase="start" />
+                      <span>1 · 시작 셋업</span>
+                    </div>
+                    <div
+                      role="listitem"
+                      className={`pf-live-tv-frame ${
+                        activePhaseSlot === 'middle' ? 'is-active-phase' : ''
+                      }`}
+                    >
+                      <ExerciseMotionArtwork exercise={exercise} phase="middle" />
+                      <span>2 · 정점 유지</span>
+                    </div>
+                    <div
+                      role="listitem"
+                      className={`pf-live-tv-frame ${
+                        activePhaseSlot === 'end' ? 'is-active-phase' : ''
+                      }`}
+                    >
+                      <ExerciseMotionArtwork exercise={exercise} phase="end" />
+                      <span>3 · 복귀·전환</span>
+                    </div>
+                  </div>
+                  <p
+                    className="pf-live-tv-coach-subtitle"
+                    data-testid="live-stage-tv-coach-subtitle"
+                  >
+                    <strong>실시간 코칭 자막</strong> · [{phase}] {primaryCoachCue}
+                    {exercise.breathPattern ? ` · 호흡: ${exercise.breathPattern}` : ''}
+                    {layerGuideKo ? ` · (${layerLabelKo}: ${layerGuideKo})` : ''}
+                  </p>
+                </section>
+              );
+            })()}
           {!currentIsRest &&
             exercise &&
             (() => {
@@ -2033,6 +2238,47 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </details>
               );
             })()}
+          {bilateralProgress.isBilateral && (
+            <div
+              className={`pf-live-bilateral-bar ${
+                bilateralProgress.isSwitchAlertWindow ? 'is-switch-alert' : ''
+              }`}
+              data-testid="live-stage-bilateral-bar"
+              role="region"
+              aria-label="양측 좌우 대칭 타이머 진행"
+            >
+              <div className="pf-live-bilateral-bar__head">
+                <span>
+                  {bilateralProgress.switchBannerKo ??
+                    `${bilateralProgress.firstSideLabelKo} · ${bilateralProgress.secondSideLabelKo} 대칭 진행`}
+                </span>
+                <small>
+                  한쪽 기준 약 {bilateralProgress.perSideTotalSec ?? 0}초
+                </small>
+              </div>
+              <div className="pf-live-bilateral-bar__track" aria-hidden="true">
+                <div className="pf-live-bilateral-bar__half">
+                  <div
+                    className="pf-live-bilateral-bar__fill"
+                    style={{
+                      width: `${Math.min(100, Math.round(bilateralProgress.sideProgressRatio * 200))}%`,
+                    }}
+                  />
+                </div>
+                <div className="pf-live-bilateral-bar__half">
+                  <div
+                    className="pf-live-bilateral-bar__fill"
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, Math.round((bilateralProgress.sideProgressRatio - 0.5) * 200)),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           {timing.sides === 2 && (
             <p
               className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}

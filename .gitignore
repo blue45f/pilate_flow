@@ -14,4 +14,12 @@ __pycache__/
 .firebase/
 .deploy-runtime/
 .omo/
+.claude-flow/
+.impeccable/
 firebase-debug.log*
+!/AGENTS.md
+!/DESIGN.md
+!/CLAUDE.md
+!/GEMINI.md
+!/.cursor/rules/pilates-flow.mdc
+!/.github/copilot-instructions.md

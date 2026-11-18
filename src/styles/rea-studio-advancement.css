@@ -1,0 +1,785 @@
+/* Adapted with unslop by Damir Sokolovsky (@heydamir, https://github.com/heydamir/unslop), CC BY 4.0 */
+
+/* ==========================================================================
+   REA Competitive Advancement Design & UI/UX System (Wave 9 — Unslop 9-Pass)
+   Synthesizes:
+   - Calm Atelier Surface Ladder (#FAF8F4 -> #EFE9DF -> #FFFFFF, #355441)
+   - Concentric Radii (6px keycap, 8px row/chip, 10px control, 12px segment, 16px card)
+   - Korean Optical Typography (Pretendard 500–600, keep-all + break-word, tabular-nums)
+   - Architectural Studio Floor-Plan & TV Mirroring Ergonomics
+   ========================================================================== */
+
+:root {
+  --pf-rea-terra-bg: #f8ece6;
+  --pf-rea-terra-border: #e5c3b5;
+  --pf-rea-terra-ink: #8f3d27;
+
+  --pf-rea-sage-bg: #eaf3ed;
+  --pf-rea-sage-border: #bcd4c5;
+  --pf-rea-sage-ink: #355441;
+
+  --pf-rea-amber-bg: #fbf2de;
+  --pf-rea-amber-border: #e4cc97;
+  --pf-rea-amber-ink: #7d4b0a;
+
+  --pf-rea-slate-bg: #eaeff4;
+  --pf-rea-slate-border: #c3d1de;
+  --pf-rea-slate-ink: #2c465e;
+
+  --pf-rea-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme='dark'] {
+  --pf-rea-terra-bg: rgba(184, 99, 74, 0.18);
+  --pf-rea-terra-border: rgba(229, 195, 181, 0.28);
+  --pf-rea-terra-ink: #f5cab9;
+
+  --pf-rea-sage-bg: rgba(47, 133, 90, 0.18);
+  --pf-rea-sage-border: rgba(188, 212, 197, 0.28);
+  --pf-rea-sage-ink: #cde8d7;
+
+  --pf-rea-amber-bg: rgba(217, 164, 38, 0.18);
+  --pf-rea-amber-border: rgba(228, 204, 151, 0.28);
+  --pf-rea-amber-ink: #fae2a8;
+
+  --pf-rea-slate-bg: rgba(71, 108, 142, 0.2);
+  --pf-rea-slate-border: rgba(195, 209, 222, 0.28);
+  --pf-rea-slate-ink: #d4e3f2;
+}
+
+/* 1. Studio Routine Tags (ClassBinderView & SequenceStudioWorkbench) */
+.pf-routine-tag-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 12px 0 16px;
+  border-radius: 16px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-routine-tag-filter-bar__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  margin-right: 4px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-routine-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.25;
+  background: #ffffff;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 150ms var(--pf-rea-ease),
+    border-color 150ms var(--pf-rea-ease),
+    color 150ms var(--pf-rea-ease),
+    transform 150ms var(--pf-rea-ease);
+}
+
+.pf-routine-tag-chip:hover:not(:disabled) {
+  border-color: var(--pf-unslop-accent, #355441);
+  background: var(--pf-rea-sage-bg);
+}
+
+.pf-routine-tag-chip:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pf-routine-tag-chip.is-active {
+  background: var(--pf-unslop-accent, #355441);
+  border-color: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pf-routine-tag-chip--compact {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: var(--pf-rea-sage-bg);
+  border-color: var(--pf-rea-sage-border);
+  color: var(--pf-rea-sage-ink);
+}
+
+.pf-routine-tag-add-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  background: transparent;
+  border: 1px dashed rgba(53, 84, 65, 0.35);
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  transition:
+    background-color 150ms var(--pf-rea-ease),
+    border-color 150ms var(--pf-rea-ease),
+    color 150ms var(--pf-rea-ease),
+    transform 150ms var(--pf-rea-ease);
+}
+
+.pf-routine-tag-add-trigger:hover {
+  background: var(--pf-rea-sage-bg);
+  border-color: var(--pf-unslop-accent, #355441);
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-routine-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pf-routine-tag-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-routine-tag-sheet__create {
+  display: flex;
+  gap: 8px;
+}
+
+.pf-routine-tag-sheet__create input {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  font-size: 0.9rem;
+}
+
+.pf-routine-tag-sheet__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 2. 3-Role Kinesiology & Compensation Fault Card */
+.pf-kinesiology-card {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-kinesiology-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-kinesiology-card__header strong {
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-kinesiology-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.pf-kinesiology-role-box {
+  padding: 8px 12px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-kinesiology-role-box.is-agonist {
+  background: var(--pf-rea-terra-bg);
+  border: 1px solid var(--pf-rea-terra-border);
+  color: var(--pf-rea-terra-ink);
+}
+
+.pf-kinesiology-role-box.is-stabilizer {
+  background: var(--pf-rea-sage-bg);
+  border: 1px solid var(--pf-rea-sage-border);
+  color: var(--pf-rea-sage-ink);
+}
+
+.pf-kinesiology-role-box small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.pf-kinesiology-role-box span {
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-kinesiology-fault-box {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--pf-rea-amber-bg);
+  border: 1px solid var(--pf-rea-amber-border);
+  color: var(--pf-rea-amber-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-kinesiology-fault-box strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pf-kinesiology-fix-note {
+  margin: 0;
+  color: var(--pf-unslop-accent, #355441);
+  background: rgba(255, 255, 255, 0.84);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* 3. Workbench Class Spinal & Bilateral Balance Mini-Strip */
+.pf-class-balance-mini-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-class-balance-mini-strip__pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-plane-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-plane-chip.is-covered {
+  background: var(--pf-rea-sage-bg);
+  border-color: var(--pf-rea-sage-border);
+  color: var(--pf-rea-sage-ink);
+  font-weight: 600;
+}
+
+/* 4. Live Stage Studio TV Widescreen Mode & Bilateral Split Bar */
+.pf-live-bilateral-bar {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--pf-rea-slate-bg);
+  border: 1px solid var(--pf-rea-slate-border);
+  color: var(--pf-rea-slate-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-live-bilateral-bar.is-switch-alert {
+  background: var(--pf-rea-amber-bg);
+  border-color: var(--pf-rea-amber-border);
+  color: var(--pf-rea-amber-ink);
+}
+
+.pf-live-bilateral-bar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-live-bilateral-bar__track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  height: 8px;
+}
+
+.pf-live-bilateral-bar__half {
+  position: relative;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pf-live-bilateral-bar__fill {
+  height: 100%;
+  background: var(--pf-unslop-accent, #355441);
+  border-radius: 4px;
+  transition: width 180ms var(--pf-rea-ease);
+}
+
+.pf-live-bilateral-bar.is-switch-alert .pf-live-bilateral-bar__fill {
+  background: #b8634a;
+}
+
+.live-stage-shell.is-tv-widescreen .teaching-stage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+html #root .vnext-shell .main-content:has(.live-stage-shell.is-tv-widescreen) {
+  max-width: 1440px;
+}
+
+.live-stage-shell.is-tv-widescreen .teaching-timer-digits {
+  font-size: clamp(3.25rem, 6vw, 5.25rem);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .live-stage-shell.is-tv-widescreen .teaching-stage-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pf-live-tv-companion-board {
+  margin: 12px 0 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #172f25;
+  color: #f6f8f4;
+  border: 1px solid rgba(205, 232, 215, 0.24);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-live-tv-companion-board__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.pf-live-tv-setup-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-live-tv-setup-pills span {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-live-tv-frames {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf-live-tv-frame {
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  opacity: 0.78;
+}
+
+.pf-live-tv-frame.is-active-phase {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #9be0b8;
+  font-weight: 600;
+}
+
+.pf-live-tv-coach-subtitle {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 7. Inspector Modification / Progression Ladder & History Pacing Telemetry */
+.pf-inspector-layers-card {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-inspector-layers-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.pf-inspector-layers-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-inspector-layer-item {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-inspector-layer-item span {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pf-inspector-layer-item p {
+  margin: 0;
+}
+
+.pf-inspector-layer-item.is-easy {
+  background: var(--pf-rea-sage-bg);
+  border: 1px solid var(--pf-rea-sage-border);
+  color: var(--pf-rea-sage-ink);
+}
+
+.pf-inspector-layer-item.is-standard {
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-inspector-layer-item.is-hard {
+  background: var(--pf-rea-terra-bg);
+  border: 1px solid var(--pf-rea-terra-border);
+  color: var(--pf-rea-terra-ink);
+}
+
+.pf-balance-pacing-milestone-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-pacing-pill,
+.pf-milestone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-pacing-pill {
+  background: var(--pf-rea-slate-bg);
+  border: 1px solid var(--pf-rea-slate-border);
+  color: var(--pf-rea-slate-ink);
+}
+
+.pf-milestone-pill {
+  background: var(--pf-rea-amber-bg);
+  border: 1px solid var(--pf-rea-amber-border);
+  color: var(--pf-rea-amber-ink);
+}
+
+@media (max-width: 640px) {
+  .pf-live-tv-frames {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pf-stage-checklist-drawer {
+  margin: 12px 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overscroll-behavior: contain;
+}
+
+.pf-stage-checklist-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-stage-checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pf-stage-checklist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-stage-checklist-row.is-current {
+  background: var(--pf-rea-sage-bg);
+  border-color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-stage-checklist-row.is-checked strong {
+  text-decoration: line-through;
+  opacity: 0.68;
+}
+
+/* 5. Boutique Studio Architectural Floor Map & Post-Class Home Care (MemberBookingView) */
+.pf-studio-room-architecture {
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pf-studio-room-mirror-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+html body #root .flow-app .pf-member-wallet-hero,
+html body #root .flow-app .pf-member-wallet-hero h2,
+html body #root .flow-app .pf-member-wallet-hero h3,
+html body #root .flow-app .pf-member-wallet-hero strong,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring strong,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring span,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-ring text {
+  color: #f7f4ee !important;
+  fill: currentColor;
+}
+
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-hero__eyebrow,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-hero__eyebrow svg,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-metrics,
+html body #root .flow-app .pf-member-wallet-hero .pf-member-wallet-metrics span,
+html body #root .flow-app .pf-member-wallet-hero p {
+  color: rgba(247, 244, 238, 0.88) !important;
+}
+
+.pf-member-homecare-card {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-member-homecare-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.pf-member-homecare-item {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 6. Instructor Studio Care & Follow-Up Playbook (InstructorScheduleView) */
+.pf-studio-care-disclosure {
+  margin: 12px 0 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.pf-studio-care-disclosure > summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  background: var(--pf-unslop-subtle, #faf8f4);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-studio-care-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-studio-care-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-studio-care-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-studio-care-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--pf-unslop-subtle, #faf8f4);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-studio-care-draft-box {
+  padding: 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  font-size: 0.83rem;
+  line-height: 1.55;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-routine-tag-chip,
+  .pf-routine-tag-add-trigger,
+  .pf-live-bilateral-bar__fill {
+    transition: none !important;
+    transform: none !important;
+  }
+}

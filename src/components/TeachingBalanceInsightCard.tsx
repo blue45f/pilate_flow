@@ -35,6 +35,57 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
     [actualLogs, resolvedHistoryMap, exercisesMap, windowSize],
   );
 
+  const pacingAndMilestones = useMemo(() => {
+    let deltaSumMin = 0;
+    let deltaCount = 0;
+    const groupCounts = new Map<string, number>();
+
+    for (const log of actualLogs) {
+      const groupLabel = log.groupName?.trim() || '일반 수업';
+      groupCounts.set(groupLabel, (groupCounts.get(groupLabel) ?? 0) + 1);
+
+      const resolved = resolvedHistoryMap.get(log.id);
+      const actualSec = resolved?.timing.actualDurationSec ?? log.actualDurationSec;
+      const plannedSec =
+        resolved?.timing.plannedTotalSec ??
+        (log.criteriaSnapshot?.targetMinutes ? log.criteriaSnapshot.targetMinutes * 60 : undefined);
+      if (
+        typeof actualSec === 'number' &&
+        actualSec > 0 &&
+        typeof plannedSec === 'number' &&
+        plannedSec > 0
+      ) {
+        deltaSumMin += (actualSec - plannedSec) / 60;
+        deltaCount += 1;
+      }
+    }
+
+    const avgDeltaMin = deltaCount > 0 ? Math.round((deltaSumMin / deltaCount) * 10) / 10 : null;
+    const pacingLabelKo =
+      avgDeltaMin === null
+        ? '실측 타이머 기록 대기'
+        : Math.abs(avgDeltaMin) <= 1.5
+          ? '평균 정시 진행 (±1.5분 이내)'
+          : avgDeltaMin > 0
+            ? `계획 대비 평균 +${avgDeltaMin}분 여유 진행`
+            : `계획 대비 평균 ${avgDeltaMin}분 빠른 마무리`;
+
+    const sortedGroups = [...groupCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const milestones = sortedGroups.slice(0, 3).map(([name, count]) => {
+      const tier =
+        count >= 25
+          ? '25회+ 장기 호흡 반'
+          : count >= 10
+            ? '10회+ 정규 안착 반'
+            : count >= 5
+              ? '5회+ 루틴 형성 반'
+              : `누적 ${count}회 진행`;
+      return { name, count, tier };
+    });
+
+    return { pacingLabelKo, milestones };
+  }, [actualLogs, resolvedHistoryMap]);
+
   return (
     <PfCard
       as="section"
@@ -113,6 +164,18 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
             <span>
               강사 체감 만족도 <strong>{report.avgRating}/5</strong>
             </span>
+          </div>
+          <div
+            className="pf-balance-pacing-milestone-strip"
+            data-testid="balance-pacing-milestone-strip"
+            aria-label="계획 대비 시간 운영 편차 및 반별 누적 마일스톤"
+          >
+            <span className="pf-pacing-pill">{pacingAndMilestones.pacingLabelKo}</span>
+            {pacingAndMilestones.milestones.map((ms) => (
+              <span key={ms.name} className="pf-milestone-pill">
+                🏅 {ms.name} · {ms.tier} ({ms.count}회)
+              </span>
+            ))}
           </div>
           <p className="muted pf-balance-data-note">
             현재 선택한 기록 중 최근 {report.analyzedSessionCount}회 · 시간 정보{' '}

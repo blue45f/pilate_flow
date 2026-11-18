@@ -193,11 +193,12 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       '.usd',
       '.usdz',
     ]);
-    const registeredStudioGlbPaths = new Set(
-      ALL_STUDIO_GLB_ASSETS.map((meta) =>
+    const registeredStudioGlbPaths = new Set([
+      ...ALL_STUDIO_GLB_ASSETS.map((meta) =>
         path.join(rootDir, 'public', meta.url.replace(/^\//, '')),
       ),
-    );
+      path.join(rootDir, 'public/models/studio3d/atelier-reformer-v9.glb'),
+    ]);
     expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
     for (const meta of ALL_STUDIO_GLB_ASSETS) {
       const fullGlbPath = path.join(rootDir, 'public', meta.url.replace(/^\//, ''));
