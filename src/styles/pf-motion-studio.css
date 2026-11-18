@@ -1,0 +1,1377 @@
+/* Adapted with unslop by Damir Sokolovsky (@heydamir), CC BY 4.0 */
+
+/* ==========================================================================
+   Pilates Flow — Unslop v7 & Studio Motion Choreography ("Breath & Spring")
+   Direction:
+   - Product: 필라테스 강사를 위한 50분 시퀀스 작성 · 3D 동작 아카이브 · 수업 진행 · 회원 예약 작업실
+   - Character: 고요한 · 정밀한 · 숨 쉬듯 살아있는 (calm, exact, breathing)
+   - World: 오전 자연광 화이트오크 리포머, 세이지 가죽 매트, 린넨 큐시트, 황동 스프링
+   - Moments: 3D 기구 도해 · 시퀀스 시간 막대 · 수강권 지갑 링 · 라이브 수업 호흡 링
+   - Signature: 기구 스프링 장력선(Spring Horizon)과 2px 보타니컬 포커스 인디케이터
+   ========================================================================== */
+
+:root {
+  --pf-font-sans:
+    'Pretendard Variable',
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
+  --pf-font-display-num: 'Instrument Serif', 'Pretendard Variable', Georgia, serif;
+
+  --pf-breath-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pf-breath-fast: 150ms;
+  --pf-breath-menu: 200ms;
+  --pf-breath-inhale: 420ms;
+  --pf-breath-exhale: 240ms;
+}
+
+/* ==========================================================================
+   1. Editorial Numerals, Neutral Image Outlines & Concentric Polish
+   ========================================================================== */
+html body #root .flow-app .pf-hero-duration,
+html body #root .flow-app .pf-hero-duration .pf-count {
+  font-family: var(--pf-font-display-num), var(--pf-font-sans) !important;
+  font-size: 34px !important;
+  line-height: 1.04 !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+.pf-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pure black/white 10% inset outline on content imagery (no tinted fringe) */
+html
+  body
+  #root
+  .flow-app:not(.is-teaching)
+  :is(
+    .flow-atlas__art-wrap,
+    .flow-pick-card__preview,
+    .flow-row-art,
+    .pf-binder-card-3d-thumb,
+    .pf-member-slot-art
+  ) {
+  outline: 1px solid oklch(0 0 0 / 0.08);
+  outline-offset: -1px;
+}
+
+/* Tactile press across interactive buttons (0.97-0.98, never on disabled) */
+@media (prefers-reduced-motion: no-preference) {
+  html
+    body
+    #root
+    .flow-app
+    :is(
+      button:not(:disabled),
+      .flow-button:not(:disabled),
+      .btn-primary:not(:disabled),
+      .btn-secondary:not(:disabled),
+      .pf-btn:not(:disabled)
+    ) {
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--pf-breath-fast) var(--pf-breath-ease),
+      border-color var(--pf-breath-fast) var(--pf-breath-ease),
+      color var(--pf-breath-fast) var(--pf-breath-ease),
+      opacity var(--pf-breath-fast) var(--pf-breath-ease),
+      transform var(--pf-breath-fast) var(--pf-breath-ease);
+  }
+
+  html
+    body
+    #root
+    .flow-app
+    :is(
+      button:not(:disabled):not([role='tab']),
+      .flow-button:not(:disabled),
+      .btn-primary:not(:disabled),
+      .btn-secondary:not(:disabled)
+    ):active {
+    transform: scale(0.975);
+  }
+}
+
+/* ==========================================================================
+   2. Reorganized Brand, Studio Sidebar IA & Sliding Spring Indicators
+   ========================================================================== */
+@media (min-width: 1024px) {
+  html body #root .flow-app.app-shell:not(.is-teaching) {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+  }
+}
+
+/* Crisp flat architectural brand mark — zero dark circle blob */
+html body #root .flow-app .brand {
+  margin: 0 4px 16px !important;
+  padding: 6px 8px !important;
+}
+
+html body #root .flow-app .brand > svg.pf-brand-mark,
+html body #root .flow-app .vnext-wordmark > svg.pf-brand-mark {
+  width: 22px !important;
+  height: 22px !important;
+  flex: 0 0 22px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--pf-unslop-accent) !important;
+}
+
+html body #root .flow-app .vnext-wordmark {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+
+/* Promoted Top Sidebar Live-Session Card */
+html body #root .flow-app .pf-sidebar-quick-stage {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  margin: 0 0 20px !important;
+  padding: 10px 12px !important;
+  min-height: 52px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--pf-unslop-border-control) !important;
+  background: var(--pf-unslop-card) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage__row > svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage__row > span {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage__track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(31, 27, 22, 0.08);
+  overflow: hidden;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage__track > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pf-unslop-accent);
+  transform-origin: left center;
+  transition: transform 420ms var(--pf-breath-ease);
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage.is-ready,
+html body #root .flow-app .pf-sidebar-quick-stage.is-active {
+  background: var(--pf-unslop-accent) !important;
+  border-color: var(--pf-unslop-accent) !important;
+  color: #ffffff !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage.is-ready .pf-sidebar-quick-stage__track,
+html body #root .flow-app .pf-sidebar-quick-stage.is-active .pf-sidebar-quick-stage__track {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage.is-ready .pf-sidebar-quick-stage__track > i,
+html body #root .flow-app .pf-sidebar-quick-stage.is-active .pf-sidebar-quick-stage__track > i {
+  background: #e6d3ad;
+}
+
+/* Grouped Primary Navigation */
+html body #root .flow-app .desktop-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+html body #root .flow-app .pf-nav-group {
+  display: grid;
+  gap: 2px;
+}
+
+html body #root .flow-app .pf-nav-group > .sidebar-label {
+  margin: 0 0 6px !important;
+  padding: 0 12px !important;
+  font-size: 11.5px !important;
+  line-height: 16px !important;
+  font-weight: 500 !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+}
+
+html body #root .flow-app .desktop-nav > button,
+html body #root .flow-app .desktop-nav .pf-nav-group > button {
+  position: relative;
+  isolation: isolate;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100%;
+  min-height: 38px !important;
+  height: 38px;
+  padding: 0 12px !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--pf-unslop-radius-row) !important;
+  background: transparent !important;
+  color: var(--pf-unslop-text-secondary) !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  text-align: left;
+}
+
+html body #root .flow-app .desktop-nav > button > svg,
+html body #root .flow-app .desktop-nav .pf-nav-group > button > svg {
+  position: relative;
+  z-index: 1;
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  color: var(--pf-unslop-text-muted-on-linen);
+}
+
+html body #root .flow-app .pf-nav-item-label {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  html body #root .flow-app .desktop-nav > button:hover:not(.active),
+  html body #root .flow-app .desktop-nav .pf-nav-group > button:hover:not(.active) {
+    background: rgba(31, 27, 22, 0.045) !important;
+    color: var(--pf-unslop-text-primary) !important;
+  }
+}
+
+html body #root .flow-app .desktop-nav > button.active,
+html body #root .flow-app .desktop-nav .pf-nav-group > button.active {
+  background: transparent !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 500 !important;
+}
+
+html body #root .flow-app .desktop-nav > button.active > svg,
+html body #root .flow-app .desktop-nav .pf-nav-group > button.active > svg {
+  color: var(--pf-unslop-accent) !important;
+}
+
+html body #root .flow-app .pf-nav-active-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--pf-unslop-radius-row);
+  background: var(--pf-unslop-card);
+  border: 1px solid rgba(31, 27, 22, 0.09);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Signature 2px left Spring Line on active nav row */
+html body #root .flow-app .pf-nav-active-pill::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 2.5px;
+  border-radius: 999px;
+  background: var(--pf-unslop-accent);
+}
+
+html body #root .flow-app .desktop-nav > button small,
+html body #root .flow-app .desktop-nav .pf-nav-group > button small {
+  position: relative;
+  z-index: 1;
+  margin-left: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--pf-unslop-text-muted-on-linen) !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Live Next-Class Peek Card in Sidebar */
+html body #root .flow-app .pf-sidebar-next-peek {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--pf-unslop-hairline);
+  background: rgba(255, 255, 255, 0.68);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) {
+  html body #root .flow-app .pf-sidebar-next-peek:hover {
+    background: var(--pf-unslop-card);
+    border-color: rgba(31, 68, 53, 0.22);
+  }
+}
+
+html body #root .flow-app .pf-sidebar-next-peek__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--pf-unslop-accent);
+}
+
+html body #root .flow-app .pf-sidebar-next-peek__kicker > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pf-unslop-accent);
+}
+
+html body #root .flow-app .pf-sidebar-next-peek > strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary);
+}
+
+html body #root .flow-app .pf-sidebar-next-peek > small {
+  font-size: 12px;
+  color: var(--pf-unslop-text-secondary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   3. Quiet Topbar, Breadcrumb Context & Sliding Role Switcher
+   ========================================================================== */
+html body #root .flow-app .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13.5px !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .flow-app .breadcrumb > strong {
+  font-weight: 600 !important;
+  color: var(--pf-unslop-text-primary) !important;
+}
+
+html body #root .flow-app .pf-breadcrumb-meta {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--pf-unslop-raised);
+  color: var(--pf-unslop-text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+html body #root .flow-app .pf-role-switcher {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 2px !important;
+  padding: 3px !important;
+  border-radius: 10px !important;
+  background: var(--pf-unslop-raised) !important;
+  border: 1px solid var(--pf-unslop-hairline) !important;
+}
+
+html body #root .flow-app .pf-role-switcher__btn {
+  position: relative;
+  isolation: isolate;
+  min-height: 30px !important;
+  padding: 4px 11px !important;
+  border-radius: 7px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--pf-unslop-text-secondary) !important;
+}
+
+html body #root .flow-app .pf-role-switcher__btn[aria-pressed='true'] {
+  background: transparent !important;
+  color: var(--pf-unslop-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+html body #root .flow-app .pf-role-switcher__pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 7px;
+  background: var(--pf-unslop-card);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+html body #root .flow-app .pf-role-switcher__label {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   4. Same-Document View Transitions (Directional, Stage Curtain, Portal)
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-pf-transition='stage']) #main-content {
+    view-transition-name: pf-workspace;
+  }
+
+  ::view-transition-old(pf-workspace) {
+    animation: pf-vt-fade-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(pf-workspace) {
+    animation: pf-vt-fade-in 300ms var(--pf-breath-ease) both;
+  }
+
+  html[data-pf-transition='forward']::view-transition-old(pf-workspace) {
+    animation: pf-vt-forward-out 190ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  html[data-pf-transition='forward']::view-transition-new(pf-workspace) {
+    animation: pf-vt-forward-in 320ms var(--pf-breath-ease) both;
+  }
+
+  html[data-pf-transition='back']::view-transition-old(pf-workspace) {
+    animation: pf-vt-back-out 190ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  html[data-pf-transition='back']::view-transition-new(pf-workspace) {
+    animation: pf-vt-back-in 320ms var(--pf-breath-ease) both;
+  }
+
+  html[data-pf-transition='portal']::view-transition-old(pf-workspace) {
+    animation: pf-vt-portal-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  html[data-pf-transition='portal']::view-transition-new(pf-workspace) {
+    animation: pf-vt-portal-in 340ms var(--pf-breath-ease) both;
+  }
+
+  /* Studio Curtain Iris Reveal when stepping onto / leaving Live Stage */
+  html[data-pf-transition='stage']::view-transition-old(root) {
+    animation: none;
+    z-index: 1;
+  }
+
+  html[data-pf-transition='stage']::view-transition-new(root) {
+    animation: pf-vt-stage-curtain 480ms var(--pf-breath-ease) both;
+    z-index: 2;
+  }
+}
+
+@keyframes pf-vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pf-vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes pf-vt-forward-out {
+  to {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+@keyframes pf-vt-forward-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes pf-vt-back-out {
+  to {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes pf-vt-back-in {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+@keyframes pf-vt-portal-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes pf-vt-portal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+}
+
+@keyframes pf-vt-stage-curtain {
+  from {
+    clip-path: circle(0px at var(--pf-vt-x, 50%) var(--pf-vt-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--pf-vt-x, 50%) var(--pf-vt-y, 50%));
+  }
+}
+
+/* ==========================================================================
+   5. Global "Breath" Scroll Stagger & Signature Header Spring Line
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html.pf-motion [data-pf-r]:not([data-pf-in]) {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+
+  html.pf-motion [data-pf-r][data-pf-in] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity var(--pf-breath-inhale) var(--pf-breath-ease) var(--pf-reveal-delay, 0ms),
+      transform var(--pf-breath-inhale) var(--pf-breath-ease) var(--pf-reveal-delay, 0ms),
+      border-color var(--pf-breath-fast) var(--pf-breath-ease),
+      box-shadow var(--pf-breath-fast) var(--pf-breath-ease),
+      background-color var(--pf-breath-fast) var(--pf-breath-ease);
+  }
+
+  /* Page Header Entrance & Drawn Signature Spring Underline */
+  html.pf-motion
+    .flow-app:not(.is-teaching)
+    :is(.flow-studio__heading, .flow-atlas__heading, .teaching-page-header, .schedule-page-header, .pf-member-header) {
+    animation: pf-header-settle 380ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-header-settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure page header intro stacks Eyebrow -> H1 -> Subtitle cleanly */
+html
+  body
+  #root
+  .flow-app:not(.is-teaching)
+  :is(.teaching-page-header, .schedule-page-header, .pf-member-header)
+  > div:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+}
+
+/* Signature 18px drawn spring accent rule leading into page Eyebrow */
+html
+  body
+  #root
+  .flow-app:not(.is-teaching)
+  :is(.teaching-page-header .eyebrow, .schedule-page-header .eyebrow, .pf-member-header .eyebrow) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html
+    body
+    #root
+    .flow-app:not(.is-teaching)
+    :is(.teaching-page-header .eyebrow, .schedule-page-header .eyebrow, .pf-member-header .eyebrow)::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 1.75px;
+    border-radius: 999px;
+    background: var(--pf-unslop-accent);
+    transform-origin: left center;
+    animation: pf-spring-line-draw 520ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-spring-line-draw {
+  from {
+    transform: scaleX(0);
+    opacity: 0.3;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   6. Page 1: Sequence Workbench ("Reformer Spring Tension & Liquid Time Bar")
+   ========================================================================== */
+html body #root .flow-app .pf-studio-spring-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--pf-unslop-card);
+  border: 1px solid var(--pf-unslop-hairline);
+  color: var(--pf-unslop-accent);
+}
+
+html body #root .flow-app .pf-spring-horizon {
+  width: 84px;
+  height: 14px;
+  display: block;
+}
+
+html body #root .flow-app .pf-spring-horizon__active {
+  transition: stroke-dashoffset 480ms var(--pf-breath-ease);
+}
+
+html body #root .flow-app .pf-studio-spring-meter > em {
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--pf-unslop-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rich Moment #1: Liquid Multi-Segment Time Bar */
+html body #root .flow-app .flow-time-bar {
+  height: 10px !important;
+  border-radius: 999px !important;
+  background: var(--pf-unslop-raised) !important;
+  overflow: hidden;
+  padding: 1px;
+  gap: 2px;
+}
+
+html body #root .flow-app .flow-time-bar > span {
+  border-radius: 999px;
+  transition:
+    width 420ms var(--pf-breath-ease),
+    opacity 200ms var(--pf-breath-ease);
+}
+
+html body #root .flow-app .flow-time-bar > span[data-section='warmup'] {
+  background: #6c907b !important;
+}
+
+html body #root .flow-app .flow-time-bar > span[data-section='main'] {
+  background: #1f4435 !important;
+}
+
+html body #root .flow-app .flow-time-bar > span[data-section='cooldown'] {
+  background: #b9915c !important;
+}
+
+/* Newly landed sequence step tactile settle */
+@media (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .flow-sequence-row.is-recently-added {
+    animation: pf-step-land 620ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-step-land {
+  0% {
+    opacity: 0.4;
+    transform: translateY(8px) scale(0.99);
+    background-color: rgba(31, 68, 53, 0.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .flow-pick-card:hover .flow-pick-card__preview img {
+    transform: scale(1.04);
+  }
+
+  html body #root .flow-app .flow-pick-card__preview img {
+    transition: transform 320ms var(--pf-breath-ease);
+  }
+}
+
+/* ==========================================================================
+   7. Page 2: Exercise Atlas ("3D Studio Pedestal & Floating Sequence Dock")
+   ========================================================================== */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .flow-atlas__card {
+    transition:
+      transform 260ms var(--pf-breath-ease),
+      border-color 200ms var(--pf-breath-ease),
+      box-shadow 260ms var(--pf-breath-ease);
+  }
+
+  html body #root .flow-app .flow-atlas__card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(24, 34, 28, 0.07);
+  }
+
+  html body #root .flow-app .flow-atlas__art img {
+    transition: transform 380ms var(--pf-breath-ease);
+  }
+
+  html body #root .flow-app .flow-atlas__card:hover .flow-atlas__art img {
+    transform: scale(1.04);
+  }
+}
+
+/* Floating Active Sequence Dock in Atlas */
+html body #root .flow-app .pf-atlas-sequence-dock {
+  position: sticky;
+  bottom: 16px;
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 560px;
+  width: 100%;
+  margin: 8px auto 0;
+  padding: 10px 12px 10px 16px;
+  border-radius: 14px;
+  background: rgba(25, 36, 30, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f7f4ee;
+  box-shadow: 0 12px 28px rgba(15, 24, 19, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .pf-atlas-sequence-dock {
+    animation: pf-dock-rise 320ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-dock-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html body #root .flow-app .pf-atlas-sequence-dock__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+
+html body #root .flow-app .pf-atlas-sequence-dock__dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 999px;
+  background: #8cc4a4;
+}
+
+html body #root .flow-app .pf-atlas-sequence-dock__summary > strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+html body #root .flow-app .pf-atlas-sequence-dock__summary > span:last-child {
+  color: rgba(247, 244, 238, 0.76);
+  font-size: 12.5px;
+}
+
+html body #root .flow-app .pf-atlas-sequence-dock__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #f7f4ee !important;
+  color: #1f1b16 !important;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  html body #root .flow-app .pf-atlas-sequence-dock__cta:hover {
+    background: #ffffff !important;
+  }
+}
+
+/* ==========================================================================
+   8. Page 3: Binder & History ("Editorial Segmented Tabs, 3D Folio Tilt & Timeline")
+   ========================================================================== */
+/* Compact segmented switchers on desktop instead of 1100px wide grey bars */
+@media (min-width: 768px) {
+  html body #root .flow-app .pf-mobile-subpage-bar {
+    width: fit-content !important;
+    max-width: 100%;
+    margin: 0 0 16px !important;
+  }
+
+  html body #root .flow-app .pf-mobile-subpage-track {
+    display: inline-flex !important;
+    width: auto !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    border-radius: 12px !important;
+  }
+
+  html body #root .flow-app .pf-mobile-subpage-btn {
+    flex: 0 0 auto !important;
+    min-height: 36px !important;
+    padding: 6px 16px !important;
+    border-radius: 8px !important;
+  }
+}
+
+html body #root .flow-app .pf-mobile-subpage-btn {
+  position: relative;
+  isolation: isolate;
+}
+
+html body #root .flow-app .pf-mobile-subpage-btn.is-active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app .pf-mobile-subpage-btn__pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--pf-unslop-card);
+  border: 1px solid rgba(31, 27, 22, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+html body #root .flow-app .pf-mobile-subpage-btn > :not(.pf-mobile-subpage-btn__pill) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fine-pointer 3D Folio Tilt + Soft Linen Specular Highlight */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .flow-binder-card[data-pf-tilting] {
+    transform: perspective(980px) rotateX(var(--pf-rx, 0deg)) rotateY(var(--pf-ry, 0deg))
+      translateY(-2px);
+    box-shadow: 0 12px 28px rgba(24, 34, 28, 0.08) !important;
+    background-image: radial-gradient(
+      380px circle at var(--pf-mx, 50%) var(--pf-my, 30%),
+      rgba(255, 255, 255, 0.72),
+      transparent 65%
+    );
+  }
+}
+
+/* Teaching History Architectural Timeline Spine */
+html body #root .flow-app .teaching-collection--history .teaching-history-date-group {
+  position: relative;
+  padding-left: 20px;
+  border-left: 1.5px solid rgba(31, 68, 53, 0.18);
+  margin-left: 6px;
+}
+
+html
+  body
+  #root
+  .flow-app
+  .teaching-collection--history
+  .teaching-history-date-group::before {
+  content: '';
+  position: absolute;
+  left: -5.5px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--pf-unslop-bg);
+  border: 2px solid var(--pf-unslop-accent);
+}
+
+/* ==========================================================================
+   9. Page 4: Instructor Schedule ("Zero Dead-Space & Sun-Horizon Spotlight")
+   ========================================================================== */
+/* Fix mobile flex-basis column height bug across all page headers */
+@media (max-width: 959px) {
+  html
+    body
+    #root
+    .flow-app
+    :is(.schedule-page-header, .teaching-page-header, .pf-member-header, .flow-studio__heading) {
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+  }
+
+  html
+    body
+    #root
+    .flow-app
+    :is(.schedule-page-header, .teaching-page-header, .pf-member-header)
+    > div:first-child {
+    flex: 0 1 auto !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Next Class Studio Horizon Card */
+html body #root .flow-app .flow-schedule-next {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 110% at 100% 0%, rgba(31, 68, 53, 0.06) 0%, transparent 62%),
+    var(--pf-unslop-card) !important;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .schedule-class {
+    transition:
+      transform 220ms var(--pf-breath-ease),
+      border-color 180ms var(--pf-breath-ease),
+      box-shadow 220ms var(--pf-breath-ease);
+  }
+
+  html body #root .flow-app .schedule-class:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(24, 34, 28, 0.06);
+  }
+}
+
+/* ==========================================================================
+   10. Page 5: Live Teaching Stage ("8s Studio Breathing Cadence Halo")
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .teaching-stage.is-stage-running .teaching-live-pill.is-live {
+    position: relative;
+  }
+
+  html body #root .flow-app .teaching-stage.is-stage-running .teaching-live-pill.is-live::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 1px solid rgba(134, 211, 171, 0.45);
+    pointer-events: none;
+    animation: pf-stage-breath 8s ease-in-out infinite;
+  }
+}
+
+@keyframes pf-stage-breath {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+/* ==========================================================================
+   11. Page 6: Member Booking ("Embossed Studio Pass Foil & Celebration Burst")
+   ========================================================================== */
+html body #root .flow-app .pf-member-wallet-hero {
+  position: relative;
+  overflow: hidden;
+  background: #1a2c24 !important;
+  border: 1px solid rgba(235, 211, 164, 0.24) !important;
+  color: #f7f4ee !important;
+}
+
+html body #root .flow-app .pf-member-wallet-ring svg circle:nth-of-type(2) {
+  transition: stroke-dashoffset 720ms var(--pf-breath-ease);
+}
+
+html body #root .flow-app .pf-member-wallet-ring__label strong {
+  font-family: var(--pf-font-display-num), var(--pf-font-sans) !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .pf-member-wallet-hero[data-pf-tilting] {
+    transform: perspective(1040px) rotateX(var(--pf-rx, 0deg)) rotateY(var(--pf-ry, 0deg));
+    background-image: radial-gradient(
+      460px circle at var(--pf-mx, 75%) var(--pf-my, 35%),
+      rgba(235, 211, 164, 0.16),
+      transparent 60%
+    ) !important;
+  }
+
+  html body #root .flow-app .pf-member-slot-card {
+    transition:
+      transform 220ms var(--pf-breath-ease),
+      border-color 180ms var(--pf-breath-ease),
+      box-shadow 220ms var(--pf-breath-ease);
+  }
+
+  html body #root .flow-app .pf-member-slot-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(24, 34, 28, 0.06);
+  }
+}
+
+/* Celebration particle layer (burstFrom) */
+.pf-burst-layer {
+  position: fixed;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.pf-burst-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   12. Mobile Bottom Nav Spring Pill, Floating Live-Stage Pill & Modal Polish
+   ========================================================================== */
+html body #root .flow-app .bottom-nav button {
+  position: relative;
+  isolation: isolate;
+}
+
+html body #root .flow-app .bottom-nav button.active {
+  background: transparent !important;
+}
+
+html body #root .flow-app .pf-bottom-nav-pill {
+  position: absolute;
+  inset: 4px 6px;
+  z-index: 0;
+  border-radius: 12px;
+  background: var(--pf-unslop-raised);
+  border: 1px solid rgba(31, 27, 22, 0.07);
+}
+
+html body #root .flow-app .pf-bottom-nav-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  margin-left: -9px;
+  border-radius: 999px;
+  background: var(--pf-unslop-accent);
+}
+
+html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile Topbar Compact Live-Stage Pill & Single-Row Topbar Polish */
+@media (min-width: 1024px) {
+  html body #root .flow-app .pf-mobile-topbar-stage-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  html body #root .flow-app .pf-mobile-topbar-stage-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 36px;
+    padding: 0 11px;
+    border-radius: 999px;
+    border: 1px solid var(--pf-unslop-accent);
+    background: var(--pf-unslop-accent) !important;
+    color: #ffffff !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  html body #root .flow-app .topbar {
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+  }
+
+  html body #root .flow-app .topbar .mobile-brand {
+    min-width: 0;
+    gap: 6px !important;
+  }
+
+  html body #root .flow-app .topbar .topbar-actions {
+    flex: 0 0 auto;
+    gap: 6px !important;
+  }
+
+  html body #root .flow-app .topbar .pf-role-switcher {
+    display: none !important;
+  }
+
+  html body #root .flow-app .topbar .app-create-movement > span {
+    display: none !important;
+  }
+
+  html body #root .flow-app .topbar .app-create-movement {
+    width: 38px !important;
+    min-width: 38px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+
+  html body #root .flow-app .pf-studio-spring-meter {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 439px) {
+  html body #root .flow-app .topbar .vnext-wordmark {
+    font-size: 15px !important;
+  }
+
+  html body #root .flow-app .topbar .pf-mobile-topbar-stage-btn > span {
+    display: none;
+  }
+
+  html body #root .flow-app .topbar .pf-mobile-topbar-stage-btn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* Dialogs, Drawers & Command Palette: overscroll containment & crisp entrance */
+html body dialog[open],
+html body .sidebar.is-open,
+html body .pf-cmdk-dialog {
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html body dialog[open] {
+    animation: pf-dialog-enter 200ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.988);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   12.5. Unified Segmented Spring Pills, Schedule Readiness Horizon & Binder Sheen
+   ========================================================================== */
+html
+  body
+  #root
+  .flow-app
+  :is(
+    .schedule-view-toggle > button,
+    .teaching-saved-quick-filters > button,
+    .pf-balance-window-tabs > button,
+    .pf-studio3d-mode-tabs > button
+  ) {
+  position: relative;
+  isolation: isolate;
+}
+
+html
+  body
+  #root
+  .flow-app
+  :is(
+    .schedule-view-toggle > button[aria-pressed='true'],
+    .teaching-saved-quick-filters > button.active,
+    .pf-balance-window-tabs > button.is-active,
+    .pf-studio3d-mode-tabs > button.is-active
+  ) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body #root .flow-app .pf-seg-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: #ffffff;
+  border: 1px solid rgba(31, 68, 53, 0.14);
+  box-shadow: 0 1px 3px rgba(24, 34, 28, 0.06);
+}
+
+html
+  body
+  #root
+  .flow-app
+  :is(
+    .schedule-view-toggle > button,
+    .teaching-saved-quick-filters > button,
+    .pf-balance-window-tabs > button,
+    .pf-studio3d-mode-tabs > button
+  )
+  > :not(.pf-seg-pill) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Schedule Readiness Horizon Progress Bar */
+html body #root .flow-app .pf-schedule-readiness-meter {
+  display: block;
+  width: min(220px, 100%);
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(31, 68, 53, 0.10);
+  overflow: hidden;
+}
+
+html body #root .flow-app .pf-schedule-readiness-meter__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pf-unslop-accent);
+  transform-origin: left center;
+  transition: transform 460ms var(--pf-breath-ease);
+}
+
+/* Teaching Balance Bars smooth breath transition */
+html body #root .flow-app .pf-balance-bar-fill {
+  transition: width 480ms var(--pf-breath-ease);
+}
+
+/* 3D Posture Frame subtle crossfade reveal */
+@media (prefers-reduced-motion: no-preference) {
+  html body #root .flow-app .pf-native-posture-frame {
+    animation: pf-posture-frame-in 240ms var(--pf-breath-ease) both;
+  }
+}
+
+@keyframes pf-posture-frame-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Fine-pointer 3D Folio Sheen across Schedule, Binder & History cards */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html
+    body
+    #root
+    .flow-app
+    :is(.flow-schedule-next, .schedule-class, .teaching-sequence-card, .teaching-history-card)[data-pf-tilting] {
+    transform: perspective(1080px) rotateX(var(--pf-rx, 0deg)) rotateY(var(--pf-ry, 0deg))
+      translateY(-2px);
+    box-shadow: 0 10px 26px rgba(24, 34, 28, 0.06) !important;
+    background-image: radial-gradient(
+      420px circle at var(--pf-mx, 50%) var(--pf-my, 35%),
+      rgba(255, 253, 248, 0.72),
+      transparent 65%
+    );
+  }
+}
+
+/* ==========================================================================
+   13. Strict Reduced-Motion Compliance (WCAG 2.3.3)
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html body #root .flow-app *,
+  html body #root .flow-app *::before,
+  html body #root .flow-app *::after,
+  html body dialog[open] {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html.pf-motion [data-pf-r] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

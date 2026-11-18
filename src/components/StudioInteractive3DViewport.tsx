@@ -272,7 +272,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     setTurntable(false);
   }, []);
   const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(viewportRef, suspend);
+  const [visualProgress, setVisualProgress] = useState<number>(0);
+  const visualProgressRef = useRef<number>(0);
   const phase = sampleStudioMotionCycle(progress);
+  const visualPhase = sampleStudioMotionCycle(playing ? progress : visualProgress);
   const glbAsset = getStudioApparatusGlbAsset(exercise.apparatus);
   const binding = getExpandedMovementVisualBinding(exercise);
   const dedicated3d = hasDedicated3DExerciseRig(exercise);
@@ -290,7 +293,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       if (playing) {
         progressRef.current =
           (progressRef.current + (dt * 1000 * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
+        visualProgressRef.current = progressRef.current;
         setProgress(progressRef.current);
+        setVisualProgress(progressRef.current);
       }
       if (turntable && !dragRef.current.active) {
         setYawDeg((prev) => {
@@ -364,7 +369,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       width: cssW,
       height: cssH,
       exercise,
-      phaseT: phase.pose,
+      phaseT: visualPhase.pose,
       yawDeg,
       pitchDeg,
       zoom,
@@ -386,7 +391,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     ctx.restore();
   }, [
     exercise,
-    phase.pose,
+    visualPhase.pose,
     yawDeg,
     pitchDeg,
     zoom,
@@ -402,11 +407,51 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     viewportVersion,
   ]);
 
+  const tweenRafRef = useRef<number>(0);
+
+  useEffect(() => {
+    return () => {
+      if (tweenRafRef.current) window.cancelAnimationFrame(tweenRafRef.current);
+    };
+  }, []);
+
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent);
+
   const jumpToProgress = (nextProgress: number) => {
     const clamped = Math.max(0, Math.min(1, Number(nextProgress.toFixed(2))));
     setPlaying(false);
     progressRef.current = clamped;
     setProgress(clamped);
+    if (!canAnimate || reducedMotion || isJsdom || typeof window === 'undefined') {
+      visualProgressRef.current = clamped;
+      setVisualProgress(clamped);
+      return;
+    }
+    if (tweenRafRef.current) window.cancelAnimationFrame(tweenRafRef.current);
+    const startVal = visualProgressRef.current;
+    if (Math.abs(clamped - startVal) < 0.01) {
+      visualProgressRef.current = clamped;
+      setVisualProgress(clamped);
+      return;
+    }
+    let startTs: number | null = null;
+    const durationMs = 280;
+    const step = (now: number) => {
+      if (startTs === null) startTs = now;
+      const t = Math.min(1, Math.max(0, (now - startTs) / durationMs));
+      const eased = 1 - Math.pow(1 - t, 4);
+      const val = Number((startVal + (clamped - startVal) * eased).toFixed(3));
+      visualProgressRef.current = val;
+      setVisualProgress(val);
+      if (t < 1) {
+        tweenRafRef.current = window.requestAnimationFrame(step);
+      } else {
+        tweenRafRef.current = 0;
+        visualProgressRef.current = clamped;
+        setVisualProgress(clamped);
+      }
+    };
+    tweenRafRef.current = window.requestAnimationFrame(step);
   };
 
   const selectHotspotById = (id: Studio3DHotspotId) => {
@@ -435,10 +480,48 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     const found = STUDIO_3D_CAMERA_PRESETS.find((p) => p.id === presetId);
     if (!found) return;
     setActivePresetId(found.id);
-    setYawDeg(found.yawDeg);
-    setPitchDeg(found.pitchDeg);
-    setZoom(found.zoom);
-    setTurntable(Boolean(found.autoTurntable) && canAnimate);
+    const enableTurn = Boolean(found.autoTurntable) && canAnimate;
+    setTurntable(enableTurn);
+    if (!canAnimate || reducedMotion || enableTurn || isJsdom || typeof window === 'undefined') {
+      setYawDeg(found.yawDeg);
+      setPitchDeg(found.pitchDeg);
+      setZoom(found.zoom);
+      return;
+    }
+    if (tweenRafRef.current) window.cancelAnimationFrame(tweenRafRef.current);
+    const startYaw = yawDeg;
+    const startPitch = pitchDeg;
+    const startZoom = zoom;
+    let deltaYaw = found.yawDeg - startYaw;
+    if (deltaYaw > 180) deltaYaw -= 360;
+    if (deltaYaw < -180) deltaYaw += 360;
+    const deltaPitch = found.pitchDeg - startPitch;
+    const deltaZoom = found.zoom - startZoom;
+    if (Math.hypot(deltaYaw, deltaPitch, deltaZoom * 50) < 0.5) {
+      setYawDeg(found.yawDeg);
+      setPitchDeg(found.pitchDeg);
+      setZoom(found.zoom);
+      return;
+    }
+    let startTs: number | null = null;
+    const durationMs = 320;
+    const step = (now: number) => {
+      if (startTs === null) startTs = now;
+      const t = Math.min(1, Math.max(0, (now - startTs) / durationMs));
+      const eased = 1 - Math.pow(1 - t, 4);
+      setYawDeg(Number((startYaw + deltaYaw * eased).toFixed(2)));
+      setPitchDeg(Number((startPitch + deltaPitch * eased).toFixed(2)));
+      setZoom(Number((startZoom + deltaZoom * eased).toFixed(3)));
+      if (t < 1) {
+        tweenRafRef.current = window.requestAnimationFrame(step);
+      } else {
+        tweenRafRef.current = 0;
+        setYawDeg(found.yawDeg);
+        setPitchDeg(found.pitchDeg);
+        setZoom(found.zoom);
+      }
+    };
+    tweenRafRef.current = window.requestAnimationFrame(step);
   };
 
   const handleCapturePng = () => {
@@ -670,9 +753,15 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             aria-valuetext={`${Math.round(progress * 100)}퍼센트 · ${phase.label}`}
             className="pf-orbit3d-slider"
             onChange={(event) => {
+              if (tweenRafRef.current) {
+                window.cancelAnimationFrame(tweenRafRef.current);
+                tweenRafRef.current = 0;
+              }
               setPlaying(false);
               progressRef.current = Number(event.target.value) / 100;
+              visualProgressRef.current = progressRef.current;
               setProgress(progressRef.current);
+              setVisualProgress(progressRef.current);
             }}
           />
           <span className="pf-orbit3d-pct">

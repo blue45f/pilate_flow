@@ -1642,8 +1642,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`teaching-stage live-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
+      className={`teaching-stage live-stage ${highContrast ? 'teaching-high-contrast' : ''} ${clock.running ? 'is-stage-running' : ''}`.trim()}
       data-presentation={presentationMode}
+      data-stage-running={clock.running ? 'true' : undefined}
     >
       <header className="teaching-stage-header">
         <div>

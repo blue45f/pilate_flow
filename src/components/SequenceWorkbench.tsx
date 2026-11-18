@@ -1975,7 +1975,7 @@ export function SequenceWorkbench({
                 <div>
                   <div className="workbench-recent-continue__header">
                     <div className="workbench-recent-continue__title">
-                      <span className="workbench-recent-kicker">RECENT FLOW</span>
+                      <span className="workbench-recent-kicker">최근 진행한 수업</span>
                       <h3 style={{ margin: '4px 0 0', fontSize: '1.15rem' }}>
                         최근 수업 이어가기{' '}
                         <PfBadge tone="sage">

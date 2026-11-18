@@ -1,5 +1,6 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { burstFrom } from '../motion';
 import {
   ArrowLeftRight,
   CalendarDays,
@@ -782,6 +783,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       setLateCancelAgreed(false);
       setErrorAlert(null);
       setFeedbackBanner(message);
+      if (intent === 'BOOK') {
+        burstFrom(document.getElementById('member-wallet-section'));
+      }
     } finally {
       confirmLockRef.current = false;
     }

@@ -1015,13 +1015,32 @@ const ATLAS_UNSLOP_CSS = `
   border-color: var(--atlas-green);
   color: #ffffff;
 }
+.flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add {
+  background: #f3f0e8;
+  border-color: rgba(31, 27, 22, 0.12);
+  color: var(--atlas-ink);
+}
+@media (hover: hover) {
+  .flow-atlas--unslop .flow-atlas__card:hover .flow-atlas__card-actions .flow-atlas__button--add:not(.is-added),
+  .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add:not(.is-added):hover {
+    background: var(--atlas-green);
+    border-color: var(--atlas-green);
+    color: #ffffff;
+  }
+}
+.flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add:not(.is-added):focus-visible {
+  background: var(--atlas-green);
+  border-color: var(--atlas-green);
+  color: #ffffff;
+}
 .flow-atlas--unslop .flow-atlas__button--add:hover {
   background: #173529;
   border-color: #173529;
 }
-.flow-atlas--unslop .flow-atlas__button--add.is-added {
+.flow-atlas--unslop .flow-atlas__button--add.is-added,
+.flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add.is-added {
   background: #eef3ed;
-  border-color: rgba(31, 68, 53, 0.16);
+  border-color: rgba(31, 68, 53, 0.22);
   color: var(--atlas-green);
 }
 .flow-atlas--unslop .flow-atlas__search-panel {
@@ -1858,6 +1877,29 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
             onClick={onLoadMore}
           >
             동작 더 보기 <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+
+      {selectedCount > 0 ? (
+        <div
+          className="pf-atlas-sequence-dock"
+          role="region"
+          aria-label="현재 구성 중인 시퀀스 요약"
+          data-testid="atlas-catalog-sequence-dock"
+        >
+          <div className="pf-atlas-sequence-dock__summary">
+            <span className="pf-atlas-sequence-dock__dot" aria-hidden="true" />
+            <strong>동작 {selectedCount}개 담김</strong>
+            <span>예상 {plannedMinutes}분</span>
+          </div>
+          <button
+            type="button"
+            className="pf-atlas-sequence-dock__cta"
+            onClick={onReturnToClass}
+          >
+            <span>시퀀스 조율하러 가기</span>
+            <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
       ) : null}

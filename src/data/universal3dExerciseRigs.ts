@@ -72,7 +72,7 @@ function chairPedalPos(deg: number): readonly [number, number] {
 
 function cadillacPushThroughBarPos(deg: number): readonly [number, number] {
   const rad = (deg * Math.PI) / 180;
-  return [0.62 - Math.sin(rad) * 0.66, 1.84 - Math.cos(rad) * 0.66];
+  return [0.62 - Math.sin(rad) * 0.66, 1.94 - Math.cos(rad) * 0.66];
 }
 
 /**
@@ -111,21 +111,22 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'supine',
     build: (rawT) => {
       const ts = smoothstep(rawT);
+      const liftArc = Math.sin(ts * Math.PI) * 0.12;
       return {
         poseFeatureKo: '누운 준비에서 C커브 분절로 앉아 발끝 방향 전굴 리치',
         trajectoryFocus: 'chest',
         pelvis: [0.02, 0, 0.13],
-        spineMid: vlerp([-0.22, 0, 0.14], [-0.04, 0, 0.34], ts),
-        chest: vlerp([-0.46, 0, 0.15], [0.16, 0, 0.48], ts),
-        antHint: vlerp([0.05, 0, 1], [0.92, 0, -0.32], ts),
-        lFoot: [0.78, -0.09, 0.12],
-        rFoot: [0.78, 0.09, 0.12],
-        lKneePole: [0.4, -0.08, 0.45],
-        rKneePole: [0.4, 0.08, 0.45],
-        lHand: vlerp([-0.52, -0.18, 0.56], [0.68, -0.16, 0.36], ts),
-        rHand: vlerp([-0.52, 0.18, 0.56], [0.68, 0.16, 0.36], ts),
-        lElbowPole: [-0.2, -0.34, 0.45],
-        rElbowPole: [-0.2, 0.34, 0.45],
+        spineMid: [lerp(-0.22, -0.02, ts), 0, lerp(0.14, 0.34, ts) + liftArc * 0.55],
+        chest: [lerp(-0.44, 0.16, ts), 0, lerp(0.15, 0.46, ts) + liftArc],
+        antHint: vlerp([0.08, 0, 1], [0.92, 0, -0.32], ts),
+        lFoot: [0.74, -0.09, 0.12],
+        rFoot: [0.74, 0.09, 0.12],
+        lKneePole: [0.15, -0.08, 0.92],
+        rKneePole: [0.15, 0.08, 0.92],
+        lHand: vlerp([-0.5, -0.18, 0.54], [0.62, -0.16, 0.36], ts),
+        rHand: vlerp([-0.5, 0.18, 0.54], [0.62, 0.16, 0.36], ts),
+        lElbowPole: [-0.2, -0.65, 0.45],
+        rElbowPole: [-0.2, 0.65, 0.45],
         activeZones: ['core'],
       };
     },
@@ -161,23 +162,23 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     apparatus: 'mat',
     bodyPosition: 'prone',
     build: (rawT) => {
-      const bendPhase = 1 - smoothstep(Math.min(1, rawT * 1.4));
-      const ext = smoothstep(Math.max(0, (rawT - 0.18) / 0.82));
+      const bendPhase = 1 - smoothstep(rawT);
+      const ext = smoothstep(Math.max(0, (rawT - 0.15) / 0.85));
       return {
         poseFeatureKo: '엎드린 양무릎 굽힘 킥에서 등 뒤 양손 깍지·흉추 신전 전환',
         trajectoryFocus: 'chest',
-        pelvis: [0.02, 0, 0.12],
-        spineMid: [-0.2, 0, lerp(0.13, 0.23, ext)],
-        chest: [-0.42, 0, lerp(0.15, 0.39, ext)],
+        pelvis: [0.02, 0, 0.13],
+        spineMid: [-0.2, 0, lerp(0.14, 0.24, ext)],
+        chest: [-0.42, 0, lerp(0.16, 0.38, ext)],
         antHint: [-lerp(0.25, 0.72, ext), 0, -0.85],
-        lFoot: [lerp(0.76, 0.24, bendPhase), -0.09, lerp(0.14 + ext * 0.16, 0.52, bendPhase)],
-        rFoot: [lerp(0.76, 0.24, bendPhase), 0.09, lerp(0.14 + ext * 0.16, 0.52, bendPhase)],
-        lKneePole: [0.45, -0.09, -0.3],
-        rKneePole: [0.45, 0.09, -0.3],
-        lHand: [lerp(-0.08, 0.24, ext), lerp(-0.08, -0.06, ext), lerp(0.24, 0.34, ext)],
-        rHand: [lerp(-0.08, 0.24, ext), lerp(0.08, 0.06, ext), lerp(0.24, 0.34, ext)],
-        lElbowPole: [-0.18, -0.32, 0.35],
-        rElbowPole: [-0.18, 0.32, 0.35],
+        lFoot: [lerp(0.72, 0.38, bendPhase), 0.1, lerp(0.18 + ext * 0.12, 0.46, bendPhase)],
+        rFoot: [lerp(0.72, 0.38, bendPhase), -0.1, lerp(0.18 + ext * 0.12, 0.46, bendPhase)],
+        lKneePole: [0.55, 0.52, -0.45],
+        rKneePole: [0.55, -0.52, -0.45],
+        lHand: [lerp(-0.1, 0.04, ext), lerp(0.09, 0.06, ext), lerp(0.24, 0.34, ext)],
+        rHand: [lerp(-0.1, 0.04, ext), lerp(-0.09, -0.06, ext), lerp(0.24, 0.34, ext)],
+        lElbowPole: [-0.15, 0.75, 0.55],
+        rElbowPole: [-0.15, -0.75, 0.55],
         activeZones: ['back', 'glutes', 'shoulders'],
       };
     },
@@ -219,16 +220,16 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
       return {
         poseFeatureKo: '한쪽 손·무릎 측면 지지와 수평으로 들어 올린 다리의 앞뒤 킥',
         trajectoryFocus: 'rFoot',
-        pelvis: [0.02, 0.02, 0.48],
-        spineMid: [-0.2, 0.02, 0.52],
-        chest: [-0.42, 0.02, 0.56],
+        pelvis: [0.02, 0.02, 0.55],
+        spineMid: [-0.2, 0.02, 0.57],
+        chest: [-0.42, 0.02, 0.59],
         antHint: [0, -1, 0.08],
-        lFoot: [0.18, 0.24, 0.09],
-        rFoot: [0.64 - Math.abs(sweep) * 0.22, -0.04 + sweep, 0.53],
-        lKneePole: [0.02, -0.22, 0.08],
-        rKneePole: [0.35, -0.35, 0.55],
-        lHand: [-0.46, 0.14, 0.09],
-        rHand: [-0.44, -0.12, 0.68],
+        lFoot: [0.04, 0.4, 0.07],
+        rFoot: [0.8 - Math.abs(sweep) * 0.1, -0.05 + sweep, 0.54],
+        lKneePole: [0.06, -0.82, -0.56],
+        rKneePole: [0.15, -0.92, 0.2],
+        lHand: [-0.44, 0.14, 0.08],
+        rHand: [-0.42, -0.12, 0.72],
         lElbowPole: [-0.52, 0.32, 0.28],
         rElbowPole: [-0.44, -0.32, 0.78],
         activeZones: ['glutes', 'obliques', 'core'],
@@ -243,18 +244,22 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
       return {
         poseFeatureKo: '양손·발 플랭크 지지에서 몸통 수평 유지 채 한 다리 후상방 리프트',
         trajectoryFocus: 'rFoot',
-        pelvis: [0.06, 0, 0.44],
-        spineMid: [-0.16, 0, 0.49],
-        chest: [-0.38, 0, 0.54],
+        pelvis: [0.04, 0, 0.41],
+        spineMid: [-0.18, 0, 0.46],
+        chest: [-0.4, 0, 0.51],
         antHint: [-0.2, 0, -0.98],
-        lFoot: [0.76, -0.09, 0.1],
-        rFoot: [lerp(0.76, 0.74, ts), 0.09, lerp(0.1, 0.58, ts)],
-        lKneePole: [0.4, -0.09, 0.18],
-        rKneePole: [0.4, 0.09, 0.35],
-        lHand: [-0.42, -0.19, 0.09],
-        rHand: [-0.42, 0.19, 0.09],
-        lElbowPole: [-0.22, -0.32, 0.32],
-        rElbowPole: [-0.22, 0.32, 0.32],
+        lFoot: [0.76, 0.09, 0.09],
+        rFoot: [
+          lerp(0.76, 0.81, ts) + Math.sin(ts * Math.PI) * 0.045,
+          -0.09,
+          lerp(0.09, 0.56, ts),
+        ],
+        lKneePole: [-0.22, 0.08, -0.96],
+        rKneePole: [-0.22, -0.08, -0.96],
+        lHand: [-0.42, 0.19, 0.08],
+        rHand: [-0.42, -0.19, 0.08],
+        lElbowPole: [0.35, 0.72, 0.28],
+        rElbowPole: [0.35, -0.72, 0.28],
         activeZones: ['core', 'glutes', 'shoulders'],
       };
     },
@@ -288,22 +293,22 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'side-lying',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const lift = lerp(0.16, 0.52, ts);
+      const lift = lerp(0.18, 0.52, ts);
       return {
         poseFeatureKo: '한 손·교차 발 측면 지지에서 골반 아치 리프트와 위쪽 팔 오버헤드 곡선',
         trajectoryFocus: 'pelvis',
         pelvis: [0.06, 0, lift],
         spineMid: [-0.16, 0, lift + lerp(0.08, 0.16, ts)],
-        chest: [-0.38, 0, lift + lerp(0.18, 0.08, ts)],
+        chest: [-0.36, 0, lift + lerp(0.18, 0.08, ts)],
         antHint: [0, -1, 0.12],
-        lFoot: [0.68, 0.05, 0.1],
-        rFoot: [0.64, -0.05, 0.1],
-        lKneePole: [0.35, -0.28, lerp(0.24, 0.42, ts)],
-        rKneePole: [0.35, -0.32, lerp(0.28, 0.46, ts)],
-        lHand: [-0.48, 0.04, 0.09],
-        rHand: vlerp([0.28, -0.14, 0.32], [-0.66, -0.08, 0.82], ts),
-        lElbowPole: [-0.55, 0.25, 0.28],
-        rElbowPole: [-0.25, -0.3, 0.92],
+        lFoot: [0.66, 0.05, 0.1],
+        rFoot: [0.62, -0.05, 0.1],
+        lKneePole: [0.35, -0.58, lerp(0.24, 0.42, ts)],
+        rKneePole: [0.35, -0.62, lerp(0.28, 0.46, ts)],
+        lHand: [-0.46, 0.04, 0.09],
+        rHand: vlerp([0.04, -0.14, 0.38], [-0.62, -0.08, 0.86], ts),
+        lElbowPole: [-0.55, 0.45, 0.28],
+        rElbowPole: [-0.25, -0.45, 0.92],
         activeZones: ['obliques', 'shoulders', 'glutes'],
       };
     },
@@ -344,18 +349,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
       return {
         poseFeatureKo: '양 무릎 지지에서 무릎~정수리 일직선 유지 채 후방 힌지 기울기',
         trajectoryFocus: 'chest',
-        pelvis: [0.06 - tilt * 0.55, 0, lerp(0.5, 0.44, ts)],
-        spineMid: [0.05 - tilt * 0.9, 0, lerp(0.72, 0.64, ts)],
-        chest: [0.04 - tilt * 1.25, 0, lerp(0.94, 0.83, ts)],
+        pelvis: [0.06 - tilt * 0.55, 0, lerp(0.46, 0.41, ts)],
+        spineMid: [0.05 - tilt * 0.9, 0, lerp(0.68, 0.61, ts)],
+        chest: [0.04 - tilt * 1.25, 0, lerp(0.9, 0.8, ts)],
         antHint: [0.94, 0, lerp(0, 0.35, ts)],
-        lFoot: [-0.32, -0.1, 0.09],
-        rFoot: [-0.32, 0.1, 0.09],
-        lKneePole: [0.22, -0.1, 0.06],
-        rKneePole: [0.22, 0.1, 0.06],
-        lHand: [0.36 - tilt * 0.8, -0.16, lerp(0.88, 0.82, ts)],
-        rHand: [0.36 - tilt * 0.8, 0.16, lerp(0.88, 0.82, ts)],
-        lElbowPole: [0.05, -0.32, 0.78],
-        rElbowPole: [0.05, 0.32, 0.78],
+        lFoot: [-0.32, -0.1, 0.07],
+        rFoot: [-0.32, 0.1, 0.07],
+        lKneePole: [0.85, -0.08, -0.55],
+        rKneePole: [0.85, 0.08, -0.55],
+        lHand: [0.36 - tilt * 0.8, -0.16, lerp(0.84, 0.78, ts)],
+        rHand: [0.36 - tilt * 0.8, 0.16, lerp(0.84, 0.78, ts)],
+        lElbowPole: [-0.35, -0.75, -0.35],
+        rElbowPole: [-0.35, 0.75, -0.35],
         activeZones: ['quads', 'core', 'glutes'],
       };
     },
@@ -365,22 +370,22 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'prone',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const alt = Math.cos(rawT * Math.PI * 3) * 0.13;
+      const alt = Math.cos(rawT * Math.PI * 3) * 0.085;
       return {
         poseFeatureKo: '엎드린 흉추 신전 부양과 반대쪽 팔·다리의 교차 플러터 스위밍',
         trajectoryFocus: 'rHand',
-        pelvis: [0.04, 0, 0.12],
-        spineMid: [-0.18, 0, lerp(0.15, 0.19, ts)],
-        chest: [-0.4, 0, lerp(0.21, 0.3, ts)],
+        pelvis: [0.02, 0, 0.12],
+        spineMid: [-0.2, 0, lerp(0.15, 0.19, ts)],
+        chest: [-0.42, 0, lerp(0.21, 0.3, ts)],
         antHint: [-0.45, 0, -0.88],
-        lFoot: [0.78, -0.1, 0.25 + alt],
-        rFoot: [0.78, 0.1, 0.25 - alt],
-        lKneePole: [0.42, -0.1, -0.25],
-        rKneePole: [0.42, 0.1, -0.25],
-        lHand: [-0.82, -0.18, 0.32 - alt],
-        rHand: [-0.82, 0.18, 0.32 + alt],
-        lElbowPole: [-0.58, -0.32, 0.22],
-        rElbowPole: [-0.58, 0.32, 0.22],
+        lFoot: [0.8, 0.1, 0.2 + alt],
+        rFoot: [0.8, -0.1, 0.2 - alt],
+        lKneePole: [0.05, 0.08, -1],
+        rKneePole: [0.05, -0.08, -1],
+        lHand: [-0.84, 0.18, 0.3 - alt],
+        rHand: [-0.84, -0.18, 0.3 + alt],
+        lElbowPole: [0.25, 0.82, 0.28],
+        rElbowPole: [0.25, -0.82, 0.28],
         activeZones: ['back', 'glutes', 'shoulders'],
       };
     },
@@ -390,22 +395,22 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'prone',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const rock = Math.sin(rawT * Math.PI) * 0.08;
+      const rock = Math.sin(rawT * Math.PI) * 0.06;
       return {
         poseFeatureKo: '양손 발목 파지 활 모양 신전과 복부 앞면을 따른 로킹',
         trajectoryFocus: 'chest',
         pelvis: [0.02, 0, 0.13 + rock * 0.4],
-        spineMid: [-0.18, 0, lerp(0.18, 0.26, ts)],
-        chest: [-0.36, 0, lerp(0.26, 0.46, ts) + rock],
+        spineMid: [-0.17, 0, lerp(0.19, 0.28, ts)],
+        chest: [-0.33, 0, lerp(0.28, 0.46, ts) + rock],
         antHint: [-0.65, 0, -0.75],
-        lFoot: [lerp(0.26, 0.16, ts), -0.13, lerp(0.52, 0.68, ts) - rock * 0.5],
-        rFoot: [lerp(0.26, 0.16, ts), 0.13, lerp(0.52, 0.68, ts) - rock * 0.5],
-        lKneePole: [0.48, -0.14, 0.08],
-        rKneePole: [0.48, 0.14, 0.08],
-        lHand: [lerp(0.24, 0.15, ts), -0.15, lerp(0.5, 0.66, ts) - rock * 0.5],
-        rHand: [lerp(0.24, 0.15, ts), 0.15, lerp(0.5, 0.66, ts) - rock * 0.5],
-        lElbowPole: [-0.1, -0.34, 0.52],
-        rElbowPole: [-0.1, 0.34, 0.52],
+        lFoot: [lerp(0.14, 0.06, ts), 0.13, lerp(0.49, 0.62, ts) - rock * 0.4],
+        rFoot: [lerp(0.14, 0.06, ts), -0.13, lerp(0.49, 0.62, ts) - rock * 0.4],
+        lKneePole: [0.62, 0.18, -0.76],
+        rKneePole: [0.62, -0.18, -0.76],
+        lHand: [lerp(0.12, 0.05, ts), 0.15, lerp(0.48, 0.61, ts) - rock * 0.4],
+        rHand: [lerp(0.12, 0.05, ts), -0.15, lerp(0.48, 0.61, ts) - rock * 0.4],
+        lElbowPole: [-0.15, 0.72, 0.55],
+        rElbowPole: [-0.15, -0.72, 0.55],
         activeZones: ['back', 'glutes', 'quads'],
       };
     },
@@ -491,23 +496,23 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'prone',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const cx = lerp(0.2, -0.18, ts);
+      const cx = lerp(0.08, -0.18, ts);
       return {
         poseFeatureKo: '풋바 양손·숄더블록 양발 지지 긴 사선 플랭크 전·후방 활주',
         trajectoryFocus: 'chest',
         carriageX: cx,
-        pelvis: [cx + 0.24, 0, lerp(0.74, 0.68, ts)],
-        spineMid: [cx + 0.44, 0, lerp(0.81, 0.76, ts)],
-        chest: [lerp(0.68, 0.5, ts), 0, lerp(0.88, 0.83, ts)],
+        pelvis: [cx + 0.38, 0, lerp(0.7, 0.65, ts)],
+        spineMid: [lerp(0.62, 0.4, ts), 0, lerp(0.78, 0.73, ts)],
+        chest: [lerp(0.78, 0.58, ts), 0, lerp(0.86, 0.8, ts)],
         antHint: [0.22, 0, -0.96],
-        lFoot: [cx - 0.16, -0.09, 0.47],
-        rFoot: [cx - 0.16, 0.09, 0.47],
-        lKneePole: [cx + 0.1, -0.09, 0.52],
-        rKneePole: [cx + 0.1, 0.09, 0.52],
+        lFoot: [cx - 0.39, -0.09, 0.46],
+        rFoot: [cx - 0.39, 0.09, 0.46],
+        lKneePole: [0.22, -0.08, -0.96],
+        rKneePole: [0.22, 0.08, -0.96],
         lHand: [0.825, -0.18, 0.58],
         rHand: [0.825, 0.18, 0.58],
-        lElbowPole: [0.55, -0.32, 0.75],
-        rElbowPole: [0.55, 0.32, 0.75],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [-0.35, 0.75, 0.35],
         activeZones: ['core', 'shoulders', 'glutes'],
       };
     },
@@ -522,18 +527,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '풋바·숄더블록 지지 인버티드 V 파이크에서 긴 사선 플랭크 전환',
         trajectoryFocus: 'pelvis',
         carriageX: cx,
-        pelvis: [cx + 0.2, 0, lerp(1.08, 0.76, ts)],
-        spineMid: [cx + 0.38, 0, lerp(1.0, 0.82, ts)],
-        chest: [lerp(0.64, 0.58, ts), 0, lerp(0.9, 0.86, ts)],
+        pelvis: [cx + 0.2, 0, lerp(1.1, 0.84, ts)],
+        spineMid: [cx + 0.38, 0, lerp(1.01, 0.86, ts)],
+        chest: [lerp(0.64, 0.58, ts), 0, lerp(0.9, 0.87, ts)],
         antHint: [0.28, 0, -0.95],
-        lFoot: [cx - 0.15, -0.09, 0.48],
-        rFoot: [cx - 0.15, 0.09, 0.48],
-        lKneePole: [0.45, -0.07, 0.65],
-        rKneePole: [0.45, 0.07, 0.65],
-        lHand: [0.825, -0.17, 0.58],
-        rHand: [0.825, 0.17, 0.58],
-        lElbowPole: [0.45, -0.3, 0.85],
-        rElbowPole: [0.45, 0.3, 0.85],
+        lFoot: [cx - 0.15, 0.09, 0.48],
+        rFoot: [cx - 0.15, -0.09, 0.48],
+        lKneePole: [0.75, 0.12, 0.45],
+        rKneePole: [0.75, -0.12, 0.45],
+        lHand: [0.825, 0.17, 0.58],
+        rHand: [0.825, -0.17, 0.58],
+        lElbowPole: [-0.35, 0.75, 0.45],
+        rElbowPole: [-0.35, -0.75, 0.45],
         activeZones: ['core', 'shoulders', 'glutes'],
       };
     },
@@ -572,24 +577,24 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
       const cx = 0.16 - smoothstep(rawT) * 0.22;
       const armFwd = Math.sin(ang * 0.75) * 0.28;
       const armOut = Math.sin(ang) * 0.24;
-      const armZ = 1.18 - smoothstep(rawT) * 0.36;
+      const armZ = 1.16 - smoothstep(rawT) * 0.34;
       return {
         poseFeatureKo: '캐리지 무릎 직립 지지와 스트랩 파지 양팔의 3D 원형 궤적',
         trajectoryFocus: 'rHand',
         carriageX: cx,
         ropeToHands: true,
-        pelvis: [cx + 0.06, 0, 0.86],
-        spineMid: [cx + 0.06, 0, 1.08],
-        chest: [cx + 0.06, 0, 1.3],
+        pelvis: [cx + 0.08, 0, 0.81],
+        spineMid: [cx + 0.08, 0, 1.03],
+        chest: [cx + 0.08, 0, 1.25],
         antHint: [1, 0, 0],
-        lFoot: [cx - 0.26, -0.11, 0.45],
-        rFoot: [cx - 0.26, 0.11, 0.45],
-        lKneePole: [cx + 0.3, -0.11, 0.44],
-        rKneePole: [cx + 0.3, 0.11, 0.44],
+        lFoot: [cx - 0.3, -0.11, 0.44],
+        rFoot: [cx - 0.3, 0.11, 0.44],
+        lKneePole: [0.85, -0.08, -0.55],
+        rKneePole: [0.85, 0.08, -0.55],
         lHand: [cx + 0.18 + armFwd, -0.2 - Math.abs(armOut), armZ],
         rHand: [cx + 0.18 + armFwd, 0.2 + Math.abs(armOut), armZ],
-        lElbowPole: [cx - 0.1, -0.38, 1.05],
-        rElbowPole: [cx - 0.1, 0.38, 1.05],
+        lElbowPole: [-0.35, -0.82, -0.35],
+        rElbowPole: [-0.35, 0.82, -0.35],
         activeZones: ['shoulders', 'core'],
       };
     },
@@ -609,14 +614,14 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         spineMid: vlerp([cx + 0.18, 0, 0.7], [cx + 0.28, 0, 0.63], ts),
         chest: vlerp([cx + 0.18, 0, 0.92], [cx + 0.38, 0, 0.78], ts),
         antHint: [-1, 0, lerp(0, 0.42, ts)],
-        lFoot: [cx - 0.28, -0.09, 0.45],
-        rFoot: [cx - 0.28, 0.09, 0.45],
-        lKneePole: [cx - 0.05, -0.12, 0.75],
-        rKneePole: [cx - 0.05, 0.12, 0.75],
-        lHand: vlerp([cx + 0.02, -0.12, 0.82], [cx + 0.42, -0.34, 0.62], ts),
-        rHand: vlerp([cx + 0.02, 0.12, 0.82], [cx + 0.42, 0.34, 0.62], ts),
-        lElbowPole: [cx + 0.2, -0.38, 0.82],
-        rElbowPole: [cx + 0.2, 0.38, 0.82],
+        lFoot: [cx - 0.28, 0.09, 0.45],
+        rFoot: [cx - 0.28, -0.09, 0.45],
+        lKneePole: [-0.25, 0.12, 0.95],
+        rKneePole: [-0.25, -0.12, 0.95],
+        lHand: vlerp([cx + 0.02, 0.12, 0.82], [cx + 0.42, 0.34, 0.62], ts),
+        rHand: vlerp([cx + 0.02, -0.12, 0.82], [cx + 0.42, -0.34, 0.62], ts),
+        lElbowPole: [0.35, 0.85, -0.35],
+        rElbowPole: [0.35, -0.85, -0.35],
         activeZones: ['back', 'core', 'shoulders'],
       };
     },
@@ -636,14 +641,14 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         spineMid: vlerp([cx + 0.18, 0, 0.7], [cx + 0.1, 0, 0.68], ts),
         chest: vlerp([cx + 0.18, 0, 0.92], [cx - 0.02, 0, 0.82], ts),
         antHint: [-1, 0, lerp(0, -0.35, ts)],
-        lFoot: [cx - 0.28, -0.09, 0.45],
-        rFoot: [cx - 0.28, 0.09, 0.45],
-        lKneePole: [cx - 0.05, -0.12, 0.75],
-        rKneePole: [cx - 0.05, 0.12, 0.75],
-        lHand: vlerp([cx - 0.04, -0.2, 0.92], [cx - 0.28, -0.18, 0.74], ts),
-        rHand: vlerp([cx - 0.04, 0.2, 0.92], [cx - 0.28, 0.18, 0.74], ts),
-        lElbowPole: [cx + 0.14, -0.34, 0.68],
-        rElbowPole: [cx + 0.14, 0.34, 0.68],
+        lFoot: [cx - 0.28, 0.09, 0.45],
+        rFoot: [cx - 0.28, -0.09, 0.45],
+        lKneePole: [-0.25, 0.12, 0.95],
+        rKneePole: [-0.25, -0.12, 0.95],
+        lHand: vlerp([cx - 0.04, 0.2, 0.92], [cx - 0.28, 0.18, 0.74], ts),
+        rHand: vlerp([cx - 0.04, -0.2, 0.92], [cx - 0.28, -0.18, 0.74], ts),
+        lElbowPole: [0.35, 0.82, -0.42],
+        rElbowPole: [0.35, -0.82, -0.42],
         activeZones: ['back', 'core', 'shoulders'],
       };
     },
@@ -775,12 +780,12 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         antHint: [0.35, 0, -0.92],
         lFoot: vlerp([cx - 0.66, -0.1, bt + 0.1], [cx - 0.18, -0.1, bt + 0.48], ts),
         rFoot: vlerp([cx - 0.66, 0.1, bt + 0.1], [cx - 0.18, 0.1, bt + 0.48], ts),
-        lKneePole: [cx - 0.35, -0.1, bt - 0.12],
-        rKneePole: [cx - 0.35, 0.1, bt - 0.12],
+        lKneePole: [-0.95, -0.08, -0.28],
+        rKneePole: [-0.95, 0.08, -0.28],
         lHand: [cx + 0.48, -0.18, bt + 0.02],
         rHand: [cx + 0.48, 0.18, bt + 0.02],
-        lElbowPole: [cx + 0.32, -0.32, bt + 0.12],
-        rElbowPole: [cx + 0.32, 0.32, bt + 0.12],
+        lElbowPole: [-0.25, -0.75, 0.45],
+        rElbowPole: [-0.25, 0.75, 0.45],
         activeZones: ['glutes', 'core'],
       };
     },
@@ -797,18 +802,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         trajectoryFocus: 'chest',
         carriageX: cx,
         ropeToHands: true,
-        pelvis: [cx + 0.12 + tilt * 0.5, 0, lerp(0.86, 0.8, ts)],
-        spineMid: [cx + 0.12 + tilt * 0.85, 0, lerp(1.08, 1.0, ts)],
-        chest: [cx + 0.12 + tilt * 1.2, 0, lerp(1.3, 1.18, ts)],
+        pelvis: [cx + 0.08 + tilt * 0.5, 0, lerp(0.84, 0.8, ts)],
+        spineMid: [cx + 0.08 + tilt * 0.85, 0, lerp(1.06, 1.0, ts)],
+        chest: [cx + 0.08 + tilt * 1.2, 0, lerp(1.28, 1.18, ts)],
         antHint: [-0.94, 0, lerp(0, 0.32, ts)],
-        lFoot: [cx + 0.42, -0.11, 0.45],
-        rFoot: [cx + 0.42, 0.11, 0.45],
-        lKneePole: [cx - 0.1, -0.11, 0.42],
-        rKneePole: [cx - 0.1, 0.11, 0.42],
-        lHand: [cx - 0.08 + tilt * 0.8, -0.18, lerp(0.92, 0.88, ts)],
-        rHand: [cx - 0.08 + tilt * 0.8, 0.18, lerp(0.92, 0.88, ts)],
-        lElbowPole: [cx + 0.15, -0.34, 0.96],
-        rElbowPole: [cx + 0.15, 0.34, 0.96],
+        lFoot: [cx + 0.42, 0.11, 0.45],
+        rFoot: [cx + 0.42, -0.11, 0.45],
+        lKneePole: [-0.85, 0.08, -0.55],
+        rKneePole: [-0.85, -0.08, -0.55],
+        lHand: [cx - 0.1 + tilt * 0.8, 0.18, lerp(0.9, 0.86, ts)],
+        rHand: [cx - 0.1 + tilt * 0.8, -0.18, lerp(0.9, 0.86, ts)],
+        lElbowPole: [0.35, 0.78, -0.45],
+        rElbowPole: [0.35, -0.78, -0.45],
         activeZones: ['quads', 'core', 'shoulders'],
       };
     },
@@ -849,18 +854,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '풋바 양손·한 발 캐리지 지지와 반대 다리 후상방 아라베스크 왕복',
         trajectoryFocus: 'pelvis',
         carriageX: cx,
-        pelvis: [cx + 0.18, 0, 1.02],
-        spineMid: [cx + 0.36, 0, 1.0],
+        pelvis: [cx + 0.14, 0, 1.12],
+        spineMid: [cx + 0.34, 0, 1.04],
         chest: [0.62, 0, 0.91],
         antHint: [0.3, 0, -0.95],
         lFoot: [cx - 0.12, -0.07, 0.45],
-        rFoot: [cx - 0.48, 0.08, lerp(0.96, 1.16, ts)],
-        lKneePole: [0.48, -0.07, 0.7],
-        rKneePole: [cx - 0.2, 0.08, 0.78],
+        rFoot: [cx - 0.61, 0.08, lerp(0.98, 1.18, ts)],
+        lKneePole: [0.95, -0.07, 0.18],
+        rKneePole: [0.18, 0.08, -0.96],
         lHand: [0.825, -0.16, 0.58],
         rHand: [0.825, 0.16, 0.58],
-        lElbowPole: [0.32, -0.26, 0.9],
-        rElbowPole: [0.32, 0.26, 0.9],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [-0.35, 0.75, 0.35],
         activeZones: ['glutes', 'core', 'shoulders'],
       };
     },
@@ -928,18 +933,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '타워 정면 스탠딩 지지에서 롤백 바 수평 높이 고정 팔꿈치 바이셉 컬',
         trajectoryFocus: 'rHand',
         rolldownBar: [bx, bz],
-        pelvis: [1.54, 0, 0.9],
-        spineMid: [1.55, 0, 1.12],
-        chest: [1.56, 0, 1.34],
+        pelvis: [1.54, 0, 0.88],
+        spineMid: [1.55, 0, 1.1],
+        chest: [1.56, 0, 1.32],
         antHint: [-1, 0, 0],
-        lFoot: [1.54, -0.11, 0.05],
-        rFoot: [1.54, 0.11, 0.05],
-        lKneePole: [1.24, -0.11, 0.48],
-        rKneePole: [1.24, 0.11, 0.48],
-        lHand: [bx, -0.18, bz],
-        rHand: [bx, 0.18, bz],
-        lElbowPole: [1.32, -0.24, 1.08],
-        rElbowPole: [1.32, 0.24, 1.08],
+        lFoot: [1.54, 0.11, 0.05],
+        rFoot: [1.54, -0.11, 0.05],
+        lKneePole: [-1, 0.08, 0],
+        rKneePole: [-1, -0.08, 0],
+        lHand: [bx, 0.18, bz],
+        rHand: [bx, -0.18, bz],
+        lElbowPole: [-0.25, 0.72, -0.65],
+        rElbowPole: [-0.25, -0.72, -0.65],
         activeZones: ['shoulders', 'core', 'back'],
       };
     },
@@ -961,12 +966,12 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         antHint: [1, 0, 0],
         lFoot: [1.34, -0.1, 0.05],
         rFoot: [1.58, 0.1, 0.05],
-        lKneePole: [1.6, -0.1, 0.48],
-        rKneePole: [1.84, 0.1, 0.48],
+        lKneePole: [1, -0.08, 0],
+        rKneePole: [1, 0.08, 0],
         lHand: [bx, -0.14, bz],
         rHand: [bx, 0.14, bz],
-        lElbowPole: [1.52, -0.36, 1.48],
-        rElbowPole: [1.52, 0.36, 1.48],
+        lElbowPole: [0.35, -0.82, 0.45],
+        rElbowPole: [0.35, 0.82, 0.45],
         activeZones: ['shoulders', 'core'],
       };
     },
@@ -982,18 +987,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '타워 정면 스탠딩에서 롤백 바를 몸통 가까이 수직 업라이트 로우 집업',
         trajectoryFocus: 'rHand',
         rolldownBar: [bx, bz],
-        pelvis: [1.52, 0, 0.9],
-        spineMid: [1.52, 0, 1.12],
-        chest: [1.52, 0, 1.34],
+        pelvis: [1.52, 0, 0.88],
+        spineMid: [1.52, 0, 1.1],
+        chest: [1.52, 0, 1.32],
         antHint: [-1, 0, 0],
-        lFoot: [1.52, -0.12, 0.05],
-        rFoot: [1.52, 0.12, 0.05],
-        lKneePole: [1.24, -0.12, 0.48],
-        rKneePole: [1.24, 0.12, 0.48],
-        lHand: [bx, -0.12, bz],
-        rHand: [bx, 0.12, bz],
-        lElbowPole: [1.42, -0.4, 1.42],
-        rElbowPole: [1.42, 0.4, 1.42],
+        lFoot: [1.52, 0.12, 0.05],
+        rFoot: [1.52, -0.12, 0.05],
+        lKneePole: [-1, 0.08, 0],
+        rKneePole: [-1, -0.08, 0],
+        lHand: [bx, 0.12, bz],
+        rHand: [bx, -0.12, bz],
+        lElbowPole: [0.1, 0.92, 0.35],
+        rElbowPole: [0.1, -0.92, 0.35],
         activeZones: ['shoulders', 'back', 'core'],
       };
     },
@@ -1037,18 +1042,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '캐딜락 테이블 무릎 지지에서 롤백 바 저항 속 허벅지·몸통 사선 후경',
         trajectoryFocus: 'chest',
         rolldownBar: [bx, bz],
-        pelvis: [0.16 - tilt * 0.55, 0, lerp(0.98, 0.92, ts)],
-        spineMid: [0.16 - tilt * 0.9, 0, lerp(1.2, 1.12, ts)],
-        chest: [0.16 - tilt * 1.25, 0, lerp(1.42, 1.31, ts)],
+        pelvis: [0.14 - tilt * 0.55, 0, lerp(0.98, 0.92, ts)],
+        spineMid: [0.14 - tilt * 0.9, 0, lerp(1.2, 1.12, ts)],
+        chest: [0.14 - tilt * 1.25, 0, lerp(1.42, 1.31, ts)],
         antHint: [0.95, 0, lerp(0, 0.32, ts)],
-        lFoot: [-0.24, -0.11, 0.6],
-        rFoot: [-0.24, 0.11, 0.6],
-        lKneePole: [0.34, -0.11, 0.58],
-        rKneePole: [0.34, 0.11, 0.58],
+        lFoot: [-0.24, -0.11, 0.62],
+        rFoot: [-0.24, 0.11, 0.62],
+        lKneePole: [0.85, -0.08, -0.55],
+        rKneePole: [0.85, 0.08, -0.55],
         lHand: [bx, -0.18, bz],
         rHand: [bx, 0.18, bz],
-        lElbowPole: [0.22, -0.34, 1.26],
-        rElbowPole: [0.22, 0.34, 1.26],
+        lElbowPole: [-0.35, -0.78, -0.35],
+        rElbowPole: [-0.35, 0.78, -0.35],
         activeZones: ['quads', 'core', 'glutes'],
       };
     },
@@ -1087,7 +1092,7 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'supine',
     build: (rawT) => {
       const openWide = Math.sin(rawT * Math.PI) * 0.22;
-      const crossEnd = smoothstep(Math.max(0, (rawT - 0.55) / 0.45)) * 0.12;
+      const closeTogether = smoothstep(Math.max(0, (rawT - 0.55) / 0.45)) * 0.03;
       return {
         poseFeatureKo: '테이블 수평 골반 고정과 45도 사선 레그 스프링 내전 오픈·크로스 비츠',
         trajectoryFocus: 'rFoot',
@@ -1098,20 +1103,20 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         antHint: [0, 0, 1],
         lFoot: [
           lerp(-0.38, -0.52, smoothstep(rawT)),
-          -0.06 - openWide + crossEnd,
+          0.07 + openWide - closeTogether,
           lerp(1.14, 0.96, smoothstep(rawT)),
         ],
         rFoot: [
           lerp(-0.38, -0.52, smoothstep(rawT)),
-          0.06 + openWide - crossEnd,
+          -0.07 - openWide + closeTogether,
           lerp(1.14, 0.96, smoothstep(rawT)),
         ],
-        lKneePole: [-0.1, -0.12 - openWide * 0.5, 1.2],
-        rKneePole: [-0.1, 0.12 + openWide * 0.5, 1.2],
-        lHand: [1.02, -0.28, 0.92],
-        rHand: [1.02, 0.28, 0.92],
-        lElbowPole: [0.76, -0.38, 0.66],
-        rElbowPole: [0.76, 0.38, 0.66],
+        lKneePole: [0.25, 0.18 + openWide * 0.4, 0.92],
+        rKneePole: [0.25, -0.18 - openWide * 0.4, 0.92],
+        lHand: [0.98, 0.26, 0.88],
+        rHand: [0.98, -0.26, 0.88],
+        lElbowPole: [0.35, 0.78, 0.25],
+        rElbowPole: [0.35, -0.78, 0.25],
         activeZones: ['adductors', 'core', 'glutes'],
       };
     },
@@ -1180,18 +1185,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '테이블 무릎 지지에서 한 손 푸시스루 바 상방 밀기와 반대 팔 측굴 아치',
         trajectoryFocus: 'rHand',
         pushthroughDeg: ptDeg,
-        pelvis: [0.12, 0.02, 0.96],
-        spineMid: [lerp(0.14, 0.24, ts), 0, 1.18],
-        chest: [lerp(0.16, 0.36, ts), 0, lerp(1.4, 1.32, ts)],
+        pelvis: [0.12, 0.0, 1.03],
+        spineMid: [lerp(0.14, 0.24, ts), 0, 1.23],
+        chest: [lerp(0.16, 0.36, ts), 0, lerp(1.45, 1.37, ts)],
         antHint: [0, -1, 0.05],
-        lFoot: [0.02, -0.22, 0.6],
-        rFoot: [0.22, 0.22, 0.6],
-        lKneePole: [0.02, -0.35, 0.62],
-        rKneePole: [0.22, -0.35, 0.62],
+        lFoot: [0.02, 0.36, 0.64],
+        rFoot: [0.22, 0.36, 0.64],
+        lKneePole: [-0.08, -0.85, -0.55],
+        rKneePole: [0.08, -0.85, -0.55],
         lHand: [ex, -0.06, ez],
         rHand: vlerp([-0.12, -0.12, 1.24], [0.46, -0.06, 1.66], ts),
-        lElbowPole: [0.45, 0.24, 1.45],
-        rElbowPole: [0.05, -0.3, 1.65],
+        lElbowPole: [0.45, 0.45, 0.25],
+        rElbowPole: [-0.25, -0.55, 0.65],
         activeZones: ['obliques', 'core', 'shoulders'],
       };
     },
@@ -1209,18 +1214,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '체어 시트 엎드린 치골·늑골 지지와 양손 페달 상승 제어 흉추 스완 신전',
         trajectoryFocus: 'chest',
         pedalDeg: pdeg,
-        pelvis: [-0.1, 0, 0.66],
-        spineMid: [0.08, 0, lerp(0.66, 0.77, ts)],
-        chest: [0.24, 0, lerp(0.64, 0.94, ts)],
+        pelvis: [-0.08, 0, 0.65],
+        spineMid: [0.1, 0, lerp(0.66, 0.77, ts)],
+        chest: [0.26, 0, lerp(0.64, 0.94, ts)],
         antHint: [lerp(0.22, 0.68, ts), 0, -1],
-        lFoot: [-0.78, -0.09, lerp(0.58, 0.74, ts)],
-        rFoot: [-0.78, 0.09, lerp(0.58, 0.74, ts)],
-        lKneePole: [-0.45, -0.09, 0.25],
-        rKneePole: [-0.45, 0.09, 0.25],
+        lFoot: [-0.86, -0.09, lerp(0.6, 0.72, ts)],
+        rFoot: [-0.86, 0.09, lerp(0.6, 0.72, ts)],
+        lKneePole: [0.1, -0.08, -1],
+        rKneePole: [0.1, 0.08, -1],
         lHand: [px, -0.16, pz + 0.03],
         rHand: [px, 0.16, pz + 0.03],
-        lElbowPole: [0.1, -0.32, 0.5],
-        rElbowPole: [0.1, 0.32, 0.5],
+        lElbowPole: [-0.35, -0.78, 0.35],
+        rElbowPole: [-0.35, 0.78, 0.35],
         activeZones: ['back', 'glutes', 'core'],
       };
     },
@@ -1236,18 +1241,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '체어 정면 바닥 무릎 지지에서 C커브 롤다운으로 양손 페달 하강 프레스',
         trajectoryFocus: 'lHand',
         pedalDeg: pdeg,
-        pelvis: [0.58, 0, 0.5],
-        spineMid: vlerp([0.52, 0, 0.72], [0.46, 0, 0.64], ts),
-        chest: vlerp([0.44, 0, 0.92], [0.34, 0, 0.58], ts),
+        pelvis: [0.54, 0, 0.48],
+        spineMid: vlerp([0.46, 0, 0.72], [0.42, 0, 0.66], ts),
+        chest: vlerp([0.36, 0, 0.84], [0.32, 0, 0.58], ts),
         antHint: [-0.7, 0, -0.72],
-        lFoot: [0.88, -0.11, 0.06],
-        rFoot: [0.88, 0.11, 0.06],
-        lKneePole: [0.42, -0.11, 0.06],
-        rKneePole: [0.42, 0.11, 0.06],
-        lHand: [px, -0.15, pz + 0.03],
-        rHand: [px, 0.15, pz + 0.03],
-        lElbowPole: [0.35, -0.32, 0.55],
-        rElbowPole: [0.35, 0.32, 0.55],
+        lFoot: [0.84, 0.11, 0.06],
+        rFoot: [0.84, -0.11, 0.06],
+        lKneePole: [-0.85, 0.1, -0.35],
+        rKneePole: [-0.85, -0.1, -0.35],
+        lHand: [px, 0.15, pz + 0.03],
+        rHand: [px, -0.15, pz + 0.03],
+        lElbowPole: [0.25, 0.78, 0.45],
+        rElbowPole: [0.25, -0.78, 0.45],
         activeZones: ['core', 'shoulders', 'back'],
       };
     },
@@ -1371,18 +1376,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '체어 시트 양손 지지와 페달 양발 접촉에서 수평 리버스 테이블 골반 리프트',
         trajectoryFocus: 'pelvis',
         pedalDeg: pdeg,
-        pelvis: [0.18, 0, lerp(0.46, 0.66, ts)],
-        spineMid: [0.04, 0, lerp(0.62, 0.72, ts)],
-        chest: [-0.08, 0, 0.8],
+        pelvis: [0.24, 0, lerp(0.65, 0.8, ts)],
+        spineMid: [0.07, 0, lerp(0.73, 0.84, ts)],
+        chest: [-0.08, 0, lerp(0.84, 0.9, ts)],
         antHint: [0.35, 0, 0.93],
         lFoot: [px, -0.09, pz + 0.04],
         rFoot: [px, 0.09, pz + 0.04],
-        lKneePole: [0.48, -0.09, 0.72],
-        rKneePole: [0.48, 0.09, 0.72],
+        lKneePole: [0.55, -0.09, 0.82],
+        rKneePole: [0.55, 0.09, 0.82],
         lHand: [-0.1, -0.2, 0.62],
         rHand: [-0.1, 0.2, 0.62],
-        lElbowPole: [-0.32, -0.3, 0.74],
-        rElbowPole: [-0.32, 0.3, 0.74],
+        lElbowPole: [-0.72, -0.45, 0.35],
+        rElbowPole: [-0.72, 0.45, 0.35],
         activeZones: ['glutes', 'shoulders', 'back'],
       };
     },
@@ -1398,18 +1403,18 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         poseFeatureKo: '체어 옆 바닥 무릎 지지에서 한 손 페달 하강과 반대 팔 오버헤드 측굴',
         trajectoryFocus: 'rHand',
         pedalDeg: pdeg,
-        pelvis: [0.58, 0.02, 0.5],
-        spineMid: [lerp(0.58, 0.46, ts), 0, 0.72],
-        chest: [lerp(0.58, 0.34, ts), 0, lerp(0.94, 0.78, ts)],
+        pelvis: [0.52, 0.02, 0.48],
+        spineMid: [lerp(0.5, 0.42, ts), 0, 0.7],
+        chest: [lerp(0.46, 0.32, ts), 0, lerp(0.86, 0.74, ts)],
         antHint: [0, -1, 0],
-        lFoot: [0.68, -0.24, 0.06],
-        rFoot: [0.52, 0.24, 0.06],
-        lKneePole: [0.68, -0.35, 0.12],
-        rKneePole: [0.52, -0.35, 0.12],
+        lFoot: [0.46, 0.24, 0.06],
+        rFoot: [0.62, 0.24, 0.06],
+        lKneePole: [-0.15, -0.92, -0.25],
+        rKneePole: [0.15, -0.92, -0.25],
         lHand: [px, -0.04, pz + 0.03],
-        rHand: vlerp([0.74, -0.1, 0.88], [0.22, -0.06, 1.16], ts),
-        lElbowPole: [0.34, 0.24, 0.55],
-        rElbowPole: [0.58, -0.28, 1.22],
+        rHand: vlerp([0.66, -0.1, 0.86], [0.22, -0.06, 1.12], ts),
+        lElbowPole: [-0.25, 0.72, 0.45],
+        rElbowPole: [0.45, -0.55, 0.75],
         activeZones: ['obliques', 'core', 'shoulders'],
       };
     },
@@ -1419,24 +1424,24 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'seated',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const pdeg = lerp(28, 10, ts);
+      const pdeg = lerp(28, 12, ts);
       const [px, pz] = chairPedalPos(pdeg);
       return {
         poseFeatureKo: '체어 시트 측면 착석에서 한 손 페달 프레스와 반대 팔 후상방 흉추 트위스트',
-        trajectoryFocus: 'rHand',
+        trajectoryFocus: 'lHand',
         pedalDeg: pdeg,
-        pelvis: [-0.08, 0, 0.67],
-        spineMid: [lerp(-0.04, 0.08, ts), 0, 0.86],
-        chest: [lerp(0.0, 0.2, ts), lerp(0, 0.06, ts), lerp(1.06, 0.88, ts)],
-        antHint: vlerp([0, -1, 0], [-0.45, -0.88, -0.18], ts),
-        lFoot: [-0.04, -0.28, 0.12],
-        rFoot: [-0.14, -0.3, 0.12],
-        lKneePole: [-0.04, -0.45, 0.55],
-        rKneePole: [-0.14, -0.45, 0.55],
-        lHand: [px, -0.06, pz + 0.03],
-        rHand: vlerp([-0.24, -0.14, 1.04], [-0.48, 0.22, 1.18], ts),
-        lElbowPole: [0.16, 0.22, 0.65],
-        rElbowPole: [-0.38, 0.12, 1.12],
+        pelvis: [-0.04, 0, 0.67],
+        spineMid: [lerp(0.02, 0.1, ts), 0, 0.85],
+        chest: [lerp(0.08, 0.2, ts), lerp(0, 0.05, ts), lerp(1.02, 0.84, ts)],
+        antHint: vlerp([0, -1, 0], [-0.38, -0.9, -0.18], ts),
+        lFoot: [-0.12, -0.3, 0.14],
+        rFoot: [0.02, -0.28, 0.14],
+        lKneePole: [-0.1, -0.92, 0.25],
+        rKneePole: [0.1, -0.92, 0.25],
+        lHand: vlerp([-0.24, -0.14, 1.04], [-0.38, 0.2, 1.18], ts),
+        rHand: [px, -0.06, pz + 0.03],
+        lElbowPole: [-0.65, 0.35, 0.55],
+        rElbowPole: [0.45, 0.65, 0.45],
         activeZones: ['obliques', 'core', 'shoulders'],
       };
     },
@@ -1492,8 +1497,8 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         rKneePole: [0.22, 0.1, 0.92],
         lHand: [ax, -ay, az],
         rHand: [ax, ay, az],
-        lElbowPole: [-0.48, -0.36, 0.76],
-        rElbowPole: [-0.48, 0.36, 0.76],
+        lElbowPole: [0.15, -0.88, -0.42],
+        rElbowPole: [0.15, 0.88, -0.42],
         activeZones: ['shoulders', 'core', 'back'],
       };
     },
@@ -1657,7 +1662,7 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
     bodyPosition: 'prone',
     build: (rawT) => {
       const ts = smoothstep(rawT);
-      const alt = Math.cos(rawT * Math.PI * 3) * 0.15;
+      const alt = Math.cos(rawT * Math.PI * 3) * 0.09;
       return {
         poseFeatureKo: '바렐 정점 복부·골반 지지에서 반대쪽 팔·다리의 공중 교차 스위밍',
         trajectoryFocus: 'rHand',
@@ -1665,14 +1670,14 @@ const EXPANDED_DEDICATED_3D_RIGS: Readonly<Record<string, DedicatedRigEntry>> = 
         spineMid: [-0.48, 0, lerp(0.94, 0.98, ts)],
         chest: [-0.68, 0, lerp(0.98, 1.08, ts)],
         antHint: [-0.55, 0, -0.82],
-        lFoot: [0.38, -0.11, 0.92 + alt],
-        rFoot: [0.38, 0.11, 0.92 - alt],
-        lKneePole: [0.05, -0.11, 0.55],
-        rKneePole: [0.05, 0.11, 0.55],
-        lHand: [-0.98, -0.18, 1.08 - alt],
-        rHand: [-0.98, 0.18, 1.08 + alt],
-        lElbowPole: [-0.76, -0.32, 0.96],
-        rElbowPole: [-0.76, 0.32, 0.96],
+        lFoot: [0.5, 0.1, 0.92 + alt],
+        rFoot: [0.5, -0.1, 0.92 - alt],
+        lKneePole: [0.05, 0.08, -1],
+        rKneePole: [0.05, -0.08, -1],
+        lHand: [-1.02, 0.18, 1.06 - alt],
+        rHand: [-1.02, -0.18, 1.06 + alt],
+        lElbowPole: [0.25, 0.82, 0.28],
+        rElbowPole: [0.25, -0.82, 0.28],
         activeZones: ['back', 'glutes', 'core'],
       };
     },
@@ -1981,37 +1986,37 @@ function sampleArchetype3DRig(
       return {
         poseFeatureKo: '네발기기 테이블 중립 지지에서 반대쪽 팔·다리 수평 버드독 리치',
         trajectoryFocus: 'rHand',
-        pelvis: [0.18, 0, 0.46],
-        spineMid: [-0.04, 0, 0.47],
-        chest: [-0.26, 0, 0.48],
+        pelvis: [0.18, 0, 0.45],
+        spineMid: [-0.04, 0, 0.46],
+        chest: [-0.26, 0, 0.47],
         antHint: [-0.15, 0, -0.98],
-        lFoot: vlerp([0.52, -0.12, 0.09], [0.84, -0.1, 0.48], ts),
-        rFoot: [0.52, 0.12, 0.09],
-        lKneePole: [0.22, -0.12, 0.06],
-        rKneePole: [0.18, 0.12, 0.06],
-        lHand: [-0.28, -0.18, 0.09],
-        rHand: vlerp([-0.28, 0.18, 0.09], [-0.74, 0.16, 0.5], ts),
-        lElbowPole: [-0.18, -0.32, 0.28],
-        rElbowPole: [-0.52, 0.3, 0.44],
+        lFoot: vlerp([0.54, 0.11, 0.07], [0.93, 0.1, 0.46], ts),
+        rFoot: [0.54, -0.11, 0.07],
+        lKneePole: [-0.45, 0.08, -0.88],
+        rKneePole: [-0.85, -0.08, -0.55],
+        lHand: [-0.28, 0.17, 0.07],
+        rHand: vlerp([-0.28, -0.17, 0.07], [-0.76, -0.16, 0.48], ts),
+        lElbowPole: [0.35, 0.72, 0.28],
+        rElbowPole: [0.25, -0.78, 0.35],
         activeZones: ['core', 'glutes', 'back'],
       };
     }
     case 'mat-forearm-plank': {
       return {
-        poseFeatureKo: '전완·발끝(또는 무릎) 지지에서 머리~골반 일직선 플랭크 유지',
+        poseFeatureKo: '전완·무릎 지지에서 머리~골반 사선 일직선 코어 플랭크 유지',
         trajectoryFocus: 'pelvis',
-        pelvis: [0.12, 0, lerp(0.28, 0.36, ts)],
-        spineMid: [-0.1, 0, lerp(0.3, 0.37, ts)],
-        chest: [-0.32, 0, 0.38],
-        antHint: [-0.15, 0, -0.98],
-        lFoot: [0.76, -0.1, 0.1],
-        rFoot: [0.76, 0.1, 0.1],
-        lKneePole: [0.42, -0.1, 0.14],
-        rKneePole: [0.42, 0.1, 0.14],
-        lHand: [-0.54, -0.16, 0.09],
-        rHand: [-0.54, 0.16, 0.09],
-        lElbowPole: [-0.34, -0.24, 0.08],
-        rElbowPole: [-0.34, 0.24, 0.08],
+        pelvis: [0.1, 0, lerp(0.36, 0.4, ts)],
+        spineMid: [-0.12, 0, lerp(0.37, 0.4, ts)],
+        chest: [-0.34, 0, 0.39],
+        antHint: [-0.18, 0, -0.98],
+        lFoot: [0.68, 0.1, lerp(0.1, 0.16, ts)],
+        rFoot: [0.68, -0.1, lerp(0.1, 0.16, ts)],
+        lKneePole: [-0.38, 0.08, -0.92],
+        rKneePole: [-0.38, -0.08, -0.92],
+        lHand: [-0.58, 0.15, 0.07],
+        rHand: [-0.58, -0.15, 0.07],
+        lElbowPole: [0.55, 0.18, -0.82],
+        rElbowPole: [0.55, -0.18, -0.82],
         activeZones: ['core', 'shoulders'],
       };
     }
@@ -2019,18 +2024,18 @@ function sampleArchetype3DRig(
       return {
         poseFeatureKo: '엎드린 치골 지지와 어깨 옆 손바닥 지지로 상부 흉추 스완 아크 신전',
         trajectoryFocus: 'chest',
-        pelvis: [0.04, 0, 0.12],
-        spineMid: [-0.18, 0, lerp(0.14, 0.24, ts)],
-        chest: [-0.38, 0, lerp(0.16, 0.42, ts)],
+        pelvis: [0.02, 0, 0.11],
+        spineMid: [-0.2, 0, lerp(0.14, 0.24, ts)],
+        chest: [-0.4, 0, lerp(0.16, 0.42, ts)],
         antHint: [-lerp(0.2, 0.72, ts), 0, -0.86],
-        lFoot: [0.78, -0.11, 0.11],
-        rFoot: [0.78, 0.11, 0.11],
-        lKneePole: [0.42, -0.11, -0.2],
-        rKneePole: [0.42, 0.11, -0.2],
-        lHand: [-0.38, -0.24, 0.09],
-        rHand: [-0.38, 0.24, 0.09],
-        lElbowPole: [-0.14, -0.34, 0.22],
-        rElbowPole: [-0.14, 0.34, 0.22],
+        lFoot: [0.8, 0.1, 0.09],
+        rFoot: [0.8, -0.1, 0.09],
+        lKneePole: [0.05, 0.08, -1],
+        rKneePole: [0.05, -0.08, -1],
+        lHand: [-0.38, 0.24, 0.08],
+        rHand: [-0.38, -0.24, 0.08],
+        lElbowPole: [0.45, 0.75, 0.28],
+        rElbowPole: [0.45, -0.75, 0.28],
         activeZones: ['back', 'glutes', 'core'],
       };
     }
@@ -2115,10 +2120,10 @@ function sampleArchetype3DRig(
         rFoot: [0.82, 0.085, 0.57],
         lKneePole: [0.42, -0.085, 1.06],
         rKneePole: [0.42, 0.085, 1.06],
-        lHand: vlerp([cx + 0.22, -0.22, ct + 0.06], [cx + 0.02, -0.25, ct + 0.36], ts),
-        rHand: vlerp([cx + 0.22, 0.22, ct + 0.06], [cx + 0.02, 0.25, ct + 0.36], ts),
-        lElbowPole: [cx - 0.05, -0.36, 0.36],
-        rElbowPole: [cx - 0.05, 0.36, 0.36],
+        lHand: vlerp([cx + 0.22, -0.22, ct + 0.05], [cx + 0.02, -0.24, ct + 0.36], ts),
+        rHand: vlerp([cx + 0.22, 0.22, ct + 0.05], [cx + 0.02, 0.24, ct + 0.36], ts),
+        lElbowPole: [0.05, -0.82, -0.55],
+        rElbowPole: [0.05, 0.82, -0.55],
         activeZones: ['core', 'adductors'],
       };
     }
@@ -2180,12 +2185,12 @@ function sampleArchetype3DRig(
         antHint: [lerp(0, 0.42, ts), 0, 1],
         lFoot: vlerp([cx + 0.28, -0.09, ct + 0.44], [cx + 0.68, -0.07, ct + 0.5], ts),
         rFoot: vlerp([cx + 0.28, 0.09, ct + 0.44], [cx + 0.68, 0.07, ct + 0.5], ts),
-        lKneePole: [cx + 0.05, -0.1, 1.15],
-        rKneePole: [cx + 0.05, 0.1, 1.15],
+        lKneePole: [-0.72, -0.1, 0.68],
+        rKneePole: [-0.72, 0.1, 0.68],
         lHand: vlerp([cx - 0.14, -0.2, ct + 0.52], [cx + 0.2, -0.22, ct + 0.12], ts),
         rHand: vlerp([cx - 0.14, 0.2, ct + 0.52], [cx + 0.2, 0.22, ct + 0.12], ts),
-        lElbowPole: [cx - 0.15, -0.35, 0.35],
-        rElbowPole: [cx - 0.15, 0.35, 0.35],
+        lElbowPole: [-0.25, -0.82, 0.28],
+        rElbowPole: [-0.25, 0.82, 0.28],
         activeZones: ['core', 'shoulders', 'quads'],
       };
     }
@@ -2202,14 +2207,14 @@ function sampleArchetype3DRig(
         spineMid: [cx + 0.08, 0, bt + 0.3],
         chest: [cx + 0.09, 0, bt + 0.52],
         antHint: [-1, 0, 0],
-        lFoot: [cx - 0.32, -0.11, 0.45],
-        rFoot: [cx - 0.32, 0.11, 0.45],
-        lKneePole: [cx - 0.12, -0.14, bt + 0.22],
-        rKneePole: [cx - 0.12, 0.14, bt + 0.22],
-        lHand: vlerp([cx - 0.22, -0.18, bt + 0.34], [cx + 0.14, -0.22, bt + 0.28], ts),
-        rHand: vlerp([cx - 0.22, 0.18, bt + 0.34], [cx + 0.14, 0.22, bt + 0.28], ts),
-        lElbowPole: [cx + 0.28, -0.36, bt + 0.32],
-        rElbowPole: [cx + 0.28, 0.36, bt + 0.32],
+        lFoot: [cx - 0.32, 0.11, 0.45],
+        rFoot: [cx - 0.32, -0.11, 0.45],
+        lKneePole: [-0.35, 0.12, 0.92],
+        rKneePole: [-0.35, -0.12, 0.92],
+        lHand: vlerp([cx - 0.22, 0.18, bt + 0.34], [cx + 0.14, 0.22, bt + 0.28], ts),
+        rHand: vlerp([cx - 0.22, -0.18, bt + 0.34], [cx + 0.14, -0.22, bt + 0.28], ts),
+        lElbowPole: [0.45, 0.78, -0.38],
+        rElbowPole: [0.45, -0.78, -0.38],
         activeZones: ['back', 'shoulders', 'core'],
       };
     }
@@ -2227,12 +2232,12 @@ function sampleArchetype3DRig(
         antHint: vlerp([0.96, 0, 0.2], [0.68, 0, 0.72], ts),
         lFoot: [0.84, -0.1, 0.54],
         rFoot: vlerp([0.52, 0.09, 0.94], [0.1, 0.08, 1.36], ts),
-        lKneePole: [0.52, -0.1, 0.88],
-        rKneePole: [0.06, 0.1, 1.18],
+        lKneePole: [0.45, -0.12, 0.88],
+        rKneePole: [-0.82, 0.18, 0.52],
         lHand: vlerp([0.36, -0.1, 0.94], [0.08, -0.08, 1.24], ts),
         rHand: vlerp([0.36, 0.14, 0.94], [0.08, 0.14, 1.24], ts),
-        lElbowPole: [0.02, -0.32, bt + 0.42],
-        rElbowPole: [0.02, 0.32, bt + 0.42],
+        lElbowPole: [-0.25, -0.75, 0.35],
+        rElbowPole: [-0.25, 0.75, 0.35],
         activeZones: ['core', 'quads'],
       };
     }
@@ -2280,8 +2285,8 @@ function sampleArchetype3DRig(
           : hasTwist
             ? vlerp([cx + 0.24, 0.16, bt + 0.44], [cx - 0.28, 0.28, bt + 0.44], ts)
             : vlerp([cx + 0.24, 0.16, bt + 0.44], [cx - 0.08, 0.16, bt + 0.46], ts),
-        lElbowPole: [cx - 0.05, -0.34, bt + 0.38],
-        rElbowPole: [cx - 0.05, 0.34, bt + 0.38],
+        lElbowPole: [-0.35, -0.82, -0.35],
+        rElbowPole: [-0.35, 0.82, -0.35],
         activeZones: ['core', 'obliques'],
       };
     }
@@ -2295,25 +2300,25 @@ function sampleArchetype3DRig(
         carriageX: cx,
         withLongbox: true,
         ropeToHands: true,
-        pelvis: [cx + 0.12, 0, bt + 0.07],
-        spineMid: [cx - 0.08, 0, bt + lerp(0.08, 0.18, ts)],
-        chest: [cx - 0.28, 0, bt + lerp(0.11, 0.34, ts)],
+        pelvis: [cx + 0.1, 0, bt + 0.07],
+        spineMid: [cx - 0.1, 0, bt + lerp(0.08, 0.18, ts)],
+        chest: [cx - 0.3, 0, bt + lerp(0.11, 0.34, ts)],
         antHint: [-lerp(0.32, 0.74, ts), 0, -0.82],
-        lFoot: [cx + 0.68, -0.09, bt + lerp(0.08, 0.2, ts)],
-        rFoot: [cx + 0.68, 0.09, bt + lerp(0.08, 0.2, ts)],
-        lKneePole: [cx + 0.42, -0.09, bt - 0.15],
-        rKneePole: [cx + 0.42, 0.09, bt - 0.15],
-        lHand: [lerp(cx - 0.56, cx - 0.04, ts), -0.2 - sweepY, bt + lerp(0.06, 0.22, ts)],
-        rHand: [lerp(cx - 0.56, cx - 0.04, ts), 0.2 + sweepY, bt + lerp(0.06, 0.22, ts)],
-        lElbowPole: [cx - 0.24, -0.4, bt + 0.16],
-        rElbowPole: [cx - 0.24, 0.4, bt + 0.16],
+        lFoot: [cx + 0.88, 0.09, bt + lerp(0.06, 0.16, ts)],
+        rFoot: [cx + 0.88, -0.09, bt + lerp(0.06, 0.16, ts)],
+        lKneePole: [0.08, 0.08, -1],
+        rKneePole: [0.08, -0.08, -1],
+        lHand: [lerp(cx - 0.58, cx - 0.06, ts), 0.2 + sweepY, bt + lerp(0.06, 0.22, ts)],
+        rHand: [lerp(cx - 0.58, cx - 0.06, ts), -0.2 - sweepY, bt + lerp(0.06, 0.22, ts)],
+        lElbowPole: [0.25, 0.85, 0.32],
+        rElbowPole: [0.25, -0.85, 0.32],
         activeZones: ['back', 'shoulders', 'glutes'],
       };
     }
     case 'reformer-longbox-swimming': {
       const cx = lerp(0.12, 0.06, ts);
       const bt = 0.64;
-      const alt = Math.cos(rawT * Math.PI * 3) * 0.13;
+      const alt = Math.cos(rawT * Math.PI * 3) * 0.09;
       return {
         poseFeatureKo: '롱박스 엎드린 몸통 부양 지지에서 반대쪽 팔·다리 교차 공중 스위밍',
         trajectoryFocus: 'rHand',
@@ -2323,14 +2328,14 @@ function sampleArchetype3DRig(
         spineMid: [cx - 0.1, 0, bt + lerp(0.1, 0.16, ts)],
         chest: [cx - 0.3, 0, bt + lerp(0.14, 0.25, ts)],
         antHint: [-0.48, 0, -0.86],
-        lFoot: [cx + 0.72, -0.1, bt + 0.18 + alt],
-        rFoot: [cx + 0.72, 0.1, bt + 0.18 - alt],
-        lKneePole: [cx + 0.42, -0.1, bt - 0.14],
-        rKneePole: [cx + 0.42, 0.1, bt - 0.14],
-        lHand: [cx - 0.68, -0.18, bt + 0.26 - alt],
-        rHand: [cx - 0.68, 0.18, bt + 0.26 + alt],
-        lElbowPole: [cx - 0.46, -0.32, bt + 0.2],
-        rElbowPole: [cx - 0.46, 0.32, bt + 0.2],
+        lFoot: [cx + 0.86, 0.1, bt + 0.14 + alt],
+        rFoot: [cx + 0.86, -0.1, bt + 0.14 - alt],
+        lKneePole: [0.08, 0.08, -1],
+        rKneePole: [0.08, -0.08, -1],
+        lHand: [cx - 0.68, 0.18, bt + 0.24 - alt],
+        rHand: [cx - 0.68, -0.18, bt + 0.24 + alt],
+        lElbowPole: [0.25, 0.82, 0.32],
+        rElbowPole: [0.25, -0.82, 0.32],
         activeZones: ['back', 'glutes', 'core'],
       };
     }
@@ -2383,8 +2388,8 @@ function sampleArchetype3DRig(
           0.08 + spread,
           lerp(bt + 0.44, bt + 0.52, ts),
         ],
-        lKneePole: [cx - 0.08, -0.14, 1.24],
-        rKneePole: [cx - 0.08, 0.14, 1.24],
+        lKneePole: [-0.75, -0.16, 0.65],
+        rKneePole: [-0.75, 0.16, 0.65],
         lHand: [
           lerp(cx - 0.24, cx + 0.28, ts),
           -0.16 - spread * 1.1,
@@ -2395,8 +2400,8 @@ function sampleArchetype3DRig(
           0.16 + spread * 1.1,
           lerp(bt + 0.48, bt + 0.34, ts),
         ],
-        lElbowPole: [cx - 0.26, -0.36, bt + 0.24],
-        rElbowPole: [cx - 0.26, 0.36, bt + 0.24],
+        lElbowPole: [-0.26, -0.78, 0.28],
+        rElbowPole: [-0.26, 0.78, 0.28],
         activeZones: ['core', 'adductors', 'shoulders'],
       };
     }
@@ -2412,22 +2417,22 @@ function sampleArchetype3DRig(
         carriageX: cx,
         withLongbox: true,
         ropeToHands: !isSwanPrepOnly,
-        pelvis: [cx + 0.12, 0, bt + 0.07],
-        spineMid: [cx - 0.08, 0, bt + lerp(0.08, 0.17, ts)],
-        chest: [cx - 0.28, 0, bt + lerp(0.1, isSwanPrepOnly ? 0.25 : 0.32, ts)],
+        pelvis: [cx + 0.1, 0, bt + 0.07],
+        spineMid: [cx - 0.1, 0, bt + lerp(0.08, 0.17, ts)],
+        chest: [cx - 0.3, 0, bt + lerp(0.1, isSwanPrepOnly ? 0.25 : 0.32, ts)],
         antHint: [-lerp(0.3, 0.72, ts), 0, -0.82],
-        lFoot: [cx + 0.68, -0.09, bt + lerp(0.06, 0.18, ts)],
-        rFoot: [cx + 0.68, 0.09, bt + lerp(0.06, 0.18, ts)],
-        lKneePole: [cx + 0.42, -0.09, bt - 0.15],
-        rKneePole: [cx + 0.42, 0.09, bt - 0.15],
+        lFoot: [cx + 0.88, 0.09, bt + lerp(0.05, 0.15, ts)],
+        rFoot: [cx + 0.88, -0.09, bt + lerp(0.05, 0.15, ts)],
+        lKneePole: [0.08, 0.08, -1],
+        rKneePole: [0.08, -0.08, -1],
         lHand: isSwanPrepOnly
-          ? vlerp([cx - 0.34, -0.22, bt + 0.04], [cx - 0.26, -0.22, bt + 0.14], ts)
-          : vlerp([cx - 0.48, -0.22, bt - 0.08], [cx + 0.08, -0.22, bt + 0.16], ts),
-        rHand: isSwanPrepOnly
           ? vlerp([cx - 0.34, 0.22, bt + 0.04], [cx - 0.26, 0.22, bt + 0.14], ts)
           : vlerp([cx - 0.48, 0.22, bt - 0.08], [cx + 0.08, 0.22, bt + 0.16], ts),
-        lElbowPole: [cx - 0.12, -0.34, bt + 0.18],
-        rElbowPole: [cx - 0.12, 0.34, bt + 0.18],
+        rHand: isSwanPrepOnly
+          ? vlerp([cx - 0.34, -0.22, bt + 0.04], [cx - 0.26, -0.22, bt + 0.14], ts)
+          : vlerp([cx - 0.48, -0.22, bt - 0.08], [cx + 0.08, -0.22, bt + 0.16], ts),
+        lElbowPole: [0.35, 0.82, 0.32],
+        rElbowPole: [0.35, -0.82, 0.32],
         activeZones: ['back', 'shoulders', 'glutes'],
       };
     }
@@ -2438,18 +2443,18 @@ function sampleArchetype3DRig(
         trajectoryFocus: 'rHand',
         carriageX: cx,
         ropeToHands: true,
-        pelvis: [cx + 0.1, 0, 0.86],
-        spineMid: [cx + 0.09, 0, 1.08],
-        chest: [cx + 0.08, 0, 1.3],
+        pelvis: [cx + 0.06, 0, 0.81],
+        spineMid: [cx + 0.06, 0, 1.03],
+        chest: [cx + 0.06, 0, 1.25],
         antHint: [-1, 0, 0],
-        lFoot: [cx + 0.4, -0.11, 0.45],
-        rFoot: [cx + 0.4, 0.11, 0.45],
-        lKneePole: [cx - 0.12, -0.11, 0.44],
-        rKneePole: [cx - 0.12, 0.11, 0.44],
-        lHand: vlerp([cx - 0.08, -0.2, 1.06], [cx + 0.22, -0.2, 0.82], ts),
-        rHand: vlerp([cx - 0.08, 0.2, 1.06], [cx + 0.22, 0.2, 0.82], ts),
-        lElbowPole: [cx + 0.16, -0.26, 1.02],
-        rElbowPole: [cx + 0.16, 0.26, 1.02],
+        lFoot: [cx + 0.44, 0.11, 0.44],
+        rFoot: [cx + 0.44, -0.11, 0.44],
+        lKneePole: [-0.85, 0.08, -0.55],
+        rKneePole: [-0.85, -0.08, -0.55],
+        lHand: vlerp([cx - 0.1, 0.2, 1.02], [cx + 0.22, 0.2, 0.8], ts),
+        rHand: vlerp([cx - 0.1, -0.2, 1.02], [cx + 0.22, -0.2, 0.8], ts),
+        lElbowPole: [0.45, 0.72, -0.45],
+        rElbowPole: [0.45, -0.72, -0.45],
         activeZones: ['shoulders', 'back', 'core'],
       };
     }
@@ -2459,18 +2464,18 @@ function sampleArchetype3DRig(
         poseFeatureKo: '프레임·풋바 방향 네발기기 지지에서 하복부 C커브 스쿱 리버스 앱 캐리지 당김',
         trajectoryFocus: 'pelvis',
         carriageX: cx,
-        pelvis: [cx + 0.12, 0, lerp(0.76, 0.84, ts)],
-        spineMid: [lerp(cx + 0.34, cx + 0.28, ts), 0, lerp(0.78, 0.88, ts)],
-        chest: [0.58, 0, 0.8],
-        antHint: [0.22, 0, -0.96],
+        pelvis: [cx + 0.16, 0, lerp(0.83, 0.87, ts)],
+        spineMid: [lerp(cx + 0.36, cx + 0.3, ts), 0, lerp(0.84, 0.91, ts)],
+        chest: [0.58, 0, 0.83],
+        antHint: [0.28, 0, -0.95],
         lFoot: [cx - 0.2, -0.11, 0.45],
         rFoot: [cx - 0.2, 0.11, 0.45],
-        lKneePole: [cx + 0.24, -0.11, 0.43],
-        rKneePole: [cx + 0.24, 0.11, 0.43],
+        lKneePole: [0.85, -0.08, -0.55],
+        rKneePole: [0.85, 0.08, -0.55],
         lHand: [0.82, -0.2, 0.44],
         rHand: [0.82, 0.2, 0.44],
-        lElbowPole: [0.58, -0.34, 0.64],
-        rElbowPole: [0.58, 0.34, 0.64],
+        lElbowPole: [-0.35, -0.78, 0.35],
+        rElbowPole: [-0.35, 0.78, 0.35],
         activeZones: ['core', 'obliques', 'shoulders'],
       };
     }
@@ -2479,67 +2484,66 @@ function sampleArchetype3DRig(
         `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`,
       );
       const cx = lerp(0.22, -0.1, ts);
-      const kz = kneesOff ? 0.5 : 0.44;
       return {
         poseFeatureKo: kneesOff
           ? '풋바 양손·숄더블록 발볼 지지에서 무릎 4cm 호버링 유지 니즈 오프 왕복'
           : '풋바 양손·캐리지 무릎 지지에서 상체 C커브 고정 고관절 니 스트레치 왕복',
         trajectoryFocus: 'pelvis',
         carriageX: cx,
-        pelvis: [cx + 0.18, 0, lerp(0.78, 0.74, ts) + (kneesOff ? 0.05 : 0)],
-        spineMid: [lerp(0.48, 0.38, ts), 0, 0.84 + (kneesOff ? 0.03 : 0)],
-        chest: [0.66, 0, 0.86],
+        pelvis: [cx + 0.2, 0, lerp(0.84, 0.8, ts) + (kneesOff ? 0.05 : 0)],
+        spineMid: [lerp(0.48, 0.38, ts), 0, 0.87 + (kneesOff ? 0.03 : 0)],
+        chest: [0.66, 0, 0.88],
         antHint: [0.28, 0, -0.95],
-        lFoot: [cx - 0.16, -0.09, 0.46],
-        rFoot: [cx - 0.16, 0.09, 0.46],
-        lKneePole: [cx + 0.24, -0.1, kz],
-        rKneePole: [cx + 0.24, 0.1, kz],
-        lHand: [0.825, -0.17, 0.58],
-        rHand: [0.825, 0.17, 0.58],
-        lElbowPole: [0.58, -0.32, 0.76],
-        rElbowPole: [0.58, 0.32, 0.76],
+        lFoot: [cx - 0.16, 0.09, 0.46],
+        rFoot: [cx - 0.16, -0.09, 0.46],
+        lKneePole: [0.92, 0.1, kneesOff ? -0.08 : -0.18],
+        rKneePole: [0.92, -0.1, kneesOff ? -0.08 : -0.18],
+        lHand: [0.825, 0.17, 0.58],
+        rHand: [0.825, -0.17, 0.58],
+        lElbowPole: [-0.35, 0.75, 0.45],
+        rElbowPole: [-0.35, -0.75, 0.45],
         activeZones: ['core', 'quads', 'shoulders'],
       };
     }
     case 'reformer-down-stretch': {
-      const cx = lerp(0.22, -0.14, ts);
+      const cx = lerp(0.22, -0.12, ts);
       return {
         poseFeatureKo: '캐리지 무릎·풋바 양손 지지에서 골반 전진 및 상부 흉추 사선 다운 스트레치 신전',
         trajectoryFocus: 'chest',
         carriageX: cx,
-        pelvis: [lerp(cx + 0.26, cx + 0.38, ts), 0, lerp(0.76, 0.7, ts)],
-        spineMid: [lerp(0.54, 0.46, ts), 0, lerp(0.92, 0.9, ts)],
-        chest: [lerp(0.68, 0.62, ts), 0, lerp(1.08, 1.14, ts)],
-        antHint: [0.84, 0, lerp(0.22, 0.52, ts)],
-        lFoot: [cx - 0.16, -0.09, 0.46],
-        rFoot: [cx - 0.16, 0.09, 0.46],
-        lKneePole: [cx + 0.22, -0.1, 0.43],
-        rKneePole: [cx + 0.22, 0.1, 0.43],
+        pelvis: [lerp(cx + 0.18, cx + 0.3, ts), 0, lerp(0.83, 0.77, ts)],
+        spineMid: [lerp(0.5, 0.44, ts), 0, lerp(0.95, 0.92, ts)],
+        chest: [lerp(0.68, 0.62, ts), 0, lerp(1.1, 1.15, ts)],
+        antHint: vlerp([0.78, 0, -0.62], [0.88, 0, -0.45], ts),
+        lFoot: [cx - 0.16, -0.1, 0.46],
+        rFoot: [cx - 0.16, 0.1, 0.46],
+        lKneePole: [0.88, -0.08, -0.45],
+        rKneePole: [0.88, 0.08, -0.45],
         lHand: [0.825, -0.18, 0.58],
         rHand: [0.825, 0.18, 0.58],
-        lElbowPole: [0.64, -0.32, 0.82],
-        rElbowPole: [0.64, 0.32, 0.82],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [-0.35, 0.75, 0.35],
         activeZones: ['back', 'glutes', 'shoulders'],
       };
     }
     case 'reformer-kneeling-lunge': {
-      const cx = lerp(0.22, -0.16, ts);
+      const cx = lerp(0.22, -0.14, ts);
       return {
         poseFeatureKo: '바닥 지지발과 캐리지 뒷무릎 지지에서 장요근·햄스트링 이브스 런지 스트레치',
         trajectoryFocus: 'pelvis',
         carriageX: cx,
-        pelvis: [lerp(0.46, 0.34, ts), -0.18, lerp(0.78, 0.68, ts)],
-        spineMid: [lerp(0.54, 0.46, ts), -0.16, lerp(0.98, 0.9, ts)],
-        chest: [lerp(0.62, 0.58, ts), -0.14, lerp(1.18, 1.12, ts)],
-        antHint: [0.94, -0.15, 0.15],
+        pelvis: [lerp(0.46, 0.34, ts), -0.18, lerp(0.82, 0.72, ts)],
+        spineMid: [lerp(0.56, 0.48, ts), -0.16, lerp(0.94, 0.86, ts)],
+        chest: [lerp(0.68, 0.62, ts), -0.14, lerp(1.04, 1.0, ts)],
+        antHint: [0.94, -0.1, -0.25],
         lFoot: [0.68, -0.34, 0.05],
         rFoot: [cx - 0.16, -0.06, 0.46],
-        lKneePole: [0.96, -0.34, 0.48],
-        rKneePole: [cx + 0.18, -0.1, 0.42],
+        lKneePole: [0.92, -0.12, 0.35],
+        rKneePole: [0.94, 0.06, 0.08],
         lHand: [0.825, -0.22, 0.58],
         rHand: [0.825, 0.06, 0.58],
-        lElbowPole: [0.56, -0.36, 0.82],
-        rElbowPole: [0.56, 0.2, 0.82],
+        lElbowPole: [-0.35, -0.75, 0.45],
+        rElbowPole: [-0.35, 0.75, 0.45],
         activeZones: ['quads', 'glutes', 'core'],
       };
     }
@@ -2550,18 +2554,18 @@ function sampleArchetype3DRig(
         trajectoryFocus: 'rHand',
         carriageX: cx,
         ropeToHands: true,
-        pelvis: [cx + 0.1, 0, 0.86],
-        spineMid: [cx + 0.1, 0, 1.08],
-        chest: [cx + 0.1, 0, 1.3],
+        pelvis: [cx + 0.06, 0, 0.81],
+        spineMid: [cx + 0.06, 0, 1.03],
+        chest: [cx + 0.06, 0, 1.25],
         antHint: [-1, 0, 0],
-        lFoot: [cx + 0.4, -0.11, 0.45],
-        rFoot: [cx + 0.4, 0.11, 0.45],
-        lKneePole: [cx - 0.12, -0.11, 0.44],
-        rKneePole: [cx - 0.12, 0.11, 0.44],
-        lHand: vlerp([cx - 0.12, -0.22, 0.96], [cx + 0.24, -0.22, 0.84], ts),
-        rHand: vlerp([cx - 0.12, 0.22, 0.96], [cx + 0.24, 0.22, 0.84], ts),
-        lElbowPole: [cx + 0.18, -0.34, 0.98],
-        rElbowPole: [cx + 0.18, 0.34, 0.98],
+        lFoot: [cx + 0.44, 0.11, 0.44],
+        rFoot: [cx + 0.44, -0.11, 0.44],
+        lKneePole: [-0.85, 0.08, -0.55],
+        rKneePole: [-0.85, -0.08, -0.55],
+        lHand: vlerp([cx - 0.14, 0.22, 0.94], [cx + 0.24, 0.22, 0.82], ts),
+        rHand: vlerp([cx - 0.14, -0.22, 0.94], [cx + 0.24, -0.22, 0.82], ts),
+        lElbowPole: [0.45, 0.75, -0.45],
+        rElbowPole: [0.45, -0.75, -0.45],
         activeZones: ['back', 'shoulders', 'core'],
       };
     }
@@ -2646,12 +2650,12 @@ function sampleArchetype3DRig(
         antHint: vlerp([0, 0, 1], [-0.55, 0, 0.85], ts),
         lFoot: vlerp([cx + 0.62, -0.08, ct + 0.58], [cx - 0.18, -0.08, ct + 0.72], ts),
         rFoot: vlerp([cx + 0.62, 0.08, ct + 0.58], [cx - 0.18, 0.08, ct + 0.72], ts),
-        lKneePole: [-0.4, -0.06, 0.85],
-        rKneePole: [-0.4, 0.06, 0.85],
-        lHand: [cx + 0.2, -0.22, ct + 0.04],
-        rHand: [cx + 0.2, 0.22, ct + 0.04],
-        lElbowPole: [0.02, -0.35, -0.25],
-        rElbowPole: [0.02, 0.35, -0.25],
+        lKneePole: [-0.88, -0.34, 0.28],
+        rKneePole: [-0.88, 0.34, 0.28],
+        lHand: [cx + 0.18, -0.22, ct + 0.04],
+        rHand: [cx + 0.18, 0.22, ct + 0.04],
+        lElbowPole: [0.02, -0.75, -0.25],
+        rElbowPole: [0.02, 0.75, -0.25],
         activeZones: ['core', 'glutes'],
       };
     }
@@ -2724,23 +2728,23 @@ function sampleArchetype3DRig(
       };
     }
     case 'reformer-lunge-arabesque': {
-      const cx = lerp(0.24, -0.16, ts);
+      const cx = lerp(0.22, -0.12, ts);
       return {
         poseFeatureKo: '바닥 지지발 고정 런지에서 뒷다리 후상방 단측성 아라베스크 힙 익스텐션',
         trajectoryFocus: 'rFoot',
         carriageX: cx,
-        pelvis: [0.46, -0.18, lerp(0.84, 0.88, ts)],
-        spineMid: [0.58, -0.16, lerp(1.0, 0.96, ts)],
-        chest: [0.7, -0.14, lerp(1.16, 1.04, ts)],
-        antHint: [0.85, -0.15, -0.5],
+        pelvis: [0.44, -0.18, lerp(0.82, 0.84, ts)],
+        spineMid: [0.58, -0.16, lerp(0.93, 0.91, ts)],
+        chest: [0.72, -0.14, lerp(1.03, 0.98, ts)],
+        antHint: [0.85, -0.1, -0.5],
         lFoot: [0.64, -0.34, 0.05],
-        rFoot: vlerp([cx - 0.12, -0.06, 0.46], [-0.28, -0.1, 0.98], ts),
-        lKneePole: [0.95, -0.34, 0.5],
-        rKneePole: [0.15, -0.12, 0.62],
+        rFoot: vlerp([cx - 0.16, -0.06, 0.46], [-0.31, -0.06, 0.92], ts),
+        lKneePole: [0.92, -0.12, 0.35],
+        rKneePole: [0.22, 0.08, -0.96],
         lHand: [0.825, -0.22, 0.58],
-        rHand: [0.825, 0.08, 0.58],
-        lElbowPole: [0.5, -0.36, 0.84],
-        rElbowPole: [0.5, 0.2, 0.84],
+        rHand: [0.825, 0.06, 0.58],
+        lElbowPole: [-0.35, -0.75, 0.45],
+        rElbowPole: [-0.35, 0.75, 0.45],
         activeZones: ['glutes', 'quads', 'core'],
       };
     }
@@ -2748,25 +2752,35 @@ function sampleArchetype3DRig(
       const isRussian = /russian|러시안/i.test(
         `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`,
       );
-      const cx = lerp(0.22, -0.22, ts);
+      const cx = lerp(0.22, -0.18, ts);
       return {
         poseFeatureKo: isRussian
           ? '기구 위 앞·뒤 발 스플릿 정렬에서 핸즈프리 코어 수직 러시안 스플릿 밸런스'
           : '풋바 앞발·숄더블록 뒷발 지지에서 골반 스퀘어 리포머 프론트 스플릿 신장',
         trajectoryFocus: 'rFoot',
         carriageX: cx,
-        pelvis: [lerp(0.46, 0.28, ts), 0, lerp(0.98, 0.82, ts)],
-        spineMid: [lerp(0.48, 0.3, ts), 0, lerp(1.2, 1.04, ts)],
-        chest: [lerp(0.5, 0.32, ts), 0, lerp(1.42, 1.26, ts)],
-        antHint: [1, 0, 0],
-        lFoot: [0.88, -0.06, 0.46],
-        rFoot: [cx - 0.16, 0.06, 0.46],
-        lKneePole: [1.08, -0.06, 0.78],
-        rKneePole: [cx + 0.14, 0.06, 0.72],
-        lHand: isRussian ? vlerp([0.54, -0.24, 1.32], [0.36, -0.42, 1.24], ts) : [0.825, -0.18, 0.58],
-        rHand: isRussian ? vlerp([0.54, 0.24, 1.32], [0.36, 0.42, 1.24], ts) : [0.825, 0.18, 0.58],
-        lElbowPole: [0.42, -0.34, 1.02],
-        rElbowPole: [0.42, 0.34, 1.02],
+        pelvis: isRussian
+          ? [lerp(0.46, 0.3, ts), 0, lerp(0.98, 0.84, ts)]
+          : [lerp(0.44, 0.28, ts), 0, lerp(0.92, 0.76, ts)],
+        spineMid: isRussian
+          ? [lerp(0.48, 0.32, ts), 0, lerp(1.2, 1.06, ts)]
+          : [lerp(0.56, 0.44, ts), 0, lerp(0.98, 0.9, ts)],
+        chest: isRussian
+          ? [lerp(0.5, 0.34, ts), 0, lerp(1.42, 1.28, ts)]
+          : [lerp(0.68, 0.62, ts), 0, lerp(1.02, 0.98, ts)],
+        antHint: isRussian ? [1, 0, 0] : [0.75, 0, -0.65],
+        lFoot: [0.86, -0.06, 0.46],
+        rFoot: [cx - 0.14, 0.06, 0.46],
+        lKneePole: [0.92, -0.06, 0.38],
+        rKneePole: [0.65, 0.06, -0.72],
+        lHand: isRussian
+          ? vlerp([0.54, -0.24, 1.32], [0.36, -0.42, 1.24], ts)
+          : [0.825, -0.18, 0.58],
+        rHand: isRussian
+          ? vlerp([0.54, 0.24, 1.32], [0.36, 0.42, 1.24], ts)
+          : [0.825, 0.18, 0.58],
+        lElbowPole: [-0.35, -0.75, 0.45],
+        rElbowPole: [-0.35, 0.75, 0.45],
         activeZones: ['quads', 'glutes', 'core'],
       };
     }
@@ -2782,12 +2796,12 @@ function sampleArchetype3DRig(
         antHint: vlerp([0.2, -0.96, -0.2], [0.35, -0.82, 0.44], ts),
         lFoot: [cx - 0.14, 0.04, 0.47],
         rFoot: [cx - 0.1, -0.05, 0.48],
-        lKneePole: [cx + 0.18, -0.26, 0.64],
-        rKneePole: [cx + 0.22, -0.28, 0.66],
-        lHand: [0.825, -0.16, 0.58],
-        rHand: [0.825, 0.12, 0.58],
-        lElbowPole: [0.54, -0.3, 0.82],
-        rElbowPole: [0.54, 0.28, 0.82],
+        lKneePole: [0.45, -0.78, 0.25],
+        rKneePole: [0.45, -0.82, 0.25],
+        lHand: [0.825, 0.14, 0.58],
+        rHand: [0.825, -0.14, 0.58],
+        lElbowPole: [-0.35, 0.75, 0.45],
+        rElbowPole: [-0.35, -0.75, 0.45],
         activeZones: ['obliques', 'core', 'shoulders'],
       };
     }
@@ -2813,23 +2827,23 @@ function sampleArchetype3DRig(
       };
     }
     case 'reformer-stomach-massage-twist': {
-      const cx = lerp(0.24, -0.14, ts);
+      const cx = lerp(0.24, -0.12, ts);
       return {
         poseFeatureKo: '양 좌골 균등 지지에서 캐리지 프레스와 단측성 흉추 회전 리치 업 & 트위스트',
         trajectoryFocus: 'rHand',
         carriageX: cx,
         pelvis: [cx + 0.22, 0, 0.48],
         spineMid: [cx + 0.2, 0, 0.7],
-        chest: [cx + 0.18, lerp(0, 0.05, ts), 0.92],
-        antHint: vlerp([1, 0, 0], [0.64, -0.76, 0.08], ts),
+        chest: [cx + 0.18, lerp(0, 0.04, ts), 0.92],
+        antHint: vlerp([1, 0, 0], [0.68, 0.72, 0.08], ts),
         lFoot: [0.825, -0.07, lerp(0.56, 0.62, ts)],
         rFoot: [0.825, 0.07, lerp(0.56, 0.62, ts)],
-        lKneePole: [0.55, -0.18, lerp(0.96, 0.72, ts)],
-        rKneePole: [0.55, 0.18, lerp(0.96, 0.72, ts)],
-        lHand: vlerp([cx + 0.42, -0.16, 0.88], [0.72, -0.14, 0.98], ts),
-        rHand: vlerp([cx + 0.42, 0.16, 0.88], [cx - 0.16, 0.38, 1.04], ts),
-        lElbowPole: [cx + 0.28, -0.32, 0.82],
-        rElbowPole: [cx + 0.02, 0.36, 0.88],
+        lKneePole: [0.35, -0.18, lerp(0.96, 0.72, ts)],
+        rKneePole: [0.35, 0.18, lerp(0.96, 0.72, ts)],
+        lHand: vlerp([cx + 0.42, -0.16, 0.88], [cx + 0.52, -0.1, 1.02], ts),
+        rHand: vlerp([cx + 0.42, 0.16, 0.88], [cx - 0.14, 0.38, 1.06], ts),
+        lElbowPole: [-0.15, -0.75, 0.45],
+        rElbowPole: [-0.25, 0.75, 0.45],
         activeZones: ['obliques', 'core', 'quads'],
       };
     }
@@ -2846,12 +2860,12 @@ function sampleArchetype3DRig(
         antHint: vlerp([0, -1, 0], [0.58, -0.81, 0], ts),
         lFoot: [cx + 0.02, -0.16, 0.45],
         rFoot: [cx + 0.22, -0.16, 0.45],
-        lKneePole: [cx - 0.08, -0.34, 0.5],
-        rKneePole: [cx + 0.3, -0.34, 0.5],
+        lKneePole: [-0.25, -0.85, 0.25],
+        rKneePole: [0.25, -0.85, 0.25],
         lHand: vlerp([cx - 0.06, -0.18, 0.82], [cx + 0.36, -0.24, 0.88], ts),
         rHand: [cx + 0.18, 0.18, 0.52],
-        lElbowPole: [cx - 0.16, -0.34, 0.76],
-        rElbowPole: [cx + 0.22, 0.32, 0.68],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [0.25, 0.75, 0.35],
         activeZones: ['obliques', 'shoulders', 'core'],
       };
     }
@@ -2861,18 +2875,18 @@ function sampleArchetype3DRig(
         poseFeatureKo: '바닥 지지발 고정과 뒷다리 캐리지 숄더블록 후방 스쿠터·런지 프레스',
         trajectoryFocus: 'rFoot',
         carriageX: cx,
-        pelvis: [0.42, -0.18, lerp(0.84, 0.78, ts)],
-        spineMid: [0.52, -0.16, lerp(1.02, 0.96, ts)],
-        chest: [0.64, -0.14, lerp(1.2, 1.12, ts)],
-        antHint: [0.85, -0.2, -0.45],
+        pelvis: [0.44, -0.18, lerp(0.82, 0.78, ts)],
+        spineMid: [0.56, -0.16, lerp(0.94, 0.9, ts)],
+        chest: [0.68, -0.14, lerp(1.04, 1.01, ts)],
+        antHint: [0.88, -0.1, -0.45],
         lFoot: [0.64, -0.34, 0.05],
         rFoot: [cx - 0.12, -0.06, 0.45],
-        lKneePole: [0.95, -0.34, 0.5],
-        rKneePole: [0.2, -0.1, 0.2],
+        lKneePole: [0.92, -0.12, 0.35],
+        rKneePole: [0.92, 0.08, 0.08],
         lHand: [0.82, -0.2, 0.58],
-        rHand: [0.82, 0.08, 0.58],
-        lElbowPole: [0.45, -0.35, 0.85],
-        rElbowPole: [0.45, 0.2, 0.85],
+        rHand: [0.82, 0.06, 0.58],
+        lElbowPole: [-0.35, -0.75, 0.45],
+        rElbowPole: [-0.35, 0.75, 0.45],
         activeZones: ['glutes', 'quads'],
       };
     }
@@ -2933,7 +2947,7 @@ function sampleArchetype3DRig(
     case 'chair-goingup-side': {
       const pdeg = lerp(8, 28, ts);
       const [px, pz] = chairPedalPos(pdeg);
-      const liftZ = lerp(0.98, 1.31, ts);
+      const liftZ = lerp(0.84, 1.28, ts);
       return {
         poseFeatureKo: '체어 시트 외회전 지지 다리와 측면 골반 수평 유지 고잉 업 사이드 상승',
         trajectoryFocus: 'pelvis',
@@ -2945,12 +2959,12 @@ function sampleArchetype3DRig(
         antHint: [0, -1, 0],
         lFoot: [-0.08, 0.02, 0.63],
         rFoot: [px, -0.04, pz + 0.04],
-        lKneePole: [-0.08, -0.38, 0.96],
-        rKneePole: [0.22, -0.34, 0.72],
+        lKneePole: [-0.15, -0.92, 0.25],
+        rKneePole: [0.25, -0.92, 0.25],
         lHand: [-0.02, -0.28, 1.27],
-        rHand: [0.12, -0.26, lerp(1.16, 1.46, ts)],
-        lElbowPole: [-0.14, -0.4, 1.18],
-        rElbowPole: [0.18, -0.4, 1.32],
+        rHand: [0.12, -0.26, lerp(1.14, 1.46, ts)],
+        lElbowPole: [-0.35, -0.78, 0.35],
+        rElbowPole: [0.35, -0.78, 0.35],
         activeZones: ['glutes', 'adductors', 'obliques'],
       };
     }
@@ -2961,18 +2975,18 @@ function sampleArchetype3DRig(
         poseFeatureKo: '체어 앞 바닥 한 발 수직 지지와 반대 발 단측성 페달 펌프 컨트롤',
         trajectoryFocus: 'rFoot',
         pedalDeg: pdeg,
-        pelvis: [0.58, 0, 0.9],
-        spineMid: [0.58, 0, 1.12],
-        chest: [0.58, 0, 1.34],
+        pelvis: [0.56, 0, 0.82],
+        spineMid: [0.56, 0, 1.04],
+        chest: [0.56, 0, 1.26],
         antHint: [-1, 0, 0],
-        lFoot: [0.6, -0.12, 0.05],
-        rFoot: [px, 0.09, pz + 0.04],
-        lKneePole: [0.3, -0.12, 0.48],
-        rKneePole: [0.28, 0.12, lerp(0.92, 0.68, ts)],
-        lHand: [0.58, -0.2, 0.94],
-        rHand: [0.58, 0.2, 0.94],
-        lElbowPole: [0.64, -0.34, 1.04],
-        rElbowPole: [0.64, 0.34, 1.04],
+        lFoot: [0.58, 0.12, 0.05],
+        rFoot: [px, -0.09, pz + 0.04],
+        lKneePole: [-0.88, 0.12, 0.35],
+        rKneePole: [-0.88, -0.12, lerp(0.55, 0.35, ts)],
+        lHand: [0.56, 0.2, 0.9],
+        rHand: [0.56, -0.2, 0.9],
+        lElbowPole: [0.35, 0.82, 0.25],
+        rElbowPole: [0.35, -0.82, 0.25],
         activeZones: ['quads', 'glutes', 'core'],
       };
     }
@@ -3002,31 +3016,31 @@ function sampleArchetype3DRig(
       };
     }
     case 'chair-teaser-triceps': {
-      const pdeg = lerp(28, 10, ts);
+      const pdeg = lerp(28, 14, ts);
       const [px, pz] = chairPedalPos(pdeg);
       return {
         poseFeatureKo: '체어 시트 사선 V자 티저 다리 부양과 등 뒤 양손 페달 트라이셉 프레스',
         trajectoryFocus: 'lHand',
         pedalDeg: pdeg,
-        pelvis: [-0.02, 0, 0.68],
-        spineMid: [lerp(0.08, 0.14, ts), 0, lerp(0.84, 0.76, ts)],
-        chest: [lerp(0.18, 0.26, ts), 0, lerp(1.0, 0.88, ts)],
+        pelvis: [0.02, 0, 0.66],
+        spineMid: [lerp(0.12, 0.18, ts), 0, lerp(0.75, 0.69, ts)],
+        chest: [lerp(0.24, 0.3, ts), 0, lerp(0.84, 0.72, ts)],
         antHint: [-0.78, 0, 0.62],
-        lFoot: vlerp([-0.54, -0.08, 0.96], [-0.58, -0.08, 1.14], ts),
-        rFoot: vlerp([-0.54, 0.08, 0.96], [-0.58, 0.08, 1.14], ts),
-        lKneePole: [-0.28, -0.08, 1.12],
-        rKneePole: [-0.28, 0.08, 1.12],
-        lHand: [px, -0.16, pz + 0.03],
-        rHand: [px, 0.16, pz + 0.03],
-        lElbowPole: [0.38, -0.3, 0.68],
-        rElbowPole: [0.38, 0.3, 0.68],
+        lFoot: vlerp([-0.5, 0.08, 0.96], [-0.54, 0.08, 1.14], ts),
+        rFoot: vlerp([-0.5, -0.08, 0.96], [-0.54, -0.08, 1.14], ts),
+        lKneePole: [-0.25, 0.08, 0.95],
+        rKneePole: [-0.25, -0.08, 0.95],
+        lHand: [px, 0.16, pz + 0.03],
+        rHand: [px, -0.16, pz + 0.03],
+        lElbowPole: [0.75, 0.45, 0.35],
+        rElbowPole: [0.75, -0.45, 0.35],
         activeZones: ['core', 'shoulders', 'quads'],
       };
     }
     case 'chair-goingup': {
       const pdeg = lerp(8, 28, ts);
       const [px, pz] = chairPedalPos(pdeg);
-      const liftZ = lerp(0.98, 1.32, ts);
+      const liftZ = lerp(0.84, 1.28, ts);
       return {
         poseFeatureKo: '시트 지지 발바닥과 핸들 보조로 수직 고잉업 스텝업·원심 하강',
         trajectoryFocus: 'pelvis',
@@ -3036,14 +3050,14 @@ function sampleArchetype3DRig(
         spineMid: [lerp(0.12, -0.02, ts), 0, liftZ + 0.22],
         chest: [lerp(0.1, -0.02, ts), 0, liftZ + 0.44],
         antHint: [-1, 0, 0],
-        lFoot: [-0.08, -0.08, 0.63],
-        rFoot: [px, 0.08, pz + 0.04],
-        lKneePole: [-0.45, -0.08, 0.95],
-        rKneePole: [-0.2, 0.08, 0.75],
-        lHand: [0.05, -0.28, 1.27],
-        rHand: [0.05, 0.28, 1.27],
-        lElbowPole: [0.35, -0.35, 1.2],
-        rElbowPole: [0.35, 0.35, 1.2],
+        lFoot: [-0.08, 0.08, 0.63],
+        rFoot: [px, -0.08, pz + 0.04],
+        lKneePole: [-0.88, 0.08, 0.35],
+        rKneePole: [-0.88, -0.08, 0.35],
+        lHand: [0.05, 0.28, 1.27],
+        rHand: [0.05, -0.28, 1.27],
+        lElbowPole: [0.45, 0.72, 0.25],
+        rElbowPole: [0.45, -0.72, 0.25],
         activeZones: ['glutes', 'quads'],
       };
     }
@@ -3054,18 +3068,18 @@ function sampleArchetype3DRig(
         poseFeatureKo: '시트 양손 수직 푸시와 복부 스쿱을 통한 페달 파이크 풀업 리프트',
         trajectoryFocus: 'pelvis',
         pedalDeg: pdeg,
-        pelvis: [lerp(0.18, 0.06, ts), 0, lerp(0.96, 1.22, ts)],
-        spineMid: [0.02, 0, lerp(1.02, 1.18, ts)],
-        chest: [-0.08, 0, 1.04],
+        pelvis: [lerp(0.24, 0.14, ts), 0, lerp(0.88, 1.1, ts)],
+        spineMid: [lerp(0.06, 0.02, ts), 0, lerp(0.98, 1.14, ts)],
+        chest: [-0.08, 0, 1.02],
         antHint: [-0.5, 0, -0.85],
-        lFoot: [px, -0.08, pz + 0.04],
-        rFoot: [px, 0.08, pz + 0.04],
-        lKneePole: [-0.25, -0.08, 0.65],
-        rKneePole: [-0.25, 0.08, 0.65],
-        lHand: [-0.1, -0.18, 0.62],
-        rHand: [-0.1, 0.18, 0.62],
-        lElbowPole: [-0.35, -0.28, 0.85],
-        rElbowPole: [-0.35, 0.28, 0.85],
+        lFoot: [px, 0.08, pz + 0.04],
+        rFoot: [px, -0.08, pz + 0.04],
+        lKneePole: [-0.85, 0.08, 0.35],
+        rKneePole: [-0.85, -0.08, 0.35],
+        lHand: [-0.1, 0.18, 0.62],
+        rHand: [-0.1, -0.18, 0.62],
+        lElbowPole: [-0.55, 0.72, 0.35],
+        rElbowPole: [-0.55, -0.72, 0.35],
         activeZones: ['core', 'adductors', 'shoulders'],
       };
     }
@@ -3073,33 +3087,36 @@ function sampleArchetype3DRig(
       return EXPANDED_DEDICATED_3D_RIGS['expanded-chair-swan']!.build(rawT);
     }
     case 'chair-seated-upper': {
+      const mDeg = lerp(28, 12, ts);
       const pdeg = 22;
-      const [px, pz] = chairPedalPos(pdeg);
+      const [px, pz] = chairPedalPos(mDeg);
       const isMermaid = /mermaid|머메이드/.test(`${exercise.id} ${exercise.nameKo}`);
       return {
         poseFeatureKo: isMermaid
           ? '체어 시트 착석에서 페달 손 지지와 반대쪽 팔 측면 머메이드 신장'
           : '체어 시트 수직 정렬에서 흉곽 회전·암 아크 상체 가동',
-        trajectoryFocus: 'rHand',
-        pedalDeg: isMermaid ? lerp(28, 12, ts) : pdeg,
-        pelvis: [-0.08, 0, 0.68],
-        spineMid: [lerp(-0.08, isMermaid ? 0.04 : -0.06, ts), 0, 0.9],
+        trajectoryFocus: isMermaid ? 'lHand' : 'rHand',
+        pedalDeg: isMermaid ? mDeg : pdeg,
+        pelvis: [-0.06, 0, 0.68],
+        spineMid: [lerp(-0.04, isMermaid ? 0.08 : -0.04, ts), 0, 0.88],
         chest: [
-          lerp(-0.08, isMermaid ? 0.16 : -0.04, ts),
+          lerp(-0.02, isMermaid ? 0.18 : -0.02, ts),
           0,
-          lerp(1.12, isMermaid ? 1.02 : 1.14, ts),
+          lerp(1.04, isMermaid ? 0.86 : 1.12, ts),
         ],
         antHint: isMermaid ? [0, -1, 0] : vlerp([1, 0, 0], [0.7, -0.7, 0], ts),
-        lFoot: isMermaid ? [-0.06, -0.28, 0.12] : [0.36, -0.11, 0.06],
-        rFoot: isMermaid ? [-0.16, -0.28, 0.12] : [0.36, 0.11, 0.06],
-        lKneePole: isMermaid ? [-0.06, -0.45, 0.55] : [0.36, -0.11, 0.65],
-        rKneePole: isMermaid ? [-0.16, -0.45, 0.55] : [0.36, 0.11, 0.65],
+        lFoot: isMermaid ? [-0.14, -0.28, 0.14] : [0.34, -0.11, 0.08],
+        rFoot: isMermaid ? [-0.02, -0.28, 0.14] : [0.34, 0.11, 0.08],
+        lKneePole: isMermaid ? [-0.1, -0.92, 0.25] : [0.85, -0.11, 0.45],
+        rKneePole: isMermaid ? [0.1, -0.92, 0.25] : [0.85, 0.11, 0.45],
         lHand: isMermaid
-          ? [px, -0.04, pz + 0.03]
+          ? vlerp([-0.24, -0.1, 1.02], [0.14, -0.06, 1.24], ts)
           : vlerp([0.2, -0.22, 0.96], [-0.1, -0.38, 1.18], ts),
-        rHand: vlerp([0.2, 0.22, 0.96], [0.16, isMermaid ? -0.06 : 0.38, 1.36], ts),
-        lElbowPole: [-0.2, -0.34, 0.96],
-        rElbowPole: [-0.2, 0.34, 1.12],
+        rHand: isMermaid
+          ? [px, -0.04, pz + 0.03]
+          : vlerp([0.2, 0.22, 0.96], [0.16, 0.38, 1.36], ts),
+        lElbowPole: isMermaid ? [-0.55, -0.45, 0.72] : [-0.45, -0.75, 0.35],
+        rElbowPole: isMermaid ? [0.45, 0.65, 0.45] : [-0.45, 0.75, 0.55],
         activeZones: ['obliques', 'core', 'shoulders'],
       };
     }
@@ -3109,71 +3126,73 @@ function sampleArchetype3DRig(
       const isBridge =
         exercise.blockCategory === 'bridging' ||
         /bridge|tower|브리지|타워/.test(`${exercise.id} ${exercise.nameKo}`);
+      const ptDeg = lerp(32, 18, ts);
+      const [bx, bz] = cadillacPushThroughBarPos(ptDeg);
       return {
         poseFeatureKo: isBridge
           ? '캐딜락 베드 수파인에서 타워 발 지지 숄더 브리지 분절 리프트'
           : '캐딜락 베드 수파인 중립 정렬에서 암 스프링 프레스·니 폴드',
         trajectoryFocus: isBridge ? 'pelvis' : 'rHand',
         armSpringsFrom: isBridge ? undefined : [1.05, 1.32],
-        pushthroughDeg: isBridge ? lerp(18, 32, ts) : undefined,
-        pelvis: [0.06, 0, lerp(0.61, isBridge ? 0.88 : 0.61, ts)],
-        spineMid: [-0.16, 0, lerp(0.61, isBridge ? 0.76 : 0.62, ts)],
-        chest: [-0.38, 0, 0.62],
+        pushthroughDeg: isBridge ? ptDeg : undefined,
+        pelvis: [isBridge ? 0.14 : 0.06, 0, lerp(0.62, isBridge ? 0.9 : 0.62, ts)],
+        spineMid: [isBridge ? -0.08 : -0.16, 0, lerp(0.62, isBridge ? 0.78 : 0.63, ts)],
+        chest: [isBridge ? -0.3 : -0.38, 0, 0.63],
         antHint: [lerp(0, isBridge ? 0.34 : 0.08, ts), 0, 1],
-        lFoot: isBridge ? [0.52, -0.1, lerp(1.06, 1.24, ts)] : [0.54, -0.1, 0.6],
+        lFoot: isBridge ? [bx, -0.1, bz - 0.02] : [0.54, -0.1, 0.62],
         rFoot: isBridge
-          ? [0.52, 0.1, lerp(1.06, 1.24, ts)]
-          : vlerp([0.54, 0.1, 0.6], [0.32, 0.1, 0.94], ts),
-        lKneePole: [0.24, -0.1, 1.12],
-        rKneePole: [0.24, 0.1, 1.12],
-        lHand: isBridge ? [0.04, -0.24, 0.59] : vlerp([0.04, -0.22, 1.06], [0.24, -0.22, 0.64], ts),
-        rHand: isBridge ? [0.04, 0.24, 0.59] : vlerp([0.04, 0.22, 1.06], [0.24, 0.22, 0.64], ts),
-        lElbowPole: [-0.2, -0.34, 0.72],
-        rElbowPole: [-0.2, 0.34, 0.72],
+          ? [bx, 0.1, bz - 0.02]
+          : vlerp([0.54, 0.1, 0.62], [0.32, 0.1, 0.94], ts),
+        lKneePole: isBridge ? [-0.35, -0.1, 0.92] : [0.24, -0.1, 0.92],
+        rKneePole: isBridge ? [-0.35, 0.1, 0.92] : [0.24, 0.1, 0.92],
+        lHand: isBridge ? [0.06, -0.24, 0.61] : vlerp([0.04, -0.22, 1.06], [0.24, -0.22, 0.65], ts),
+        rHand: isBridge ? [0.06, 0.24, 0.61] : vlerp([0.04, 0.22, 1.06], [0.24, 0.22, 0.65], ts),
+        lElbowPole: [-0.15, -0.78, -0.58],
+        rElbowPole: [-0.15, 0.78, -0.58],
         activeZones: isBridge ? ['glutes', 'core'] : ['core', 'shoulders'],
       };
     }
     case 'cadillac-seated-rollback': {
-      const bx = lerp(0.56, 0.22, ts);
-      const bz = lerp(1.22, 0.94, ts);
+      const bx = lerp(0.68, 0.34, ts);
+      const bz = lerp(1.18, 0.94, ts);
       return {
         poseFeatureKo: '수직 폴 양발 지지와 롤백 바를 잡은 C커브 척추 분절 롤다운',
         trajectoryFocus: 'chest',
         rolldownBar: [bx, bz],
-        pelvis: [0.12, 0, 0.62],
-        spineMid: vlerp([0.12, 0, 0.84], [-0.08, 0, 0.72], ts),
-        chest: vlerp([0.14, 0, 1.06], [-0.28, 0, 0.8], ts),
+        pelvis: [0.3, 0, 0.62],
+        spineMid: vlerp([0.29, 0, 0.84], [0.1, 0, 0.72], ts),
+        chest: vlerp([0.3, 0, 1.06], [-0.1, 0, 0.8], ts),
         antHint: vlerp([1, 0, 0], [0.52, 0, 0.85], ts),
-        lFoot: [1.02, -0.26, 0.72],
-        rFoot: [1.02, 0.26, 0.72],
-        lKneePole: [0.55, -0.2, 0.88],
-        rKneePole: [0.55, 0.2, 0.88],
+        lFoot: [1.02, -0.24, 0.7],
+        rFoot: [1.02, 0.24, 0.7],
+        lKneePole: [0.35, -0.2, 0.88],
+        rKneePole: [0.35, 0.2, 0.88],
         lHand: [bx, -0.18, bz],
         rHand: [bx, 0.18, bz],
-        lElbowPole: [-0.05, -0.34, 0.92],
-        rElbowPole: [-0.05, 0.34, 0.92],
+        lElbowPole: [-0.25, -0.75, 0.35],
+        rElbowPole: [-0.25, 0.75, 0.35],
         activeZones: ['core', 'back'],
       };
     }
     case 'cadillac-prone-swan': {
-      const ptDeg = lerp(30, -4, ts);
+      const ptDeg = lerp(24, 2, ts);
       const [ex, ez] = cadillacPushThroughBarPos(ptDeg);
       return {
         poseFeatureKo: '캐딜락 베드 프론 지지에서 푸쉬스루 바 전상방 리치와 흉추 스완 신전',
         trajectoryFocus: 'chest',
         pushthroughDeg: ptDeg,
-        pelvis: [-0.14, 0, 0.6],
-        spineMid: [0.08, 0, lerp(0.61, 0.74, ts)],
-        chest: [0.3, 0, lerp(0.63, 0.96, ts)],
-        antHint: [lerp(0.25, 0.72, ts), 0, -0.82],
-        lFoot: [-0.88, -0.11, 0.6],
-        rFoot: [-0.88, 0.11, 0.6],
-        lKneePole: [-0.5, -0.11, 0.42],
-        rKneePole: [-0.5, 0.11, 0.42],
+        pelvis: [-0.05, 0, 0.65],
+        spineMid: [0.15, 0, lerp(0.72, 0.82, ts)],
+        chest: [0.35, 0, lerp(0.87, 1.02, ts)],
+        antHint: [lerp(0.45, 0.78, ts), 0, -0.72],
+        lFoot: [-0.84, -0.1, 0.65],
+        rFoot: [-0.84, 0.1, 0.65],
+        lKneePole: [0.05, -0.08, -1],
+        rKneePole: [0.05, 0.08, -1],
         lHand: [ex, -0.18, ez],
         rHand: [ex, 0.18, ez],
-        lElbowPole: [0.42, -0.34, 0.88],
-        rElbowPole: [0.42, 0.34, 0.88],
+        lElbowPole: [-0.15, -0.75, 0.35],
+        rElbowPole: [-0.15, 0.75, 0.35],
         activeZones: ['back', 'shoulders', 'glutes'],
       };
     }
@@ -3184,62 +3203,62 @@ function sampleArchetype3DRig(
         poseFeatureKo: '테이블 양 무릎 지지에서 롤다운 바 전하방 프레스와 C커브 캣 분절',
         trajectoryFocus: 'chest',
         rolldownBar: [bx, bz],
-        pelvis: [-0.08, 0, 0.94],
-        spineMid: [lerp(-0.04, 0.14, ts), 0, lerp(1.16, 1.12, ts)],
-        chest: [lerp(0.0, 0.32, ts), 0, lerp(1.38, 1.04, ts)],
+        pelvis: [-0.06, 0, 0.98],
+        spineMid: [lerp(-0.02, 0.14, ts), 0, lerp(1.2, 1.14, ts)],
+        chest: [lerp(0.02, 0.32, ts), 0, lerp(1.42, 1.04, ts)],
         antHint: vlerp([1, 0, 0], [0.35, 0, -0.94], ts),
-        lFoot: [-0.42, -0.11, 0.58],
-        rFoot: [-0.42, 0.11, 0.58],
-        lKneePole: [0.15, -0.11, 0.55],
-        rKneePole: [0.15, 0.11, 0.55],
+        lFoot: [-0.44, -0.11, 0.62],
+        rFoot: [-0.44, 0.11, 0.62],
+        lKneePole: [0.85, -0.08, -0.55],
+        rKneePole: [0.85, 0.08, -0.55],
         lHand: [bx, -0.18, bz],
         rHand: [bx, 0.18, bz],
-        lElbowPole: [0.2, -0.32, 1.25],
-        rElbowPole: [0.2, 0.32, 1.25],
+        lElbowPole: [-0.25, -0.82, 0.35],
+        rElbowPole: [-0.25, 0.82, 0.35],
         activeZones: ['core', 'back'],
       };
     }
     case 'cadillac-teaser': {
-      const ptDeg = lerp(32, -8, ts);
+      const ptDeg = lerp(24, 4, ts);
       const [ex, ez] = cadillacPushThroughBarPos(ptDeg);
       return {
         poseFeatureKo: '베드 천골 지지에서 푸쉬스루 바 상방 리치와 동시 상·하체 V자 티저',
         trajectoryFocus: 'chest',
         pushthroughDeg: ptDeg,
-        pelvis: [0.02, 0, 0.6],
-        spineMid: [lerp(-0.18, -0.06, ts), 0, lerp(0.62, 0.8, ts)],
-        chest: [lerp(-0.38, -0.14, ts), 0, lerp(0.66, 1.02, ts)],
-        antHint: vlerp([0.25, 0, 0.96], [0.8, 0, 0.6], ts),
-        lFoot: vlerp([0.66, -0.08, 0.64], [0.54, -0.08, 1.16], ts),
-        rFoot: vlerp([0.66, 0.08, 0.64], [0.54, 0.08, 1.16], ts),
-        lKneePole: [0.1, -0.05, 1.3],
-        rKneePole: [0.1, 0.05, 1.3],
+        pelvis: [0.24, 0, 0.62],
+        spineMid: [lerp(0.1, 0.16, ts), 0, lerp(0.75, 0.84, ts)],
+        chest: [lerp(0.06, 0.24, ts), 0, lerp(0.9, 1.06, ts)],
+        antHint: vlerp([0.52, 0, 0.85], [0.85, 0, 0.52], ts),
+        lFoot: vlerp([0.84, -0.08, 0.68], [0.74, -0.08, 1.18], ts),
+        rFoot: vlerp([0.84, 0.08, 0.68], [0.74, 0.08, 1.18], ts),
+        lKneePole: [0.15, -0.08, 0.95],
+        rKneePole: [0.15, 0.08, 0.95],
         lHand: [ex, -0.18, ez],
         rHand: [ex, 0.18, ez],
-        lElbowPole: [-0.2, -0.32, 1.1],
-        rElbowPole: [-0.2, 0.32, 1.1],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [-0.35, 0.75, 0.35],
         activeZones: ['core', 'quads'],
       };
     }
     case 'cadillac-monkey': {
-      const ptDeg = lerp(38, 14, ts);
+      const ptDeg = lerp(26, 8, ts);
       const [ex, ez] = cadillacPushThroughBarPos(ptDeg);
       return {
         poseFeatureKo: '푸쉬스루 바 손·발 동시 파지에서 무릎 신전·발목 가동 캐딜락 몽키 스트레치',
         trajectoryFocus: 'rFoot',
         pushthroughDeg: ptDeg,
-        pelvis: [0.1, 0, lerp(0.6, 0.65, ts)],
-        spineMid: [-0.08, 0, lerp(0.62, 0.72, ts)],
-        chest: [-0.26, 0, lerp(0.68, 0.84, ts)],
-        antHint: [0.55, 0, 0.83],
+        pelvis: [0.24, 0, lerp(0.62, 0.66, ts)],
+        spineMid: [0.12, 0, lerp(0.76, 0.82, ts)],
+        chest: [0.06, 0, lerp(0.92, 0.98, ts)],
+        antHint: [0.68, 0, 0.72],
         lFoot: [ex, -0.09, ez - 0.02],
         rFoot: [ex, 0.09, ez - 0.02],
-        lKneePole: [lerp(0.05, 0.24, ts), -0.14, lerp(1.18, 1.02, ts)],
-        rKneePole: [lerp(0.05, 0.24, ts), 0.14, lerp(1.18, 1.02, ts)],
+        lKneePole: [-0.55, -0.25, 0.75],
+        rKneePole: [-0.55, 0.25, 0.75],
         lHand: [ex, -0.2, ez],
         rHand: [ex, 0.2, ez],
-        lElbowPole: [-0.14, -0.34, 1.05],
-        rElbowPole: [-0.14, 0.34, 1.05],
+        lElbowPole: [-0.35, -0.75, 0.35],
+        rElbowPole: [-0.35, 0.75, 0.35],
         activeZones: ['core', 'back', 'quads'],
       };
     }
@@ -3247,39 +3266,39 @@ function sampleArchetype3DRig(
       return {
         poseFeatureKo: '캐딜락 기둥 손·발 고정 서스펜션에서 C커브 신장→활 모양 스프레드 이글 신전',
         trajectoryFocus: 'pelvis',
-        pelvis: [lerp(-0.46, -0.7, ts), 0, lerp(1.02, 1.14, ts)],
-        spineMid: [lerp(-0.52, -0.74, ts), 0, lerp(1.24, 1.35, ts)],
-        chest: [lerp(-0.62, -0.76, ts), 0, lerp(1.44, 1.56, ts)],
-        antHint: vlerp([-0.94, 0, -0.32], [-0.86, 0, 0.5], ts),
-        lFoot: [-1.02, -0.26, 0.74],
-        rFoot: [-1.02, 0.26, 0.74],
-        lKneePole: [-0.72, -0.28, 0.92],
-        rKneePole: [-0.72, 0.28, 0.92],
-        lHand: [-1.02, -0.28, 1.66],
-        rHand: [-1.02, 0.28, 1.66],
-        lElbowPole: [-0.74, -0.38, 1.54],
-        rElbowPole: [-0.74, 0.38, 1.54],
+        pelvis: [lerp(-0.48, -0.62, ts), 0, lerp(1.22, 1.3, ts)],
+        spineMid: [lerp(-0.54, -0.68, ts), 0, lerp(1.44, 1.5, ts)],
+        chest: [lerp(-0.62, -0.72, ts), 0, lerp(1.66, 1.7, ts)],
+        antHint: vlerp([-0.94, 0, -0.28], [-0.84, 0, 0.52], ts),
+        lFoot: [-1.0, 0.26, 0.66],
+        rFoot: [-1.0, -0.26, 0.66],
+        lKneePole: [-0.88, 0.25, 0.42],
+        rKneePole: [-0.88, -0.25, 0.42],
+        lHand: [-1.0, 0.28, 1.68],
+        rHand: [-1.0, -0.28, 1.68],
+        lElbowPole: [0.35, 0.78, -0.35],
+        rElbowPole: [0.35, -0.78, -0.35],
         activeZones: ['back', 'glutes', 'shoulders'],
       };
     }
     case 'cadillac-hanging': {
-      const lift = lerp(0.92, 1.24, ts);
+      const lift = lerp(1.16, 1.34, ts);
       return {
         poseFeatureKo: '캐노피 상단 바·퍼지 스트랩 서스펜션 그립에서 후면 사슬 행잉 리프트',
         trajectoryFocus: 'pelvis',
         trapezeStrap: true,
-        pelvis: [-0.14, 0, lift],
-        spineMid: [0.04, 0, lift + 0.12],
-        chest: [0.22, 0, lift + 0.24],
-        antHint: [0.25, 0, 0.96],
-        lFoot: [-0.78, -0.1, 1.54],
-        rFoot: [-0.78, 0.1, 1.54],
-        lKneePole: [-0.45, -0.1, 0.85],
-        rKneePole: [-0.45, 0.1, 0.85],
-        lHand: [0.18, -0.22, 1.92],
-        rHand: [0.18, 0.22, 1.92],
-        lElbowPole: [0.45, -0.38, 1.55],
-        rElbowPole: [0.45, 0.38, 1.55],
+        pelvis: [-0.08, 0, lift],
+        spineMid: [0.06, 0, lift + 0.14],
+        chest: [0.18, 0, lift + 0.28],
+        antHint: [0.18, 0, 0.98],
+        lFoot: [-0.34, 0.11, 1.52],
+        rFoot: [-0.34, -0.11, 1.52],
+        lKneePole: [-0.35, 0.15, -0.88],
+        rKneePole: [-0.35, -0.15, -0.88],
+        lHand: [0.2, 0.2, 1.92],
+        rHand: [0.2, -0.2, 1.92],
+        lElbowPole: [0.35, 0.78, -0.25],
+        rElbowPole: [0.35, -0.78, -0.25],
         activeZones: ['back', 'glutes', 'core'],
       };
     }
@@ -3311,18 +3330,18 @@ function sampleArchetype3DRig(
         return {
           poseFeatureKo: '래더 양손 고정 스탠딩 지지에서 한 다리 후상방 힙 익스텐션 리프트',
           trajectoryFocus: 'rFoot',
-          pelvis: [0.76, 0, 0.9],
-          spineMid: [0.7, 0, 1.1],
-          chest: [0.64, 0, 1.28],
+          pelvis: [0.76, 0, 0.87],
+          spineMid: [0.7, 0, 1.08],
+          chest: [0.64, 0, 1.27],
           antHint: [-0.94, 0, -0.32],
-          lFoot: [0.78, -0.1, 0.05],
-          rFoot: vlerp([0.84, 0.1, 0.08], [1.14, 0.1, 0.56], ts),
-          lKneePole: [0.5, -0.1, 0.48],
-          rKneePole: [0.95, 0.1, 0.32],
-          lHand: [0.49, -0.18, 0.96],
-          rHand: [0.49, 0.18, 0.96],
-          lElbowPole: [0.58, -0.32, 0.88],
-          rElbowPole: [0.58, 0.32, 0.88],
+          lFoot: [0.78, 0.1, 0.05],
+          rFoot: vlerp([0.84, -0.1, 0.08], [1.38, -0.1, 0.48], ts),
+          lKneePole: [-1, 0.08, 0],
+          rKneePole: [-0.35, -0.08, -0.92],
+          lHand: [0.49, 0.18, 0.96],
+          rHand: [0.49, -0.18, 0.96],
+          lElbowPole: [0.45, 0.75, -0.35],
+          rElbowPole: [0.45, -0.75, -0.35],
           activeZones: ['glutes', 'core'],
         };
       }
@@ -3330,18 +3349,18 @@ function sampleArchetype3DRig(
         return {
           poseFeatureKo: '래더 한 손 지지 스탠딩에서 바깥쪽 다리 외전 사이드 레그 리프트',
           trajectoryFocus: 'rFoot',
-          pelvis: [0.76, 0.02, 0.9],
-          spineMid: [0.76, 0.02, 1.12],
-          chest: [0.76, 0.02, 1.34],
+          pelvis: [0.76, 0.02, 0.87],
+          spineMid: [0.76, 0.02, 1.09],
+          chest: [0.76, 0.02, 1.31],
           antHint: [0, -1, 0],
           lFoot: [0.74, 0.06, 0.05],
-          rFoot: vlerp([0.78, -0.06, 0.06], [0.82, -0.38, 0.42], ts),
-          lKneePole: [0.74, -0.26, 0.48],
-          rKneePole: [0.82, -0.44, 0.46],
+          rFoot: vlerp([0.78, -0.06, 0.06], [0.82, -0.44, 0.34], ts),
+          lKneePole: [0, -1, 0],
+          rKneePole: [0, -1, 0.25],
           lHand: [0.5, 0.14, 0.96],
           rHand: vlerp([0.78, -0.18, 0.92], [0.78, -0.34, 1.28], ts),
-          lElbowPole: [0.62, 0.3, 0.88],
-          rElbowPole: [0.78, -0.38, 1.12],
+          lElbowPole: [-0.35, 0.78, -0.35],
+          rElbowPole: [0.15, -0.82, -0.35],
           activeZones: ['glutes', 'obliques'],
         };
       }
@@ -3350,36 +3369,36 @@ function sampleArchetype3DRig(
         return {
           poseFeatureKo: '래더 양손 가벼운 지지에서 양발 뒤꿈치 카프 릴레베 발목 가동',
           trajectoryFocus: 'pelvis',
-          pelvis: [0.78, 0, 0.89 + lift],
-          spineMid: [0.78, 0, 1.11 + lift],
-          chest: [0.78, 0, 1.33 + lift],
+          pelvis: [0.78, 0, 0.87 + lift],
+          spineMid: [0.78, 0, 1.09 + lift],
+          chest: [0.78, 0, 1.31 + lift],
           antHint: [-1, 0, 0],
-          lFoot: [0.78, -0.11, 0.05 + lift * 0.85],
-          rFoot: [0.78, 0.11, 0.05 + lift * 0.85],
-          lKneePole: [0.5, -0.11, 0.48 + lift],
-          rKneePole: [0.5, 0.11, 0.48 + lift],
-          lHand: [0.49, -0.18, 0.96],
-          rHand: [0.49, 0.18, 0.96],
-          lElbowPole: [0.64, -0.32, 0.92],
-          rElbowPole: [0.64, 0.32, 0.92],
+          lFoot: [0.78, 0.11, 0.05 + lift * 0.85],
+          rFoot: [0.78, -0.11, 0.05 + lift * 0.85],
+          lKneePole: [-1, 0.08, 0],
+          rKneePole: [-1, -0.08, 0],
+          lHand: [0.49, 0.18, 0.96],
+          rHand: [0.49, -0.18, 0.96],
+          lElbowPole: [0.45, 0.75, -0.35],
+          rElbowPole: [0.45, -0.75, -0.35],
           activeZones: ['quads', 'core'],
         };
       }
       return {
         poseFeatureKo: '바렐·래더 앞 스탠딩 한 다리 발레 스트레치 지지와 몸통 측면·전방 리치',
         trajectoryFocus: 'rHand',
-        pelvis: [-0.68, 0, 0.9],
-        spineMid: [lerp(-0.68, -0.56, ts), 0, 1.12],
-        chest: [lerp(-0.68, -0.42, ts), 0, lerp(1.34, 1.26, ts)],
+        pelvis: [-0.68, 0, 0.87],
+        spineMid: [lerp(-0.68, -0.56, ts), 0, 1.09],
+        chest: [lerp(-0.68, -0.42, ts), 0, lerp(1.31, 1.23, ts)],
         antHint: [1, 0, lerp(0, -0.25, ts)],
         lFoot: [-0.7, -0.1, 0.05],
-        rFoot: [-0.28, 0.08, 0.89],
-        lKneePole: [-0.42, -0.1, 0.48],
-        rKneePole: [-0.48, 0.12, 1.05],
-        lHand: vlerp([-0.64, -0.22, 1.12], [-0.18, -0.16, 1.44], ts),
-        rHand: vlerp([-0.64, 0.22, 1.12], [-0.18, 0.16, 1.44], ts),
-        lElbowPole: [-0.54, -0.34, 1.22],
-        rElbowPole: [-0.54, 0.34, 1.22],
+        rFoot: [-0.24, 0.08, 0.89],
+        lKneePole: [1, -0.08, 0],
+        rKneePole: [0.45, 0.15, 0.88],
+        lHand: vlerp([-0.64, -0.22, 1.1], [-0.18, -0.16, 1.42], ts),
+        rHand: vlerp([-0.64, 0.22, 1.1], [-0.18, 0.16, 1.42], ts),
+        lElbowPole: [-0.45, -0.75, -0.35],
+        rElbowPole: [-0.45, 0.75, -0.35],
         activeZones: ['glutes', 'obliques', 'core'],
       };
     }
@@ -3431,14 +3450,14 @@ function sampleArchetype3DRig(
         spineMid: [-0.5, 0, lerp(0.82, 1.04, ts)],
         chest: [-0.68, 0, lerp(0.7, 1.22, ts)],
         antHint: [lerp(-0.4, -0.75, ts), 0, -0.7],
-        lFoot: [0.49, -0.1, 0.58],
-        rFoot: [0.49, 0.1, 0.58],
-        lKneePole: [0.1, -0.1, 0.5],
-        rKneePole: [0.1, 0.1, 0.5],
-        lHand: [-0.86, -0.18, lerp(0.62, 1.44, ts)],
-        rHand: [-0.86, 0.18, lerp(0.62, 1.44, ts)],
-        lElbowPole: [-0.6, -0.32, 0.9],
-        rElbowPole: [-0.6, 0.32, 0.9],
+        lFoot: [0.46, 0.1, 0.63],
+        rFoot: [0.46, -0.1, 0.63],
+        lKneePole: [-0.2, 0.08, -1],
+        rKneePole: [-0.2, -0.08, -1],
+        lHand: [-0.86, 0.18, lerp(0.62, 1.44, ts)],
+        rHand: [-0.86, -0.18, lerp(0.62, 1.44, ts)],
+        lElbowPole: [0.35, 0.78, 0.35],
+        rElbowPole: [0.35, -0.78, 0.35],
         activeZones: ['back', 'glutes'],
       };
     }
@@ -4428,6 +4447,297 @@ export function hasDedicated3DExerciseRig(
   return false;
 }
 
+const vSub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const vAdd = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const vMul = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
+const vDot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const vCross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+const vLen = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const vNorm = (a: Vec3): Vec3 => {
+  const l = vLen(a);
+  return l > 1e-6 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 1];
+};
+
+function computeBodyRight(pelvis: Vec3, chest: Vec3, antHint: Vec3): {
+  readonly spUp: Vec3;
+  readonly antN: Vec3;
+  readonly bodyRight: Vec3;
+} {
+  const spUp = vNorm(vSub(chest, pelvis));
+  const antProj = vSub(antHint, vMul(spUp, vDot(antHint, spUp)));
+  const antN = vLen(antProj) > 1e-4 ? vNorm(antProj) : vNorm([1, 0, 0]);
+  const bodyRight = vNorm(vCross(spUp, antN));
+  return { spUp, antN, bodyRight };
+}
+
+function eval2BoneMid(root: Vec3, target: Vec3, l1: number, l2: number, pole: Vec3): {
+  readonly mid: Vec3;
+  readonly bend: Vec3;
+  readonly poleProjLen: number;
+} {
+  let dVec = vSub(target, root);
+  let dist = vLen(dVec);
+  const maxR = (l1 + l2) * 0.992;
+  const minR = Math.abs(l1 - l2) + 0.03;
+  if (dist > maxR) {
+    dVec = vMul(vNorm(dVec), maxR);
+    dist = maxR;
+  } else if (dist < minR) {
+    const dir: Vec3 = dist > 1e-5 ? vNorm(dVec) : [1, 0, 0];
+    dVec = vMul(dir, minR);
+    dist = minR;
+  }
+  const u = vNorm(dVec);
+  let bend = vSub(pole, vMul(u, vDot(pole, u)));
+  const poleProjLen = vLen(bend);
+  if (poleProjLen < 1e-4) {
+    bend = vCross(u, [0, 1, 0]);
+    if (vLen(bend) < 1e-4) bend = vCross(u, [0, 0, 1]);
+  }
+  bend = vNorm(bend);
+  const cosA = Math.max(-1, Math.min(1, (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist)));
+  const angA = Math.acos(cosA);
+  const mid = vAdd(root, vMul(vAdd(vMul(u, Math.cos(angA)), vMul(bend, Math.sin(angA))), l1));
+  return { mid, bend, poleProjLen };
+}
+
+function stabilizeLimbPole(
+  root: Vec3,
+  target: Vec3,
+  l1: number,
+  l2: number,
+  rawPole: Vec3,
+  fallbackPole: Vec3,
+  minMidZ: number,
+): Vec3 {
+  let pole = vLen(rawPole) >= 0.12 ? vNorm(rawPole) : vNorm(fallbackPole);
+  const u = vNorm(vSub(target, root));
+  const proj = vSub(pole, vMul(u, vDot(pole, u)));
+  const projLen = vLen(proj);
+  if (projLen < 0.34) {
+    const fbProj = vSub(fallbackPole, vMul(u, vDot(fallbackPole, u)));
+    const safeDir = vLen(fbProj) > 0.1 ? vNorm(fbProj) : vNorm(vCross(u, [0, 1, 0]));
+    const w = smoothstep(Math.max(0, Math.min(1, (0.34 - projLen) / 0.28)));
+    pole = vNorm(vAdd(vMul(pole, 1 - w * 0.85), vMul(safeDir, w * 0.95)));
+  }
+  const { mid } = eval2BoneMid(root, target, l1, l2, pole);
+  if (mid[2] < minMidZ) {
+    const deficit = Math.min(1, (minMidZ - mid[2]) / 0.08);
+    const liftBias = vNorm(vAdd([0, 0, 1], vMul(fallbackPole, 0.35)));
+    pole = vNorm(vAdd(vMul(pole, 1 - deficit * 0.7), vMul(liftBias, 0.35 + deficit * 0.85)));
+  }
+  return pole;
+}
+
+function normalizeBiomechanicalPoseRig(
+  raw: Omit<Universal3DPoseRig, 'rigId' | 'rigScope'>,
+  refAtZero: Omit<Universal3DPoseRig, 'rigId' | 'rigScope'>,
+  refAtOne: Omit<Universal3DPoseRig, 'rigId' | 'rigScope'>,
+): Omit<Universal3DPoseRig, 'rigId' | 'rigScope'> {
+  let pelvis = raw.pelvis;
+  let spineMid = raw.spineMid;
+  let chest = raw.chest;
+
+  // 1. Preserve anatomical spine chord length (0.312m .. 0.56m) without losing C-curve arc
+  const spVec0 = vSub(chest, pelvis);
+  const spLen0 = vLen(spVec0);
+  if (spLen0 < 0.312 || spLen0 > 0.56) {
+    const targetLen = spLen0 < 0.312 ? 0.316 : 0.555;
+    const center = vMul(vAdd(pelvis, chest), 0.5);
+    const dir = spLen0 > 1e-4 ? vMul(spVec0, 1 / spLen0) : ([0, 0, 1] as Vec3);
+    const half = targetLen * 0.5;
+    const nextPelvis: Vec3 = [
+      Math.max(0.035, center[0] - dir[0] * half) === center[0] - dir[0] * half
+        ? center[0] - dir[0] * half
+        : center[0] - dir[0] * half,
+      center[1] - dir[1] * half,
+      Math.max(0.08, center[2] - dir[2] * half),
+    ];
+    const nextChest: Vec3 = [
+      nextPelvis[0] + dir[0] * targetLen,
+      nextPelvis[1] + dir[1] * targetLen,
+      Math.max(0.11, nextPelvis[2] + dir[2] * targetLen),
+    ];
+    const chordShift = vMul(vAdd(vSub(nextPelvis, pelvis), vSub(nextChest, chest)), 0.5);
+    pelvis = nextPelvis;
+    chest = nextChest;
+    spineMid = [
+      spineMid[0] + chordShift[0],
+      spineMid[1] + chordShift[1],
+      Math.max(0.09, spineMid[2] + chordShift[2]),
+    ];
+  }
+
+  // 2. Consistently uncross L/R feet or hands when a rig's entire trajectory swapped lateral sides
+  const br0 = computeBodyRight(refAtZero.pelvis, refAtZero.chest, refAtZero.antHint).bodyRight;
+  const br1 = computeBodyRight(refAtOne.pelvis, refAtOne.chest, refAtOne.antHint).bodyRight;
+  const swapLegs =
+    vDot(vSub(refAtZero.rFoot, refAtZero.lFoot), br0) < -0.04 &&
+    vDot(vSub(refAtOne.rFoot, refAtOne.lFoot), br1) < -0.04;
+  const swapArms =
+    vDot(vSub(refAtZero.rHand, refAtZero.lHand), br0) < -0.05 &&
+    vDot(vSub(refAtOne.rHand, refAtOne.lHand), br1) < -0.05;
+
+  let lFoot = swapLegs ? raw.rFoot : raw.lFoot;
+  let rFoot = swapLegs ? raw.lFoot : raw.rFoot;
+  let lKneePole = swapLegs ? raw.rKneePole : raw.lKneePole;
+  let rKneePole = swapLegs ? raw.lKneePole : raw.rKneePole;
+
+  let lHand = swapArms ? raw.rHand : raw.lHand;
+  let rHand = swapArms ? raw.lHand : raw.rHand;
+  let lElbowPole = swapArms ? raw.rElbowPole : raw.lElbowPole;
+  let rElbowPole = swapArms ? raw.lElbowPole : raw.rElbowPole;
+
+  let { antN, bodyRight } = computeBodyRight(pelvis, chest, raw.antHint);
+
+  // 3. Seat upper-limb & lower-limb reach organically within anatomical segment lengths
+  const maxArmReach = 0.534;
+  const maxLegReach = 0.784;
+
+  let lSh = vSub(chest, vMul(bodyRight, 0.148));
+  let rSh = vAdd(chest, vMul(bodyRight, 0.148));
+  const overLArm = Math.max(0, vLen(vSub(lHand, lSh)) - maxArmReach);
+  const overRArm = Math.max(0, vLen(vSub(rHand, rSh)) - maxArmReach);
+  if (overLArm > 0 || overRArm > 0) {
+    // Allow subtle thoracic protraction/lean (up to 3.8cm) when reaching toward a bar/pedal
+    const pullVec = vAdd(
+      overLArm > 0 ? vMul(vNorm(vSub(lHand, lSh)), Math.min(0.038, overLArm * 0.65)) : [0, 0, 0],
+      overRArm > 0 ? vMul(vNorm(vSub(rHand, rSh)), Math.min(0.038, overRArm * 0.65)) : [0, 0, 0],
+    );
+    const pullMag = vLen(pullVec);
+    if (pullMag > 1e-4) {
+      const cappedPull = pullMag > 0.038 ? vMul(vNorm(pullVec), 0.038) : pullVec;
+      const candChest: Vec3 = [
+        chest[0] + cappedPull[0],
+        chest[1] + cappedPull[1],
+        Math.max(0.11, chest[2] + cappedPull[2]),
+      ];
+      const candSpLen = vLen(vSub(candChest, pelvis));
+      if (candSpLen >= 0.308 && candSpLen <= 0.565) {
+        chest = candChest;
+        spineMid = vAdd(spineMid, vMul(cappedPull, 0.5));
+        ({ antN, bodyRight } = computeBodyRight(pelvis, chest, raw.antHint));
+        lSh = vSub(chest, vMul(bodyRight, 0.148));
+        rSh = vAdd(chest, vMul(bodyRight, 0.148));
+      }
+    }
+    if (vLen(vSub(lHand, lSh)) > maxArmReach) {
+      lHand = vAdd(lSh, vMul(vNorm(vSub(lHand, lSh)), maxArmReach));
+      lHand = [lHand[0], lHand[1], Math.max(0.04, lHand[2])];
+    }
+    if (vLen(vSub(rHand, rSh)) > maxArmReach) {
+      rHand = vAdd(rSh, vMul(vNorm(vSub(rHand, rSh)), maxArmReach));
+      rHand = [rHand[0], rHand[1], Math.max(0.04, rHand[2])];
+    }
+  }
+
+  let lHip = vSub(pelvis, vMul(bodyRight, 0.086));
+  let rHip = vAdd(pelvis, vMul(bodyRight, 0.086));
+  const overLLeg = Math.max(0, vLen(vSub(lFoot, lHip)) - maxLegReach);
+  const overRLeg = Math.max(0, vLen(vSub(rFoot, rHip)) - maxLegReach);
+  if (overLLeg > 0 || overRLeg > 0) {
+    if (vLen(vSub(lFoot, lHip)) > maxLegReach) {
+      lFoot = vAdd(lHip, vMul(vNorm(vSub(lFoot, lHip)), maxLegReach));
+      lFoot = [lFoot[0], lFoot[1], Math.max(0.04, lFoot[2])];
+    }
+    if (vLen(vSub(rFoot, rHip)) > maxLegReach) {
+      rFoot = vAdd(rHip, vMul(vNorm(vSub(rFoot, rHip)), maxLegReach));
+      rFoot = [rFoot[0], rFoot[1], Math.max(0.04, rFoot[2])];
+    }
+  }
+
+  // 4. Stabilize knee & elbow poles against collinearity, floor penetration, and knee-crossing
+  lHip = vSub(pelvis, vMul(bodyRight, 0.086));
+  rHip = vAdd(pelvis, vMul(bodyRight, 0.086));
+  lSh = vSub(chest, vMul(bodyRight, 0.148));
+  rSh = vAdd(chest, vMul(bodyRight, 0.148));
+
+  const lLegFallback = vNorm(vAdd(vMul(antN, 0.78), vMul(bodyRight, -0.32)));
+  const rLegFallback = vNorm(vAdd(vMul(antN, 0.78), vMul(bodyRight, 0.32)));
+  const lArmFallback = vNorm(vAdd(vMul(bodyRight, -0.82), vMul(antN, -0.35)));
+  const rArmFallback = vNorm(vAdd(vMul(bodyRight, 0.82), vMul(antN, -0.35)));
+
+  lKneePole = stabilizeLimbPole(lHip, lFoot, 0.4, 0.39, lKneePole, lLegFallback, 0.042);
+  rKneePole = stabilizeLimbPole(rHip, rFoot, 0.4, 0.39, rKneePole, rLegFallback, 0.042);
+  lElbowPole = stabilizeLimbPole(lSh, lHand, 0.28, 0.26, lElbowPole, lArmFallback, 0.036);
+  rElbowPole = stabilizeLimbPole(rSh, rHand, 0.28, 0.26, rElbowPole, rArmFallback, 0.036);
+
+  // Smoothly blend away any severe posterior/ostrich knee pole on procedural rigs without hard step-jumps
+  const pelUp = vNorm(vSub(spineMid, pelvis));
+  const pelAntProj = vSub(raw.antHint, vMul(pelUp, vDot(raw.antHint, pelUp)));
+  const pelAnt = vLen(pelAntProj) > 1e-4 ? vNorm(pelAntProj) : antN;
+  for (const side of ['L', 'R'] as const) {
+    const hip = side === 'L' ? lHip : rHip;
+    const foot = side === 'L' ? lFoot : rFoot;
+    const pole = side === 'L' ? lKneePole : rKneePole;
+    const outward = side === 'L' ? vMul(bodyRight, -1) : bodyRight;
+    const fb = side === 'L' ? lLegFallback : rLegFallback;
+    const solved = eval2BoneMid(hip, foot, 0.4, 0.39, pole);
+    const u1 = vNorm(vSub(solved.mid, hip));
+    const u2 = vNorm(vSub(foot, solved.mid));
+    const bendCos = vDot(u1, u2);
+    if (!raw.trapezeStrap && bendCos < 0.985) {
+      const patella = vNorm(vSub(u1, u2));
+      const dPelAnt = vDot(patella, pelAnt);
+      const dAnt = vDot(patella, antN);
+      const dUp = vDot(patella, pelUp);
+      const dOut = vDot(patella, outward);
+      const isProneCurl = pelAnt[2] < -0.45 && patella[2] < -0.05;
+      if (!isProneCurl && dPelAnt < -0.55 && dAnt < -0.45 && dUp < 0.25 && dOut < 0.45) {
+        const w = smoothstep(Math.max(0, Math.min(1, (-0.55 - dPelAnt) / 0.3)));
+        const ventralPole = vNorm(vAdd(vMul(pelAnt, 0.86), vMul(outward, 0.24)));
+        const blended = vNorm(vAdd(vMul(pole, 1 - w), vMul(ventralPole, w)));
+        const fixedPole = stabilizeLimbPole(hip, foot, 0.4, 0.39, blended, fb, 0.042);
+        if (side === 'L') lKneePole = fixedPole;
+        else rKneePole = fixedPole;
+      }
+    }
+  }
+
+  // Ensure knees don't cross past each other when feet are uncrossed
+  const lMid = eval2BoneMid(lHip, lFoot, 0.4, 0.39, lKneePole).mid;
+  const rMid = eval2BoneMid(rHip, rFoot, 0.4, 0.39, rKneePole).mid;
+  if (vDot(vSub(rFoot, lFoot), bodyRight) >= -0.02 && vDot(vSub(rMid, lMid), bodyRight) < -0.03) {
+    lKneePole = stabilizeLimbPole(
+      lHip,
+      lFoot,
+      0.4,
+      0.39,
+      vNorm(vAdd(lKneePole, vMul(bodyRight, -0.55))),
+      lLegFallback,
+      0.042,
+    );
+    rKneePole = stabilizeLimbPole(
+      rHip,
+      rFoot,
+      0.4,
+      0.39,
+      vNorm(vAdd(rKneePole, vMul(bodyRight, 0.55))),
+      rLegFallback,
+      0.042,
+    );
+  }
+
+  return {
+    ...raw,
+    pelvis,
+    spineMid,
+    chest,
+    lFoot,
+    rFoot,
+    lKneePole,
+    rKneePole,
+    lHand,
+    rHand,
+    lElbowPole,
+    rElbowPole,
+  };
+}
+
 export function sampleUniversal3DExerciseRig(
   exercise: Pick<
     PilatesExercise,
@@ -4445,10 +4755,15 @@ export function sampleUniversal3DExerciseRig(
     exp.apparatus === exercise.apparatus &&
     (!exp.bodyPosition || exp.bodyPosition === exercise.bodyPosition)
   ) {
+    const normalized = normalizeBiomechanicalPoseRig(
+      exp.build(clampedT),
+      exp.build(0),
+      exp.build(1),
+    );
     return {
       rigId: exercise.id,
       rigScope: 'dedicated-3d-rig',
-      ...exp.build(clampedT),
+      ...normalized,
     };
   }
 
@@ -4459,9 +4774,10 @@ export function sampleUniversal3DExerciseRig(
     const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, cat.archetype)
       ? EXPANDED_DEDICATED_3D_RIGS[cat.archetype]
       : undefined;
-    const built = delegatedExpanded
-      ? delegatedExpanded.build(clampedT)
-      : sampleArchetype3DRig(cat.archetype, clampedT, exercise);
+    const evalFn = delegatedExpanded
+      ? delegatedExpanded.build
+      : (tVal: number) => sampleArchetype3DRig(cat.archetype, tVal, exercise);
+    const built = normalizeBiomechanicalPoseRig(evalFn(clampedT), evalFn(0), evalFn(1));
     return {
       rigId: cat.archetype,
       rigScope: 'dedicated-3d-rig',
@@ -4475,9 +4791,10 @@ export function sampleUniversal3DExerciseRig(
   const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, proceduralKey)
     ? EXPANDED_DEDICATED_3D_RIGS[proceduralKey]
     : undefined;
-  const built = delegatedExpanded
-    ? delegatedExpanded.build(clampedT)
-    : sampleArchetype3DRig(proceduralKey, clampedT, exercise);
+  const evalProc = delegatedExpanded
+    ? delegatedExpanded.build
+    : (tVal: number) => sampleArchetype3DRig(proceduralKey, tVal, exercise);
+  const built = normalizeBiomechanicalPoseRig(evalProc(clampedT), evalProc(0), evalProc(1));
   return {
     rigId: `procedural:${exercise.apparatus}:${exercise.bodyPosition}:${proceduralKey}`,
     rigScope: 'procedural-3d-synthesis',

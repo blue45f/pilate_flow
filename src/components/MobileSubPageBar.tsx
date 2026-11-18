@@ -79,7 +79,7 @@ export function MobileSubPageBar<T extends string>({
                   transition={
                     prefersReduced
                       ? { duration: 0 }
-                      : { type: 'spring', stiffness: 460, damping: 34, mass: 0.7 }
+                      : { type: 'spring', duration: 0.28, bounce: 0 }
                   }
                 />
               )}

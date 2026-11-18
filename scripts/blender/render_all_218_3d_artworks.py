@@ -217,7 +217,7 @@ def main():
         allowed = {x.strip() for x in args.apparatus.split(",") if x.strip()}
         all_exercises = [ex for ex in all_exercises if ex["apparatus"] in allowed]
     subset = all_exercises[args.start : args.end]
-    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=640, res_y=400, samples=12)
+    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=640, res_y=400, samples=14)
 
     t0 = time.time()
     rendered = 0
@@ -230,7 +230,7 @@ def main():
             mc = MeshCollector(subj_col, mats, glb_mode=False)
             rig = ex["phases"][phase]
             build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=1)
+            build_sculpted_practitioner(mc, rig, subsurf=2)
             scene.render.filepath = out_png
             bpy.ops.render.render(write_still=True)
             rendered += 1

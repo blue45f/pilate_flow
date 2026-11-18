@@ -1,6 +1,7 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
 import { EquipmentChoice } from './EquipmentChoice';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   AlertTriangle,
   CalendarDays,
@@ -290,6 +291,7 @@ const exceptionLabel = (item: InstructorScheduleException) =>
 export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   today = localScheduleDate(),
 }) => {
+  const prefersReduced = useReducedMotion();
   const {
     instructorSchedule: data,
     setInstructorSchedule,
@@ -1045,6 +1047,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           className="flow-schedule-next"
           aria-label="다가오는 수업"
           data-testid="schedule-next-class"
+          data-pf-r=""
+          data-pf-tilt=""
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           <span className="flow-schedule-next-label">
@@ -1166,14 +1170,38 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               aria-pressed={mode === 'day'}
               onClick={() => setModeWithReset('day')}
             >
-              일간 보기
+              {mode === 'day' && (
+                <motion.span
+                  layoutId={prefersReduced ? undefined : 'pf-schedule-mode-pill'}
+                  className="pf-seg-pill"
+                  aria-hidden="true"
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : { type: 'spring', duration: 0.24, bounce: 0 }
+                  }
+                />
+              )}
+              <span>일간 보기</span>
             </button>
             <button
               type="button"
               aria-pressed={mode === 'week'}
               onClick={() => setModeWithReset('week')}
             >
-              주간 보기
+              {mode === 'week' && (
+                <motion.span
+                  layoutId={prefersReduced ? undefined : 'pf-schedule-mode-pill'}
+                  className="pf-seg-pill"
+                  aria-hidden="true"
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : { type: 'spring', duration: 0.24, bounce: 0 }
+                  }
+                />
+              )}
+              <span>주간 보기</span>
             </button>
           </div>
           <div className="schedule-date-nav" style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -1306,6 +1334,14 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               <strong>수업 준비 현황</strong>
               <span>
                 준비 완료 {readyScheduledCount}회 · 준비 필요 {needsPrepRows.length}회
+              </span>
+              <span className="pf-schedule-readiness-meter" aria-hidden="true">
+                <span
+                  className="pf-schedule-readiness-meter__fill"
+                  style={{
+                    transform: `scaleX(${Math.min(1, Math.max(0, readyScheduledCount / Math.max(1, scheduledRows.length))).toFixed(3)})`,
+                  }}
+                />
               </span>
             </div>
             <div className="schedule-prep-controls">
@@ -1638,6 +1674,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         className={`schedule-class schedule-class-${row.status}${isHighlighted ? ' schedule-class-prep-focus' : ''}`}
                         data-prep-status={row.status === 'scheduled' ? prepInfo?.status : undefined}
                         data-prep-highlighted={isHighlighted ? 'true' : undefined}
+                        data-pf-r=""
+                        data-pf-tilt=""
                         key={row.id}
                         aria-label={`${row.title} ${formatScheduleTime(row.startTime)}`}
                       >

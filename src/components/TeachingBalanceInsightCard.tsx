@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, ArrowRight, Compass } from 'lucide-react';
 import { PfBadge, PfButton, PfCard } from '../design-system';
 import type { ClassHistoryLog, PilatesExercise } from '../types/pilates';
@@ -20,6 +21,7 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
   exercisesMap,
   onJumpToWorkbench,
 }) => {
+  const prefersReduced = useReducedMotion();
   const [windowSize, setWindowSize] = useState<5 | 15>(5);
 
   const report = useMemo(
@@ -43,8 +45,8 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
       <div className="pf-balance-insight-card__head">
         <div>
           <span className="eyebrow">
-            <Compass size={13} aria-hidden="true" style={{ verticalAlign: 'middle' }} /> RECENT FLOW
-            BALANCE
+            <Compass size={13} strokeWidth={1.5} aria-hidden="true" style={{ verticalAlign: 'middle' }} />{' '}
+            최근 수업 흐름 요약
           </span>
           <h2 className="section-heading">움직임 분류 · 블록 밸런스</h2>
         </div>
@@ -68,7 +70,19 @@ export const TeachingBalanceInsightCard: React.FC<TeachingBalanceInsightCardProp
                 aria-pressed={windowSize === opt.size}
                 onClick={() => setWindowSize(opt.size)}
               >
-                {opt.label}
+                {windowSize === opt.size && (
+                  <motion.span
+                    layoutId={prefersReduced ? undefined : 'pf-balance-window-pill'}
+                    className="pf-seg-pill"
+                    aria-hidden="true"
+                    transition={
+                      prefersReduced
+                        ? { duration: 0 }
+                        : { type: 'spring', duration: 0.24, bounce: 0 }
+                    }
+                  />
+                )}
+                <span>{opt.label}</span>
               </button>
             ))}
           </div>

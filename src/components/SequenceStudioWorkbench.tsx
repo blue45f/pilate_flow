@@ -95,6 +95,8 @@ import {
 import { AiQuickSequenceBar } from './AiQuickSequenceBar';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { LightDismissDialog } from './LightDismissDialog';
+import { StudioSpringHorizon } from './StudioBrandMark';
+import { CountUp } from '../motion';
 import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
 import '../styles/sequence-studio.css';
 
@@ -150,6 +152,10 @@ const LAYER_OPTIONS = [
 ];
 const minutes = (seconds: number) =>
   `${Math.floor(seconds / 60)}분${seconds % 60 ? ` ${Math.round(seconds % 60)}초` : ''}`;
+const minutesTweened = (seconds: number) => {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}분${s % 60 ? ` ${s % 60}초` : ''}`;
+};
 
 /** Valid keystrokes persist immediately. Incomplete number/title input stays local. */
 function PlanningInput({
@@ -1063,6 +1069,10 @@ export function SequenceStudioWorkbench(props: Props) {
             수업 만들기
           </h1>
           <p>동작을 고르고 나만의 흐름을 완성하세요</p>
+          <span className="pf-studio-spring-meter" aria-hidden="true">
+            <StudioSpringHorizon ratio={target ? total / target : 0} />
+            <em>{target ? `${Math.min(100, Math.round((total / target) * 100))}%` : '0%'}</em>
+          </span>
         </div>
         <div className="flow-heading-actions">
           <button className="flow-button" onClick={() => setPresetsOpen(true)}>
@@ -1628,7 +1638,9 @@ export function SequenceStudioWorkbench(props: Props) {
             </div>
             <div className="flow-time-overview">
               <div>
-                <strong>{minutes(total)}</strong>
+                <strong className="pf-hero-duration">
+                  <CountUp value={total} format={minutesTweened} />
+                </strong>
                 <span> / 목표 {s.activeTargetMinutes}분</span>
                 <button
                   className="flow-text-button"
