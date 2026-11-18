@@ -1874,6 +1874,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             }`.trim()}
           >
             <span
+              className="teaching-timer-eyebrow"
+              style={{
+                display: 'block',
+                fontSize: '0.6875rem',
+                fontWeight: 600,
+                letterSpacing: '0.16em',
+                opacity: 0.75,
+                marginBottom: 6,
+              }}
+            >
+              딥 포레스트 타이머
+            </span>
+            <span
               className={`teaching-timer-status ${clock.running ? 'running' : ''} ${
                 isPausedMidStep ? 'paused' : ''
               } ${isStepCompleted ? 'completed' : ''}`.trim()}
@@ -1934,10 +1947,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </details>
             {!currentIsRest && exercise?.breathPattern && (
               <p
-                className="teaching-breath-glance-pill sr-only"
+                className="teaching-breath-glance-pill"
                 data-testid="live-stage-breath-callout"
               >
-                호흡 리듬 · {exercise.breathPattern}
+                호흡 콜아웃 · {exercise.breathPattern}
               </p>
             )}
             <div

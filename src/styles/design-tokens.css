@@ -10,12 +10,14 @@
   --pf-palette-forest-800: #173d34;
   --pf-palette-forest-700: #214f43;
   --pf-palette-forest-600: #2e6354;
+  /* Doc-canonical sage accent (primary action); forest-800 stays as the darker text/contrast green. */
+  --pf-palette-sage-accent: #355441;
   --pf-palette-sage-300: #c4d0be;
   --pf-palette-sage-200: #d8e1d3;
   --pf-palette-sage-150: #e4eadf;
   --pf-palette-sage-100: #eef2ea;
   --pf-palette-ivory-200: #efede4;
-  --pf-palette-ivory-100: #f7f5ef;
+  --pf-palette-ivory-100: #faf8f4;
   --pf-palette-paper-50: #fffef9;
   --pf-palette-white: #ffffff;
   --pf-palette-ink-900: #1e3129;
@@ -31,7 +33,7 @@
   --pf-color-bg-surface-subtle: #f3f5ee;
   --pf-color-bg-surface-muted: var(--vnext-sage, var(--pf-palette-sage-150));
   --pf-color-bg-surface-elevated: var(--pf-palette-white);
-  --pf-color-bg-sidebar: var(--vnext-forest, var(--pf-palette-forest-800));
+  --pf-color-bg-sidebar: var(--pf-palette-white);
   --pf-color-bg-sample: #f8f8ef;
   --pf-color-bg-overlay: rgba(23, 45, 36, 0.48);
 
@@ -40,11 +42,11 @@
   --pf-color-text-secondary: var(--pf-palette-ink-700);
   --pf-color-text-muted: var(--pf-palette-ink-500);
   --pf-color-text-on-primary: #fffef9;
-  --pf-color-text-on-sidebar: #f5f4e8;
+  --pf-color-text-on-sidebar: var(--pf-palette-ink-900);
   --pf-color-text-brand: var(--vnext-forest, var(--pf-palette-forest-800));
 
   /* 4. Semantic Color Tokens — Interactive Actions */
-  --pf-color-action-primary: var(--vnext-forest, var(--pf-palette-forest-800));
+  --pf-color-action-primary: var(--pf-palette-sage-accent);
   --pf-color-action-primary-hover: var(--pf-palette-forest-700);
   --pf-color-action-primary-active: var(--pf-palette-forest-900);
   --pf-color-action-secondary-bg: var(--pf-palette-paper-50);
@@ -86,6 +88,16 @@
   --pf-color-ai-memo-bg: #f4f1e3;
   --pf-color-ai-memo-border: #d4ccb3;
   --pf-color-ai-memo-text: #4a3f28;
+
+  /* 6c. Atelier Motion Tokens — kinematic diagram palette shared by
+     MovementPhaseDiagramSvg and the motion-pattern-preview harmonization.
+     Exact authored values: no existing --pf-palette-sage-* token equals the sage
+     volume #cfe0d5 (closest are sage-200 #d8e1d3 / sage-300 #c4d0be), so the
+     atelier tokens pin the diagram palette instead of shifting its colors. */
+  --pf-atelier-oak: #cca477;
+  --pf-atelier-sage: #cfe0d5;
+  --pf-atelier-forest: #1a3b32;
+  --pf-atelier-terracotta: #bf5a41;
 
   /* 7. Typography Tokens */
   --pf-font-sans:
@@ -1041,8 +1053,8 @@
 
 .pf-core-quick-btn--accent,
 .vnext-shell .pf-core-quick-btn.pf-core-quick-btn--accent {
-  background: var(--pf-color-action-primary, #173d34) !important;
-  border-color: var(--pf-color-action-primary, #173d34) !important;
+  background: var(--pf-color-action-primary, #355441) !important;
+  border-color: var(--pf-color-action-primary, #355441) !important;
   color: var(--pf-color-text-on-primary, #fffef9) !important;
 }
 

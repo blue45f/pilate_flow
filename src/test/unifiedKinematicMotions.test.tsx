@@ -151,8 +151,10 @@ describe('Unified Studio Kinematic Motion System with native illustrations and s
     }
 
     const { container, unmount } = render(<KinematicSchematicShowcase />);
+    // 4 curated cards + 1 selected-motion card from the motion selector
+    // (the selector covers all 98 native motions via the shared engine).
     const showcaseSvgs = container.querySelectorAll('svg.movement-phase-diagram-svg');
-    expect(showcaseSvgs).toHaveLength(4);
+    expect(showcaseSvgs).toHaveLength(5);
     unmount();
   });
 

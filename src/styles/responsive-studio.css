@@ -1,15 +1,15 @@
 /* Responsive studio: one navigation surface, the sequence before secondary tools.
    Existing functional classes remain intact. No asset, state or review data is changed. */
 :root {
-  --studio-canvas: #f5f7f7;
+  --studio-canvas: #faf8f4;
   --studio-surface: #ffffff;
   --studio-subtle: #eef2f2;
   --studio-ink: #182c30;
   --studio-muted: #526267;
   --studio-line: #d6e0e0;
-  --studio-accent: #17675c;
-  --studio-accent-hover: #105449;
-  --studio-selected: #e5f2ef;
+  --studio-accent: #355441;
+  --studio-accent-hover: #2e4a3a;
+  --studio-selected: #e7ece7;
   --vnext-forest: var(--studio-accent);
   --vnext-ivory: var(--studio-canvas);
   --vnext-sage: var(--studio-selected);
@@ -39,7 +39,7 @@
   --pf-color-text-on-sidebar: var(--studio-ink);
   --pf-color-action-primary: var(--studio-accent);
   --pf-color-action-primary-hover: var(--studio-accent-hover);
-  --pf-color-action-primary-active: #0c443b;
+  --pf-color-action-primary-active: #173d34;
   --pf-color-action-secondary-bg: var(--studio-surface);
   --pf-color-action-secondary-hover: var(--studio-subtle);
   --pf-color-action-secondary-border: var(--studio-line);
@@ -48,7 +48,7 @@
   --pf-color-border-default: var(--studio-line);
   --pf-color-border-strong: #97adad;
   --pf-color-focus-ring: var(--studio-accent);
-  --pf-color-focus-halo: #17675c26;
+  --pf-color-focus-halo: #35544126;
   --pf-color-block-surface: var(--studio-surface);
   --pf-color-block-header-bg: var(--studio-subtle);
   --pf-color-ai-draft-bg: var(--studio-subtle);

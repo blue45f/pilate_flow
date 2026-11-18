@@ -1,13 +1,16 @@
 /* Instructor workspace. Provider chrome is reserved for, never hidden or modified. */
 :root {
-  --vnext-forest: #173d34;
-  --vnext-ivory: #f7f5ef;
+  /* Doc-canonical sage accent; --vnext-forest-deep keeps the darker forest for text/contrast. */
+  --vnext-forest: #355441;
+  --vnext-forest-deep: #173d34;
+  --vnext-ivory: #faf8f4;
   --vnext-sage: #d8e1d3;
   --vnext-clay: #b16f48;
   --hosted-obstruction-inset: 0px;
   --v2-background: var(--vnext-ivory);
   --v2-primary: var(--vnext-forest);
   --v2-sage: var(--vnext-sage);
+  --v2-sidebar: #ffffff;
   --v2-ink: #24362f;
   --v2-muted: #59685e;
   --v2-line: #dfe3d8;
@@ -22,13 +25,14 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
 }
 #root .vnext-shell .sidebar {
   width: auto;
-  background: var(--vnext-forest);
-  color: #f5f4e8;
-  border: 0;
+  /* Light editorial sidebar (doc: white). No longer a dark base that later layers must override. */
+  background: var(--v2-sidebar);
+  color: var(--v2-ink);
+  border-right: 1px solid var(--v2-line);
   padding: 28px 18px 20px;
 }
 #root .vnext-shell .brand {
-  color: #f5f4e8;
+  color: var(--vnext-forest);
   gap: 10px;
   margin-bottom: 38px;
 }
@@ -40,11 +44,11 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
   display: block;
   font: 500 0.5rem/1.8 sans-serif;
   letter-spacing: 0.2em;
-  color: #d3dfce;
+  color: var(--v2-muted);
   margin-top: 5px;
 }
 #root .vnext-shell .sidebar-label {
-  color: #becebd;
+  color: var(--v2-muted);
   font-size: 0.6875rem;
   letter-spacing: 0.16em;
 }
@@ -52,7 +56,7 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
   gap: 8px;
 }
 #root .vnext-shell .desktop-nav button {
-  color: #e0e8d9;
+  color: var(--v2-ink);
   min-height: 50px;
   font-weight: 500;
   border-radius: 12px;
@@ -63,39 +67,39 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
   color: var(--vnext-forest);
 }
 #root .vnext-shell .desktop-nav button:hover:not(.active) {
-  background: #ffffff12;
+  background: rgba(53, 84, 65, 0.08);
 }
 #root .vnext-shell .desktop-nav small {
   color: inherit;
   opacity: 0.8;
 }
 #root .vnext-shell .v2-sidebar-upcoming {
-  border-top: 1px solid #ffffff24;
+  border-top: 1px solid var(--v2-line);
   padding-top: 24px;
   margin-top: 36px;
 }
 #root .vnext-shell .v2-sidebar-upcoming h2,
 #root .vnext-shell .v2-sidebar-upcoming > p,
 #root .vnext-shell .v2-sidebar-upcoming .text-button {
-  color: #d3dfce;
+  color: var(--v2-muted);
 }
 #root .vnext-shell .v2-upcoming-link {
-  color: #f5f4e8;
-  background: #ffffff08;
-  border-color: #ffffff15;
+  color: var(--v2-ink);
+  background: var(--vnext-ivory);
+  border-color: var(--v2-line);
   border-radius: 12px;
   padding: 10px 8px;
 }
 #root .vnext-shell .v2-upcoming-link small {
-  color: #d3dfce;
+  color: var(--v2-muted);
 }
 #root .vnext-shell .workspace-button {
-  color: #f5f4e8;
-  border-color: #ffffff24;
+  color: var(--v2-ink);
+  border-color: var(--v2-line);
   padding-top: 20px;
 }
 #root .vnext-shell .workspace-button small {
-  color: #d3dfce;
+  color: var(--v2-muted);
 }
 #root .vnext-shell .studio-avatar {
   background: #dbe3cf;
@@ -132,12 +136,12 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
 #root .vnext-shell .btn-primary {
   background: var(--vnext-forest);
   color: #fffef9;
-  box-shadow: 0 3px 7px #173d3412;
+  box-shadow: 0 3px 7px rgba(53, 84, 65, 0.07);
   border: 1px solid var(--vnext-forest);
   border-radius: 12px;
 }
 #root .vnext-shell .btn-primary:hover:not(:disabled) {
-  background: #235346;
+  background: #2e4a3a;
 }
 #root .vnext-shell .btn-secondary {
   background: #fffef9b3;
@@ -314,7 +318,7 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
   margin-block: auto;
   border-color: #d7dfd0;
   border-radius: 22px;
-  box-shadow: 0 20px 80px #173d3433;
+  box-shadow: 0 20px 80px rgba(53, 84, 65, 0.2);
 }
 #root .vnext-shell .atelier-modal-shell {
   max-height: calc(90dvh - var(--hosted-obstruction-inset));
@@ -363,7 +367,7 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
     width: 270px;
   }
   #root .vnext-shell .sidebar-close {
-    color: #f5f4e8;
+    color: var(--v2-ink);
   }
   #root .vnext-shell .topbar {
     min-height: 72px;
@@ -408,7 +412,7 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
     grid-template-columns: minmax(88px, 0.72fr) minmax(0, 1fr);
     gap: 10px;
     padding: 18px;
-    background: linear-gradient(90deg, transparent 22%, #f7f5efbf 44%, #f7f5efed 64%);
+    background: linear-gradient(90deg, transparent 22%, #faf8f4bf 44%, #faf8f4ed 64%);
   }
   #root .vnext-shell .vnext-workbench .workbench-welcome-summary,
   #root .vnext-shell .vnext-workbench .workbench-welcome h2 {
@@ -433,7 +437,7 @@ html:has(> [popover='manual']:popover-open:not(dialog)) {
     min-height: 68px;
     padding: 5px 7px calc(5px + env(safe-area-inset-bottom));
     background: #fbfbf4f2;
-    box-shadow: 0 4px 28px #173d3412;
+    box-shadow: 0 4px 28px rgba(53, 84, 65, 0.07);
     backdrop-filter: blur(14px);
   }
   #root .vnext-shell .bottom-nav > button {

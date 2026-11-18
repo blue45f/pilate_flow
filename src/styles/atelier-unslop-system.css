@@ -12,8 +12,8 @@
 
 :root {
   /* Pass 2: Warm Light Neutral Ramp & Single Botanical Accent (>= 4.5:1) */
-  --pf-unslop-bg: #f7f4ee;
-  --pf-unslop-sidebar: #f3efe7;
+  --pf-unslop-bg: #faf8f4;
+  --pf-unslop-sidebar: #ffffff;
   --pf-unslop-card: #ffffff;
   --pf-unslop-subtle: #faf8f4;
   --pf-unslop-raised: #efe9df;
@@ -28,9 +28,9 @@
   --pf-unslop-text-muted-on-linen: #6b6257;
 
   /* Single Primary Accent */
-  --pf-unslop-accent: #1f4435;
-  --pf-unslop-accent-hover: #18362a;
-  --pf-unslop-accent-soft: rgba(31, 68, 53, 0.08);
+  --pf-unslop-accent: #355441;
+  --pf-unslop-accent-hover: #2e4a3a;
+  --pf-unslop-accent-soft: rgba(53, 84, 65, 0.08);
 
   /* Pass 1 & 7: 4px Scale, Concentric Radii & Neutral Light Depth */
   --pf-unslop-radius-keycap: 6px;
@@ -1392,7 +1392,7 @@ html body #root .pf-cmdk-search-box {
 html body #root .pf-cmdk-search-box:focus-within {
   background: var(--pf-unslop-card) !important;
   border-color: var(--pf-unslop-accent) !important;
-  box-shadow: 0 0 0 2px rgba(31, 68, 53, 0.14) !important;
+  box-shadow: 0 0 0 2px rgba(53, 84, 65, 0.14) !important;
 }
 
 html body #root .pf-cmdk-search-box input {
@@ -1414,7 +1414,7 @@ html body #root .pf-cmdk-feedback {
   padding: 8px 12px !important;
   border-radius: var(--pf-unslop-radius-row) !important;
   background: var(--pf-unslop-subtle) !important;
-  border: 1px solid rgba(31, 68, 53, 0.24) !important;
+  border: 1px solid rgba(53, 84, 65, 0.24) !important;
   color: var(--pf-unslop-accent) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -1536,14 +1536,14 @@ html body #root .pf-cmdk-nav-icon {
    10. 나의 스튜디오 설정 (PilatesSettingsPage) — Calm White Cards & Quiet Badges
    ========================================================================== */
 .pf-settings-page {
-  --pf-sp-bg: var(--pf-unslop-bg, #f7f4ee);
+  --pf-sp-bg: var(--pf-unslop-bg, #faf8f4);
   --pf-sp-card: var(--pf-unslop-card, #ffffff);
   --pf-sp-subtle: var(--pf-unslop-subtle, #faf8f4);
   --pf-sp-border: var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
   --pf-sp-forest: var(--pf-unslop-text-primary, #1f1b16);
   --pf-sp-sage: var(--pf-unslop-text-secondary, #5e554a);
   --pf-sp-muted: var(--pf-unslop-text-secondary, #5e554a);
-  --pf-sp-accent: var(--pf-unslop-accent, #1f4435);
+  --pf-sp-accent: var(--pf-unslop-accent, #355441);
   --pf-sp-accent-soft: var(--pf-unslop-raised, #efe9df);
   color: var(--pf-unslop-text-primary, #1f1b16);
 }
@@ -1607,8 +1607,8 @@ html body #root .pf-cmdk-nav-icon {
     .pf-settings-page__speed-btn[aria-pressed='true'],
     .pf-settings-subchip[aria-pressed='true']
   ) {
-  background: var(--pf-unslop-accent, #1f4435) !important;
-  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  background: var(--pf-unslop-accent, #355441) !important;
+  border-color: var(--pf-unslop-accent, #355441) !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
@@ -1643,8 +1643,8 @@ html body #root .pf-cmdk-nav-icon {
 .pf-settings-fixture-toolbar .pf-settings-page__btn[aria-pressed='true'] {
   min-height: 44px;
   border-radius: var(--pf-unslop-radius-control, 10px) !important;
-  background: var(--pf-unslop-accent, #1f4435) !important;
-  border: 1px solid var(--pf-unslop-accent, #1f4435) !important;
+  background: var(--pf-unslop-accent, #355441) !important;
+  border: 1px solid var(--pf-unslop-accent, #355441) !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
@@ -1662,8 +1662,8 @@ html body #root .pf-cmdk-nav-icon {
 }
 
 .pf-settings-page .pf-settings-connection-badge.is-connected {
-  border-color: rgba(31, 68, 53, 0.24) !important;
-  color: var(--pf-unslop-accent, #1f4435) !important;
+  border-color: rgba(53, 84, 65, 0.24) !important;
+  color: var(--pf-unslop-accent, #355441) !important;
 }
 
 .pf-settings-page .pf-settings-overview-card {
@@ -1746,8 +1746,8 @@ html
     .study-bookmark-filter[aria-pressed='true'],
     .study-save-bookmark[aria-pressed='true']
   ) {
-  background: var(--pf-unslop-accent, #1f4435) !important;
-  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  background: var(--pf-unslop-accent, #355441) !important;
+  border-color: var(--pf-unslop-accent, #355441) !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
@@ -1779,8 +1779,8 @@ html
 }
 
 html body #root .pf-idea-step-pill.is-active {
-  background: var(--pf-unslop-accent, #1f4435) !important;
-  border-color: var(--pf-unslop-accent, #1f4435) !important;
+  background: var(--pf-unslop-accent, #355441) !important;
+  border-color: var(--pf-unslop-accent, #355441) !important;
   color: #ffffff !important;
 }
 
@@ -1829,7 +1829,7 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
    ========================================================================== */
 @media screen {
   .class-cue-sheet-root:not(.is-print-preview) {
-    background-color: var(--pf-unslop-bg, #f7f4ee);
+    background-color: var(--pf-unslop-bg, #faf8f4);
     color: var(--pf-unslop-text-primary, #1f1b16);
     gap: 16px;
   }
@@ -1858,8 +1858,8 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
   .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-focus-card.is-current,
   .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-item.is-active-step,
   .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-expanded-row.is-active-step {
-    border: 1px solid var(--pf-unslop-accent, #1f4435);
-    box-shadow: inset 3px 0 0 var(--pf-unslop-accent, #1f4435);
+    border: 1px solid var(--pf-unslop-accent, #355441);
+    box-shadow: inset 3px 0 0 var(--pf-unslop-accent, #355441);
     background-color: var(--pf-unslop-card, #ffffff);
   }
 
@@ -1881,8 +1881,8 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
 
   .class-cue-sheet-root:not(.is-print-preview)
     :is(.cue-sheet-btn.is-active, .cue-sheet-item-select-btn[aria-current='step']) {
-    background-color: var(--pf-unslop-accent, #1f4435);
-    border-color: var(--pf-unslop-accent, #1f4435);
+    background-color: var(--pf-unslop-accent, #355441);
+    border-color: var(--pf-unslop-accent, #355441);
     color: #ffffff;
     font-weight: 600;
   }
@@ -1897,9 +1897,9 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
   }
 
   .class-cue-sheet-root:not(.is-print-preview) .cue-sheet-badge.is-emphasis {
-    background-color: rgba(31, 68, 53, 0.08);
-    border-color: rgba(31, 68, 53, 0.24);
-    color: var(--pf-unslop-accent, #1f4435);
+    background-color: rgba(53, 84, 65, 0.08);
+    border-color: rgba(53, 84, 65, 0.24);
+    color: var(--pf-unslop-accent, #355441);
     font-weight: 600;
   }
 
@@ -1910,7 +1910,7 @@ html body #root :is(.study-step-counter, .study-results-row, .pf-quick-flow-coac
 
 /* ==========================================================================
    13. Pass 8: Seamless 3D Cyclorama & Thumbnail Surface Blending
-       Matches Infinity L-Sweep Studio Cyclorama (#f2eee5..#f7f4ee) with quiet
+       Matches Infinity L-Sweep Studio Cyclorama (#f2eee5..#faf8f4) with quiet
        1px neutral hairlines so 3D renders & interactive WebGL/Canvas stages
        sit natively inside warm-linen cards without harsh rectangular seams.
    ========================================================================== */

@@ -39,11 +39,20 @@ function formatFriendlyStudioText(raw: string): string {
 export interface CatalogMotionThumbnailProps {
   asset: CatalogContinuousMotionAsset;
   className?: string;
+  /**
+   * When true, the continuous-motion loop starts on mount instead of waiting
+   * for the thumbnail's own pointerenter. Used by atlas cards, where the
+   * parent swaps the static artwork for this thumbnail on hover — the
+   * thumbnail mounts under an already-hovering pointer, so its own
+   * pointerenter may never fire.
+   */
+  autoStart?: boolean;
 }
 
 export function CatalogMotionThumbnail({
   asset,
   className = '',
+  autoStart = false,
 }: CatalogMotionThumbnailProps): React.JSX.Element {
   if (getExpandedMovementVisualBinding(asset.exerciseId)?.nativeMotionAvailable === false) {
     return (
@@ -62,12 +71,15 @@ export function CatalogMotionThumbnail({
       </div>
     );
   }
-  return <CatalogMotionThumbnailContent asset={asset} className={className} />;
+  return (
+    <CatalogMotionThumbnailContent asset={asset} className={className} autoStart={autoStart} />
+  );
 }
 
 function CatalogMotionThumbnailContent({
   asset,
   className = '',
+  autoStart = false,
 }: CatalogMotionThumbnailProps): React.JSX.Element {
   const [hoverProgress, setHoverProgress] = useState<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -86,6 +98,42 @@ function CatalogMotionThumbnailContent({
   }, []);
   const { canAnimate } = useMotionPlaybackEnvironment(wrapperRef, stopHoverLoop);
 
+  const startHoverLoop = useCallback(() => {
+    if (!canAnimate) return;
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    startTimeRef.current = null;
+    lastPaintRef.current = null;
+
+    const cycleMs = asset.durationMs;
+    const step = (now: number) => {
+      if (document.hidden) {
+        stopHoverLoop();
+        return;
+      }
+      if (startTimeRef.current === null) {
+        startTimeRef.current = now;
+      }
+      const elapsed = Math.max(0, now - startTimeRef.current);
+      if (
+        lastPaintRef.current === null ||
+        now - lastPaintRef.current >= RENDER_INTERVAL_MS - 0.5
+      ) {
+        setHoverProgress((elapsed % cycleMs) / cycleMs);
+        lastPaintRef.current = now;
+      }
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+  }, [asset.durationMs, canAnimate, stopHoverLoop]);
+
+  // autoStart: begin the loop on mount (see prop docs). The parent swaps this
+  // thumbnail in under an already-hovering pointer, so no pointerenter fires.
+  useEffect(() => {
+    if (!autoStart) return undefined;
+    startHoverLoop();
+    return stopHoverLoop;
+  }, [autoStart, startHoverLoop, stopHoverLoop]);
+
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) {
@@ -97,33 +145,9 @@ function CatalogMotionThumbnailContent({
   const handlePointerEnter = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.pointerType && event.pointerType !== 'mouse') return;
-      if (!canAnimate) return;
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      startTimeRef.current = null;
-      lastPaintRef.current = null;
-
-      const cycleMs = asset.durationMs;
-      const step = (now: number) => {
-        if (document.hidden) {
-          stopHoverLoop();
-          return;
-        }
-        if (startTimeRef.current === null) {
-          startTimeRef.current = now;
-        }
-        const elapsed = Math.max(0, now - startTimeRef.current);
-        if (
-          lastPaintRef.current === null ||
-          now - lastPaintRef.current >= RENDER_INTERVAL_MS - 0.5
-        ) {
-          setHoverProgress((elapsed % cycleMs) / cycleMs);
-          lastPaintRef.current = now;
-        }
-        rafRef.current = requestAnimationFrame(step);
-      };
-      rafRef.current = requestAnimationFrame(step);
+      startHoverLoop();
     },
-    [asset.durationMs, canAnimate, stopHoverLoop],
+    [startHoverLoop],
   );
 
   const sampledHover = useMemo(

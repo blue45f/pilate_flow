@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type DragEvent,
 } from 'react';
 import {
@@ -31,6 +32,7 @@ import {
   RefreshCw,
   Search,
   Settings2,
+  Sparkles,
   Trash2,
   Undo2,
   UnlockKeyhole,
@@ -48,7 +50,7 @@ import {
   usePilatesStore,
 } from '../store/usePilatesStore';
 import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
-import { EQUIPMENT_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, getEquipmentFamilies, getEquipmentFamily, getExerciseEquipment } from '../data/equipmentCatalog';
 import type {
   ApparatusType,
   AutoGenerateCriteria,
@@ -81,11 +83,13 @@ import {
 import {
   exerciseMatchesCriteria,
   fitSequenceDuration,
+  getMovementKey,
   getStepSideLabels,
   getStepTiming,
   isRestStep,
   proposeBlockAlternatives,
 } from '../utils/sequenceEngine';
+import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
@@ -97,6 +101,7 @@ import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { LightDismissDialog } from './LightDismissDialog';
 import { StudioSpringHorizon } from './StudioBrandMark';
 import { CountUp } from '../motion';
+import { SpringVisualPills } from './SpringVisualPills';
 import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
 import '../styles/sequence-studio.css';
 
@@ -156,6 +161,43 @@ const minutesTweened = (seconds: number) => {
   const s = Math.max(0, Math.round(seconds));
   return `${Math.floor(s / 60)}분${s % 60 ? ` ${s % 60}초` : ''}`;
 };
+
+/**
+ * Spring-timeline tone. Ported from the legacy workbench ribbon, with the
+ * yellow catch-all fixed: green/white get their own tones and anything
+ * unrecognized falls back to neutral sage, never yellow.
+ * Mixed springs resolve to the strongest tension present (Balanced Body
+ * order: green 특강 > red 강 > blue 중 > yellow 약 > white 미세).
+ */
+type SpringTone = 'is-red' | 'is-blue' | 'is-green' | 'is-yellow' | 'is-white' | 'is-sage';
+const SPRING_TONE_STYLES: Record<SpringTone, { background: string; borderColor: string }> = {
+  'is-red': { background: '#faeae5', borderColor: '#e4b6a9' },
+  'is-blue': { background: '#e6eff7', borderColor: '#b5cde2' },
+  'is-green': { background: '#e6f2e9', borderColor: '#a9cbb4' },
+  'is-yellow': { background: '#fbf3e2', borderColor: '#e2cb9c' },
+  'is-white': { background: '#f8fafc', borderColor: '#cbd5e1' },
+  'is-sage': { background: '#edf4f0', borderColor: '#bfd3c6' },
+};
+function springToneClass(rawSprings: string | undefined): SpringTone {
+  const text = (rawSprings ?? '').toLowerCase();
+  if (!text) return 'is-sage';
+  const has = (pattern: RegExp) => pattern.test(text);
+  if (has(/green|그린|초록|녹색|\d\s*g\b/)) return 'is-green';
+  if (has(/red|레드|빨강|적색|\d\s*r\b/)) return 'is-red';
+  if (has(/blue|블루|파랑|청색|\d\s*b\b/)) return 'is-blue';
+  if (has(/yellow|옐로우?|노랑|황색|\d\s*y\b/)) return 'is-yellow';
+  if (has(/white|화이트|하양|백색|\d\s*w\b/)) return 'is-white';
+  return 'is-sage';
+}
+
+/** Provisional tension tiers (SpringBadge labels); exact tension varies by manufacturer/model. */
+const SPRING_TENSION_LEGEND = [
+  { swatch: '#D9A426', label: '노랑', tier: 'Yellow(약)', meaning: '가벼운 장력' },
+  { swatch: '#2E6F9E', label: '파랑', tier: 'Blue(중)', meaning: '중간 장력' },
+  { swatch: '#C84B31', label: '빨강', tier: 'Red(강)', meaning: '강한 장력' },
+  { swatch: '#2F855A', label: '초록', tier: 'Green(특강)', meaning: '특강 장력' },
+  { swatch: '#CBD5E1', label: '하양', tier: 'White(미세)', meaning: '미세 장력' },
+] as const;
 
 /** Valid keystrokes persist immediately. Incomplete number/title input stays local. */
 function PlanningInput({
@@ -695,6 +737,7 @@ export function SequenceStudioWorkbench(props: Props) {
     maxPossibleSec: number;
     reasonMessage: string;
   } | null>(null);
+  const [gapFillOpen, setGapFillOpen] = useState(false);
   const [transitionDiffPlan, setTransitionDiffPlan] =
     useState<SafeTransitionOptimizationPlan | null>(null);
   const [quickRehearsalOpen, setQuickRehearsalOpen] = useState(false);
@@ -802,6 +845,66 @@ export function SequenceStudioWorkbench(props: Props) {
         )
       : [];
 
+  // Smart gap-fill candidates, ported from the legacy workbench: at most 2
+  // authoring-eligible motions not already used (by movement key), matching
+  // the apparatus/level/equipment of the current sequence. Only computed
+  // while the sequence is short of its target.
+  const gapFillCandidates: PilatesExercise[] =
+    !s.activeSteps.length || difference <= 0
+      ? []
+      : (() => {
+          const usedKeys = new Set(
+            s.activeSteps.flatMap((step) => {
+              const exercise = !isRestStep(step) ? byId.get(step.exerciseId) : undefined;
+              return exercise ? [getMovementKey(exercise)] : [];
+            }),
+          );
+          const currentStepEquipment = [
+            ...new Set(
+              s.activeSteps.flatMap((step) => {
+                const exercise = byId.get(step.exerciseId);
+                return exercise ? getExerciseEquipment(exercise).requiredEquipment : [];
+              }),
+            ),
+          ];
+          const effectiveEq = currentStepEquipment.length
+            ? currentStepEquipment
+            : (criteria.availableEquipment ??
+              (criteria.apparatus === 'mixed'
+                ? (criteria.ownedApparatus ?? [])
+                : [criteria.apparatus]));
+          const effectiveApparatus: ApparatusType | 'mixed' =
+            effectiveEq.length === 1
+              ? (getEquipmentFamily(effectiveEq[0]) ?? s.activeApparatus)
+              : effectiveEq.length > 1
+                ? 'mixed'
+                : s.activeApparatus;
+          const picked: PilatesExercise[] = [];
+          for (const exercise of s.exercises) {
+            if (picked.length >= 2) break;
+            if (!isExerciseAuthoringEligible(exercise)) continue;
+            const key = getMovementKey(exercise);
+            if (usedKeys.has(key)) continue;
+            if (
+              !exerciseMatchesCriteria(exercise, {
+                ...criteria,
+                apparatus: effectiveApparatus,
+                level: s.activeLevel,
+                ownedApparatus: getEquipmentFamilies(effectiveEq),
+                availableEquipment: effectiveEq,
+                preferredProps: (s.lastCriteria?.preferredProps ?? criteria.preferredProps).filter(
+                  (prop) => prop === 'none' || s.ownedProps.includes(prop),
+                ),
+              })
+            ) {
+              continue;
+            }
+            usedKeys.add(key);
+            picked.push(exercise);
+          }
+          return picked;
+        })();
+
   const updateConditions = (patch: Partial<AutoGenerateCriteria>) => {
     const result = usePilatesStore.getState().updateSequencePlanningConditions(patch);
     setNotice(result.message);
@@ -827,6 +930,29 @@ export function SequenceStudioWorkbench(props: Props) {
       }
     }
     return result;
+  };
+
+  /** Appends the gap-fill candidates at the end, in one undo step. Existing steps are untouched. */
+  const applyGapFill = () => {
+    const current = usePilatesStore.getState();
+    const appendedSteps: SequenceStep[] = gapFillCandidates.map((candidate, index) => ({
+      stepId: `gap-fill-${Date.now()}-${index}`,
+      order: current.activeSteps.length + index + 1,
+      exerciseId: candidate.id,
+      blockCategory: candidate.blockCategory,
+      durationMin: candidate.defaultDurationMin,
+      selectedLayer: 'standard',
+      instructorNote: '',
+    }));
+    const message = `추천 동작 ${gapFillCandidates.length}개를 수업표 끝에 추가했어요. 되돌리기로 복구할 수 있습니다.`;
+    usePilatesStore.setState({
+      undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
+      activeSteps: [...current.activeSteps, ...appendedSteps],
+      generationError: null,
+      saveFeedback: message,
+    });
+    setGapFillOpen(false);
+    setNotice(message);
   };
 
   useEffect(() => {
@@ -1684,6 +1810,17 @@ export function SequenceStudioWorkbench(props: Props) {
                 >
                   시간 맞추기
                 </button>
+                {s.activeSteps.length > 0 && difference > 0 && gapFillCandidates.length > 0 && (
+                  <button
+                    type="button"
+                    className="flow-text-button"
+                    data-testid="smart-gap-fill-toggle"
+                    aria-expanded={gapFillOpen}
+                    onClick={() => setGapFillOpen((v) => !v)}
+                  >
+                    <Sparkles size={14} strokeWidth={1.5} aria-hidden="true" /> 빈 시간 채우기 추천
+                  </button>
+                )}
                 {transitionOptimization.savedTransitionCount > 0 && (
                   <button
                     type="button"
@@ -1749,6 +1886,236 @@ export function SequenceStudioWorkbench(props: Props) {
                       : '목표 시간에 맞게 구성했어요'}
               </p>
             </div>
+            {gapFillOpen &&
+              s.activeSteps.length > 0 &&
+              difference > 0 &&
+              gapFillCandidates.length > 0 && (
+                <div
+                  className="pf-gap-fill-drawer"
+                  data-testid="smart-gap-fill-drawer"
+                  role="region"
+                  aria-label="부족한 시간 채우기 추천 미리보기"
+                  style={{
+                    margin: '12px 0 16px',
+                    padding: '16px 18px',
+                    borderRadius: '16px',
+                    border: '1.5px dashed #355441',
+                    background: '#eef5f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <div
+                    className="pf-gap-fill-drawer__head"
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                    }}
+                  >
+                    <strong>
+                      <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
+                      {Math.max(1, Math.round(difference / 60))}분 채우기 후보 (기존 수업은
+                      덮어쓰지 않아요)
+                    </strong>
+                    <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
+                      검토 후 원하는 구성만 반영
+                    </span>
+                  </div>
+                  <div
+                    className="pf-gap-fill-drawer__items"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                      gap: '8px',
+                    }}
+                  >
+                    {gapFillCandidates.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        className="pf-gap-fill-card"
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: '12px',
+                          background: '#ffffff',
+                          border: '1px solid #cdd9d0',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                        }}
+                      >
+                        <strong>{candidate.nameKo}</strong>
+                        <span style={{ fontSize: '0.8rem', color: '#56685f' }}>
+                          기본 {minutes(candidate.defaultDurationMin * 60)} ·{' '}
+                          {candidate.targetMuscles.slice(0, 2).join('·') || '체간 정렬'}
+                        </span>
+                        {candidate.springs && <SpringVisualPills springs={candidate.springs} />}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="pf-gap-fill-drawer__actions"
+                    style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}
+                  >
+                    <button
+                      type="button"
+                      className="flow-button flow-button--primary"
+                      data-testid="smart-gap-fill-apply"
+                      onClick={applyGapFill}
+                    >
+                      수업표 끝에 추가하기
+                    </button>
+                    <button
+                      type="button"
+                      className="flow-button"
+                      onClick={() => setGapFillOpen(false)}
+                    >
+                      닫기
+                    </button>
+                  </div>
+                </div>
+              )}
+            {s.activeSteps.length > 0 && (
+              <section
+                className="pf-spring-ribbon-board"
+                data-testid="spring-timeline-ribbon"
+                role="region"
+                aria-label="타임라인 및 스프링 흐름 보드"
+                style={{
+                  margin: '8px 0 16px',
+                  padding: '16px',
+                  borderRadius: '18px',
+                  background: '#fcfbf8',
+                  border: '1px solid #dad5c8',
+                }}
+              >
+                <span className="pf-step-kicker-badge">타임라인 & 스프링 흐름 뷰</span>
+                <p style={{ margin: '0 0 8px', fontSize: '0.84rem', color: '#56685f' }}>
+                  가로 블록 너비는 소요 시간에 비례하며, 색상으로 스프링 장력 전환 지점을 한눈에
+                  확인합니다.
+                </p>
+                <div
+                  className="pf-spring-ribbon-track"
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    overflowX: 'auto',
+                    padding: '8px 0 4px',
+                  }}
+                >
+                  {s.activeSteps.map((step, index) => {
+                    const exercise = !isRestStep(step) ? byId.get(step.exerciseId) : undefined;
+                    const rawSpring = step.customSpringOverride || exercise?.springs || '';
+                    const tone = isRestStep(step) ? 'is-sage' : springToneClass(rawSpring);
+                    const toneStyle = SPRING_TONE_STYLES[tone];
+                    const durationSec = getStepTiming(step).totalSec;
+                    const blockStyle: CSSProperties = {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                      minHeight: '82px',
+                      padding: '10px 12px',
+                      borderRadius: '14px',
+                      border: '1px solid',
+                      borderColor: toneStyle.borderColor,
+                      background: toneStyle.background,
+                      textAlign: 'left',
+                      flexShrink: 0,
+                      color: '#1d201c',
+                      width: `${Math.max(132, Math.round((durationSec / 60) * 26))}px`,
+                    };
+                    const inner = (
+                      <>
+                        <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
+                          {String(index + 1).padStart(2, '0')} · {minutes(durationSec)}
+                        </small>
+                        <strong style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>
+                          {isRestStep(step) ? '중간 휴식' : (exercise?.nameKo ?? '동작')}
+                        </strong>
+                        {!isRestStep(step) && rawSpring && (
+                          <SpringVisualPills springs={rawSpring} />
+                        )}
+                      </>
+                    );
+                    return isRestStep(step) ? (
+                      <span
+                        key={step.stepId}
+                        className={`pf-spring-ribbon-block ${tone}`}
+                        style={{ ...blockStyle, cursor: 'default' }}
+                      >
+                        {inner}
+                      </span>
+                    ) : (
+                      <button
+                        key={step.stepId}
+                        type="button"
+                        className={`pf-spring-ribbon-block ${tone}`}
+                        style={{ ...blockStyle, cursor: 'pointer' }}
+                        onClick={() => revealStep(step.stepId)}
+                        aria-label={`${index + 1}번 ${exercise?.nameKo ?? '동작'} 위치로 이동`}
+                      >
+                        {inner}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    marginTop: '12px',
+                    borderTop: '1px solid #dad5c8',
+                    paddingTop: '10px',
+                  }}
+                >
+                  <strong style={{ fontSize: '0.84rem' }}>
+                    스프링 색상 범례(임시 정의 — 확인 필요)
+                  </strong>
+                  <ul
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px 14px',
+                      listStyle: 'none',
+                      margin: '6px 0 0',
+                      padding: 0,
+                    }}
+                  >
+                    {SPRING_TENSION_LEGEND.map((item) => (
+                      <li
+                        key={item.label}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        <i
+                          aria-hidden="true"
+                          style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            background: item.swatch,
+                            border: '1px solid rgba(0,0,0,0.15)',
+                            display: 'inline-block',
+                          }}
+                        />
+                        {item.label} = {item.meaning} ({item.tier})
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#56685f' }}>
+                    임시 정의입니다. 제조사·모델별 실제 장력은 다를 수 있으니 현장에서 확인해
+                    주세요.
+                  </p>
+                </div>
+              </section>
+            )}
             <div
               className="flow-sequence-list"
               onDragOver={(e) => e.preventDefault()}

@@ -68,6 +68,18 @@ const STUDIO_COLORS = {
   skinFarInk: MATERIAL.skinShade,
 } as const;
 
+/**
+ * Atelier tokens (see --pf-atelier-* in design-tokens.css). SVG presentation
+ * attributes do not reliably resolve var(), so these values are applied through
+ * inline `style` props at the sites below; the hex fallback keeps the exact
+ * authored color when the token sheet is not loaded. The rgba glow/core
+ * derivations in getMusclePalette stay literal — they are alpha variants, not
+ * the token hex itself. (#cca477 white-oak and #cfe0d5 sage do not occur in this
+ * file: oak/sage here come from the MATERIAL gradients, not hardcoded hexes.)
+ */
+const ATELIER_TERRACOTTA = 'var(--pf-atelier-terracotta, #bf5a41)';
+const ATELIER_FOREST = 'var(--pf-atelier-forest, #1a3b32)';
+
 function r1(val: number): number {
   return Math.round(val * 10) / 10;
 }
@@ -235,7 +247,7 @@ function getMusclePalette(role: MuscleHighlightSpec['role']): {
   switch (role) {
     case 'primary':
       return {
-        stroke: '#bf5a41',
+        stroke: ATELIER_TERRACOTTA,
         glow: 'rgba(191, 90, 65, 0.16)',
         core: 'rgba(191, 90, 65, 0.42)',
       };
@@ -349,7 +361,7 @@ function renderApparatusSupportLayer(
     : Math.round(apparatusState.carriageOffsetPx * 0.35);
   const springColor =
     apparatusState.springTensionLevel === 'high'
-      ? '#bf5a41'
+      ? ATELIER_TERRACOTTA
       : apparatusState.springTensionLevel === 'medium'
         ? '#b87430'
         : '#356859';
@@ -452,7 +464,7 @@ function renderApparatusSupportLayer(
         <path
           d={renderSpringCoilPath(springStart.x, springStart.y, springEnd.x, springEnd.y, 9, 1.8)}
           fill="none"
-          stroke={springColor}
+          style={{ stroke: springColor }}
           strokeWidth={1.45}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -765,7 +777,7 @@ function renderApparatusSupportLayer(
                 springTarget.y,
               )}
               fill="none"
-              stroke={springColor}
+              style={{ stroke: springColor }}
               strokeWidth={1.35}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -892,7 +904,7 @@ function renderApparatusSupportLayer(
         <path
           d={renderSpringCoilPath(springBase.x, springBase.y, pedalTip.x, pedalTip.y, 7, 1.8)}
           fill="none"
-          stroke={springColor}
+          style={{ stroke: springColor }}
           strokeWidth={1.4}
         />
 
@@ -1284,7 +1296,7 @@ function renderPoseDeltaGhostLayer(
             y1={fromPt.y}
             x2={toPt.x}
             y2={toPt.y}
-            stroke="#bf5a41"
+            style={{ stroke: ATELIER_TERRACOTTA }}
             strokeWidth={compact ? 0.8 : 1}
             strokeDasharray="2 2.5"
             opacity={0.44}
@@ -1382,7 +1394,7 @@ function renderPrimaryMusclesLayer(
             <path
               d={pathD}
               fill="none"
-              stroke={palette.glow}
+              style={{ stroke: palette.glow }}
               strokeWidth={
                 compact ? (muscle.role === 'primary' ? 8 : 6) : muscle.role === 'primary' ? 12 : 9
               }
@@ -1392,7 +1404,7 @@ function renderPrimaryMusclesLayer(
             <path
               d={pathD}
               fill="none"
-              stroke={palette.core}
+              style={{ stroke: palette.core }}
               strokeWidth={
                 compact
                   ? muscle.role === 'primary'
@@ -1411,9 +1423,8 @@ function renderPrimaryMusclesLayer(
                 cx={midPt.x}
                 cy={midPt.y}
                 r={muscle.role === 'primary' ? 2.8 : 2.2}
-                fill={palette.stroke}
                 fillOpacity={0.3}
-                stroke={palette.stroke}
+                style={{ fill: palette.stroke, stroke: palette.stroke }}
                 strokeWidth={0.95}
               />
             )}
@@ -1934,10 +1945,10 @@ function renderJointAlignmentLayer(
               rx={1.6}
               fill="#fcfaf5"
               fillOpacity={0.85}
-              stroke="#1a3b32"
+              style={{ stroke: ATELIER_FOREST }}
               strokeWidth={compact ? 1.05 : 1.35}
             />
-            <circle cx={pt.x} cy={pt.y} r={compact ? 1.1 : 1.4} fill="#1a3b32" />
+            <circle cx={pt.x} cy={pt.y} r={compact ? 1.1 : 1.4} style={{ fill: ATELIER_FOREST }} />
           </g>
         );
       })}
@@ -1953,7 +1964,7 @@ function renderJointAlignmentLayer(
             cy={pt.y}
             r={compact ? 4.2 : 5.2}
             fill="none"
-            stroke="#bf5a41"
+            style={{ stroke: ATELIER_TERRACOTTA }}
             strokeWidth={compact ? 0.9 : 1.15}
             strokeDasharray="2.5 2"
           />
@@ -1978,7 +1989,7 @@ function renderMovementDirectionLayer(
         const d = buildSmoothCurvePath(pts);
         const isControlOrLengthen =
           vec.kind === 'return-control' || vec.kind === 'axial-lengthening';
-        const color = isControlOrLengthen ? '#1f5c4d' : '#bf5a41';
+        const color = isControlOrLengthen ? '#1f5c4d' : ATELIER_TERRACOTTA;
         const markerId = isControlOrLengthen ? arrowControlId : arrowExcursionId;
         const startPt = pts[0];
 
@@ -1995,7 +2006,7 @@ function renderMovementDirectionLayer(
             <path
               d={d}
               fill="none"
-              stroke={color}
+              style={{ stroke: color }}
               strokeWidth={compact ? 1.95 : 2.25}
               strokeLinecap="round"
               strokeDasharray={vec.kind === 'axial-lengthening' ? '4 2.5' : undefined}
@@ -2006,7 +2017,7 @@ function renderMovementDirectionLayer(
               cy={startPt.y}
               r={compact ? 1.9 : 2.3}
               fill="#fcfaf5"
-              stroke={color}
+              style={{ stroke: color }}
               strokeWidth={1.35}
             />
           </g>
@@ -2273,7 +2284,7 @@ export function MovementPhaseDiagramSvg({
           markerHeight={5.5}
           orient="auto-start-reverse"
         >
-          <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#bf5a41" />
+          <path d="M 0 1.5 L 9 5 L 0 8.5 z" style={{ fill: ATELIER_TERRACOTTA }} />
         </marker>
         <marker
           id={arrowControlId}
@@ -2333,8 +2344,10 @@ export function MovementPhaseDiagramSvg({
           <circle cx={21.5} cy={13.8} r={2.9} fill="#1f4d3f" stroke="#1f4d3f" strokeWidth={0.9} />
           <polygon
             points="35.2,10.5 38.5,13.8 35.2,17.1 31.9,13.8"
-            fill={phase === 'middle' || phase === 'end' ? '#bf5a41' : '#fcfaf5'}
-            stroke={phase === 'middle' || phase === 'end' ? '#bf5a41' : '#9aa89f'}
+            style={{
+              fill: phase === 'middle' || phase === 'end' ? ATELIER_TERRACOTTA : '#fcfaf5',
+              stroke: phase === 'middle' || phase === 'end' ? ATELIER_TERRACOTTA : '#9aa89f',
+            }}
             strokeWidth={0.95}
           />
           <rect
