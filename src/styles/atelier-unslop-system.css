@@ -2882,3 +2882,35 @@ html
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+
+/* ==========================================================================
+   21. Wave 3 3D/Orbit Viewport & Motion Studio Mobile Ergonomics
+       - Block iOS long-press callout & accidental scroll during 3D orbit drags
+       - Guarantee >= 44px touch targets on mobile/tablet topbar stage & atlas dock
+       - Keep 3D HUD badges, posture captions & hotspot cards crisp in Korean
+   ========================================================================== */
+html body #root :is(.pf-orbit3d-canvas-wrap, .pf-orbit3d-canvas) {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html body #root :is(.pf-studio3d-stage, .pf-motion-studio-card) {
+  overscroll-behavior: contain;
+}
+
+html
+  body
+  #root
+  :is(.pf-studio3d-chip, .pf-orbit3d-badge, .pf-orbit3d-hotspot-card, .pf-motion-studio-card) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  html body #root .flow-app .pf-mobile-topbar-stage-btn,
+  html body #root .flow-app .pf-atlas-sequence-dock__cta {
+    min-height: 44px !important;
+  }
+}
