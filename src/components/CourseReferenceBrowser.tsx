@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ArrowUpRight, BookOpen, Check, Layers, Search, SlidersHorizontal, X } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -579,6 +580,7 @@ export function CourseReferenceBrowser({
           aria-label="선택한 참고 자료 비교"
           data-testid="course-compare-panel"
           onKeyDown={(event) => {
+            if (isImeComposing(event)) return;
             if (event.key === 'Escape' && compareState.expanded) {
               event.preventDefault();
               event.stopPropagation();

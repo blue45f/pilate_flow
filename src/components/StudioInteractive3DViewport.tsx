@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import {
   Camera,
   Check,
@@ -684,6 +685,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         tabIndex={0}
         aria-label="3D 뷰포트 조작 영역 (스페이스바 재생, 좌우 화살표 구간 이동, Shift+방향키 시점 회전, +/- 확대·축소, 두 손가락 핀치 줌, 관절 클릭 코칭 확인)"
         onKeyDown={(event) => {
+          if (isImeComposing(event)) return;
           if (event.key === ' ') {
             event.preventDefault();
             if (canAnimate) setPlaying((p) => !p);

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import {
   ArrowDown,
   ArrowUp,
@@ -114,6 +115,7 @@ export function RestStepCard({
             value={value}
             disabled={step.locked}
             onKeyDown={(event) => {
+              if (isImeComposing(event)) return;
               if (event.key === 'Escape' && activeDraft !== null) {
                 event.preventDefault();
                 event.stopPropagation();

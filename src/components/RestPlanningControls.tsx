@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { Coffee, Plus, RotateCcw } from 'lucide-react';
 import type { SequenceStep } from '../types/pilates';
@@ -83,6 +84,7 @@ export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudge
             step={0.5}
             value={value}
             onKeyDown={(event) => {
+              if (isImeComposing(event)) return;
               if (event.key === 'Escape' && edit !== null) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -247,6 +249,7 @@ export function RestInsertControl({ steps, labelForStep, onAdd }: RestInsertCont
               aria-invalid={hasDurationError ? true : undefined}
               aria-describedby={hasDurationError ? feedbackId : undefined}
               onKeyDown={(event) => {
+                if (isImeComposing(event)) return;
                 if (event.key === 'Escape' && (hasDurationError || !durationValid)) {
                   event.preventDefault();
                   event.stopPropagation();

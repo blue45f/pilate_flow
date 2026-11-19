@@ -1,4 +1,5 @@
 import { useId, useState, type RefObject } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import { X } from 'lucide-react';
 import type { InstructorScheduleOccurrence } from '../types/instructorSchedule';
 import { formatScheduleDate, formatScheduleTime } from '../utils/instructorSchedule';
@@ -30,6 +31,7 @@ export function ScheduleChangeScopePanel({
       className="schedule-change-scope"
       aria-labelledby={`${id}-heading`}
       onKeyDown={(event) => {
+        if (isImeComposing(event)) return;
         if (event.key === 'Escape') {
           event.preventDefault();
           event.stopPropagation();
