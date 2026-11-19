@@ -328,3 +328,121 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ==========================================================================
+   Wave 19 — Mobile UI/UX Simplification (Delete-Demote-Defer),
+   Impeccable (distill / quieter / typeset / harden) & Korean Typography
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* 1. Delete desktop-only keyboard shortcut hints on mobile screens */
+  html #root .composition-keyboard-hint {
+    display: none !important;
+  }
+
+  /* 2. Korean Typography ink-density tuning (Hangul 85% em-square density) */
+  html #root main#main-content p,
+  html #root .movement-cue-list li,
+  html #root .pf-step-stage-lead,
+  html #root .pf-five-min-honest-note,
+  html #root .workbench-step-flow-summary {
+    line-height: 1.65 !important;
+    letter-spacing: -0.01em !important;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  /* 3. Distill wizard & view-mode bars into calm single-row scrollable rails */
+  html #root .pf-step-wizard-stepper,
+  html #root .pf-seq-view-switcher {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    gap: 8px !important;
+    padding-bottom: 4px;
+  }
+
+  html #root .pf-step-wizard-stepper::-webkit-scrollbar,
+  html #root .pf-seq-view-switcher::-webkit-scrollbar {
+    display: none;
+  }
+
+  html #root .pf-step-wizard-stepper > button,
+  html #root .pf-seq-view-switcher > button {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+    white-space: nowrap !important;
+  }
+
+  /* 4. Quieter: flatten nested bordered cards into calm alabaster surfaces */
+  html #root .workbench-recent-card,
+  html #root .pf-b05-summary-box,
+  html #root .movement-layer,
+  html #root .pf-gap-fill-card,
+  html #root .pf-five-min-step {
+    border: none !important;
+    box-shadow: none !important;
+    background: #f5f2ea !important;
+  }
+
+  html #root .pf-five-min-step.is-done {
+    background: #eaf2ed !important;
+  }
+
+  /* 5. Compact 52px mobile topbar & clean 1px bottom-nav hairline */
+  html #root header.topbar {
+    min-height: 52px !important;
+    padding-inline: 12px !important;
+    border-bottom: 1px solid rgba(23, 61, 52, 0.08) !important;
+    box-shadow: none !important;
+  }
+
+  html #root nav.bottom-nav {
+    border-top: 1px solid rgba(23, 61, 52, 0.1) !important;
+    box-shadow: none !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* 6. Harden mobile tables against horizontal overflow */
+  html #root main#main-content table,
+  html #root dialog[open] table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-variant-numeric: tabular-nums;
+  }
+
+  html #root main#main-content table td,
+  html #root main#main-content table th,
+  html #root dialog[open] table td,
+  html #root dialog[open] table th {
+    word-break: normal;
+    padding: 8px 10px;
+    font-size: 0.84375rem;
+  }
+
+  /* 7. Calm spacing rhythm between major mobile sections (4px grid) */
+  html #root .plan-view,
+  html #root .teaching-stage,
+  html #root .pf-step-stage-frame {
+    gap: 16px;
+  }
+
+  /* 8. Sticky live CTA breathing room above bottom navigation */
+  html #root .pf-p04-mobile-sticky-cta {
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid rgba(23, 61, 52, 0.1) !important;
+    background: #fdfbf7 !important;
+  }
+}
+
+@media (pointer: coarse) {
+  html #root .composition-keyboard-hint {
+    display: none !important;
+  }
+}
