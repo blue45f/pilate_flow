@@ -27,6 +27,12 @@ describe('Wave 19 Mobile UI/UX Simplification & Korean Typography Gate', () => {
     expect(css).toContain('border: none !important');
   });
 
+  it('enforces touch-action: manipulation, overscroll-behavior-x: none, and sage tap highlight on mobile', () => {
+    expect(css).toContain('touch-action: manipulation');
+    expect(css).toContain('overscroll-behavior-x: none');
+    expect(css).toContain('-webkit-tap-highlight-color');
+  });
+
   it('hardens mobile tables against horizontal overflow with tabular-nums', () => {
     expect(css).toContain('main#main-content table');
     expect(css).toContain('dialog[open] table');

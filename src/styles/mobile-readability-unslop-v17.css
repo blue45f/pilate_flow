@@ -446,3 +446,36 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Wave 22 — Mobile Touch Ergonomics & Tactile Feedback
+   ========================================================================== */
+@media (max-width: 640px) {
+  html,
+  body,
+  html #root .workspace {
+    overscroll-behavior-x: none;
+  }
+
+  html #root button,
+  html #root a,
+  html #root summary,
+  html #root [role='button'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(30, 70, 54, 0.12);
+  }
+
+  html #root button:not(:disabled):active,
+  html #root [role='button']:active {
+    transform: scale(0.985);
+    transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html #root button:not(:disabled):active,
+  html #root [role='button']:active {
+    transform: none !important;
+    transition: none !important;
+  }
+}
