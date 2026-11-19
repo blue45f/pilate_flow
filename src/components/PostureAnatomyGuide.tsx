@@ -58,7 +58,7 @@ function AnatomyMap({ regions, label }: { regions: AnatomyRegion[]; label: strin
       </desc>
       {(['front', 'back'] as const).map((view, i) => (
         <g key={view} transform={`translate(${i * 132 + 16}, 22)`}>
-          <text x="50" y="-7" textAnchor="middle" className="posture-map-view">
+          <text x="50" y="-3" textAnchor="middle" className="posture-map-view">
             {view === 'front' ? '앞면' : '뒷면'}
           </text>
           <g className="posture-map-body" strokeWidth="1.5" strokeLinejoin="round">
@@ -95,8 +95,9 @@ function AnatomyMap({ regions, label }: { regions: AnatomyRegion[]; label: strin
                 />
                 <text
                   x={item.badge[0]}
-                  y={item.badge[1] + 3}
+                  y={item.badge[1]}
                   textAnchor="middle"
+                  dominantBaseline="central"
                   className="posture-map-number"
                 >
                   {index + 1}

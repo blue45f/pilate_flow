@@ -100,6 +100,7 @@
 }
 .posture-guide-anatomy {
   min-width: 0;
+  container-type: inline-size;
 }
 .posture-anatomy-map {
   display: block;
@@ -114,7 +115,6 @@
 }
 .posture-map-view {
   fill: #40584f;
-  font-size: 13px;
   font-weight: 600;
 }
 .posture-map-spine {
@@ -139,8 +139,22 @@
 }
 .posture-map-number {
   fill: white;
-  font-size: 13px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.posture-map-view,
+.posture-map-number {
+  font-size: 14px;
+}
+/* The 264-unit drawing can be only 198 CSS pixels wide inside a phone dialog. */
+@container (max-width: 248px) {
+  .posture-map-view,
+  .posture-map-number {
+    font-size: 18px;
+  }
+  .posture-map-number-bg {
+    r: 10.5px;
+  }
 }
 .posture-anatomy-guide .posture-guide-legend {
   list-style: none;
@@ -286,12 +300,6 @@
 @media (max-width: 360px) {
   .posture-anatomy-guide.is-compact .posture-guide-position {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .posture-map-view {
-    font-size: 13px;
-  }
-  .posture-map-number {
-    font-size: 13px;
   }
 }
 @media (forced-colors: active) {

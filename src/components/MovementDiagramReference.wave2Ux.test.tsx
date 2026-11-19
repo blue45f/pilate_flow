@@ -140,15 +140,47 @@ describe('Wave 2-2 MovementDiagramReference nested details scroll relief & Postu
   });
 
   it('enforces 44px touch targets and mobile SVG legibility rules in posture-anatomy-guide.css', () => {
-    const exercise = INITIAL_EXERCISES[0];
-    render(<PostureAnatomyGuide exercise={exercise} />);
+    const exercise = { ...INITIAL_EXERCISES[0], targetMuscles: ['햄스트링'] };
+    const { container } = render(
+      <>
+        <style>{postureAnatomyCss}</style>
+        <PostureAnatomyGuide exercise={exercise} />
+      </>,
+    );
     const region = screen.getByRole('region', { name: '자세·부위 한눈에' });
     expect(region).toHaveTextContent('위치 참고 그림입니다');
 
-    expect(postureAnatomyCss).toMatch(/\.posture-map-view\s*\{[^}]*font-size:\s*11px/);
-    expect(postureAnatomyCss).toMatch(/\.posture-map-number\s*\{[^}]*font-size:\s*10\.5px/);
-    expect(postureAnatomyCss).toMatch(
-      /\.posture-guide-notes a\s*\{[^}]*display:\s*inline-flex;[^}]*align-items:\s*center;[^}]*min-height:\s*44px;[^}]*min-width:\s*44px;[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*anywhere;/s,
+    const link = getComputedStyle(region.querySelector('.posture-guide-notes a')!);
+    expect(link.display).toBe('inline-flex');
+    expect(link.alignItems).toBe('center');
+    expect(parseFloat(link.minHeight)).toBeGreaterThanOrEqual(44);
+    expect(parseFloat(link.minWidth)).toBeGreaterThanOrEqual(44);
+    expect(link.wordBreak).toBe('keep-all');
+    expect(link.overflowWrap).toBe('anywhere');
+
+    const map = region.querySelector('.posture-anatomy-map')!;
+    const viewBoxWidth = Number(map.getAttribute('viewBox')!.split(' ')[2]);
+    const labels = ['.posture-map-view', '.posture-map-number'].map((s) => map.querySelector(s)!);
+    for (const label of labels)
+      expect(parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(13);
+
+    // jsdom has no layout engine. Apply the container rules that match the 320px dialog's 198px map.
+    const mapWidth = 198;
+    const stylesheet = container.querySelector('style')!.sheet!;
+    const matchingRules = Array.from(stylesheet.cssRules).filter(
+      (rule): rule is CSSContainerRule => {
+        const query = /^@container\s+\(max-width:\s*([\d.]+)px\)/.exec(rule.cssText);
+        return Boolean(query && mapWidth <= Number(query[1]));
+      },
     );
+    const narrowStyles = document.createElement('style');
+    narrowStyles.textContent = matchingRules
+      .flatMap((r) => Array.from(r.cssRules, (s) => s.cssText))
+      .join('\n');
+    container.append(narrowStyles);
+    for (const label of labels) {
+      const pixels = parseFloat(getComputedStyle(label).fontSize) * (mapWidth / viewBoxWidth);
+      expect(pixels).toBeGreaterThanOrEqual(13);
+    }
   });
 });
