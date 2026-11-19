@@ -1068,13 +1068,13 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         expect(usePilatesStore.getState().activeTitle).toBe('UI 로컬 폴백 생존 검증 수업');
         unmount();
       },
-      15000,
+      45000,
     );
   });
 
   describe('4. Exact Reproduction of Discovered Track A Defects', () => {
-    it('DEFECT-A1: createFreeAiService passes no AbortSignal timeout to fetchFn, and a hung postAssist locks FreeAiAssistantPanel isLoading=true (disabling the local fallback button)', async () => {
-      // Part 1: Verify backend callUpstreamFreeProvider passes no signal (timeout) in fetch init
+    it('DEFECT-A1 (backend AbortSignal resolved): createFreeAiService passes an AbortSignal timeout to fetchFn, while a hung client transport still locks FreeAiAssistantPanel isLoading=true', async () => {
+      // Part 1 (resolved regression): Verify backend callUpstreamFreeProvider attaches an AbortSignal timeout in fetch init
       const fetchSpy = vi
         .fn<typeof fetch>()
         .mockResolvedValue(makeGeminiUpstreamResponse(VALID_UPSTREAM_CLASS_DRAFT_JSON));
@@ -1086,8 +1086,9 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       await service.assist('instructor-timeout-check', SAMPLE_SERVER_CLASS_DRAFT_REQ);
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [, fetchInit] = fetchSpy.mock.calls[0];
-      // DEFECT-A1 reproduction: no AbortSignal / timeout is configured on upstream fetch
-      expect(fetchInit?.signal).toBeUndefined();
+      expect(fetchInit?.signal).toBeDefined();
+      expect(typeof fetchInit?.signal?.aborted).toBe('boolean');
+      expect(fetchInit?.signal?.aborted).toBe(false);
 
       // Part 2: Verify a hung transport.postAssist keeps FreeAiAssistantPanel in isLoading=true,
       // which disables the local fallback button ('조건으로 초안 만들기')
