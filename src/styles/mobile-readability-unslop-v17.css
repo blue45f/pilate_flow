@@ -479,3 +479,72 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   Wave 23 — 183 Disclosure <summary> 44px Ergonomics & Binder/Schedule/Stage
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* 1. All 183 progressive-disclosure <summary> triggers meet 44px thumb target */
+  html #root details > summary {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 0.90625rem;
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: keep-all;
+  }
+
+  /* 2. LiveStageView mid-class one-hand 48px transport CTAs & calm cue card */
+  html #root .teaching-next-action-cta,
+  html #root .teaching-step-control {
+    min-height: 48px !important;
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+  }
+
+  html #root .pf-p09-cue-summary-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: #f5f2ea !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  /* 3. ClassBinderView single-row filter rail & 1-column cards */
+  html #root .teaching-saved-quick-filters,
+  html #root .pf-routine-tag-filter-bar {
+    display: flex;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px !important;
+  }
+
+  html #root .teaching-saved-quick-filters::-webkit-scrollbar,
+  html #root .pf-routine-tag-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  html #root .pf-binder-blocks-grid,
+  html #root .schedule-form-grid,
+  html #root .pf-handsfree-guide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  html #root .teaching-card-main-actions,
+  html #root .flow-binder-secondary-actions,
+  html #root .schedule-card-actions,
+  html #root .schedule-day-actions,
+  html #root .schedule-prep-actions,
+  html #root .schedule-planning-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  html #root .teaching-card-date {
+    font-variant-numeric: tabular-nums;
+  }
+}

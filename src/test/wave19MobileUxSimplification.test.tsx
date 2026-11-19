@@ -33,6 +33,13 @@ describe('Wave 19 Mobile UI/UX Simplification & Korean Typography Gate', () => {
     expect(css).toContain('-webkit-tap-highlight-color');
   });
 
+  it('enforces 44px touch targets on disclosure summaries and 48px LiveStage transport CTAs', () => {
+    expect(css).toContain('details > summary');
+    expect(css).toContain('.teaching-next-action-cta');
+    expect(css).toContain('min-height: 48px !important');
+    expect(css).toContain('.pf-binder-blocks-grid');
+  });
+
   it('hardens mobile tables against horizontal overflow with tabular-nums', () => {
     expect(css).toContain('main#main-content table');
     expect(css).toContain('dialog[open] table');
