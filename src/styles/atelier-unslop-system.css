@@ -2841,3 +2841,44 @@ html
     border-radius: 14px;
   }
 }
+
+/* ==========================================================================
+   20. Wave 2 Mobile Subpage Polish — Sticky Hover Guard, v7.0 Tabular Numerals
+       & Remaining >= 44px Coarse-Pointer Targets
+   ========================================================================== */
+@media (hover: none) {
+  html body #root .movement-card:hover .pf-p06-3d-img {
+    transform: none !important;
+  }
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  html
+    body
+    #root
+    :is(
+      .pf-p08-yt-btn,
+      .pf-ai-preset-apply-btn,
+      .atlas-compare-art-btn.is-compact-link,
+      .pf-p07-top-tabs .pf-step-guide-chip,
+      .pf-orbit3d-setup-field select
+    ) {
+    min-height: 44px !important;
+  }
+}
+
+html
+  body
+  #root
+  :is(
+    .pf-v70-briefing-chip,
+    .pf-v70-station-sub,
+    .pf-v70-week-moves,
+    .pf-v70-circuit-summary,
+    .pf-handsfree-remote-keys,
+    .pf-visual-filmstrip__num
+  ) {
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
