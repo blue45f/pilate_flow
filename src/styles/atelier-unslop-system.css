@@ -2914,3 +2914,78 @@ html
     min-height: 44px !important;
   }
 }
+
+/* ==========================================================================
+   22. Wave 4 Live Stage, Step Inspector & Member Booking Mobile Ergonomics
+       - Hide desktop keyboard-shortcut hint bar on touch-only devices
+       - Add safe-area bottom clearance on Live Stage & Member dialog actions
+       - Fix cramped Hangul tracking (-0.04em -> -0.02em) & mid-syllable breaks
+         in Step Inspector, plus sticky-hover guard & horizontal scroll-snap
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  html body #root .vnext-shell .teaching-keyboard-shortcut-hint {
+    display: none !important;
+  }
+}
+
+html body #root .vnext-shell .teaching-stage {
+  padding-bottom: calc(136px + env(safe-area-inset-bottom, 0px));
+}
+
+html
+  body
+  #root
+  .vnext-shell
+  :is(
+    .teaching-current-name,
+    .teaching-next-panel h2,
+    .teaching-stage-outline li strong,
+    .teaching-transition-chip
+  ) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+html
+  body
+  #root
+  .vnext-shell
+  :is(.teaching-transition-chip, .teaching-stage-outline li small) {
+  font-variant-numeric: tabular-nums;
+}
+
+html body #root .step-inspector-top h2 {
+  letter-spacing: -0.02em !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+}
+
+html body #root .step-inspector-badges span {
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+}
+
+@media (hover: none) {
+  html body #root .pf-member-chip:hover:not(:disabled):not([aria-pressed='true']),
+  html body #root .pf-member-quick-spot-btn:hover:not(:disabled) {
+    background: var(--pf-color-bg-surface, #ffffff);
+  }
+}
+
+@media (max-width: 767px) {
+  html body #root .pf-member-week-grid,
+  html body #root .pf-member-steps {
+    scroll-snap-type: x proximity;
+  }
+
+  html body #root .pf-member-day-btn,
+  html body #root .pf-member-steps li {
+    scroll-snap-align: start;
+  }
+
+  html body #root .pf-member-dialog-actions {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
