@@ -52,7 +52,12 @@ beforeEach(() => {
   try {
     for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
       const key = window.sessionStorage.key(index);
-      if (key?.startsWith('pf_workspace_browse_v1:')) window.sessionStorage.removeItem(key);
+      if (
+        key === 'pf_live_stage_checkpoint_v1' ||
+        key?.startsWith('pf_workspace_browse_v1:') ||
+        key?.startsWith('pf_teaching_recovery_v1:')
+      )
+        window.sessionStorage.removeItem(key);
     }
   } catch {
     // Storage-denial tests can intentionally leave access unavailable until cleanup.

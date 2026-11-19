@@ -1,3 +1,4 @@
+import { teachingScheduleContextSchema } from './teachingScheduleContext';
 import { z } from 'zod';
 import {
   cloudBackupDataSchema,
@@ -257,6 +258,7 @@ const persistedEnvelope = z
   .strict();
 const dataKeys = new Set(Object.keys(cloudBackupDataSchema.shape));
 const workspaceKeys = new Set([
+  'activeScheduleContext',
   'activeSequenceId',
   'activeTitle',
   'activeSubtitle',
@@ -477,8 +479,7 @@ function hasInvalidHistorySnapshotExerciseRefs(
   }
   if (
     log.exerciseIds.some(
-      (id) =>
-        DANGEROUS_OBJECT_KEYS.has(id) || (!known.has(id) && !snapshotExerciseIds.has(id)),
+      (id) => DANGEROUS_OBJECT_KEYS.has(id) || (!known.has(id) && !snapshotExerciseIds.has(id)),
     )
   ) {
     return true;
@@ -498,6 +499,7 @@ function parseInput(raw: string) {
     data: Record<string, unknown>,
     draft: SavedSequence | undefined;
   let exportedAt: string | undefined;
+  let hadScheduleContext = false;
   if (own(input, 'format') || own(input, 'data')) {
     if (input.format === 'pilates-motion-review-packet')
       throw new InspectionError(
@@ -554,6 +556,15 @@ function parseInput(raw: string) {
         '이전 저장 자료에 현재 앱이 보존할 수 없는 항목이 있습니다. 원본 파일을 유지해 주세요.',
         unsupported.length,
       );
+    if (own(state, 'activeScheduleContext')) {
+      const context = teachingScheduleContextSchema.safeParse(state.activeScheduleContext);
+      if (!context.success || context.data.draftSequenceId !== state.activeSequenceId)
+        throw new InspectionError(
+          'invalid_schedule_context',
+          '브라우저 초안의 회차 참고 정보가 올바르지 않습니다. 원본 파일을 유지해 주세요.',
+        );
+      hadScheduleContext = true;
+    }
     if (own(state, 'activeDraft'))
       throw new InspectionError(
         'legacy_draft_ambiguous',
@@ -622,7 +633,7 @@ function parseInput(raw: string) {
       '같은 수업 또는 이력 스냅샷 안에 중복된 stepId가 있어 안전하게 복원할 수 없습니다. 어떤 항목도 적용하지 않았습니다.',
     );
   }
-  return { sourceKind, data: checked, draft, bytes, exportedAt };
+  return { sourceKind, data: checked, draft, bytes, exportedAt, hadScheduleContext };
 }
 function mergeRecords<T extends { id: string }>(
   key: string,
@@ -744,8 +755,7 @@ export function inspectBackupRecovery(
             (DANGEROUS_OBJECT_KEYS.has(step.exerciseId) ||
               (step.exerciseSnapshot !== undefined &&
                 step.exerciseSnapshot.id !== step.exerciseId) ||
-              (!known.has(step.exerciseId) &&
-                step.exerciseSnapshot?.id !== step.exerciseId)),
+              (!known.has(step.exerciseId) && step.exerciseSnapshot?.id !== step.exerciseId)),
         ),
       )
     )
@@ -990,6 +1000,12 @@ export function inspectBackupRecovery(
         code: 'local_preferences',
         message: '이전 화면·테마 설정은 적용하지 않으며 현재 블록·제목·시간·잠금은 유지합니다.',
       });
+    if (parsed.hadScheduleContext)
+      notices.push({
+        code: 'local_schedule_context',
+        message:
+          '초안의 날짜·장소 참고 표시는 현재 수업에 적용하지 않습니다. 날짜별 계획은 별도로 보존하며, 수업을 준비할 때 해당 회차에서 다시 열어 주세요.',
+      });
     if (parsed.draft)
       notices.push({
         code: 'legacy_draft',
@@ -1072,9 +1088,7 @@ export function inspectBackupRecovery(
       ...(humanDrafts !== undefined
         ? { humanMovementDrafts: current.humanMovementDrafts ?? [] }
         : {}),
-      ...(reusableBlocks !== undefined
-        ? { reusableBlocks: current.reusableBlocks ?? [] }
-        : {}),
+      ...(reusableBlocks !== undefined ? { reusableBlocks: current.reusableBlocks ?? [] } : {}),
       conditionTemplates: current.conditionTemplates,
       instructorSchedule: current.instructorSchedule,
       instructorStudyState: current.instructorStudyState,

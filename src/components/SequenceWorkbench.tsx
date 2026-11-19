@@ -45,6 +45,7 @@ import {
 } from '../data/equipmentCatalog';
 import { canonicalRecoveryContent } from '../utils/backupRecoveryInspection';
 import {
+  createSequenceSnapshot,
   getLastStorageError,
   isSavedSequencePersistedOnDisk,
   usePilatesStore,
@@ -350,18 +351,6 @@ export function SequenceWorkbench({
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const captureUndoSnapshot = (current: ReturnType<typeof usePilatesStore.getState>) => ({
-    activeSequenceId: current.activeSequenceId,
-    activeTitle: current.activeTitle,
-    activeSubtitle: current.activeSubtitle,
-    activeApparatus: current.activeApparatus,
-    activeLevel: current.activeLevel,
-    activeTargetMinutes: current.activeTargetMinutes,
-    activeTargetGroupId: current.activeTargetGroupId,
-    activeSteps: structuredClone(current.activeSteps),
-    lastCriteria: current.lastCriteria ? structuredClone(current.lastCriteria) : null,
-    draftCriteria: current.draftCriteria ? structuredClone(current.draftCriteria) : null,
-  });
   const normalizeStepForSave = (step: SequenceStep): SequenceStep =>
     step.selectedLayer ? step : { ...step, selectedLayer: 'standard' };
   const serializeSemanticSteps = (steps: readonly SequenceStep[]) =>
@@ -1062,7 +1051,7 @@ export function SequenceWorkbench({
       setNotice(`이미 ‘${payload.recipeTitleKo}’ 시퀀스가 열려 있습니다.`);
       return;
     }
-    const snapshot = captureUndoSnapshot(current);
+    const snapshot = createSequenceSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), snapshot],
       redoStack: [],
@@ -1309,7 +1298,7 @@ export function SequenceWorkbench({
         setNotice(`이미 ‘${starter.titleKo}’ 초안 틀이 열려 있습니다.`);
         return;
       }
-      const snapshot = captureUndoSnapshot(current);
+      const snapshot = createSequenceSnapshot(current);
       usePilatesStore.setState({
         undoStack: [...current.undoStack.slice(-19), snapshot],
         redoStack: [],
@@ -1379,18 +1368,7 @@ export function SequenceWorkbench({
   const handleInsertReusableBlock = (blockId: string, deltaMin = 0) => {
     const beforeState = usePilatesStore.getState();
     const prevLen = beforeState.activeSteps.length;
-    const snapshot = {
-      activeSequenceId: beforeState.activeSequenceId,
-      activeTitle: beforeState.activeTitle,
-      activeSubtitle: beforeState.activeSubtitle,
-      activeApparatus: beforeState.activeApparatus,
-      activeLevel: beforeState.activeLevel,
-      activeTargetMinutes: beforeState.activeTargetMinutes,
-      activeTargetGroupId: beforeState.activeTargetGroupId,
-      activeSteps: structuredClone(beforeState.activeSteps),
-      lastCriteria: beforeState.lastCriteria ? structuredClone(beforeState.lastCriteria) : null,
-      draftCriteria: beforeState.draftCriteria ? structuredClone(beforeState.draftCriteria) : null,
-    };
+    const snapshot = createSequenceSnapshot(beforeState);
     const res = insertIdeaReusableBlockToCurrentClass(blockId);
     if (res.ok) {
       const current = usePilatesStore.getState();
@@ -1454,7 +1432,7 @@ export function SequenceWorkbench({
       }
       return;
     }
-    const snapshot = captureUndoSnapshot(current);
+    const snapshot = createSequenceSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), snapshot],
       redoStack: [],
@@ -1586,10 +1564,11 @@ export function SequenceWorkbench({
       return;
     }
     lastBlankResetAtRef.current = Date.now();
-    const previousSnapshot = captureUndoSnapshot(current);
+    const previousSnapshot = createSequenceSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), previousSnapshot],
       redoStack: [],
+      activeScheduleContext: undefined,
       activeSequenceId: `draft-new-${Date.now()}`,
       activeTitle: '새 수업 시퀀스',
       activeSubtitle: '동작을 골라 나만의 흐름으로 구성하세요',
@@ -1602,7 +1581,7 @@ export function SequenceWorkbench({
     setRecentSwitcherOpen(false);
     setWorkflowStep('select');
     setNotice('새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.');
-  }, [closeInspector, openExerciseFinder, setWorkflowStep]);
+  }, [closeInspector, openExerciseFinder, setWorkflowStep, setNotice]);
   const continueRecentSequence = (sequenceId: string, title: string) => {
     s.loadSequenceIntoWorkbench(sequenceId);
     setRecentSwitcherOpen(false);

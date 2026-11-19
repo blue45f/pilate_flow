@@ -1,3 +1,4 @@
+import { getActiveWorkspaceOwner } from './lib/accountStorage';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { getAccessibleScrollBehavior } from './utils/scrollBehavior';
 import { useManagedTimeouts } from './hooks/useManagedTimeouts';
@@ -1122,6 +1123,7 @@ export function App() {
                 )}
                 {state.activeTab === 'stage' && (
                   <LiveStageView
+                    key={getActiveWorkspaceOwner() ?? '__anonymous__'}
                     navigationRef={stageNavigationRef}
                     onNavigate={completeStageTransition}
                     onNavigationCancelled={() => {

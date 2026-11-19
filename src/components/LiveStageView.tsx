@@ -1,3 +1,13 @@
+import { TeachingScheduleContext } from './TeachingScheduleContext';
+import { matchingTeachingScheduleContext } from '../utils/teachingScheduleContext';
+import { getActiveWorkspaceOwner } from '../lib/accountStorage';
+import {
+  clearTeachingRecovery,
+  readTeachingRecovery,
+  teachingDraftFingerprint,
+  teachingRecoveryKey,
+  writeTeachingRecovery,
+} from '../utils/teachingSessionRecovery';
 import { stepSchema } from '../schemas/cloudBackupSchema';
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
@@ -82,6 +92,7 @@ import {
 export const LIVE_STAGE_CHECKPOINT_KEY = 'pf_live_stage_checkpoint_v1';
 
 interface LiveStageSessionCheckpoint {
+  readonly owner?: string | null;
   readonly sequenceId: string;
   readonly sourceSignature: string;
   readonly steps: SequenceStep[];
@@ -241,6 +252,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 }) => {
   const {
     activeSequenceId,
+    activeScheduleContext,
+    instructorSchedule,
     activeTitle,
     activeSteps,
     activeTargetMinutes,
@@ -250,6 +263,21 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setActiveTab,
   } = usePilatesStore();
   const [session] = useState(() => ({ id: activeSequenceId, title: activeTitle }));
+  const [scheduleContext] = useState(() =>
+    matchingTeachingScheduleContext(activeScheduleContext, activeSequenceId),
+  );
+  const [recoveryIdentity] = useState(() => ({
+    owner: getActiveWorkspaceOwner(),
+    key: teachingRecoveryKey(getActiveWorkspaceOwner(), activeSequenceId),
+    fingerprint: teachingDraftFingerprint(
+      activeSequenceId,
+      activeTitle,
+      activeSteps,
+      scheduleContext,
+    ),
+    originalSteps: JSON.stringify(activeSteps),
+    historyIds: new Set(usePilatesStore.getState().historyLogs.map((log) => log.id)),
+  }));
   const sourceSignature = useMemo(
     () =>
       `${activeSequenceId}:${activeSteps
@@ -264,6 +292,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const parsed = JSON.parse(raw) as LiveStageSessionCheckpoint;
       if (
         !parsed ||
+        (parsed.owner ?? null) !== (getActiveWorkspaceOwner() ?? null) ||
         parsed.sequenceId !== activeSequenceId ||
         parsed.sourceSignature !==
           `${activeSequenceId}:${activeSteps
@@ -279,6 +308,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         return null;
       }
       if ((parsed.elapsedMs ?? 0) <= 0 && parsed.index === 0) return null;
+      window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
       return parsed;
     } catch {
       return null;
@@ -286,6 +316,26 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   });
   const [restoredFromReload, setRestoredFromReload] = useState(() => initialCheckpoint !== null);
   const unloadingPageRef = useRef(false);
+  const [pendingRecovery, setPendingRecovery] = useState(() =>
+    initialCheckpoint ? null : readTeachingRecovery(recoveryIdentity.key, recoveryIdentity.fingerprint),
+  );
+  const pendingRecoveryRef = useRef(pendingRecovery);
+  const recoveryFinished = useRef(false);
+  const recordingRequested = useRef(false);
+  const lastRecoveryWrite = useRef(0);
+  const [recoveryStatus, setRecoveryStatus] = useState('');
+  const sameRecoveryOwner = recoveryIdentity.owner === getActiveWorkspaceOwner();
+  const clearSessionRecovery = () => {
+    recoveryFinished.current = true;
+    if (recoveryIdentity.owner === getActiveWorkspaceOwner()) {
+      clearTeachingRecovery(recoveryIdentity.key);
+      try {
+        window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
+      } catch {
+        // Ignore sessionStorage restrictions
+      }
+    }
+  };
   const [steps, setSteps] = useState(() =>
     initialCheckpoint
       ? initialCheckpoint.steps.map((step) => ({ ...step }))
@@ -338,8 +388,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     autoAdvanceRef.current = autoAdvance;
     undoRef.current = undoState;
     try {
-      if (clock.elapsedMs > 0 || clock.index > 0) {
+      if (
+        (clock.elapsedMs > 0 || clock.index > 0) &&
+        recoveryIdentity.owner === getActiveWorkspaceOwner()
+      ) {
         const checkpoint: LiveStageSessionCheckpoint = {
+          owner: recoveryIdentity.owner,
           sequenceId: session.id,
           sourceSignature,
           steps,
@@ -353,17 +407,24 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     } catch {
       // Ignore sessionStorage restrictions
     }
-  }, [steps, durations, clock, autoAdvance, undoState, session.id, sourceSignature]);
+  }, [
+    steps,
+    durations,
+    clock,
+    autoAdvance,
+    undoState,
+    session.id,
+    sourceSignature,
+    recoveryIdentity.owner,
+  ]);
 
   useEffect(() => {
     const markUnloading = () => {
       unloadingPageRef.current = true;
     };
     window.addEventListener('beforeunload', markUnloading);
-    window.addEventListener('pagehide', markUnloading);
     return () => {
       window.removeEventListener('beforeunload', markUnloading);
-      window.removeEventListener('pagehide', markUnloading);
       if (!unloadingPageRef.current) {
         try {
           window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
@@ -389,6 +450,71 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     undoRef.current = nextUndo;
     setUndoState(nextUndo);
   };
+
+  useEffect(() => {
+    let active = true;
+    const save = (force = false) => {
+      if (
+        pendingRecoveryRef.current ||
+        recoveryFinished.current ||
+        recoveryIdentity.owner !== getActiveWorkspaceOwner()
+      )
+        return;
+      const now = Date.now();
+      const sampled = sampleClock(
+        clockRef.current,
+        now,
+        durationsRef.current,
+        autoAdvanceRef.current,
+      );
+      const modified = JSON.stringify(stepsRef.current) !== recoveryIdentity.originalSteps;
+      if (!sampled.running && sampled.elapsedMs === 0 && sampled.index === 0 && !modified) return;
+      if (!force && now - lastRecoveryWrite.current < 1000) return;
+      lastRecoveryWrite.current = now;
+      const { index, remainingMs, elapsedMs, elapsedByStep } = sampled;
+      const saved = writeTeachingRecovery(recoveryIdentity.key, {
+        version: 1,
+        fingerprint: recoveryIdentity.fingerprint,
+        savedAt: now,
+        steps: stepsRef.current.map((step) => ({ ...step })),
+        clock: { index, remainingMs, elapsedMs, elapsedByStep: { ...elapsedByStep } },
+      });
+      if (!saved && active)
+        setRecoveryStatus(
+          '이 탭에 진행 상태를 보관하지 못했습니다. 화면을 닫기 전에 수업 기록을 남겨 주세요.',
+        );
+    };
+    const flush = () => save(true);
+    const interval = window.setInterval(() => save(), 1000);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    const unsubscribe = usePilatesStore.subscribe((state) => {
+      if (recoveryIdentity.owner !== getActiveWorkspaceOwner()) return;
+      const recorded =
+        !pendingRecoveryRef.current &&
+        recordingRequested.current &&
+        state.historyLogs.some(
+          (log) =>
+            !recoveryIdentity.historyIds.has(log.id) &&
+            log.sequenceId === session.id &&
+            log.actualDurationSec !== undefined &&
+            JSON.stringify(log.stepsSnapshot) === JSON.stringify(stepsRef.current),
+        );
+      if (recorded) {
+        recoveryFinished.current = true;
+        clearTeachingRecovery(recoveryIdentity.key);
+      }
+    });
+    return () => {
+      active = false;
+      save(true);
+      window.clearInterval(interval);
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+      unsubscribe();
+    };
+    // Identity is captured once per mounted teaching session; refs hold the current clock.
+  }, [recoveryIdentity, session.id]);
 
   const wakeRef = useRef<WakeLockSentinel | null>(null);
   const mounted = useRef(true);
@@ -561,7 +687,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     };
   }, []);
 
+  const requiresRecoveryChoice = () => {
+    if (!pendingRecoveryRef.current || !sameRecoveryOwner) return false;
+    setRecoveryStatus('중단 지점을 복구하거나 새로 시작을 선택해 주세요.');
+    return true;
+  };
   const toggleRunning = () => {
+    if (requiresRecoveryChoice()) return;
     const liveClock = clockRef.current;
     const liveDurations = durationsRef.current;
     if (liveClock.running) {
@@ -1014,6 +1146,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   };
 
   const pauseForReview = () => {
+    if (requiresRecoveryChoice()) return;
     runningIntent.current = false;
     classVoice.pause();
     setReviewTarget(null);
@@ -1024,6 +1157,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setReviewOpen(true);
   };
   const pauseForExit = () => {
+    if (requiresRecoveryChoice()) return;
     const liveClock = clockRef.current;
     const liveSteps = stepsRef.current;
     const hasSessionData =
@@ -1542,8 +1676,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             type="button"
             className="btn-primary"
             onClick={() => {
+              if (requiresRecoveryChoice()) {
+                closeReview();
+                return;
+              }
               const destination = reviewTarget;
               const targetSequenceId = session.id || activeSequenceId || 'draft-live-session';
+              recordingRequested.current = true;
               closeReview();
               if (destination) onOpenLogModal(targetSequenceId, logContext, destination);
               else onOpenLogModal(targetSequenceId, logContext);
@@ -1557,6 +1696,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           className="teaching-log-link"
           onClick={() => {
             const destination = reviewTarget ?? 'workbench';
+            clearSessionRecovery();
             closeReview();
             navigate(destination);
           }}
@@ -1607,6 +1747,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             className="btn-ghost"
             onClick={() => {
               const destination = exitTarget ?? 'workbench';
+              clearSessionRecovery();
               closeExit();
               navigate(destination);
             }}
@@ -1713,6 +1854,81 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       data-tv-widescreen={tvWidescreenMode ? 'true' : undefined}
       data-stage-running={clock.running ? 'true' : undefined}
     >
+      {pendingRecovery && sameRecoveryOwner && (
+        <section className="panel teaching-recovery-notice" aria-label="중단된 수업 복구">
+          <strong>이 탭에서 중단된 수업이 있어요</strong>
+          <p>
+            {pendingRecovery.clock.index + 1}번째 순서 · 진행{' '}
+            {formatSecondsToMMSS(pendingRecovery.clock.elapsedMs / 1000)}. 복구해도 타이머와 음성은
+            자동 시작하지 않습니다. 탭을 닫거나 다른 기기에서는 복구되지 않을 수 있어요.
+          </p>
+          <div className="button-row">
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                const recovered = readTeachingRecovery(
+                  recoveryIdentity.key,
+                  recoveryIdentity.fingerprint,
+                );
+                if (!recovered || recoveryIdentity.owner !== getActiveWorkspaceOwner()) {
+                  setRecoveryStatus(
+                    '복구 자료가 변경되었거나 만료되었습니다. 새로 시작을 선택해 주세요.',
+                  );
+                  return;
+                }
+                classVoice.pause();
+                runningIntent.current = false;
+                applySteps(() => recovered.steps.map((step) => ({ ...step })));
+                applyClock(() => ({
+                  ...recovered.clock,
+                  elapsedByStep: { ...recovered.clock.elapsedByStep },
+                  running: false,
+                  sampledAt: Date.now(),
+                }));
+                applyUndo(null);
+                pendingRecoveryRef.current = null;
+                setPendingRecovery(null);
+                setRecoveryStatus(
+                  '중단 지점을 일시정지 상태로 복구했습니다. 계속하려면 아래 재생 버튼을 눌러 주세요.',
+                );
+              }}
+            >
+              중단 지점 복구
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                if (recoveryIdentity.owner !== getActiveWorkspaceOwner()) return;
+                clearTeachingRecovery(recoveryIdentity.key);
+                applySteps(() => JSON.parse(recoveryIdentity.originalSteps) as SequenceStep[]);
+                applyClock(() => ({
+                  index: 0,
+                  remainingMs: durationsRef.current[0] ?? 0,
+                  elapsedMs: 0,
+                  elapsedByStep: {},
+                  running: false,
+                  sampledAt: Date.now(),
+                }));
+                applyUndo(null);
+                pendingRecoveryRef.current = null;
+                setPendingRecovery(null);
+                setRecoveryStatus(
+                  '이전 중단 지점을 지우고 새 수업을 준비합니다. 타이머는 아직 시작하지 않았습니다.',
+                );
+              }}
+            >
+              중단 기록 버리고 새로 시작
+            </button>
+          </div>
+        </section>
+      )}
+      {recoveryStatus && sameRecoveryOwner && (
+        <p role="status" className="muted">
+          {recoveryStatus}
+        </p>
+      )}
       <header className="teaching-stage-header">
         <div>
           <button type="button" className="teaching-back" onClick={pauseForExit}>
@@ -1763,11 +1979,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 onClick={() => {
                   const freshSteps = activeSteps.map((st) => ({ ...st }));
                   const freshDurations = computeStepDurationsMs(freshSteps);
-                  try {
-                    window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
-                  } catch {
-                    // Ignore sessionStorage restrictions
-                  }
+                  clearSessionRecovery();
                   setRestoredFromReload(false);
                   applyUndo(null);
                   applySteps(() => freshSteps);
@@ -1785,6 +1997,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </button>
             </div>
           )}
+          <TeachingScheduleContext
+            context={sameRecoveryOwner ? scheduleContext : undefined}
+            steps={steps}
+            schedule={instructorSchedule}
+            exercises={exercises}
+          />
           <details className="teaching-time-details" style={{ fontVariantNumeric: 'tabular-nums' }}>
             <summary>운동·휴식 시간 상세</summary>
             <p className="muted">

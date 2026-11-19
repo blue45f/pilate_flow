@@ -857,3 +857,50 @@ describe('read-only recovery inspection and safe legacy conversion', () => {
     expect(JSON.stringify(result)).not.toContain('QA_PRIVATE');
   });
 });
+
+describe('local dated-draft context in a browser workspace backup', () => {
+  const context = {
+    draftSequenceId: 'qa-source-unsaved',
+    classId: 'qa-class-b',
+    originalDate: '2026-11-17',
+    date: '2026-11-17',
+    startTime: '14:00',
+    endTime: '14:50',
+    locationId: 'qa-venue-b',
+    locationAlias: '합성 QA 장소',
+    classTitle: '합성 QA 회차',
+  };
+  it('validates the optional reference and restores the original plan without overwriting the current venue/session', () => {
+    const source = legacy();
+    source.state.activeScheduleContext = context;
+    const original = JSON.stringify(source);
+    const state = freeze(current());
+    const before = canonicalRecoveryContent(state);
+    const result = checked(original, state);
+    expect(result.summary.sourceKind).toBe('persisted-v3');
+    expect(result.summary.notices).toContainEqual(
+      expect.objectContaining({ code: 'local_schedule_context' }),
+    );
+    const recovered = result.next.savedSequences.find((item) => item.recoveredDraftOrigin)!;
+    expect(recovered.steps).toEqual(source.state.activeSteps);
+    expect(result.next).not.toHaveProperty('activeScheduleContext');
+    expect(canonicalRecoveryContent(state)).toBe(before);
+    expect(JSON.stringify(source)).toBe(original);
+  });
+  it.each([
+    { ...context, date: 'invalid' },
+    { ...context, draftSequenceId: 'different-draft' },
+    { ...context, unexpected: 'do not silently discard' },
+  ])(
+    'rejects malformed or unrelated context without accepting arbitrary unknown fields',
+    (badContext) => {
+      const source = legacy();
+      source.state.activeScheduleContext = badContext;
+      const state = freeze(current());
+      const before = canonicalRecoveryContent(state);
+      const result = inspectBackupRecovery(JSON.stringify(source), state);
+      expect(result.success).toBe(false);
+      expect(canonicalRecoveryContent(state)).toBe(before);
+    },
+  );
+});
