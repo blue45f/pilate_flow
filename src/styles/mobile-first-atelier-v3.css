@@ -37,7 +37,7 @@
   border-radius: 999px;
   background: #e6f0eb;
   color: #173d34;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -69,7 +69,7 @@
   border-radius: 999px;
   background: transparent;
   color: #35493f;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -138,7 +138,7 @@
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   backdrop-filter: blur(6px);
 }
@@ -186,7 +186,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #526358;
 }
@@ -204,7 +204,7 @@
 }
 
 .pf-detail-essential-pill__val small {
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   color: #5b6d62;
 }
 
@@ -307,7 +307,7 @@
 }
 
 .pf-step1-visual-tile span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #173d34;
 }
@@ -603,7 +603,7 @@
   background: #e8f0ec;
   border: 1px solid #c6d8ce;
   color: #173d34;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   word-break: keep-all;
 }
@@ -620,7 +620,7 @@
 }
 
 .pf-class-spring-source {
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #5d533f;
   word-break: keep-all;
@@ -740,7 +740,7 @@
   align-items: center;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1029,7 +1029,7 @@
   border-radius: 8px;
   background: #e9f0ec;
   color: #173d34;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -1053,7 +1053,7 @@
 }
 
 .pf-visual-1p-row__num {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #173d34;
 }
@@ -1063,7 +1063,7 @@
   border-radius: 999px;
   background: #e6efe9;
   color: #173d34;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1095,7 +1095,7 @@
   border-radius: 999px;
   background: #fdebe6;
   color: #a63a1f;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1104,7 +1104,7 @@
   border-radius: 999px;
   background: #edf1ee;
   color: #364940;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1116,7 +1116,7 @@
 }
 
 .pf-visual-1p-cuesheet__footer {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: #5b6d62;
   padding-top: 6px;
   border-top: 1px solid #e3e9e2;
@@ -1210,7 +1210,7 @@
   border: 1px solid #cbd8cf;
   background: #fffef9;
   color: #2f463c;
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1258,7 +1258,7 @@
 }
 
 .pf-visual-1p-qr-corner span {
-  font-size: 0.64rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #26483d;
 }
@@ -1391,7 +1391,7 @@
   background: #eaf2ee;
   border: 1px solid #c4d8cc;
   color: #19453a;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   word-break: keep-all;
 }
@@ -1404,7 +1404,7 @@
   background: #f6efe2;
   border: 1px solid #e0d0b4;
   color: #5a4522;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   word-break: keep-all;
 }
@@ -1416,7 +1416,7 @@
 }
 
 .pf-member-flow-summary {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #465b50;
 }

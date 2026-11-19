@@ -60,6 +60,7 @@ import './styles/mobile-subpages-user-first-v6.css';
 import './styles/atelier-unslop-system.css';
 import './styles/pf-motion-studio.css';
 import './styles/rea-studio-advancement.css';
+import './styles/mobile-readability-unslop-v17.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 import { cycleWorkspaceLandmark } from './utils/workspaceLandmarkNavigation';

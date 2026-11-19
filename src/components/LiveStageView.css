@@ -232,7 +232,7 @@
   background: #e2f5ed;
   border: 1px solid #b8ded0;
   color: #105d4f;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
@@ -600,7 +600,7 @@
 }
 
 .teaching-inline-next-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0;
   padding: 3px 8px;
@@ -664,7 +664,7 @@
   border-radius: 6px;
   background: #1f4d3f;
   color: #f7f5f0;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -755,7 +755,7 @@
   border-radius: 6px;
   border: 1px solid rgba(167, 196, 178, 0.34);
   background: rgba(255, 255, 255, 0.06);
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -882,7 +882,7 @@
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid #e5decb;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   word-break: keep-all;
 }

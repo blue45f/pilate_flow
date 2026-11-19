@@ -726,7 +726,7 @@ html #root .workbench-task-focused .step-bundle-provenance-row {
 }
 
 .pf-b05-summary-box > span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -1007,7 +1007,7 @@ dialog .pf-mobile-subpage-bar {
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: rgba(23, 61, 52, 0.11);
   color: var(--pf-v6-emerald);
@@ -1058,7 +1058,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: var(--pf-v6-emerald);
   color: #ffffff;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1069,7 +1069,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: var(--pf-v6-track);
   color: var(--pf-v6-muted);
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1093,7 +1093,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: transparent;
   color: var(--pf-v6-muted);
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -1185,7 +1185,7 @@ dialog .pf-mobile-subpage-bar {
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   backdrop-filter: blur(8px);
   max-width: 100%;
@@ -1240,7 +1240,7 @@ dialog .pf-mobile-subpage-bar {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -1260,7 +1260,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-detail-essential-pill__val small {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
   word-break: keep-all;
 }
@@ -1420,7 +1420,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-p08-yt-copy span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: rgba(232, 245, 238, 0.8);
 }
 
@@ -1643,7 +1643,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-inspector-3sec-item > span {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -1735,7 +1735,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: var(--pf-v6-mint);
   color: var(--pf-v6-emerald-dark);
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   margin-bottom: 6px;
@@ -1835,7 +1835,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-ai-unlinked-meta > span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-emerald-bright);
   font-weight: 600;
 }
@@ -1998,7 +1998,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-ai-quick-recipe-card small {
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -2094,7 +2094,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: var(--pf-v6-emerald);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -2115,7 +2115,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-visual-apparatus-card__meta small {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald);
   background: rgba(23, 61, 52, 0.1);
@@ -2218,14 +2218,14 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: rgba(15, 38, 30, 0.84);
   color: #a7f3d0;
-  font-size: 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   z-index: 2;
 }
 
 .pf-visual-filmstrip__caption {
   padding: 4px 6px;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #f0fdf4;
   white-space: nowrap;
@@ -2238,7 +2238,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.12);
   color: #d1fae5;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -2315,7 +2315,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-breath-pacer-pill__copy small {
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -2872,7 +2872,7 @@ html #root .library-task-focused .movement-card-footer button {
   }
 
   html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-card__meta strong {
-    font-size: 0.71rem;
+    font-size: 0.8125rem;
     white-space: normal;
     word-break: keep-all;
   }
@@ -3090,12 +3090,12 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: rgba(23, 61, 52, 0.86);
   color: #ffffff;
-  font-size: 0.64rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .pf-studio3d-frame-thumb__label {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-ink);
 }
@@ -3151,7 +3151,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: rgba(25, 52, 43, 0.82);
   color: #ffffff;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   letter-spacing: -0.01em;
   -webkit-backdrop-filter: blur(10px);
@@ -3182,7 +3182,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: transparent;
   color: var(--pf-v6-ink);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -3243,7 +3243,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-border);
   background: #ffffff;
   color: var(--pf-v6-muted);
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -3292,7 +3292,7 @@ html #root .movement-card .movement-card-footer {
 .pf-orbit3d-pct {
   min-width: 36px;
   text-align: right;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald);
   font-variant-numeric: tabular-nums;
@@ -3323,7 +3323,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.13);
   background: #ffffff;
   color: var(--pf-v6-ink);
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 680;
   cursor: pointer;
   transition:
@@ -3342,7 +3342,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: var(--pf-v6-emerald);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -3379,7 +3379,7 @@ html #root .movement-card .movement-card-footer {
 .pf-orbit3d-setup-field {
   display: grid;
   gap: 4px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -3411,7 +3411,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.22);
   background: #f5f7f2;
   color: var(--pf-v6-emerald);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -3429,7 +3429,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-orbit3d-export-notice {
   margin: 0;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald);
 }
@@ -3504,7 +3504,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-border);
   color: var(--pf-v6-muted);
   font-family: inherit;
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -3671,7 +3671,7 @@ html #root .movement-card .movement-card-footer {
 }
 
 .pf-cmdk-exercise-meta small {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -3690,7 +3690,7 @@ html #root .movement-card .movement-card-footer {
   min-height: 32px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -3791,7 +3791,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-cmdk-nav-copy small,
 .pf-cmdk-seq-card small {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -3844,7 +3844,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: rgba(23, 61, 52, 0.84);
   color: #ffffff;
-  font-size: 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -3867,7 +3867,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-mint-strong);
   background: var(--pf-v6-mint);
   color: var(--pf-v6-emerald-dark);
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -3888,7 +3888,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px !important;
   background: var(--pf-v6-surface-subtle) !important;
   border: 1px solid var(--pf-v6-border) !important;
-  font-size: 0.72rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -3900,7 +3900,7 @@ html #root .movement-card .movement-card-footer {
 .pf-inspector-brand-spring-note {
   display: block;
   margin-top: 2px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald);
 }
@@ -3931,7 +3931,7 @@ html #root .movement-card .movement-card-footer {
 }
 
 .pf-member-360-drawer__note {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--pf-v6-muted);
 }
@@ -3964,7 +3964,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: var(--pf-v6-mint, #dff0e8);
   color: var(--pf-v6-emerald, #173d34);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -4030,7 +4030,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 999px;
   background: #dff0e8;
   color: #173d34;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -4100,7 +4100,7 @@ html #root .movement-card .movement-card-footer {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--pf-v6-muted, #57635e);
 }
@@ -4153,7 +4153,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-v70-chip-label,
 .pf-v70-field > span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
@@ -4250,7 +4250,7 @@ html #root .movement-card .movement-card-footer {
 }
 
 .pf-v70-station-kicker {
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #173d34;
 }
@@ -4267,7 +4267,7 @@ html #root .movement-card .movement-card-footer {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted, #57635e);
 }
 
@@ -4348,7 +4348,7 @@ html #root .movement-card .movement-card-footer {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted, #57635e);
 }
 
@@ -4387,7 +4387,7 @@ html #root .movement-card .movement-card-footer {
   background: #f3f1ea;
   border: 1px solid rgba(23, 61, 52, 0.12);
   color: #1c2623;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
