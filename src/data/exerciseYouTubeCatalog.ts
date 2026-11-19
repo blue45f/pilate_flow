@@ -1,6 +1,7 @@
 import rawCatalog from './verifiedPilatesYouTubeCatalog.json';
 import expandedCatalog from './expandedPilatesVideoCatalog.json';
 import additionalCatalog from './additionalPilatesVideoCatalog.json';
+import creatorCatalog from './creatorPilatesVideoCatalog.json';
 import { INITIAL_EXERCISES } from './pilatesCatalog';
 import { getExerciseVideoEvidence } from './exerciseVideoBindings';
 import {
@@ -43,6 +44,7 @@ export const VERIFIED_YOUTUBE_VIDEO_POOL: readonly RawVerifiedYouTubeItem[] = [
   ...rawCatalog,
   ...expandedCatalog,
   ...additionalCatalog,
+  ...creatorCatalog,
 ] as RawVerifiedYouTubeItem[];
 
 export const VERIFIED_YOUTUBE_BY_ID: ReadonlyMap<string, RawVerifiedYouTubeItem> = new Map(

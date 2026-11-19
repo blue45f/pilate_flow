@@ -77,7 +77,7 @@ afterEach(() => {
 });
 
 describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge', () => {
-  it('verifies all 48 Blender 3D studio renders across 24 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and the 158-exercise/350-video catalog invariants', () => {
+  it('verifies all 48 Blender 3D studio renders across 24 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and the 158-exercise/420-video catalog invariants', () => {
     expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(24);
     expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(48);
 
@@ -271,7 +271,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     // Baseline invariants preserved
     expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(350);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(420);
   });
 
   it('routes new motion families separately from inversions and ladder-barrel poses', () => {
@@ -351,7 +351,8 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const card = screen.getByTestId('studio-3d-motion-hero-card');
     expect(card).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
     expect(card).toHaveAttribute('data-motion-mode', 'motion');
-    expect(card).toHaveTextContent('임상 각도는 강사 현장 확인');
+    expect(card).toHaveTextContent('같은 동작군의 대표 자세');
+    expect(card).toHaveTextContent('실제 자세와 범위는 강사가 확인하세요.');
     expect(within(card).getByTestId('studio-interactive-3d-viewport')).toBeVisible();
 
     const modeGroup = within(card).getByRole('group', { name: '동작 보기 방식' });

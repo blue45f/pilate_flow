@@ -21,11 +21,11 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     vi.restoreAllMocks();
   });
 
-  it('maintains 350 metadata-verified videos (76 domestic KR + 274 global)', () => {
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(350);
-    expect(new Set(VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => item.videoId)).size).toBe(350);
+  it('maintains 420 metadata-verified videos (76 domestic KR + 344 global)', () => {
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(420);
+    expect(new Set(VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => item.videoId)).size).toBe(420);
     expect(VERIFIED_YOUTUBE_CATALOG_STATS.koreanVideos).toBe(76);
-    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(274);
+    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(344);
     for (const item of VERIFIED_YOUTUBE_VIDEO_POOL) {
       expect(item.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
       expect(['kr', 'global']).toContain(item.region);

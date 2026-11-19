@@ -1,0 +1,513 @@
+{
+  "checkedAt": "2026-11-19",
+  "catalog": "src/data/creatorPilatesVideoCatalog.json",
+  "sourcePages": 42,
+  "verifiedVideos": 70,
+  "apparatusCounts": {
+    "mat": 28,
+    "cadillac": 3,
+    "reformer": 32,
+    "chair": 4,
+    "barrel": 3
+  },
+  "creatorCounts": {
+    "BASI Pilates": 8,
+    "Andrea Maida": 37,
+    "Complete Pilates": 10,
+    "Balanced Body": 15
+  },
+  "verificationScope": "제작자 페이지의 동작명·기구와 YouTube 링크 또는 임베드를 확인하고, 공식 oEmbed의 제목·채널명·임베드 ID를 대조했다.",
+  "playbackVerified": false,
+  "records": [
+    {
+      "videoId": "IZaOcdYl-Ec",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "IZaOcdYl-Ec"
+    },
+    {
+      "videoId": "6wya4EkBarA",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "6wya4EkBarA"
+    },
+    {
+      "videoId": "l2RCS7z9Wsg",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "l2RCS7z9Wsg"
+    },
+    {
+      "videoId": "P0PLCDDYuZo",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "P0PLCDDYuZo"
+    },
+    {
+      "videoId": "CIhw8Upw1G0",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "CIhw8Upw1G0"
+    },
+    {
+      "videoId": "18BIE47qqjU",
+      "sourceUrl": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "18BIE47qqjU"
+    },
+    {
+      "videoId": "GpQQX2XEEP8",
+      "sourceUrl": "https://pilatesandrea.com/pilates-projects-hanging-pull-ups-on-the-cadillac/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "GpQQX2XEEP8"
+    },
+    {
+      "videoId": "JWjHmpg6aXI",
+      "sourceUrl": "https://www.basipilates.com/pilates/reformer-videos-pulling-straps-1-2-with-rael-isacowitz/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "JWjHmpg6aXI"
+    },
+    {
+      "videoId": "l6T8jy5vo50",
+      "sourceUrl": "https://www.basipilates.com/pilates/reformer-videos-pulling-straps-1-2-with-rael-isacowitz/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@basipilates",
+      "oEmbedId": "l6T8jy5vo50"
+    },
+    {
+      "videoId": "yjv-88E8Ctk",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-reformer-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "yjv-88E8Ctk"
+    },
+    {
+      "videoId": "5y-4F-UsmNU",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-reformer-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "5y-4F-UsmNU"
+    },
+    {
+      "videoId": "mbi4HYzwy9Q",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-reformer-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "mbi4HYzwy9Q"
+    },
+    {
+      "videoId": "HUyN68uHZxE",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "HUyN68uHZxE"
+    },
+    {
+      "videoId": "qxY_0Wrkxw8",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "qxY_0Wrkxw8"
+    },
+    {
+      "videoId": "yRBNFnJ_9ao",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "yRBNFnJ_9ao"
+    },
+    {
+      "videoId": "UeizauvTH1I",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "UeizauvTH1I"
+    },
+    {
+      "videoId": "fcFgE0fXG2k",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "fcFgE0fXG2k"
+    },
+    {
+      "videoId": "aih2VeTUGbE",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "aih2VeTUGbE"
+    },
+    {
+      "videoId": "Tm9jxbuifGk",
+      "sourceUrl": "https://complete-pilates.co.uk/pilates-mat-exercises/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@completepilatesuk",
+      "oEmbedId": "Tm9jxbuifGk"
+    },
+    {
+      "videoId": "0RDqTFs03vE",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "0RDqTFs03vE"
+    },
+    {
+      "videoId": "WlAly-OSRUk",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "WlAly-OSRUk"
+    },
+    {
+      "videoId": "_sy5T2x_LaQ",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "_sy5T2x_LaQ"
+    },
+    {
+      "videoId": "-k1Ui_gVHLI",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "-k1Ui_gVHLI"
+    },
+    {
+      "videoId": "Qd8jPymWkAk",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "Qd8jPymWkAk"
+    },
+    {
+      "videoId": "BEMeEhjOIn4",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "BEMeEhjOIn4"
+    },
+    {
+      "videoId": "KvOrx8OjLg4",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "KvOrx8OjLg4"
+    },
+    {
+      "videoId": "cHzxcxo1K2w",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "cHzxcxo1K2w"
+    },
+    {
+      "videoId": "M1zebRNO9Wo",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "M1zebRNO9Wo"
+    },
+    {
+      "videoId": "mzmbdQP5UcM",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "mzmbdQP5UcM"
+    },
+    {
+      "videoId": "mmrkHvsALec",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "mmrkHvsALec"
+    },
+    {
+      "videoId": "SWmtzHehxkE",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "SWmtzHehxkE"
+    },
+    {
+      "videoId": "NhNWjIhvMBE",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "NhNWjIhvMBE"
+    },
+    {
+      "videoId": "4d9sxCV-Ybw",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "4d9sxCV-Ybw"
+    },
+    {
+      "videoId": "z_1K4WXdm2E",
+      "sourceUrl": "https://www.balancedbody.com.au/podcasts-instructors",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@BalancedBodyPilates",
+      "oEmbedId": "z_1K4WXdm2E"
+    },
+    {
+      "videoId": "4ZaLXVyVDRw",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-spine-corrector-a-tutorial-on-the-teaser/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "4ZaLXVyVDRw"
+    },
+    {
+      "videoId": "51RTyQWG3VI",
+      "sourceUrl": "https://pilatesandrea.com/fundamental-pilates-reformer-exercises-kneeling-knee-stretches/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "51RTyQWG3VI"
+    },
+    {
+      "videoId": "8KKWwxyPWQs",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-rowing-series-on-the-reformer-part-1/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "8KKWwxyPWQs"
+    },
+    {
+      "videoId": "8HfgZLz9QS0",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-rowing-series-on-the-reformer-part-2/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "8HfgZLz9QS0"
+    },
+    {
+      "videoId": "l7_oRbdY7vI",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-rowing-series-on-the-reformer-part-3/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "l7_oRbdY7vI"
+    },
+    {
+      "videoId": "BLZWhyPpwdE",
+      "sourceUrl": "https://pilatesandrea.com/pilates-mat-exercise-19-neck-pull/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "BLZWhyPpwdE"
+    },
+    {
+      "videoId": "DPTV-xcw_uQ",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-brief-tutorial-on-the-tree/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "DPTV-xcw_uQ"
+    },
+    {
+      "videoId": "DfNpsWd4PzU",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-snaketwist-2-0/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "DfNpsWd4PzU"
+    },
+    {
+      "videoId": "EUWkhV4hyTc",
+      "sourceUrl": "https://pilatesandrea.com/fundamental-reformer-exercises-short-box-series/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "EUWkhV4hyTc"
+    },
+    {
+      "videoId": "EpI2g-95htg",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-brief-tutorial-on-the-down-stretch/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "EpI2g-95htg"
+    },
+    {
+      "videoId": "Ffo6rQazk68",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-elephant-vs-tendon-stretch/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "Ffo6rQazk68"
+    },
+    {
+      "videoId": "FoztkudBojg",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-tutorial-on-the-up-stretch-combo/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "FoztkudBojg"
+    },
+    {
+      "videoId": "HVph4YA198o",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-brief-tutorial-on-the-stomach-massage-series/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "HVph4YA198o"
+    },
+    {
+      "videoId": "LzK0ALfyIVc",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-tutorial-on-the-side-splits/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "LzK0ALfyIVc"
+    },
+    {
+      "videoId": "OjDJxwB44S8",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-tutorial-on-the-front-splits/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "OjDJxwB44S8"
+    },
+    {
+      "videoId": "OwPJwt5PAD4",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-brief-tutorial-on-the-backstroke/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "OwPJwt5PAD4"
+    },
+    {
+      "videoId": "Ps6WgSezn20",
+      "sourceUrl": "https://pilatesandrea.com/pilates-reformer-exercise-23-the-long-back-stretch/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "Ps6WgSezn20"
+    },
+    {
+      "videoId": "Xg2Y7681Tl8",
+      "sourceUrl": "https://pilatesandrea.com/exercise-tutorial-down-the-mountain-on-the-wunda-chair/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "Xg2Y7681Tl8"
+    },
+    {
+      "videoId": "YRF5wM3ROiw",
+      "sourceUrl": "https://pilatesandrea.com/the-universal-reformer-a-brief-tutorial-on-the-up-stretch/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "YRF5wM3ROiw"
+    },
+    {
+      "videoId": "arpsZ7SKD54",
+      "sourceUrl": "https://pilatesandrea.com/desperately-seeking-neck-pull-on-the-mat/",
+      "creatorPageElement": "a",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "arpsZ7SKD54"
+    },
+    {
+      "videoId": "f8nFePhHtPk",
+      "sourceUrl": "https://pilatesandrea.com/revisiting-the-basics-side-to-side-on-the-short-box/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "f8nFePhHtPk"
+    },
+    {
+      "videoId": "fCK3pAGuB4k",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-teaser-on-the-wunda-chair/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "fCK3pAGuB4k"
+    },
+    {
+      "videoId": "kBiZsPhQcBo",
+      "sourceUrl": "https://pilatesandrea.com/semicircle-on-the-reformer-whats-really-going-on-here/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "kBiZsPhQcBo"
+    },
+    {
+      "videoId": "mE-m7zsv6P0",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-teaser-on-the-cadillac/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "mE-m7zsv6P0"
+    },
+    {
+      "videoId": "taiS7hfHBPI",
+      "sourceUrl": "https://pilatesandrea.com/the-pilates-system-russian-splits-on-the-reformer/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "taiS7hfHBPI"
+    },
+    {
+      "videoId": "waGj9pn2e-U",
+      "sourceUrl": "https://pilatesandrea.com/ladder-barrel-love-short-box-edition/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "waGj9pn2e-U"
+    },
+    {
+      "videoId": "ffdXVuKFBb0",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "ffdXVuKFBb0"
+    },
+    {
+      "videoId": "CnCkVEA7vTI",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-2/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "CnCkVEA7vTI"
+    },
+    {
+      "videoId": "n2fx0QnrnF8",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-3/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "n2fx0QnrnF8"
+    },
+    {
+      "videoId": "xEagGK-keEg",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-4/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "xEagGK-keEg"
+    },
+    {
+      "videoId": "ha-2eizHWuk",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-5/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "ha-2eizHWuk"
+    },
+    {
+      "videoId": "tQ0Nz0FhlnM",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-6/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "tQ0Nz0FhlnM"
+    },
+    {
+      "videoId": "o8hg2nguF_Q",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-7/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "o8hg2nguF_Q"
+    },
+    {
+      "videoId": "oJSCUyJ18SI",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-8/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "oJSCUyJ18SI"
+    },
+    {
+      "videoId": "eojgpn53YxQ",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-transitions-on-the-mat-9/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "eojgpn53YxQ"
+    },
+    {
+      "videoId": "JiH28qXyCs0",
+      "sourceUrl": "https://pilatesandrea.com/thanks-order-of-the-pilates-exercises-mat-transitions-10/",
+      "creatorPageElement": "iframe",
+      "youtubeAuthorUrl": "https://www.youtube.com/@PilatesAndrea",
+      "oEmbedId": "JiH28qXyCs0"
+    }
+  ]
+}
