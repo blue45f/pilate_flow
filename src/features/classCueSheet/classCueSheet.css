@@ -636,6 +636,7 @@
 @media print {
   .class-cue-sheet-root,
   .class-cue-sheet-root * {
+    transition: none !important;
     color: #000 !important;
     background: #fff !important;
     border-color: #111 !important;

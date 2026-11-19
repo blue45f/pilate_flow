@@ -177,15 +177,10 @@ function inspectGeneratedPdf(
     encoding: 'utf8',
   });
 
-  const pageTexts: string[] = [];
-  for (let p = 1; p <= pageCount; p++) {
-    const pageText = execFileSync(
-      PDFTOTEXT_BINARY,
-      ['-layout', '-f', String(p), '-l', String(p), pdfPath, '-'],
-      { encoding: 'utf8' },
-    );
-    pageTexts.push(pageText);
-  }
+  // Poppler terminates every page, including the last one, with a form feed.
+  const pageTexts = fullText.split('\f');
+  expect(pageTexts.pop()).toBe('');
+  expect(pageTexts).toHaveLength(pageCount);
 
   const ppmPrefix = join(workDir, `${caseSlug}-page`);
   execFileSync(PDFTOPPM_BINARY, ['-gray', '-r', '72', pdfPath, ppmPrefix]);
@@ -498,15 +493,21 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
   afterAll(async () => {
     cdp?.close();
     if (chromeProcess && chromeProcess.exitCode === null && chromeProcess.signalCode === null) {
-      const exited = once(chromeProcess, 'exit');
-      chromeProcess.kill('SIGKILL');
-      await exited;
+      const browser = chromeProcess;
+      const closed = once(browser, 'close');
+      browser.kill('SIGTERM');
+      const forceKill = setTimeout(() => browser.kill('SIGKILL'), 2000);
+      try {
+        await closed;
+      } finally {
+        clearTimeout(forceKill);
+      }
     }
     if (viteServer) {
       await viteServer.close();
     }
     if (userDataDir) {
-      rmSync(userDataDir, { recursive: true, force: true });
+      rmSync(userDataDir, { recursive: true, force: true, maxRetries: 4, retryDelay: 100 });
     }
   });
 
@@ -1100,11 +1101,14 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         })`,
       );
 
-      // Activate @media print emulation in Chromium
-      await session.send('Emulation.setEmulatedMedia', { media: 'print' });
+      await session.send('Emulation.setEmulatedMedia', {
+        media: 'print',
+        features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+      });
 
       const printComputed = await session.evaluate<{
         noPrintDisplays: string[];
+        rootTransition: string;
         rootColor: string;
         rootBg: string;
         rootDisplay: string;
@@ -1138,6 +1142,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
 
         return {
           noPrintDisplays: noPrintEls.map((el) => window.getComputedStyle(el).display),
+          rootTransition: rootStyle.transitionProperty,
           rootColor: rootStyle.color,
           rootBg: rootStyle.backgroundColor,
           rootDisplay: rootStyle.display,
@@ -1160,6 +1165,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
 
       expect(printComputed.noPrintDisplays.length).toBeGreaterThan(0);
       expect(printComputed.noPrintDisplays.every((d) => d === 'none')).toBe(true);
+      expect(printComputed.rootTransition).toBe('none');
       expect(printComputed.rootColor).toBe('rgb(0, 0, 0)');
       expect(printComputed.rootBg).toBe('rgb(255, 255, 255)');
       expect(printComputed.rootDisplay).toBe('block');
