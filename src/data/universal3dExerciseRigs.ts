@@ -3203,11 +3203,12 @@ function sampleArchetype3DRig(
     case 'cadillac-seated-rotation':
     case 'cadillac-seated-side-reach': {
       // Long-sitting on the upholstered table. Both sitting bones and feet stay planted.
+      const footX = archetype === 'cadillac-seated-rotation' ? 0.72 : 0.75;
       const base = {
         pelvis: [0, 0, 0.62] as Vec3,
         pelvisRight: [0, 1, 0] as Vec3,
-        lFoot: [0.75, -0.14, 0.60] as Vec3,
-        rFoot: [0.75, 0.14, 0.60] as Vec3,
+        lFoot: [footX, -0.14, 0.60] as Vec3,
+        rFoot: [footX, 0.14, 0.60] as Vec3,
         lKneePole: [0.35, -0.12, 0.92] as Vec3,
         rKneePole: [0.35, 0.12, 0.92] as Vec3,
       };

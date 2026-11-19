@@ -1195,28 +1195,28 @@
       "archetypeId": "cadillac-seated-rotation",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.start.eda26b07dc3f.webp",
-          "sha256": "eda26b07dc3fc35a4fe48d158c0dcac72da3332e4a0517533f219407ce73a1cb",
-          "bytes": 5474,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.start.89b63455269e.webp",
+          "sha256": "89b63455269ec05c89c133a0eb174655dc7d9182068ae46f6de58b6ce9068d1e",
+          "bytes": 5482,
           "labelKo": "시작 자세",
-          "svgSha256": "0aec72cb42f0fd4b71fbd729868899c1dcdf061d4265d939cf60746a61c49b37",
-          "inputSha256": "69b2df0dde9626de9bae77059fde3ebe1b950160dff7c15385f51bfb55374a1c"
+          "svgSha256": "eaa7252db789f7580c41972cef4a4f8d91a6b3bc96dd31d40c51777e60652252",
+          "inputSha256": "677c8dfabcf73da7f60877a889d013eac330c7536b878002e678f31109478287"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.middle.35037568d2d8.webp",
-          "sha256": "35037568d2d8cb3a89bbbcb6088d419a20348630d1cb3fcdd2cafcf57c3e545d",
-          "bytes": 5458,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.middle.06c2160a8b09.webp",
+          "sha256": "06c2160a8b0975042005184335873a2666f3bedd5eb6fa0218bd572841181002",
+          "bytes": 5462,
           "labelKo": "정점 자세",
-          "svgSha256": "558a9461a442c8504cc1836e9562e71f3ffa9b296d9faa4fc0673c5f909a62c5",
-          "inputSha256": "d9afa74ddcd7c8411396d5b8c4eefc7454f7beba16fe19397f366e8e7271eefc"
+          "svgSha256": "f87414359450ba748aa47ef6ae4745720ad0400e6b38a041c3961c274c72f0cd",
+          "inputSha256": "3c5831bea43dc83f83fa9e91bd959d10a519ed751368364c826dd806f5a232f2"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.end.df1082756bfa.webp",
-          "sha256": "df1082756bfa69b28bb77192b9d15167ecaa95c315117d754e25ffa9ef52e689",
-          "bytes": 5564,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.end.a4ccb123963a.webp",
+          "sha256": "a4ccb123963a3dd9881b7a8978c06691b15cee264016d2ff4d72b43a80f8477d",
+          "bytes": 5538,
           "labelKo": "복귀 자세",
-          "svgSha256": "19a8699c5370a56a13dcd47ec4b4f0ae98e70fe01b02b5c97aed4e36672348d7",
-          "inputSha256": "f2512c9cd9df9808e578d57c6bf249332728040328062986faafcf031eb6963c"
+          "svgSha256": "0f3834c09ae8b574e30661730d2df3ab6f70ad111521d8d13cf18a2d087a65b5",
+          "inputSha256": "16b38459bc4febee784c6e7bb4bba4d2da32abb84c2dd140e10e2bc4bde18399"
         }
       }
     },

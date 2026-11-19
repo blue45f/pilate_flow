@@ -180,8 +180,9 @@ describe('Unslop v7 UI/UX, reorganized studio IA & page-specific motion choreogr
         const antN = len(antProj) > 1e-4 ? norm(antProj) : ([1, 0, 0] as const);
         const bodyRight = norm(cross(spUp, antN));
 
-        const lHip = sub(rig.pelvis, mul(bodyRight, 0.086));
-        const rHip = add(rig.pelvis, mul(bodyRight, 0.086));
+        const pelvisRight = rig.pelvisRight ?? bodyRight;
+        const lHip = sub(rig.pelvis, mul(pelvisRight, 0.086));
+        const rHip = add(rig.pelvis, mul(pelvisRight, 0.086));
         const lSh = sub(rig.chest, mul(bodyRight, 0.148));
         const rSh = add(rig.chest, mul(bodyRight, 0.148));
 
@@ -205,7 +206,7 @@ describe('Unslop v7 UI/UX, reorganized studio IA & page-specific motion choreogr
           const hip = side === 'L' ? lHip : rHip;
           const knee = side === 'L' ? lKnee : rKnee;
           const foot = side === 'L' ? rig.lFoot : rig.rFoot;
-          const outward = side === 'L' ? mul(bodyRight, -1) : bodyRight;
+          const outward = side === 'L' ? mul(pelvisRight, -1) : pelvisRight;
           const u1 = norm(sub(knee, hip));
           const u2 = norm(sub(foot, knee));
           const bendDeg = (Math.acos(Math.max(-1, Math.min(1, dot(u1, u2)))) * 180) / Math.PI;
