@@ -11,7 +11,7 @@ Enforces strict topology & UV hygiene before export:
 - 0 `true_nonmanifold` edges, 0 `boundary` edges, 0 `loose_verts`, 0 `wire_edges`
 - Applied transforms (`scale == (1, 1, 1)`), floor grounded at `Z = 0.0`
 - Non-degenerate isotropic UVs via `uv.smart_project` + `uv.pack_islands` inside `[0, 1]`
-- Triangle count strictly inside the `25,000–35,000` flagship sweet spot (2 draw calls, 2 PBR materials)
+- Triangle count strictly inside the `45,000–98,000` flagship sweet spot (2 draw calls, 2 PBR materials)
 """
 from __future__ import annotations
 
@@ -37,6 +37,7 @@ from pilates_3d_modeling_kernel import (
     atlas_tile_bounds,
     build_apparatus_and_props,
     build_glb_pbr_atlas,
+    build_glb_surface_atlas,
     build_sculpted_practitioner,
     compute_hand_frame,
     set_bsdf_input,
@@ -44,24 +45,27 @@ from pilates_3d_modeling_kernel import (
 )
 
 
-def make_glb_materials(atlas_img):
+def make_glb_materials(atlas_img, surface_atlas):
     mats = {}
-    for key, mname, rough, metal, sheen, coat in [
-        ("glb_diel", "MAT_StudioDielectric", 0.44, 0.0, 0.0, 0.0),
-        ("glb_metal", "MAT_StudioMetallic", 0.20, 1.0, 0.0, 0.0),
+    for key, mname, metal in [
+        ("glb_diel", "MAT_StudioDielectric", 0.0),
+        ("glb_metal", "MAT_StudioMetallic", 1.0),
     ]:
         mat = bpy.data.materials.new(mname)
         if mat.node_tree is None:
             mat.use_nodes = True
         nt = mat.node_tree
         bsdf = nt.nodes.get("Principled BSDF")
-        set_bsdf_input(bsdf, "Roughness", rough)
         set_bsdf_input(bsdf, "Metallic", metal)
-        set_bsdf_input(bsdf, "Sheen Weight", sheen)
-        set_bsdf_input(bsdf, "Coat Weight", coat)
         tex = nt.nodes.new("ShaderNodeTexImage")
         tex.image = atlas_img
         nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        surface = nt.nodes.new("ShaderNodeTexImage")
+        surface.image = surface_atlas
+        channels = nt.nodes.new("ShaderNodeSeparateColor")
+        nt.links.new(surface.outputs["Color"], channels.inputs["Color"])
+        nt.links.new(channels.outputs["Green"], bsdf.inputs["Roughness"])
+        mat.use_backface_culling = True
         mats[key] = mat
     return mats
 
@@ -306,6 +310,8 @@ def export_selected_glb(objs: list[bpy.types.Object], out_path: str):
         export_apply=True,
         export_texcoords=True,
         export_normals=True,
+        export_image_format="JPEG",
+        export_image_quality=94,
         export_materials="EXPORT",
     )
 
@@ -373,12 +379,15 @@ def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | No
         targets = [t for t in targets if t[0] in allowed]
 
     work_scene = bpy.context.scene
+    work_scene.unit_settings.system = "METRIC"
+    work_scene.unit_settings.scale_length = 1.0
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
 
     results = {}
     atlas = build_glb_pbr_atlas(1024)
-    mats = make_glb_materials(atlas)
+    surface_atlas = build_glb_surface_atlas()
+    mats = make_glb_materials(atlas, surface_atlas)
     try:
         for app_key, fname, ex_id, phase_key, extra_props in targets:
             for o in list(work_scene.objects):
@@ -424,6 +433,7 @@ def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | No
         for mat in mats.values():
             bpy.data.materials.remove(mat)
         bpy.data.images.remove(atlas)
+        bpy.data.images.remove(surface_atlas)
         for m in list(bpy.data.meshes):
             if m.users == 0:
                 bpy.data.meshes.remove(m)

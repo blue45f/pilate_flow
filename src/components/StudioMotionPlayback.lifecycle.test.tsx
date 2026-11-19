@@ -194,6 +194,29 @@ describe('shared motion playback lifecycle', () => {
     expect(frames.size).toBe(0);
   });
 
+  it('keeps the orbit and live repetition in sync after a delayed display frame', () => {
+    render(
+      <>
+        <StudioInteractive3DViewport exercise={first} />
+        <LiveStageKinematicDiagram exercise={first} running />
+      </>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '3D 모션 재생' }));
+    frame();
+    frame(2000);
+    expect(screen.getByRole('slider')).toHaveValue('25');
+    expect(screen.getByTestId('live-stage-kinematic-diagram')).toHaveAttribute(
+      'data-motion-progress',
+      '0.25',
+    );
+    frame(8000);
+    expect(screen.getByRole('slider')).toHaveValue('25');
+    expect(screen.getByTestId('live-stage-kinematic-diagram')).toHaveAttribute(
+      'data-motion-progress',
+      '0.25',
+    );
+  });
+
   it.each(['orbit', 'catalog'] as const)(
     'pauses %s when offscreen, hidden or reduced-motion, requiring explicit replay',
     (kind) => {

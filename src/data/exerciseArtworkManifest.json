@@ -76,31 +76,31 @@
     "original-mat-rib-breath": {
       "apparatus": "mat",
       "bodyPosition": "supine",
-      "archetypeId": "mat-supine-breath",
+      "archetypeId": "original-mat-rib-breath",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-mat-rib-breath.start.3d256aa999c0.webp",
-          "sha256": "3d256aa999c0d4099feeb824a77f3be724fdf6e65f618cd48e73b74fb320b10b",
-          "bytes": 7630,
+          "src": "/motion-artwork-v2/original-mat-rib-breath.start.590593f14a1e.webp",
+          "sha256": "590593f14a1e22b29b39fca5af48093c92b0ff9d0c14f49b8bedc80dc822ba07",
+          "bytes": 7784,
           "labelKo": "시작 자세",
-          "svgSha256": "32503d50e76e1717591cef9b5f49b9b5465dbad73a4bba74a714638a361e93aa",
-          "inputSha256": "1cf4f674c8c58ff23e382ada07e601d95db53d1161ee6cbaafa90c70d1cdc981"
+          "svgSha256": "7d905b290a06dac4140d94e50d026446b4c61b6e82575505d783f5b5fe527fd6",
+          "inputSha256": "fa7493148e3428778a10d06cb24485e87aed0f5bc8e70ae1ac99926ed2ae36a3"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-mat-rib-breath.middle.240075623b4c.webp",
-          "sha256": "240075623b4c225efbfee2f9dbf32cd28d2001f7be47e639eee5754c99066935",
-          "bytes": 7522,
+          "src": "/motion-artwork-v2/original-mat-rib-breath.middle.2bedccc07290.webp",
+          "sha256": "2bedccc072900de8f95927e1badca217cf205d63668705452ce8ac217d2cbcbd",
+          "bytes": 7756,
           "labelKo": "정점 자세",
-          "svgSha256": "51199db4d5201909f88bf778bcdbc906ace37cfe5bf8c1dcd408d34c09647bbe",
-          "inputSha256": "8309011bd929e2bbb724be410aa42ede612bb9e36bf4e7f29cc7dae2d862366b"
+          "svgSha256": "76e545d46816170824b9af25fd30428108bdfaefd79fa910b134ca8af9db4929",
+          "inputSha256": "b3b5c88292948af33a7a9014f36ca690a0af688b63376bdcfbcf31b6ecec887f"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-mat-rib-breath.end.9ce0a75c685d.webp",
-          "sha256": "9ce0a75c685d749744dc4f746c6e6461fde0cd6f7103d82247c123bcdf7e16bd",
-          "bytes": 7480,
+          "src": "/motion-artwork-v2/original-mat-rib-breath.end.a0d81b8fe985.webp",
+          "sha256": "a0d81b8fe985142e3e005e21b9fb47bbf437352030b55f35e8d38d80af75a5fe",
+          "bytes": 7748,
           "labelKo": "복귀 자세",
-          "svgSha256": "f185e6dd2db45d3280a241ebaf264b56e2d9895b500ed10bbcbe387cdbcdd100",
-          "inputSha256": "0b3c1a9cd94ce1a2673845b584835cfcb619c57312aa899258573570930a3b68"
+          "svgSha256": "cf0b9cd3d84024eeb1e23577195c251636054669dd52148d3ef3b9ac4dc93782",
+          "inputSha256": "3b16e90f3e592c6a2e90e2115897faf29bfd383490f5f37ad23e22d276c8a470"
         }
       }
     },
@@ -231,31 +231,31 @@
     "original-mat-pelvic-clock": {
       "apparatus": "mat",
       "bodyPosition": "supine",
-      "archetypeId": "mat-supine-breath",
+      "archetypeId": "original-mat-pelvic-clock",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-mat-pelvic-clock.start.3d256aa999c0.webp",
-          "sha256": "3d256aa999c0d4099feeb824a77f3be724fdf6e65f618cd48e73b74fb320b10b",
-          "bytes": 7630,
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.start.a6f830391f05.webp",
+          "sha256": "a6f830391f05e237278283ea1bcb6956c7f66a396e1de7d46c1f8ae43f880f53",
+          "bytes": 7732,
           "labelKo": "시작 자세",
-          "svgSha256": "df640b99709c9bef68f7137f2c53eac9eb96e01a94e09d4236a37ca093bb2caf",
-          "inputSha256": "039a8a0301cc765e831e6fd5d7d12d8c1397088784ba28d51e976b8cd38bd9fb"
+          "svgSha256": "2c87120168924e803379762428368384303defe7ac8d6490423c9d583f659f5e",
+          "inputSha256": "8b58d0081a96d61ddbd27c04b12e2c3ba9323ce005918d43abdf929b3716d92c"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-mat-pelvic-clock.middle.240075623b4c.webp",
-          "sha256": "240075623b4c225efbfee2f9dbf32cd28d2001f7be47e639eee5754c99066935",
-          "bytes": 7522,
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.middle.a73529c6c223.webp",
+          "sha256": "a73529c6c223333f8062271ca4fd40a668701089152bc93b59fd4fc19ede8d03",
+          "bytes": 7784,
           "labelKo": "정점 자세",
-          "svgSha256": "0169f1ea82f76ccfb39ddf46f3897c4a0570c33294dcfc45d7dbbd27e76e1303",
-          "inputSha256": "f9d9e1a7188d15055218f6dd66d3df02205f008ad5c8d7f09a9c613ed431631a"
+          "svgSha256": "727e60e405c1fb8ec47920bdb7ec159a871bfb32d5bcca85074a796f3b20b10e",
+          "inputSha256": "e59416301e87f98214972fbfdc5581e1e197e022cacdc92f80e3d7d71c0f01a3"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-mat-pelvic-clock.end.9ce0a75c685d.webp",
-          "sha256": "9ce0a75c685d749744dc4f746c6e6461fde0cd6f7103d82247c123bcdf7e16bd",
-          "bytes": 7480,
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.end.3e55362999cd.webp",
+          "sha256": "3e55362999cdf8e33d656ac1980d8ea6487e0f532aae9163863a3f185ee54c55",
+          "bytes": 7762,
           "labelKo": "복귀 자세",
-          "svgSha256": "ce5ca650cc72a251b18f5c6282634a164adeb1b6282d7730cdd9a0430913e086",
-          "inputSha256": "0ac103dee477e4ffc86c65b7d0b0ecf6887c5ac74a519fa2d170b4ea4ae91832"
+          "svgSha256": "746e806d2636eb6e2c5098c6bcc2a33258587a5be757b7b1ce0225afc658cf31",
+          "inputSha256": "85a40fbbb9d3e982594fefa056628deefe0ecfcc60600d559bf3d8e2c9d180e3"
         }
       }
     },
@@ -885,28 +885,28 @@
       "archetypeId": "cadillac-seated-rollback",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.start.ad319414ce04.webp",
-          "sha256": "ad319414ce043772987774cf5f0c1785a34a9cfd24e26e544e33c088f9c5512f",
-          "bytes": 8286,
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.start.b99e7d352096.webp",
+          "sha256": "b99e7d3520960814e39d427d453c70248280903e0bfa448cf9ed343d21574aaa",
+          "bytes": 8276,
           "labelKo": "시작 자세",
           "svgSha256": "5a2b1cf7094a32d310643ba84138807a42a22f72595986258a9ca1b30779473c",
-          "inputSha256": "c5ba1491a9280e3470ee796b6518b2f071b1ef5abb8460975feab061e22d9861"
+          "inputSha256": "50daec0050be01e4c02a93003b82100c46c59a6b6d263ceb92a5726e99f22f01"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.middle.15dea1f15ebd.webp",
-          "sha256": "15dea1f15ebd836ff0798a9a77708a6dc2f4b3c9e484cd812a89bdeb7417bb42",
-          "bytes": 8346,
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.middle.9df60e8f4288.webp",
+          "sha256": "9df60e8f428817eef1f32eb5c241794d09198ed2f601539aa4e2cdc4e61c3062",
+          "bytes": 8218,
           "labelKo": "정점 자세",
           "svgSha256": "7041a2e507f3b2d8ed58fd32b31a411fb98984c6965cb2d4b5ece3274d5d7d69",
-          "inputSha256": "f38553786f30874ba8d06b0ccd67ad6910bf6669c051ec66413b80f63fb1abcb"
+          "inputSha256": "fde4aaac48b08abc86ca27773869f4aba5b5a350cf31758fa6b777fdf4af628a"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.end.c3aa016e1e8e.webp",
-          "sha256": "c3aa016e1e8e5a9959204005826879fb913955c614d443f8f8c146b18dbce424",
-          "bytes": 8242,
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.end.305aaac8ed4b.webp",
+          "sha256": "305aaac8ed4b479ead25052790f45e72f13bfc1dffa17dd6cd8bb1f858f89b8a",
+          "bytes": 8310,
           "labelKo": "마무리 자세",
           "svgSha256": "45f77973264ef9377bde2db48586ac79e02c5b78e478a8a82ac266acd5da0608",
-          "inputSha256": "424d13384f52042895d2576d7a7ea67af262064534faad4a862d19258652fc1f"
+          "inputSha256": "ef5bfbe8614ec24356f89d035122f14365c4162c4abbb701b3368a4b487d48fd"
         }
       }
     },
@@ -1192,31 +1192,31 @@
     "original-cadillac-seated-rotation": {
       "apparatus": "cadillac",
       "bodyPosition": "seated",
-      "archetypeId": "cadillac-seated-rollback",
+      "archetypeId": "cadillac-seated-rotation",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.start.ad319414ce04.webp",
-          "sha256": "ad319414ce043772987774cf5f0c1785a34a9cfd24e26e544e33c088f9c5512f",
-          "bytes": 8286,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.start.eda26b07dc3f.webp",
+          "sha256": "eda26b07dc3fc35a4fe48d158c0dcac72da3332e4a0517533f219407ce73a1cb",
+          "bytes": 5474,
           "labelKo": "시작 자세",
-          "svgSha256": "9409682bd6f99db082245171d40f8c63a277ed212fcfec376b7b7303c183f626",
-          "inputSha256": "df91e1b07da999f3494470f5819ab1c55a7b7fb975d5793eca0f2a74cf09927a"
+          "svgSha256": "0aec72cb42f0fd4b71fbd729868899c1dcdf061d4265d939cf60746a61c49b37",
+          "inputSha256": "69b2df0dde9626de9bae77059fde3ebe1b950160dff7c15385f51bfb55374a1c"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.middle.793c48787f99.webp",
-          "sha256": "793c48787f997deed92390c8d18945f483fcc1e5997b8679e348f0d0a86824cc",
-          "bytes": 8342,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.middle.35037568d2d8.webp",
+          "sha256": "35037568d2d8cb3a89bbbcb6088d419a20348630d1cb3fcdd2cafcf57c3e545d",
+          "bytes": 5458,
           "labelKo": "정점 자세",
-          "svgSha256": "51dc343c071cad8e7b48d3c95223457fab7165f41c01c7f12cadc8611b4154c5",
-          "inputSha256": "a42b56dc3ccb2dfcd75a90fdc039f12d71fa52b320ddc95f0a40d5f3d4eff9f3"
+          "svgSha256": "558a9461a442c8504cc1836e9562e71f3ffa9b296d9faa4fc0673c5f909a62c5",
+          "inputSha256": "d9afa74ddcd7c8411396d5b8c4eefc7454f7beba16fe19397f366e8e7271eefc"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.end.db4426d2ffb4.webp",
-          "sha256": "db4426d2ffb41aff148852c9ae3b6e76c0750ff3e68d8d224c142b9e95a9b455",
-          "bytes": 8244,
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.end.df1082756bfa.webp",
+          "sha256": "df1082756bfa69b28bb77192b9d15167ecaa95c315117d754e25ffa9ef52e689",
+          "bytes": 5564,
           "labelKo": "복귀 자세",
-          "svgSha256": "ce49bd062f6136089c2ec673994557a32b1fdeea9096356c83c63babddac8c7c",
-          "inputSha256": "122ce8119c6919c04dbf86b36f0ec6d9687190f4d1a03c5ade323102aa6c3e8b"
+          "svgSha256": "19a8699c5370a56a13dcd47ec4b4f0ae98e70fe01b02b5c97aed4e36672348d7",
+          "inputSha256": "f2512c9cd9df9808e578d57c6bf249332728040328062986faafcf031eb6963c"
         }
       }
     },
@@ -1440,31 +1440,31 @@
     "original-cadillac-quadruped-slide": {
       "apparatus": "cadillac",
       "bodyPosition": "quadruped",
-      "archetypeId": "cadillac-cat-rolldown",
+      "archetypeId": "cadillac-quadruped-slide",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.start.b510d1093c55.webp",
-          "sha256": "b510d1093c55a1d8239bc8f938b2dbe834c4c33130a59b595058a500dcca00cd",
-          "bytes": 8436,
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.start.f787f03d3660.webp",
+          "sha256": "f787f03d3660feaabcbf32a6aaa85c352797c65a5da0c0d53ffbb98b10fafa8c",
+          "bytes": 8350,
           "labelKo": "시작 자세",
-          "svgSha256": "7d2b9ed0c30efa46aae95afa85ccfb9fd10c1ae0982d14e08bd9ce9c37bdb7cc",
-          "inputSha256": "421e9f854924ed23dfdde3684104109ac621bde540c5258d84979b17740c88d9"
+          "svgSha256": "7ecba842588b704e51540d7d513004778b0806081f638a95f8ced9e563b50368",
+          "inputSha256": "e04433b4f61a49a4ab55327b1b3d00882b9a695728eb923902b1319bf666eb04"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.middle.93215814cfc4.webp",
-          "sha256": "93215814cfc428102e7498eae89b7bf6dccb80b87a26bbb85472262717f1a055",
-          "bytes": 8538,
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.middle.b7b34caba7b8.webp",
+          "sha256": "b7b34caba7b83a91ba8a5be66f0add6140a084c71f0f4e04746911d094146c1e",
+          "bytes": 8342,
           "labelKo": "정점 자세",
-          "svgSha256": "24581d58147b9e3d5ef159fabb1d2ee5fd0d892f725359a0e7b912c5f6cb3c24",
-          "inputSha256": "4c7f97f6f04bed2c564387e1957ad9b9c03ee28c3c336273ded7f07ffadbce4b"
+          "svgSha256": "a94e7f6c0143334631ca80d95909f3f5f8ccd045e5be97704ffa5555aedff7de",
+          "inputSha256": "bf66e53f023398503019c468a74c0f5e0cdda011cb4de93401e994abc68ced4b"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.end.9ed832e10b59.webp",
-          "sha256": "9ed832e10b5974c13a5e37029b8deccd4ba02e7660ba73a1b12d88b37b39dfcd",
-          "bytes": 8342,
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.end.e1e4f11fac74.webp",
+          "sha256": "e1e4f11fac7444743974743c55b62e40448453c49257545660ff9d0f269d92d3",
+          "bytes": 8376,
           "labelKo": "복귀 자세",
-          "svgSha256": "4d7d6e73319051a16b1fc8ac0adec0a331c6851b1277cf6b4b341ee56948fb2d",
-          "inputSha256": "43f973126f67a65417c247a47fea599cabe02a2d4826fc8d9c6c1bbfcfc0d167"
+          "svgSha256": "eaa0f22083699d5fcf61ac7907253a68107ad7a23f292310778ea4f844865721",
+          "inputSha256": "06af579bc709b483ac561cf8491bae08c209b7d8d615f333b456f52c6b5c95d6"
         }
       }
     },
@@ -1657,31 +1657,31 @@
     "original-cadillac-seated-side-reach": {
       "apparatus": "cadillac",
       "bodyPosition": "seated",
-      "archetypeId": "cadillac-seated-rollback",
+      "archetypeId": "cadillac-seated-side-reach",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.start.ad319414ce04.webp",
-          "sha256": "ad319414ce043772987774cf5f0c1785a34a9cfd24e26e544e33c088f9c5512f",
-          "bytes": 8286,
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.start.1bac0492b87a.webp",
+          "sha256": "1bac0492b87a0e5b76867bef80fedf8b40f6043e792fe3309f67b81dd1e8e5b0",
+          "bytes": 5604,
           "labelKo": "시작 자세",
-          "svgSha256": "96affa209dc93bdf16c0ad44c1beefe9bac3184f2677743125d92c890da6faaa",
-          "inputSha256": "fb0f37774b95fe4085b31282d9a99a7cff06b5a4d008cd458f8f731c5026b049"
+          "svgSha256": "03299b2abba0f70d63671aa036b113e400df4cdd36de1eacd68ea6abaa3cd230",
+          "inputSha256": "51591f9fdfd68c9bf60531efa5106337dee2a863eb48325647c558eb1f5e5143"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.middle.793c48787f99.webp",
-          "sha256": "793c48787f997deed92390c8d18945f483fcc1e5997b8679e348f0d0a86824cc",
-          "bytes": 8342,
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.middle.540ca2af98c5.webp",
+          "sha256": "540ca2af98c59f21013dc021b06b900bf617c68befcba284650e557dfd7b4b73",
+          "bytes": 5740,
           "labelKo": "정점 자세",
-          "svgSha256": "5f2eb4b64f0f837fb298794f7bcc074f55732df488b7550db4da1920ac9df593",
-          "inputSha256": "645c4bca2982a39a65386e88dcd66b68f1e7e34dd648bbe8041d21887fee1228"
+          "svgSha256": "a2161902f78efda894b8ab69aef06bf577db6ac2234df387a1a233b56bb6133d",
+          "inputSha256": "bf832304d18db4cc671c8aa5580049072ccbc08a2c4c7cfcaf67522f6666bf2c"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.end.db4426d2ffb4.webp",
-          "sha256": "db4426d2ffb41aff148852c9ae3b6e76c0750ff3e68d8d224c142b9e95a9b455",
-          "bytes": 8244,
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.end.d988adb3ecac.webp",
+          "sha256": "d988adb3ecacf6b9f4d389fde7b91ed9d9715a8e1398b5848317f2774c8aa05e",
+          "bytes": 5646,
           "labelKo": "마무리 자세",
-          "svgSha256": "950805fecc58e3ff06c483803c03308f2a73540e2c9fa933e952ed1d3b052188",
-          "inputSha256": "b783e88cd04708b943c7c9ccbe2d7cf043c1d8cdeeb5f9a10637e5f14fa3006f"
+          "svgSha256": "27d3268673c46ae4e824719462481ed31938112ae8ab0511eacbf2b5bf180b15",
+          "inputSha256": "2db96756d14f286f2fce1639fe2734bbccf91ea99633f3b157c2173f7b2e13ea"
         }
       }
     },
@@ -1939,28 +1939,28 @@
       "archetypeId": "cadillac-cat-rolldown",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/ex-warmup-02.start.8540367b8b43.webp",
-          "sha256": "8540367b8b433c5fc37e7b1efb6fab9899d9f3775eb374590031630125b81205",
-          "bytes": 8952,
+          "src": "/motion-artwork-v2/ex-warmup-02.start.46d6318d4f01.webp",
+          "sha256": "46d6318d4f012d068b1f4ecd9c6da68142147439e54a0951e9f1a608a2a8c5b2",
+          "bytes": 9002,
           "labelKo": "시작 자세",
           "svgSha256": "9c5e5e79dcda7de4120cabda6e0bd7eb79706b4c371646011799eb25498a131c",
-          "inputSha256": "7b01bc0cbe842eb9751ced8bf60f827a923eeecca9abd95b3c2b6feb3173601a"
+          "inputSha256": "1711b3df4af1361df67dff623e7720f098298af8008adbb71e46c5e13037e701"
         },
         "middle": {
-          "src": "/motion-artwork-v2/ex-warmup-02.middle.cfcb1d9aeab2.webp",
-          "sha256": "cfcb1d9aeab202264b1d9fdb0ce05ee392b3b87fc4f6e962e2f8f4f8d6894974",
-          "bytes": 9184,
+          "src": "/motion-artwork-v2/ex-warmup-02.middle.c13fb3dc6cd9.webp",
+          "sha256": "c13fb3dc6cd958345a2f1b41801d713997a097e2e160aad97a6322b79fc1d2c9",
+          "bytes": 9224,
           "labelKo": "정점 자세",
           "svgSha256": "a2c4bc1ca053859802dabd4ec5b57c09404aaf639360d8b2ef442516ee96e8d3",
-          "inputSha256": "adbc3c517729a10673b81d3b1dcf5bcadb64ce7c2ebd12b231101ffe11311620"
+          "inputSha256": "e6c294321236e6c63659cd53619d3627c2712f107734b837af402f933b1d63f4"
         },
         "end": {
-          "src": "/motion-artwork-v2/ex-warmup-02.end.9775dc610b16.webp",
-          "sha256": "9775dc610b1647d152a84157e50cbe3deaef4107eed5d2886470a1581c399286",
-          "bytes": 8972,
+          "src": "/motion-artwork-v2/ex-warmup-02.end.ce6e587e509e.webp",
+          "sha256": "ce6e587e509e24c5b21b450a9f42f2f545c3643f1265f52b0f79dbf3f9fdc3d9",
+          "bytes": 8948,
           "labelKo": "마무리 자세",
           "svgSha256": "0dfa997ca0b9ad5a5945c54e8232c88aebf2e17c62fabe9cc7d4df208769fe63",
-          "inputSha256": "44dfe0346d57e65f627a8e52067a53a42de46a461d9acd542f3faad1757c7fc5"
+          "inputSha256": "af7cdf7d95b67132ac6b118ce744ed862c4cac1c4bd766b3ba247e3a0a80f1ce"
         }
       }
     },
@@ -2311,25 +2311,25 @@
       "archetypeId": "expanded-cadillac-standing-fencing",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/ex-upper-03.start.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/ex-upper-03.start.086a4886dd04.webp",
+          "sha256": "086a4886dd04884a0b0bfa6994c0d60d4804d54e2b756835f9e9a4e4778d7dd7",
+          "bytes": 7056,
           "labelKo": "시작 자세",
           "svgSha256": "3a28b0b7114aa1d7f38acca3340597b645e56f7e9d8d7ce0e68b6447bc68c2fb",
           "inputSha256": "aa9fe7464af99dd02ab528ced046a555253ec507ba008fec18bca7fa9a4c4839"
         },
         "middle": {
-          "src": "/motion-artwork-v2/ex-upper-03.middle.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/ex-upper-03.middle.7d15246632ee.webp",
+          "sha256": "7d15246632ee254e469ad362cdbb5ec2e1afeb5e2fdc50e6891bb1f30169f4a0",
+          "bytes": 7164,
           "labelKo": "정점 자세",
           "svgSha256": "023411721f11e56f86e2e5dcc155b615bca7cd403bd8865cfffffe2d5dec4e3a",
           "inputSha256": "dbaa51a3850706bb76f6c14fc0a99f919e7b9c3ee78081d38ab85e1d0a659eef"
         },
         "end": {
-          "src": "/motion-artwork-v2/ex-upper-03.end.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/ex-upper-03.end.6f248bfa0116.webp",
+          "sha256": "6f248bfa0116ad3236e44f5bd8b5015bba7da877d944bf34ddb07a4aaf9569a7",
+          "bytes": 6936,
           "labelKo": "마무리 자세",
           "svgSha256": "88da5053355dc6fee7bcab4c6e00e7997b759215bdd3045b62364f48ee3c87e7",
           "inputSha256": "e6051260e526c15b42a63d0ef65283bc78b77fe2dbbeae43f83e58182877373b"
@@ -4016,25 +4016,25 @@
       "archetypeId": "expanded-cadillac-standing-butterfly",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.start.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.start.d248a0b85da8.webp",
+          "sha256": "d248a0b85da8e2ca0078aeb0b5d02d44d7bb7cfa72ca6beded47c58c7700d40e",
+          "bytes": 6574,
           "labelKo": "시작 자세",
           "svgSha256": "b9a63caa6ecf185f855115de31a7152a2d3781b90379453fe18673c1cb82b14b",
           "inputSha256": "84ba7bce24dfcc414a089997b7a435944bd103899521587b0eea83831431681f"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.middle.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.middle.909f5c89d00f.webp",
+          "sha256": "909f5c89d00f1aeb2f31691452daaa76e55000d0e136ea49575ff141ab35b4d4",
+          "bytes": 6640,
           "labelKo": "정점 자세",
           "svgSha256": "a5809a170438c35f72ac2e375fa60b4cacb17767b5e5f28e9e3f0eb649d7afbb",
           "inputSha256": "8742fdb1bea600f873b0912792e21c899bdfca54f846384a651753c8fefd7598"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.end.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-butterfly.end.4e4bfbf1b920.webp",
+          "sha256": "4e4bfbf1b920e06ee954a8889c78445ecb38c24dbd95cc98e09ef9a86d3a7c9e",
+          "bytes": 6604,
           "labelKo": "종료 자세",
           "svgSha256": "efa58203bacbbc4d2739b5f02bf236fc328f9543ce889a05ae320fe6de9fe23f",
           "inputSha256": "7433d5833f553dbe8e17110efc0211fca5f176233e2130110bd4b7f647dfd168"
@@ -4047,25 +4047,25 @@
       "archetypeId": "expanded-cadillac-standing-fencing",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.start.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.start.7e89ee8a4d20.webp",
+          "sha256": "7e89ee8a4d2067d709c6f49ed3775941b45c5b597b6b041b6adda74971828597",
+          "bytes": 7138,
           "labelKo": "시작 자세",
           "svgSha256": "732e76796a63d326b7f714fb375699df4803a717dde1636cefe8ad2ca001a4e6",
           "inputSha256": "114fbaa55ca8a50b6db642fdcca5726b1c9edf677d5ca3f053cd2d4f74d8194a"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.middle.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.middle.b5a023b73a42.webp",
+          "sha256": "b5a023b73a42e80d23c1c40fde3e0b49df3be0c7f2a97128ebc274ab02729867",
+          "bytes": 7210,
           "labelKo": "정점 자세",
           "svgSha256": "56d974889238ca0de54fb000b486d1d9a69d3c3f218bb27c51db0596105d3b21",
           "inputSha256": "93c3a688b92e317f84f7ccb3d915c4784877649ea9eef1a2015ed80a95c66b13"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.end.1d81c9dd9fa4.webp",
-          "sha256": "1d81c9dd9fa4043ad4c605818c822bd49b0a454204e88ec1221db979fac0fc66",
-          "bytes": 520,
+          "src": "/motion-artwork-v2/expanded-cadillac-standing-fencing.end.1ca01819bab8.webp",
+          "sha256": "1ca01819bab874a6b5fe8a7556ce278323733af994a109efed93a69eba86b760",
+          "bytes": 6964,
           "labelKo": "종료 자세",
           "svgSha256": "47bc3766ac999bd8a97739929521c07fd45a1abbeda4df9c064df16abb2cf2c5",
           "inputSha256": "b538e1260cb765a4232d1c1fc592b45eeeddb324948b4c3a8b373be3f5a23d63"
@@ -4078,28 +4078,28 @@
       "archetypeId": "expanded-cadillac-roll-back-biceps",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.start.f5a08139943b.webp",
-          "sha256": "f5a08139943bf3ed4fe1371b34a959a0d924af4253032c1b81cbf7b8cd4bc04b",
-          "bytes": 7854,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.start.df9e54a77dc6.webp",
+          "sha256": "df9e54a77dc69bebab482e14679de0d3513957fd9d64d7ef1e3db83ca93cfb96",
+          "bytes": 7898,
           "labelKo": "시작 자세",
           "svgSha256": "229f58c8d25f2a4880fe8374631d85f5a10b82ef8c376f295a1f325b00b72523",
-          "inputSha256": "074a700c60e883bbdb33d14315835b1bdb3956cff3ad289ea72b1d2005101014"
+          "inputSha256": "9d157e02df972e4db923d94fb500f8a18c9d5e651a7eb8adcac5f5457b5342fe"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.middle.bc46d5c2269a.webp",
-          "sha256": "bc46d5c2269af2d4c8ae30abd1466f4b303c38bfb1facfd2450d98e17ac6c346",
-          "bytes": 7822,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.middle.55a807200716.webp",
+          "sha256": "55a80720071614285285816b9f3f0334ae7dbd22ac94cbfa0b9469908ff386b3",
+          "bytes": 7828,
           "labelKo": "정점 자세",
           "svgSha256": "552802db4d840cfc4890302e26af83b5d9d4219d35d5f41f7ea09b181b202739",
-          "inputSha256": "3c53500cd50905e202b3ec2f4590217223d83ec73282e9be57521e4e4cb905ae"
+          "inputSha256": "acde340b07bee021e7710a1ea1c6fb0f7b90652928eddefba280f49f72bd2085"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.end.b1e7ba879574.webp",
-          "sha256": "b1e7ba8795749b2aac12dbff54dea9da7cc92125287dc87d25bb536d46a93545",
-          "bytes": 7834,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-biceps.end.82ffa8a4297e.webp",
+          "sha256": "82ffa8a4297efd21d6d958ce6bd8bf716ca828fbf8cd7c150310ba4ac0fc6f28",
+          "bytes": 7766,
           "labelKo": "종료 자세",
           "svgSha256": "881564095b4cc09eb0f392efe7c5bb9b3c40bc585b53647868d0dcc6cfb18760",
-          "inputSha256": "73151ecf6342ca50144bc076cbbea8793d0274cd35fbed7d2da5c609fd90575e"
+          "inputSha256": "848e7ad05034ee7641bec6a092d95f8a7c98949155cf0aaa97ed960591bd6ec5"
         }
       }
     },
@@ -4109,28 +4109,28 @@
       "archetypeId": "expanded-cadillac-roll-back-shave",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.start.bdb351b27b17.webp",
-          "sha256": "bdb351b27b17d95b8ee2c4e5550637caf520ebaaffa83ee7fe921ec4c8f7493b",
-          "bytes": 8006,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.start.efaeef2b877a.webp",
+          "sha256": "efaeef2b877a4ff3cfb091466309638fad166c6509986872b38e67b9617dbf55",
+          "bytes": 7866,
           "labelKo": "시작 자세",
           "svgSha256": "a823f2b3a6370e2ba95ed08db947c65dee216717d37837412a6c52b90dd996c1",
-          "inputSha256": "d1191257db7505034ef854d46c731b4942891d86ca06f0134512f49725f09537"
+          "inputSha256": "0ba45e0ce5fdc16cb6a47b34bb779ec43b779d951e3d412687a025627d76221f"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.middle.f84043ac57e6.webp",
-          "sha256": "f84043ac57e657555e567727993f538901e1eae3f4507744ae36014a9bea031f",
-          "bytes": 7958,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.middle.fb022b2d7c9d.webp",
+          "sha256": "fb022b2d7c9d43510dd439fe622c0787deacee3274c97fd29f4f023ff7e718fb",
+          "bytes": 8012,
           "labelKo": "정점 자세",
           "svgSha256": "17e1977d84c35e60a1738fcb24a1e0310975d9ba82b9f7b3a4f29ea9b8c7e944",
-          "inputSha256": "c2f08209bdf19a9fc58021edd46592c46f4a5cd11617e570a9e87be39e97fb98"
+          "inputSha256": "878dea240e4f6f3ba4c51b4a75575034543a00a38e8c546035f59940c7950ca8"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.end.78e135495012.webp",
-          "sha256": "78e1354950125f86a758d46f0ba4ab6dee9a9938d97427356d472a732a3f9392",
-          "bytes": 7988,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-shave.end.98b5327bd381.webp",
+          "sha256": "98b5327bd38160187e3ebed40d1c96719f0757851467bfadc93ccd3ae7db9daf",
+          "bytes": 7900,
           "labelKo": "종료 자세",
           "svgSha256": "083fc373ed36dee015728560eccf7b81016b169d3e24e94a3acfbf8ea1f74dd7",
-          "inputSha256": "37e795052d08f6bf5691a7969d8be17929fa713ba7bf1f01998f6955b73cbc8e"
+          "inputSha256": "cf5e18a2ec78d9e2d0c6417fc559ef79cf9bff12a238bb1e9d215a03f857ba3f"
         }
       }
     },
@@ -4140,28 +4140,28 @@
       "archetypeId": "expanded-cadillac-roll-back-zip-up",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.start.374ca00b1b36.webp",
-          "sha256": "374ca00b1b366ba0fb7e354682f311e0944e4157b9e896e828aa67b5dcaf9886",
-          "bytes": 7832,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.start.78cb3616ed7d.webp",
+          "sha256": "78cb3616ed7d61ced580f343f6be5aaea62a1dc655ace3bd24ec37ac61ee36a2",
+          "bytes": 7908,
           "labelKo": "시작 자세",
           "svgSha256": "a6911868c80ce0ceb8e2469161b928314c50f5c042d8008468ede185a42d8f71",
-          "inputSha256": "24367808979a5059c15861bb00f106e56f178a94c2c8184101f015518311e070"
+          "inputSha256": "2f257416065f42ae5358b52acf9bcc387db3f621bd1c161ffc65412478b1ebdf"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.middle.8d45c7657d2e.webp",
-          "sha256": "8d45c7657d2ec9f0f570ca699c5dd298d03d61ca7c4f968580b4e64d9e329f09",
-          "bytes": 7732,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.middle.ebf6f305244e.webp",
+          "sha256": "ebf6f305244ec87e5faafb192f1883a174a77320f4b78e580c9fc311b299cf98",
+          "bytes": 7874,
           "labelKo": "정점 자세",
           "svgSha256": "57824d52df5500bcbcb284c89ca8acdc217fccd57b928b6e6285ab1229064313",
-          "inputSha256": "91b74aa13c07f6bc423c3d75062e0a9a898f740a07c01e93a5cc47dfc7336b5e"
+          "inputSha256": "dcebd7ba07508431186b0bf96e42d76902e992b79bafa2c04a05d745e63543c1"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.end.1b6b825298eb.webp",
-          "sha256": "1b6b825298eb9a7997898660792efe05820d7172a908983cc15371e2ca54bc24",
-          "bytes": 7732,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-zip-up.end.0aea982d096e.webp",
+          "sha256": "0aea982d096e3bd61381ea03001bba317c98d9df0ce101b15c56746742793837",
+          "bytes": 7856,
           "labelKo": "종료 자세",
           "svgSha256": "453cfa11d39b65e7ebb211072e939e5978b582db46cab479bab6636bc9675a04",
-          "inputSha256": "604fd3e7ee776ff88468544f47f3057b71e2e3a2a17c6bb498914c7278be7c1d"
+          "inputSha256": "2f536f7780739ecb3e4246304db7960932a49e0b127acdd86056d491620e5546"
         }
       }
     },
@@ -4171,28 +4171,28 @@
       "archetypeId": "expanded-cadillac-roll-back-side-arm",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.start.44a13f06e9e1.webp",
-          "sha256": "44a13f06e9e1cdba7d365de9364799fba478ec053e2f2f07b171bab4bef5ebbc",
-          "bytes": 7926,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.start.ccdeeabf9528.webp",
+          "sha256": "ccdeeabf952800708629d656fba8fc81448caa6b2d6316126a5d8aa07538f679",
+          "bytes": 7894,
           "labelKo": "시작 자세",
           "svgSha256": "ec013aa6f450ecd70d203cd673064841b25ef2dd687e625bd14ff1bab6acb07b",
-          "inputSha256": "d4d129c6b722462b9f2919f9f5858ccbabc87933543cd0bc3dd466a032f26b5f"
+          "inputSha256": "579b8bf66f408f40a4878975c2e53ae5a1de60a59658ef6c91b816d10982c4db"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.middle.41ac0a809b40.webp",
-          "sha256": "41ac0a809b40b6369dc5f1d703ba04d021a4cc4140ef354abe4165e97962171e",
-          "bytes": 7922,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.middle.fd9d817d9166.webp",
+          "sha256": "fd9d817d91667745b7930331d0bcedf36e0d3525b6fff28196a478da482efea1",
+          "bytes": 8014,
           "labelKo": "정점 자세",
           "svgSha256": "975fee7ac709d93fc538a9439d27219ab187016223598a869a24f5b6e24a7fae",
-          "inputSha256": "e18e89f594f8340251fb238ed93319293a3d0bd24c20b481d5f08e4ae2064f55"
+          "inputSha256": "044231bf94ee731692c0428ee35e57a8801c23d109a16af4a5642dbbfad28698"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.end.5a15aa3807c1.webp",
-          "sha256": "5a15aa3807c1138875e0b1a5623ebb22abe5baacd090d84a350c705e94fc4dc0",
-          "bytes": 7990,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-side-arm.end.5163d5b7d7fd.webp",
+          "sha256": "5163d5b7d7fd9f66e075635d7735e0059b7c92ca0c422539b1eaaf9ed4c9e42a",
+          "bytes": 7984,
           "labelKo": "종료 자세",
           "svgSha256": "7641d847ddde60c7eaf2335769f8928eb429ae5fd814959640d37e1c0da8426c",
-          "inputSha256": "291439b1ff261af5f2953176791b82d1c517b55680a97f52a7f122bb0b140fc9"
+          "inputSha256": "92de59a8fd64858eff6ad467d073b2d2cad7f0b9e8dc3e4d4690118619f3049f"
         }
       }
     },
@@ -4202,28 +4202,28 @@
       "archetypeId": "expanded-cadillac-roll-back-thigh-stretch",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.start.d41df3ed5fc0.webp",
-          "sha256": "d41df3ed5fc0790e52961179cd0896ab983078829b048afab36104bfe6515b63",
-          "bytes": 8318,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.start.e62bb1d826fd.webp",
+          "sha256": "e62bb1d826fdb83800d9236542b461a777d3a1b945332713c42d2807f080a391",
+          "bytes": 8386,
           "labelKo": "시작 자세",
           "svgSha256": "ca9d5a926fe10ae091cc17104d2a4c7d499674373ba783225a9a8395402cac5f",
-          "inputSha256": "eb73ba94d03a0d6dcac4e119d6f61cbfd59d4251b7c7e0bae0d220ec0fc8e350"
+          "inputSha256": "a3a94f7067dbf49804b8fb2361aeea1c95459fad95cd023e658d7badadee457f"
         },
         "middle": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.middle.41ccaff96069.webp",
-          "sha256": "41ccaff960696d5a62fda21770449f0d9c1b8719578bdb09bbf6e47a5c72a9ef",
-          "bytes": 8444,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.middle.5181462dc0ee.webp",
+          "sha256": "5181462dc0ee3e3818c1adc4dfe0e822e6b1d24db313d56c6b1773229e4922ba",
+          "bytes": 8380,
           "labelKo": "정점 자세",
           "svgSha256": "64922e30b72171f8faa1b1971df7b64edb4230893583dcfd7dac98c68971c7b1",
-          "inputSha256": "b6b29b9334a5b432803796d4e7897de65eab148c0a6debac86a757c4ff6ea841"
+          "inputSha256": "b6ee552a5ad2af49337832535b35bddbee65f4401a347f5e05461864d7e1acd5"
         },
         "end": {
-          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.end.23f70f62d600.webp",
-          "sha256": "23f70f62d600e76a8de6812f187b0c01227f3c02caca71251bee35086f4fcae4",
-          "bytes": 8374,
+          "src": "/motion-artwork-v2/expanded-cadillac-roll-back-thigh-stretch.end.1f538c76147e.webp",
+          "sha256": "1f538c76147ecb8642fde1da7b6b1937a647824979846f6ff81159539674dc6c",
+          "bytes": 8446,
           "labelKo": "종료 자세",
           "svgSha256": "5cdc1446fb11c3b748bc4b504700adc61bcdc139dfaefd73be91932ed40952f5",
-          "inputSha256": "0e91d0c0b4c959990c5efc682afdecb617b05f24734f48d4faaa2ce5ab6b5380"
+          "inputSha256": "ad46ff5ce008b0e7ca89020fdc12a3134d7ec06017b28c396bce648fcc17c7d5"
         }
       }
     },
@@ -6124,28 +6124,28 @@
       "archetypeId": "cadillac-seated-rollback",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.start.81531afa2753.webp",
-          "sha256": "81531afa2753f58bf331b2a2341da5fa8044596c5b5ee205caf6b8febbc5e3e5",
-          "bytes": 8284,
+          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.start.a6f07b8d8ba1.webp",
+          "sha256": "a6f07b8d8ba181939fd3b747987f321b1a144c3bbdefd143b0bc9cca793dceb5",
+          "bytes": 8256,
           "labelKo": "시작 자세",
           "svgSha256": "594212495f1527ce578cbe164c3d2b6dc88c08c0927009f793e96fa6d411e755",
-          "inputSha256": "79ffa144db1df19d72c7f22aaac0aab27500a3f7d37957ab556c8b6e7ff46d1c"
+          "inputSha256": "7d97dc9d906045a32f315d689b16027286725e9c51d8033c40c097457a7d6737"
         },
         "middle": {
-          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.middle.793c48787f99.webp",
-          "sha256": "793c48787f997deed92390c8d18945f483fcc1e5997b8679e348f0d0a86824cc",
-          "bytes": 8342,
+          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.middle.8c77560f0421.webp",
+          "sha256": "8c77560f04219772756e13144041839ec92e3c8c4852844a86c25852b4b28c57",
+          "bytes": 8200,
           "labelKo": "정점 자세",
           "svgSha256": "443f09ff41b30256f6338c473ff4fbe569a26cee543ee22ce2e3f6eabfa1fa1f",
-          "inputSha256": "a6d5ecb82eedad54654a1496a7d1401b0835bf9dc57fcc4cf10adb91b5a5970d"
+          "inputSha256": "1fc4cf685704f4bd5c25b9ce0e8e342b56cb6d2edd277167f148780a2e2c615a"
         },
         "end": {
-          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.end.6e1583a51534.webp",
-          "sha256": "6e1583a5153451d9d8ae998251ec8a959c88822b66ed9b76ea7e2e3a26c29945",
-          "bytes": 8206,
+          "src": "/motion-artwork-v2/crawled-cadillac-rolling-stomach-massage.end.29d023f379e9.webp",
+          "sha256": "29d023f379e95d5a16c5616c4fa9aa9b879a36ad735aad18cd81d6ae95e5cd34",
+          "bytes": 8270,
           "labelKo": "종료 자세",
           "svgSha256": "d18f1d5e350b4e274fa47ccdbfca4af59858df7b5b7ed173de0876604b3dce50",
-          "inputSha256": "f6b76442bf23816707e81ba06afdd0dcf83c4fc1a2624cf3ea68fea8f81e7f00"
+          "inputSha256": "755307f9569498bd33e1a7de4206026570e78ee7143c22dcebc58728a8a2698f"
         }
       }
     },

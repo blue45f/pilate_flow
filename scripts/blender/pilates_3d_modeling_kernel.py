@@ -1,5 +1,5 @@
 """
-Flagship Precision 3D Modeling Kernel v3 for Blender 5.2 LTS (`bpy` + `bmesh`)
+Flagship Precision 3D Modeling Kernel v3 for Blender 5.3 (`bpy` + `bmesh`)
 Upgrades:
 - Stylized Korean Webtoon / Atelier Practitioner Sculpt: appealing V-line facial silhouette, sculpted nose bridge & tip,
   cupid's-bow tinted lips, arched tapered brows, winged manhwa upper eyelashes, glossy espresso-amber iris with specular
@@ -109,6 +109,23 @@ def build_glb_pbr_atlas(size: int = 512):
             pixels[idx + 2] = max(0.0, min(1.0, base_b + grain * 0.76))
             pixels[idx + 3] = 1.0
             idx += 4
+    img.pixels[:] = pixels
+    img.pack()
+    return img
+
+
+def build_glb_surface_atlas():
+    # Match the 16 base-color swatches. glTF reads G as a linear roughness value.
+    roughness = (0.22, 0.19, 0.21, 0.21, 0.21, 0.39, 0.51, 0.58,
+                 0.54, 0.33, 0.30, 0.36, 0.44, 0.28, 0.62, 0.60)
+    size = 64
+    img = bpy.data.images.new("StudioSurfaceAtlas", width=size, height=size, alpha=False)
+    img.colorspace_settings.name = "Non-Color"
+    pixels = []
+    for y in range(size):
+        for x in range(size):
+            band = (y // 16) * 4 + x // 16
+            pixels.extend((1.0, roughness[band], 1.0, 1.0))
     img.pixels[:] = pixels
     img.pack()
     return img
@@ -1058,8 +1075,12 @@ def build_sculpted_hand(
     body_right: Vector,
     ant_n: Vector,
     supinate_up: bool = False,
+    bar_grip=None,
 ):
-    fdir, lat, dorsal = compute_hand_frame(side, forearm_dir, body_right, ant_n, supinate_up=supinate_up)
+    if bar_grip is None:
+        fdir, lat, dorsal = compute_hand_frame(side, forearm_dir, body_right, ant_n, supinate_up=supinate_up)
+    else:
+        fdir, lat, dorsal = bar_grip
 
     palm_len = 0.070
     palm_stations = []
@@ -1136,6 +1157,15 @@ def build_sculpted_hand(
         dip = pip + d2 * (flen * 0.31)
         tip = dip + d3 * (flen * 0.25)
         f_pts = [mcp - d1 * 0.004, mcp.lerp(pip, 0.5), pip, dip, tip]
+        if bar_grip is not None:
+            # Wrap each digit around the 34 mm maple bar; shorter fingers end earlier.
+            axis_point = wrist + fdir * 0.066 - dorsal * 0.022 + lat * (lat_u * 0.030)
+            radius = 0.017 + frad * 0.82
+            f_pts = [
+                axis_point + radius * (fdir * math.sin(t * flen / radius)
+                                       + dorsal * math.cos(t * flen / radius))
+                for t in (0.0, 0.22, 0.44, 0.75, 1.0)
+            ]
         f_scales = [1.04, 0.96, 0.89, 0.79, 0.66]
         f_stations = []
         for idx_f, (fp, sc) in enumerate(zip(f_pts, f_scales)):
@@ -1301,6 +1331,8 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
     ant_n = ant_proj.normalized()
     body_right = sp_up.cross(ant_n).normalized()
 
+    pelvis_right = Vector(rig.get("pelvisRight", body_right))
+
     def spine_frame(u_clamped: float):
         uc = max(0.0, min(1.0, u_clamped))
         pt = bezier3(pelvis, spine_mid, chest, uc)
@@ -1309,7 +1341,8 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             pt = pelvis + tan * (u_clamped * 0.42)
         elif u_clamped > 1.0:
             pt = chest + tan * ((u_clamped - 1.0) * 0.42)
-        r_ax = body_right - tan * body_right.dot(tan)
+        cross_axis = pelvis_right.lerp(body_right, uc)
+        r_ax = cross_axis - tan * cross_axis.dot(tan)
         if r_ax.length < 1e-4:
             r_ax = tan.cross(ant_n)
         r_ax.normalize()
@@ -1318,7 +1351,7 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             f_ax = -f_ax
         return pt, r_ax, f_ax, tan
 
-    r_segs_torso = 16 if mc.glb_mode else 36
+    r_segs_torso = 20 if mc.glb_mode else 36
 
     # 1A) High-Waisted Sculpted Legging Pelvis & Gluteal Loft (u = -0.10 .. 0.395, flush waistband hem)
     legging_stations = []
@@ -1505,8 +1538,8 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
 
     # Continuous Arched Crop-Top Shoulder Straps
     pt_top_edge, r_te, f_te, _ = spine_frame(0.868)
-    l_hip = pelvis - body_right * 0.086
-    r_hip = pelvis + body_right * 0.086
+    l_hip = pelvis - pelvis_right * 0.086
+    r_hip = pelvis + pelvis_right * 0.086
     l_sh = chest - body_right * 0.148
     r_sh = chest + body_right * 0.148
 
@@ -1588,7 +1621,23 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
         ("L", l_sh, l_hand, Vector(rig["lElbowPole"])),
         ("R", r_sh, r_hand, Vector(rig["rElbowPole"])),
     ]:
-        elb, wr, e_bend = solve_2bone_ik_with_bend(sh, hd, 0.28, 0.26, epole)
+        bar_grip = None
+        wrist_target = hd
+        if rig.get("rolldownBar"):
+            bar_x, bar_z = rig["rolldownBar"]
+            if abs(hd.x - bar_x) < 0.015 and abs(hd.z - bar_z) < 0.015:
+                # A catalog bar contact locates the grip, not the wrist joint.
+                forward = Vector((bar_x - sh.x, 0.0, bar_z - sh.z)).normalized()
+                lateral = Vector((0.0, 1.0 if side == "L" else -1.0, 0.0))
+                dorsal = Vector((-forward.z, 0.0, forward.x))
+                if dorsal.z < 0:
+                    dorsal.negate()
+                candidate = Vector((bar_x, hd.y, bar_z)) - forward * 0.066 + dorsal * 0.022
+                if forward.length_squared > 0.99 and (candidate - sh).length <= 0.54 * 0.992:
+                    wrist_target = candidate
+                    bar_grip = (forward, lateral, dorsal)
+
+        elb, wr, e_bend = solve_2bone_ik_with_bend(sh, wrist_target, 0.28, 0.26, epole)
         sh_embed = chest.lerp(sh, 0.78)
         arm_stations = []
         arm_profile_table = [
@@ -1629,7 +1678,8 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             subsurf_levels=subsurf,
         )
         forearm_dir = (wr - elb).normalized() if (wr - elb).length > 1e-4 else ant_n
-        build_sculpted_hand(mc, side, wr, forearm_dir, body_right, ant_n, supinate_up=bool(rig.get("supinatePalms")))
+        build_sculpted_hand(mc, side, wr, forearm_dir, body_right, ant_n,
+                            supinate_up=bool(rig.get("supinatePalms")), bar_grip=bar_grip)
 
 
 # ==============================================================================
@@ -2112,7 +2162,7 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             add_cylinder_rod(mc, f"CadStretcher_{sy}", (-1.05, sy, 0.14), (1.05, sy, 0.14), 0.018, "oak", segs=12)
         for sx in (-1.05, 1.05):
             add_beveled_box(mc, f"CadEnd_{sx}", (sx, 0.0, 0.475), (0.048, 0.686, 0.094), "oak", bevel=0.008)
-            add_cylinder_rod(mc, f"CadCrossStretcher_{sx}", (sx, -0.32, 0.14), (sx, 0.32, 0.14), 0.018, "oak", segs=12)
+            add_cylinder_rod(mc, f"CadCrossStretcher_{sx}", (sx, -0.310, 0.14), (sx, 0.310, 0.14), 0.018, "oak", segs=12)
 
         for sx in (-1.05, 1.05):
             for sy in (-0.31, 0.31):
@@ -2125,7 +2175,7 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
                 in_y = -0.034 if sy > 0 else 0.034
                 add_cylinder_rod(mc, f"CadCastSlvZ_{sx}_{sy}", (sx, sy, 1.905), (sx, sy, 1.945), 0.021, "brass", segs=12)
                 add_cylinder_rod(mc, f"CadCastSlvX_{sx}_{sy}", (sx, sy, 1.95), (sx + in_x, sy, 1.95), 0.020, "brass", segs=12)
-                add_cylinder_rod(mc, f"CadCastSlvY_{sx}_{sy}", (sx, sy, 1.95), (sx, sy + in_y, 1.95), 0.020, "brass", segs=12)
+                add_cylinder_rod(mc, f"CadCastSlvY_{sx}_{sy}", (sx, sy + in_y * 0.24, 1.95), (sx, sy + in_y, 1.95), 0.020, "brass", segs=12)
 
         for sy in (-0.31, 0.31):
             add_cylinder_rod(mc, f"CadCanopyRail_{sy}", (-1.05, sy, 1.95), (1.05, sy, 1.95), 0.015, "steel", segs=14)

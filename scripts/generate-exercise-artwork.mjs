@@ -108,6 +108,12 @@ export async function verifyArtworkBytes(buffer, frame, settings = RASTER_SETTIN
   assert.equal(metadata.pages ?? 1, 1, 'Artwork cache must be a static image.');
 }
 
+/** Catch a camera outside the cyclorama even when the blank frame has a valid hash. */
+export async function verifyArtworkSubject(buffer, label) {
+  const luminance = await sharp(buffer).resize(64, 40).removeAlpha().greyscale().raw().toBuffer();
+  assert(Math.max(...luminance) - Math.min(...luminance) >= 12, 'Empty studio frame: ' + label);
+}
+
 /** Bound native memory; drain started jobs before reporting a failure. */
 export async function runArtworkJobs(jobs, concurrency = 4) {
   assert(Number.isInteger(concurrency) && concurrency >= 1 && concurrency <= 4);
@@ -130,7 +136,11 @@ export async function runArtworkJobs(jobs, concurrency = 4) {
   if (failed) throw failure;
 }
 
-export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '' } = {}) {
+export async function generateExerciseArtwork({
+  checkOnly = false,
+  rawPngDir = '',
+  changedOnly = false,
+} = {}) {
   const atlasBuffer = await readFile(path.join(ROOT, 'public', PRACTITIONER_ATLAS_URL));
   const embeddedAtlas = await sharp(atlasBuffer).png({ compressionLevel: 9 }).toBuffer();
   const sourceAssets = new Map([
@@ -207,7 +217,9 @@ export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '
         const svgSha256 = sha256(rigSpecJson);
         const inputSha256 = sha256(
           JSON.stringify({
-            renderer: 'BlenderCycles3DStudio-v3',
+            renderer: rigSample.rolldownBar
+              ? 'BlenderCycles3DStudio-rollbar-grip-v1'
+              : 'BlenderCycles3DStudio-v3',
             svgSha256,
             settings: RASTER_SETTINGS,
             encoder: ENCODER_VERSIONS,
@@ -220,7 +232,7 @@ export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '
             previous?.schemaVersion === 3 &&
             priorFrame?.inputSha256 === inputSha256 &&
             priorFrame?.svgSha256 === svgSha256 &&
-            !rawPngDir;
+            (!rawPngDir || changedOnly);
           let buffer;
           let reused = false;
 
@@ -244,6 +256,7 @@ export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '
               );
               buffer = await readFile(path.join(OUTPUT, file));
               await verifyArtworkBytes(buffer, priorFrame);
+              await verifyArtworkSubject(buffer, exercise.id + '/' + phase);
               reused = true;
             } catch (error) {
               if (checkOnly) throw error;
@@ -262,6 +275,7 @@ export async function generateExerciseArtwork({ checkOnly = false, rawPngDir = '
               .resize(RASTER_SETTINGS.width, RASTER_SETTINGS.height, RASTER_SETTINGS.resize)
               .webp(RASTER_SETTINGS.webp)
               .toBuffer();
+            await verifyArtworkSubject(buffer, exercise.id + '/' + phase);
             rasterizedFrames++;
           }
 
@@ -348,5 +362,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === SCRIPT) {
   const checkOnly = args.includes('--check');
   const rawIdx = args.indexOf('--raw-png-dir');
   const rawPngDir = rawIdx >= 0 ? args[rawIdx + 1] : '';
-  await generateExerciseArtwork({ checkOnly, rawPngDir });
+  await generateExerciseArtwork({
+    checkOnly,
+    rawPngDir,
+    changedOnly: args.includes('--changed-only'),
+  });
 }

@@ -302,9 +302,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        Blender 5.2 LTS · GLBForge Meshopt 검증 완료 ({glbAsset.triangles.toLocaleString()} tris ·{' '}
-        {glbAsset.drawCalls} drawCall{glbAsset.drawCalls > 1 ? 's' : ''} · {glbAsset.glbForgeScore}
-        /100)
+        {glbAsset.generator} · 삼각형 {glbAsset.triangles.toLocaleString('ko-KR')}개
       </p>
 
       {showStudio3dRender && (

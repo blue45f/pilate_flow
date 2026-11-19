@@ -53,7 +53,7 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
     let lastTimestamp: number | null = null;
     const tick = (now: number) => {
       if (document.hidden) return;
-      const elapsed = lastTimestamp === null ? 0 : Math.min(100, Math.max(0, now - lastTimestamp));
+      const elapsed = lastTimestamp === null ? 0 : Math.max(0, now - lastTimestamp);
       lastTimestamp = now;
       clockRef.current.progress =
         (clockRef.current.progress + elapsed / STUDIO_MOTION_CYCLE_MS) % 1;
@@ -85,10 +85,7 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
         ? 'middle'
         : 'end';
 
-  const rigMeta = useMemo(
-    () => sampleUniversal3DExerciseRig(exercise, cycle.pose),
-    [exercise, cycle.pose],
-  );
+  const rigMeta = useMemo(() => sampleUniversal3DExerciseRig(exercise, 0), [exercise]);
   const dedicated3d = hasDedicated3DExerciseRig(exercise);
 
   useEffect(() => {

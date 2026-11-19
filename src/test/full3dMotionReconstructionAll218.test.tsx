@@ -63,6 +63,48 @@ afterEach(() => {
 });
 
 describe('100% 3D Motion Conversion & Full 218-Exercise + Procedural 3D Reconstruction', () => {
+  it.each(['original-mat-rib-breath', 'original-mat-pelvic-clock'])(
+    'keeps hands and feet supported throughout the standard %s illustration',
+    (id) => {
+      const exercise = INITIAL_EXERCISES.find((item) => item.id === id)!;
+      const start = sampleUniversal3DExerciseRig(exercise, 0);
+      for (const t of [0.25, 0.5, 0.75, 1]) {
+        const pose = sampleUniversal3DExerciseRig(exercise, t);
+        for (const key of ['lHand', 'rHand', 'lFoot', 'rFoot'] as const) {
+          expect(pose[key]).toEqual(start[key]);
+        }
+        if (id === 'original-mat-rib-breath') {
+          expect(pose.pelvis).toEqual(start.pelvis);
+          expect(pose.chest[2]).toBeGreaterThan(start.chest[2]);
+        } else {
+          expect(pose.chest).toEqual(start.chest);
+          expect(pose.spineMid[2]).toBeLessThan(start.spineMid[2]);
+        }
+      }
+    },
+  );
+
+  it('uses different thoracic and hand paths for seated Cadillac rotation and side reach', () => {
+    for (const movement of ['rotation', 'side-reach']) {
+      const exercise = INITIAL_EXERCISES.find(
+        (ex) => ex.id === 'original-cadillac-seated-' + movement,
+      )!;
+      const setup = sampleUniversal3DExerciseRig(exercise, 0);
+      for (const phase of [0.25, 0.5, 0.75, 1]) {
+        const pose = sampleUniversal3DExerciseRig(exercise, phase);
+        expect(pose.rolldownBar).toBeUndefined();
+        if (movement === 'rotation') {
+          expect(pose.chest).toEqual(setup.chest);
+          expect(pose.antHint[1]).toBeGreaterThan(0);
+        } else {
+          expect(pose.lHand).toEqual(setup.lHand);
+          expect(pose.chest[1]).toBeLessThan(0);
+          expect(pose.rHand[2]).toBeGreaterThan(pose.chest[2]);
+        }
+      }
+    }
+  });
+
   it('reconstructs dedicated, phase-distinct 3D rigs and cached 3D WebP frames for all 218 exercises (98 native + 60 expanded + 60 crawled) and verifies all 6 Flagship Precision .glb assets', () => {
     const all218 = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
     expect(all218).toHaveLength(218);

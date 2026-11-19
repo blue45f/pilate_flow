@@ -14,6 +14,7 @@ export interface Universal3DPoseRig {
   readonly spineMid: Vec3;
   readonly chest: Vec3;
   readonly antHint: Vec3;
+  readonly pelvisRight?: Vec3;
   readonly lFoot: Vec3;
   readonly rFoot: Vec3;
   readonly lKneePole: Vec3;
@@ -1699,6 +1700,33 @@ function sampleArchetype3DRig(
   const ts = smoothstep(rawT);
   switch (archetype) {
     // --- MAT ARCHETYPES ---
+    case 'original-mat-rib-breath':
+    case 'original-mat-pelvic-clock': {
+      // The standard catalog cues keep the feet planted. Arm arcs belong to a
+      // harder breathing variation, not the shared starting position.
+      const breathing = archetype === 'original-mat-rib-breath';
+      const ribRise = breathing ? ts * 0.014 : 0;
+      const tilt = breathing ? 0 : ts;
+      return {
+        poseFeatureKo: breathing
+          ? '무릎을 세우고 양팔과 발을 매트에 둔 채 흉곽의 작은 움직임 관찰'
+          : '양발과 어깨를 지지한 채 골반을 12시 방향으로 기울였다가 중립으로 복귀',
+        trajectoryFocus: breathing ? 'chest' : 'pelvis',
+        pelvis: [0.04 - tilt * 0.011, 0, 0.13 + tilt * 0.009],
+        spineMid: [-0.18, 0, 0.15 - tilt * 0.016 + ribRise * 0.4],
+        chest: [-0.4, 0, 0.15 + ribRise],
+        antHint: [0, 0, 1],
+        lFoot: [0.52, -0.1, 0.1],
+        rFoot: [0.52, 0.1, 0.1],
+        lKneePole: [0.24, -0.1, 0.58],
+        rKneePole: [0.24, 0.1, 0.58],
+        lHand: [0.105, -0.22, 0.09],
+        rHand: [0.105, 0.22, 0.09],
+        lElbowPole: [0, -1, 0.05],
+        rElbowPole: [0, 1, 0.05],
+        activeZones: ['core'],
+      };
+    }
     case 'mat-supine-breath': {
       const rib = Math.sin(rawT * Math.PI) * 0.03;
       return {
@@ -3152,6 +3180,73 @@ function sampleArchetype3DRig(
         activeZones: isBridge ? ['glutes', 'core'] : ['core', 'shoulders'],
       };
     }
+    case 'cadillac-quadruped-slide': {
+      // The standard cue moves one contact a short distance along the padded table.
+      return {
+        poseFeatureKo: '캐딜락 테이블에서 양 무릎과 왼손을 지지하고 오른손을 짧게 밀었다 복귀',
+        trajectoryFocus: 'rHand',
+        pelvis: [0.16, 0, 1.04],
+        spineMid: [-0.06, 0, 1.075],
+        chest: [-0.28, 0, 1.12],
+        antHint: [-0.16, 0, -1],
+        lFoot: [0.57, 0.086, 0.665],
+        rFoot: [0.57, -0.086, 0.665],
+        lKneePole: [-0.83, 0, -0.88],
+        rKneePole: [-0.83, 0, -0.88],
+        lHand: [-0.28, 0.15, 0.605],
+        rHand: [lerp(-0.28, -0.40, ts), -0.15, 0.605],
+        lElbowPole: [0.85, 0.18, 0.08],
+        rElbowPole: [0.85, -0.18, 0.08],
+        activeZones: ['core', 'shoulders'],
+      };
+    }
+    case 'cadillac-seated-rotation':
+    case 'cadillac-seated-side-reach': {
+      // Long-sitting on the upholstered table. Both sitting bones and feet stay planted.
+      const base = {
+        pelvis: [0, 0, 0.62] as Vec3,
+        pelvisRight: [0, 1, 0] as Vec3,
+        lFoot: [0.75, -0.14, 0.60] as Vec3,
+        rFoot: [0.75, 0.14, 0.60] as Vec3,
+        lKneePole: [0.35, -0.12, 0.92] as Vec3,
+        rKneePole: [0.35, 0.12, 0.92] as Vec3,
+      };
+      if (archetype === 'cadillac-seated-rotation') {
+        const angle = ts * Math.PI / 4;
+        const along = Math.cos(angle);
+        const across = Math.sin(angle);
+        return {
+          ...base,
+          poseFeatureKo: '캐딜락 테이블에 앉아 양발과 골반을 고정하고 가슴과 두 팔을 한쪽으로 회전',
+          trajectoryFocus: 'rHand',
+          spineMid: [0, 0, 0.84],
+          chest: [0, 0, 1.06],
+          antHint: [along, across, 0],
+          lHand: [0.59 * across, -0.59 * along, 1.05],
+          rHand: [-0.59 * across, 0.59 * along, 1.05],
+          lElbowPole: [-along, -across, -0.25],
+          rElbowPole: [-along, -across, -0.25],
+          activeZones: ['obliques', 'core'],
+        };
+      }
+      // A progressively curved spine keeps the base upright while the upper ribs arc sideways.
+      const bend = ts * 34 * Math.PI / 180;
+      const lean = Math.sin(bend);
+      const rise = Math.cos(bend);
+      return {
+        ...base,
+        poseFeatureKo: '캐딜락 테이블에 왼손을 짚고 오른팔을 머리 위로 뻗으며 옆구리를 길게 펴기',
+        trajectoryFocus: 'rHand',
+        spineMid: [0, -0.04 * lean, 0.84],
+        chest: [0, -0.28 * lean, 0.62 + 0.44 * rise],
+        antHint: [1, 0, 0],
+        lHand: [0.04, -0.29, 0.60],
+        rHand: [0.07, 0.16 * rise - 0.80 * lean, 0.62 + 0.85 * rise + 0.16 * lean],
+        lElbowPole: [-0.7, -0.4, 0.1],
+        rElbowPole: [-0.25, 0.7, 0.3],
+        activeZones: ['obliques', 'shoulders', 'core'],
+      };
+    }
     case 'cadillac-seated-rollback': {
       const bx = lerp(0.68, 0.34, ts);
       const bz = lerp(1.18, 0.94, ts);
@@ -3509,7 +3604,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-mat-rib-breath': {
     apparatus: 'mat',
     bodyPosition: 'supine',
-    archetype: 'mat-supine-breath',
+    archetype: 'original-mat-rib-breath',
   },
   'original-cadillac-table-breath': {
     apparatus: 'cadillac',
@@ -3534,7 +3629,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-mat-pelvic-clock': {
     apparatus: 'mat',
     bodyPosition: 'supine',
-    archetype: 'mat-supine-breath',
+    archetype: 'original-mat-pelvic-clock',
   },
   'original-cadillac-pelvic-rock': {
     apparatus: 'cadillac',
@@ -3685,7 +3780,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-cadillac-seated-rotation': {
     apparatus: 'cadillac',
     bodyPosition: 'seated',
-    archetype: 'cadillac-seated-rollback',
+    archetype: 'cadillac-seated-rotation',
   },
   'original-chair-sit-to-stand': {
     apparatus: 'chair',
@@ -3721,7 +3816,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-cadillac-quadruped-slide': {
     apparatus: 'cadillac',
     bodyPosition: 'quadruped',
-    archetype: 'cadillac-cat-rolldown',
+    archetype: 'cadillac-quadruped-slide',
   },
   'original-chair-incline-support': {
     apparatus: 'chair',
@@ -3756,7 +3851,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-cadillac-seated-side-reach': {
     apparatus: 'cadillac',
     bodyPosition: 'seated',
-    archetype: 'cadillac-seated-rollback',
+    archetype: 'cadillac-seated-side-reach',
   },
   'original-chair-seated-mermaid': {
     apparatus: 'chair',
@@ -4635,8 +4730,9 @@ function normalizeBiomechanicalPoseRig(
     }
   }
 
-  let lHip = vSub(pelvis, vMul(bodyRight, 0.086));
-  let rHip = vAdd(pelvis, vMul(bodyRight, 0.086));
+  const pelvisRight = raw.pelvisRight ?? bodyRight;
+  let lHip = vSub(pelvis, vMul(pelvisRight, 0.086));
+  let rHip = vAdd(pelvis, vMul(pelvisRight, 0.086));
   const overLLeg = Math.max(0, vLen(vSub(lFoot, lHip)) - maxLegReach);
   const overRLeg = Math.max(0, vLen(vSub(rFoot, rHip)) - maxLegReach);
   if (overLLeg > 0 || overRLeg > 0) {
@@ -4651,8 +4747,8 @@ function normalizeBiomechanicalPoseRig(
   }
 
   // 4. Stabilize knee & elbow poles against collinearity, floor penetration, and knee-crossing
-  lHip = vSub(pelvis, vMul(bodyRight, 0.086));
-  rHip = vAdd(pelvis, vMul(bodyRight, 0.086));
+  lHip = vSub(pelvis, vMul(pelvisRight, 0.086));
+  rHip = vAdd(pelvis, vMul(pelvisRight, 0.086));
   lSh = vSub(chest, vMul(bodyRight, 0.148));
   rSh = vAdd(chest, vMul(bodyRight, 0.148));
 

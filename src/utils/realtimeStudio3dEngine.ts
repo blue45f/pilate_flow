@@ -1,10 +1,10 @@
 import type { ApparatusType, FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
 import {
   hasDedicated3DExerciseRig,
-  sampleUniversal3DExerciseRig,
   type ActiveMuscleZone3D,
   type Universal3DPoseRig,
 } from '../data/universal3dExerciseRigs';
+import { sampleStudio3DMotionRig } from './studio3dMotionTrack';
 import { MOTION_STUDIO_MATERIALS, MOTION_STUDIO_RGB } from './motionStudioMaterials';
 import {
   resolveStudio3DMotionForExercise,
@@ -183,6 +183,7 @@ interface PoseRigKeyframe {
   readonly spineMid: Vec3;
   readonly chest: Vec3;
   readonly antHint: Vec3;
+  readonly pelvisRight?: Vec3;
   readonly lFoot: Vec3;
   readonly rFoot: Vec3;
   readonly lKneePole: Vec3;
@@ -2685,10 +2686,114 @@ interface Built3DScene {
   readonly shadowAnchors: readonly { pos: Vec3; rx: number; ry: number }[];
   readonly pelvis: Vec3;
   readonly target: Vec3;
+  readonly halfSize: Vec3;
   readonly signatureId: Studio3DSignatureId;
   readonly activeZonesCount: number;
   readonly springStretchPct: number;
   readonly biomechTelemetry: Biomech3DTelemetry;
+}
+
+/** Joint locations shared by the rendered skin, spring attachments, and model angle overlays. */
+export function resolveStudio3DBody(rig: PoseRigKeyframe) {
+  const spUp = norm3(sub3(rig.chest, rig.pelvis));
+  const antProj = sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp)));
+  const antN = norm3(len3(antProj) > 1e-4 ? antProj : sub3([1, 0, 0], mul3(spUp, spUp[0])));
+  const bodyRight = norm3(cross3(spUp, antN));
+
+  const pelvisRight = rig.pelvisRight ?? bodyRight;
+  const lHip = sub3(rig.pelvis, mul3(pelvisRight, 0.086));
+  const rHip = add3(rig.pelvis, mul3(pelvisRight, 0.086));
+  const lSh = sub3(rig.chest, mul3(bodyRight, 0.15));
+  const rSh = add3(rig.chest, mul3(bodyRight, 0.15));
+
+  const [lKnee, lAnkle, lKneeBend] = solve2BoneIK(lHip, rig.lFoot, 0.4, 0.39, rig.lKneePole);
+  const [rKnee, rAnkle, rKneeBend] = solve2BoneIK(rHip, rig.rFoot, 0.4, 0.39, rig.rKneePole);
+  const [lElb, lWr, lElbowBend] = solve2BoneIK(lSh, rig.lHand, 0.28, 0.26, rig.lElbowPole);
+  const [rElb, rWr, rElbowBend] = solve2BoneIK(rSh, rig.rHand, 0.28, 0.26, rig.rElbowPole);
+
+  return {
+    spUp,
+    antN,
+    bodyRight,
+    lHip,
+    rHip,
+    lSh,
+    rSh,
+    lKnee,
+    lAnkle,
+    lKneeBend,
+    rKnee,
+    rAnkle,
+    rKneeBend,
+    lElb,
+    lWr,
+    lElbowBend,
+    rElb,
+    rWr,
+    rElbowBend,
+  };
+}
+
+interface MotionRoute {
+  readonly points: Vec3[];
+  readonly mirrorPoints: Vec3[];
+  readonly target: Vec3;
+  readonly halfSize: Vec3;
+}
+// Apparatus floor footprint and highest fixed attachment, in metres.
+const APPARATUS_EXTENT: Record<ApparatusType, readonly [number, number, number, number]> = {
+  cadillac: [-1.1, 1.1, 0.37, 2],
+  reformer: [-1.2, 1.2, 0.36, 0.72],
+  mat: [-1.04, 1.04, 0.4, 0.055],
+  barrel: [-0.68, 0.58, 0.32, 1.06],
+  chair: [-0.44, 0.38, 0.32, 0.74],
+};
+const motionRoutes = new WeakMap<PilatesExercise, MotionRoute>();
+
+// The orbit target and route belong to the entire repetition. A camera threshold
+// evaluated on the current pose would jump when the pelvis passes that threshold.
+function studioMotionRoute(exercise: PilatesExercise, signature: Studio3DSignatureId): MotionRoute {
+  const cached = motionRoutes.get(exercise);
+  if (cached) return cached;
+  const points: Vec3[] = [];
+  const bounds = APPARATUS_EXTENT[exercise.apparatus];
+  let minX = bounds[0],
+    maxX = bounds[1],
+    halfWidth = bounds[2],
+    maxZ = bounds[3];
+  function include(p: Vec3, radius: number) {
+    minX = Math.min(minX, p[0] - radius);
+    maxX = Math.max(maxX, p[0] + radius);
+    halfWidth = Math.max(halfWidth, Math.abs(p[1]) + radius);
+    maxZ = Math.max(maxZ, p[2] + radius);
+  }
+  for (let index = 0; index <= 64; index++) {
+    const pose =
+      exercise.id === '__legacy_signature__'
+        ? samplePoseRig(signature, index / 64)
+        : sampleStudio3DMotionRig(exercise, index / 64);
+    const focus = pose.trajectoryFocus ?? 'chest';
+    const point = pose[focus];
+    points.push([
+      point[0],
+      point[1],
+      point[2] + (focus === 'pelvis' || focus === 'chest' ? 0.14 : 0.04),
+    ]);
+    const body = resolveStudio3DBody(pose);
+    include(pose.chest, 0.35); // Neck, head and bun may extend past the last spine landmark.
+    include(pose.pelvis, 0.16);
+    for (const p of [body.lElb, body.rElb, body.lKnee, body.rKnee]) include(p, 0.08);
+    for (const p of [body.lWr, body.rWr, body.lAnkle, body.rAnkle]) include(p, 0.17);
+    if (pose.withChairHandles) maxZ = Math.max(maxZ, 1.32);
+  }
+  const route: MotionRoute = {
+    points,
+    mirrorPoints: points.map((p) => [p[0], -p[1], p[2]]),
+    target: [(minX + maxX) / 2, 0, maxZ / 2],
+    halfSize: [(maxX - minX) / 2, halfWidth, maxZ / 2],
+  };
+  motionRoutes.set(exercise, route);
+  return route;
 }
 
 function buildStudio3DScene(options: {
@@ -2720,7 +2825,7 @@ function buildStudio3DScene(options: {
   const rawRig: PoseRigKeyframe =
     exercise.id === '__legacy_signature__'
       ? samplePoseRig(spec.signatureId, phaseT)
-      : sampleUniversal3DExerciseRig(exercise, phaseT);
+      : sampleStudio3DMotionRig(exercise, phaseT);
   const mirrorVec = (v: Vec3): Vec3 => (mirrored ? [v[0], -v[1], v[2]] : v);
   const rig: PoseRigKeyframe = mirrored
     ? {
@@ -4325,20 +4430,27 @@ function buildStudio3DScene(options: {
   }
 
   // Orthonormal Spine & Cranial Basis + 2-Bone Analytical Limb IK (solved ahead of props for exact contact alignment)
-  const spUp = norm3(sub3(rig.chest, rig.pelvis));
-  const antProj = sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp)));
-  const antN = norm3(len3(antProj) > 1e-4 ? antProj : sub3([1, 0, 0], mul3(spUp, spUp[0])));
-  const bodyRight = norm3(cross3(spUp, antN));
-
-  const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.086));
-  const rHip = add3(rig.pelvis, mul3(bodyRight, 0.086));
-  const lSh = sub3(rig.chest, mul3(bodyRight, 0.15));
-  const rSh = add3(rig.chest, mul3(bodyRight, 0.15));
-
-  const [lKnee, lAnkle, lKneeBend] = solve2BoneIK(lHip, rig.lFoot, 0.4, 0.39, rig.lKneePole);
-  const [rKnee, rAnkle, rKneeBend] = solve2BoneIK(rHip, rig.rFoot, 0.4, 0.39, rig.rKneePole);
-  const [lElb, lWr, lElbowBend] = solve2BoneIK(lSh, rig.lHand, 0.28, 0.26, rig.lElbowPole);
-  const [rElb, rWr, rElbowBend] = solve2BoneIK(rSh, rig.rHand, 0.28, 0.26, rig.rElbowPole);
+  const {
+    spUp,
+    antN,
+    bodyRight,
+    lHip,
+    rHip,
+    lSh,
+    rSh,
+    lKnee,
+    lAnkle,
+    lKneeBend,
+    rKnee,
+    rAnkle,
+    rKneeBend,
+    lElb,
+    lWr,
+    lElbowBend,
+    rElb,
+    rWr,
+    rElbowBend,
+  } = resolveStudio3DBody(rig);
 
   // Optional High-Craft 3D Studio Props Across All 5 Apparatuses (Zero-Float, Zero-Clip Grounding)
   if ((useLongBox || useShortBox) && !boxMountedOnReformer && !boxMountedOnCadillac) {
@@ -4731,7 +4843,8 @@ function buildStudio3DScene(options: {
     } else if (uClamped > 1) {
       pt = add3(rig.chest, mul3(tan, (uClamped - 1) * 0.42));
     }
-    let rProj = sub3(bodyRight, mul3(tan, dot3(bodyRight, tan)));
+    const crossAxis = rig.pelvisRight ? vlerp(rig.pelvisRight, bodyRight, uc) : bodyRight;
+    let rProj = sub3(crossAxis, mul3(tan, dot3(crossAxis, tan)));
     if (len3(rProj) < 1e-4) rProj = cross3(tan, antN);
     const rAx = norm3(rProj);
     let fAx = norm3(cross3(rAx, tan));
@@ -5170,56 +5283,15 @@ function buildStudio3DScene(options: {
     );
   }
 
-  // 3D Trajectory Excursion Ribbon (traces actual moving limb / body segment)
-  const trajPts: Vec3[] = [];
-  for (let s = 0; s <= 16; s++) {
-    const sample =
-      exercise.id === '__legacy_signature__'
-        ? samplePoseRig(spec.signatureId, s / 16)
-        : sampleUniversal3DExerciseRig(exercise, s / 16);
-    const focus = sample.trajectoryFocus;
-    const rawPt =
-      focus === 'rFoot'
-        ? sample.rFoot
-        : focus === 'lFoot'
-          ? sample.lFoot
-          : focus === 'rHand'
-            ? sample.rHand
-            : focus === 'lHand'
-              ? sample.lHand
-              : focus === 'pelvis'
-                ? sample.pelvis
-                : sample.chest;
-    const pt = mirrorVec(rawPt);
-    const zLift = focus === 'pelvis' || focus === 'chest' ? 0.14 : 0.04;
-    trajPts.push([pt[0], pt[1], pt[2] + zLift]);
-  }
+  const route = studioMotionRoute(exercise, spec.signatureId);
   lines.push({
-    pts: trajPts,
+    pts: mirrored ? route.mirrorPoints : route.points,
     stroke: shader === 'studio-pbr' || isClay ? '#C9822B' : '#FBBF24',
     width: 2.3,
     dash: [5, 4],
     overlay: true,
   });
-
-  const target: Vec3 =
-    apparatus === 'cadillac'
-      ? rig.pelvis[0] > 1.05
-        ? [0.68, 0, 0.94]
-        : [0.02, 0, 0.94]
-      : apparatus === 'chair'
-        ? rig.pelvis[0] > 0.35
-          ? [0.2, 0, 0.64]
-          : [-0.04, 0, 0.7]
-        : apparatus === 'barrel'
-          ? rig.pelvis[0] < -0.52
-            ? [-0.28, 0, 0.72]
-            : [0.0, 0, 0.58]
-          : apparatus === 'mat'
-            ? rig.pelvis[2] > 0.65
-              ? [0.02, 0, 0.66]
-              : [0.02, 0, 0.34]
-            : [0.04, 0, 0.54];
+  const target = route.target;
 
   const apparatusAnchor: Vec3 =
     apparatus === 'reformer'
@@ -5287,6 +5359,7 @@ function buildStudio3DScene(options: {
     shadowAnchors,
     pelvis: rig.pelvis,
     target,
+    halfSize: route.halfSize,
     signatureId: spec.signatureId,
     activeZonesCount: rig.activeZones.length,
     springStretchPct,
@@ -5438,6 +5511,42 @@ const STUDIO_GIZMO_AXES: readonly { readonly vec: Vec3; readonly col: string; re
   { vec: [0, 0, 1], col: '#1FA97C', lbl: 'Z' },
 ];
 
+function studioCamera(
+  scene: Built3DScene,
+  width: number,
+  height: number,
+  yawDeg: number,
+  pitchDeg: number,
+  zoom: number,
+) {
+  const yaw = ((yawDeg - 90) * Math.PI) / 180;
+  const pitch = (Math.max(-6, Math.min(82, pitchDeg)) * Math.PI) / 180;
+  const back: Vec3 = [
+    Math.cos(pitch) * Math.cos(yaw),
+    Math.cos(pitch) * Math.sin(yaw),
+    Math.sin(pitch),
+  ];
+  const camFwd = mul3(back, -1);
+  const camRight = norm3(cross3(camFwd, [0, 0, 1]));
+  const camUp = norm3(cross3(camRight, camFwd));
+  const focal = Math.min(width, height * 1.48) * 1.38;
+  const [x, y, z] = scene.halfSize;
+  let distance = 0;
+  for (const dx of [-x, x])
+    for (const dy of [-y, y])
+      for (const dz of [-z, z]) {
+        const corner: Vec3 = [dx, dy, dz];
+        const horizontal = (Math.abs(dot3(corner, camRight)) * focal) / (width * 0.47);
+        const vertical = (Math.abs(dot3(corner, camUp)) * focal) / (height * 0.45);
+        distance = Math.max(distance, dot3(corner, back) + Math.max(horizontal, vertical));
+      }
+  const baseCamPos = add3(
+    scene.target,
+    mul3(back, (distance * 1.04) / Math.max(0.65, Math.min(1.85, zoom))),
+  );
+  return { baseCamPos, camFwd, camRight, camUp, focal };
+}
+
 function drawSceneRegion(params: {
   ctx: CanvasRenderingContext2D;
   scene: Built3DScene;
@@ -5498,26 +5607,20 @@ function drawSceneRegion(params: {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(rx, ry, rw, rh);
 
-  const dist = 3.42 / Math.max(0.65, Math.min(1.85, zoom));
-  const yaw = ((yawDeg - 90) * Math.PI) / 180;
-  const pitch = (Math.max(-6, Math.min(82, pitchDeg)) * Math.PI) / 180;
-  const baseCamPos: Vec3 = [
-    scene.target[0] + dist * Math.cos(pitch) * Math.cos(yaw),
-    scene.target[1] + dist * Math.cos(pitch) * Math.sin(yaw),
-    scene.target[2] + dist * Math.sin(pitch),
-  ];
-
-  const camFwd = norm3(sub3(scene.target, baseCamPos));
-  const worldUp: Vec3 = [0, 0, 1];
-  const camRight = norm3(cross3(camFwd, worldUp));
-  const camUp = norm3(cross3(camRight, camFwd));
+  const { baseCamPos, camFwd, camRight, camUp, focal } = studioCamera(
+    scene,
+    rw,
+    rh,
+    yawDeg,
+    pitchDeg,
+    zoom,
+  );
   const clampedPanX = Math.max(-0.45, Math.min(0.45, panX));
   const clampedPanY = Math.max(-0.45, Math.min(0.45, panY));
   const camPos: Vec3 =
     clampedPanX !== 0 || clampedPanY !== 0
       ? add3(baseCamPos, add3(mul3(camRight, -clampedPanX), mul3(camUp, clampedPanY)))
       : baseCamPos;
-  const focal = Math.min(rw, rh * 1.48) * 1.38;
 
   const project = (pt: Vec3): { x: number; y: number; zCam: number; valid: boolean } => {
     const rel = sub3(pt, camPos);
@@ -6060,22 +6163,13 @@ export function projectStudio3DSceneForSvg(
     svgFastMode: true,
   });
 
-  const yawDeg = -34;
-  const pitchDeg = 21;
-  const zoom = 1.06;
-  const dist = 3.42 / zoom;
-  const yaw = ((yawDeg - 90) * Math.PI) / 180;
-  const pitch = (pitchDeg * Math.PI) / 180;
-  const camPos: Vec3 = [
-    scene.target[0] + dist * Math.cos(pitch) * Math.cos(yaw),
-    scene.target[1] + dist * Math.cos(pitch) * Math.sin(yaw),
-    scene.target[2] + dist * Math.sin(pitch),
-  ];
-  const camFwd = norm3(sub3(scene.target, camPos));
-  const worldUp: Vec3 = [0, 0, 1];
-  const camRight = norm3(cross3(camFwd, worldUp));
-  const camUp = norm3(cross3(camRight, camFwd));
-  const focal = Math.min(width, height * 1.48) * 1.38;
+  const {
+    baseCamPos: camPos,
+    camFwd,
+    camRight,
+    camUp,
+    focal,
+  } = studioCamera(scene, width, height, -34, 21, 1.04);
 
   const project = (pt: Vec3) => {
     const rel = sub3(pt, camPos);

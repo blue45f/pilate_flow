@@ -41,7 +41,6 @@ import { downloadBlenderSceneScript } from '../utils/blenderSceneScriptExporter'
 import {
   renderRealtimeStudio3DFrame,
   STUDIO_3D_CAMERA_PRESETS,
-  type Biomech3DTelemetry,
   type Studio3DHotspot,
   type Studio3DHotspotId,
   type Studio3DPropOverride,
@@ -213,10 +212,6 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const progressRef = useRef(0);
   const hotspotsRef = useRef<readonly Studio3DHotspot[]>([]);
-  const telemetryRef = useRef<{
-    springStretchPct: number;
-    biomech?: Biomech3DTelemetry;
-  }>({ springStretchPct: 0 });
   const [viewportVersion, invalidateViewport] = useReducer((version: number) => version + 1, 0);
   const dragRef = useRef<{
     active: boolean;
@@ -322,7 +317,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const glbAsset = getStudioApparatusGlbAsset(exercise.apparatus);
   const binding = getExpandedMovementVisualBinding(exercise);
   const dedicated3d = hasDedicated3DExerciseRig(exercise);
-  const rigMeta = sampleUniversal3DExerciseRig(exercise, phase.pose);
+  const rigMeta = useMemo(() => sampleUniversal3DExerciseRig(exercise, 0), [exercise]);
+  const selectedHotspotId = selectedHotspot?.id ?? null;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -359,35 +355,30 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
 
     const step = (now: number) => {
       if (document.hidden) return;
-      if (
-        frameBudget.tier === 'low-memory' &&
-        lastCommitTs !== null &&
-        now - lastCommitTs < frameBudget.frameIntervalMs - 1
-      ) {
+      if (lastCommitTs !== null && now - lastCommitTs < frameBudget.frameIntervalMs - 1) {
         rafId = window.requestAnimationFrame(step);
         return;
       }
-      const dt = lastTs === null ? 0 : Math.min(0.06, Math.max(0, now - lastTs) / 1000);
+      const elapsedMs = lastTs === null ? 0 : Math.max(0, now - lastTs);
       lastTs = now;
       lastCommitTs = now;
       if (playing) {
         progressRef.current =
-          (progressRef.current + (dt * 1000 * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
+          (progressRef.current + (elapsedMs * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
         visualProgressRef.current = progressRef.current;
         setProgress(progressRef.current);
         setVisualProgress(progressRef.current);
       }
       if (turntable && !dragRef.current.active) {
         setYawDeg((prev) => {
-          const next = prev + dt * 28;
-          return next > 180 ? next - 360 : next;
+          return ((prev + (elapsedMs / 1000) * 28 + 180) % 360) - 180;
         });
       }
       rafId = window.requestAnimationFrame(step);
     };
     rafId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(rafId);
-  }, [playing, turntable, speed, canAnimate, frameBudget.tier, frameBudget.frameIntervalMs]);
+  }, [playing, turntable, speed, canAnimate, frameBudget.frameIntervalMs]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -466,13 +457,18 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       footbarOverride,
       headrestOverride,
       propOverride,
-      selectedHotspotId: selectedHotspot?.id ?? null,
+      selectedHotspotId,
     });
     hotspotsRef.current = frameResult.hotspots;
-    telemetryRef.current = {
-      springStretchPct: frameResult.springStretchPct,
-      biomech: frameResult.biomechTelemetry,
-    };
+    if (selectedHotspotId) {
+      const current = frameResult.hotspots.find((hotspot) => hotspot.id === selectedHotspotId);
+      if (current)
+        setSelectedHotspot((previous) =>
+          previous?.id === current.id && previous.metricKo !== current.metricKo
+            ? current
+            : previous,
+        );
+    }
     ctx.restore();
   }, [
     exercise,
@@ -489,7 +485,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     footbarOverride,
     headrestOverride,
     propOverride,
-    selectedHotspot,
+    selectedHotspotId,
     viewportVersion,
   ]);
 
@@ -685,7 +681,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         tabIndex={0}
         aria-label="3D 뷰포트 조작 영역 (스페이스바 재생, 좌우 화살표 구간 이동, Shift+방향키 시점 회전, +/- 확대·축소, 두 손가락 핀치 줌, 관절 클릭 코칭 확인)"
         onKeyDown={(event) => {
-          if (isImeComposing(event)) return;
+          if (event.target !== event.currentTarget || isImeComposing(event)) return;
           if (event.key === ' ') {
             event.preventDefault();
             if (canAnimate) setPlaying((p) => !p);
@@ -896,7 +892,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             className="pf-orbit3d-hotspot-card"
             data-testid="studio-3d-hotspot-card"
             role="status"
-            aria-live="polite"
+            aria-live={playing ? 'off' : 'polite'}
           >
             <div className="pf-orbit3d-hotspot-card__head">
               <strong>{selectedHotspot.labelKo}</strong>
@@ -921,52 +917,6 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
             {mirrored ? ' · 반전' : ''}
           </span>
-          <div
-            className="pf-orbit3d-shader-pills"
-            role="group"
-            aria-label="3D 카메라 앵글 프리셋"
-            data-testid="studio-3d-angle-presets"
-          >
-            {primaryPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                className={`pf-orbit3d-shader-btn ${
-                  activePresetId === preset.id ? 'is-active' : ''
-                }`}
-                aria-pressed={activePresetId === preset.id}
-                onClick={() => applyCameraPreset(preset.id)}
-              >
-                {preset.labelKo}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="pf-orbit3d-zoom-controls" role="group" aria-label="3D 줌 조절">
-          <button
-            type="button"
-            className="pf-orbit3d-icon-btn"
-            aria-label="3D 화면 확대"
-            onClick={() => setZoom((z) => Math.min(1.85, Number((z + 0.14).toFixed(2))))}
-          >
-            <ZoomIn size={15} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="pf-orbit3d-icon-btn"
-            aria-label="3D 화면 축소"
-            onClick={() => setZoom((z) => Math.max(0.68, Number((z - 0.14).toFixed(2))))}
-          >
-            <ZoomOut size={15} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="pf-orbit3d-icon-btn"
-            aria-label="기본 스튜디오 35도 각도로 초기화"
-            onClick={() => applyCameraPreset('quarter')}
-          >
-            <RotateCcw size={15} aria-hidden="true" />
-          </button>
         </div>
       </div>
 
@@ -1019,6 +969,60 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             {speed === 1 ? '1.0x' : '0.5x 슬로우'}
           </button>
         </div>
+
+        <details className="pf-orbit3d-camera-settings">
+          <summary>
+            <Camera size={16} aria-hidden="true" /> 시점·확대
+          </summary>
+          <div className="pf-orbit3d-camera-settings__body">
+            <div
+              className="pf-orbit3d-shader-pills"
+              role="group"
+              aria-label="3D 카메라 앵글 프리셋"
+              data-testid="studio-3d-angle-presets"
+            >
+              {primaryPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={`pf-orbit3d-shader-btn ${
+                    activePresetId === preset.id ? 'is-active' : ''
+                  }`}
+                  aria-pressed={activePresetId === preset.id}
+                  onClick={() => applyCameraPreset(preset.id)}
+                >
+                  {preset.labelKo}
+                </button>
+              ))}
+            </div>
+            <div className="pf-orbit3d-zoom-controls" role="group" aria-label="3D 줌 조절">
+              <button
+                type="button"
+                className="pf-orbit3d-icon-btn"
+                aria-label="3D 화면 확대"
+                onClick={() => setZoom((z) => Math.min(1.85, Number((z + 0.14).toFixed(2))))}
+              >
+                <ZoomIn size={15} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="pf-orbit3d-icon-btn"
+                aria-label="3D 화면 축소"
+                onClick={() => setZoom((z) => Math.max(0.68, Number((z - 0.14).toFixed(2))))}
+              >
+                <ZoomOut size={15} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="pf-orbit3d-icon-btn"
+                aria-label="기본 스튜디오 35도 각도로 초기화"
+                onClick={() => applyCameraPreset('quarter')}
+              >
+                <RotateCcw size={15} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </details>
 
         <div
           className="pf-orbit3d-modeler-strip"
@@ -1336,9 +1340,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         </p>
       )}
       <p className="pf-orbit3d-provenance-note" data-testid="studio-3d-provenance-note">
-        출처 수준: {dedicated3d ? '카탈로그 절차적 3D 참조 도해' : '자세 유형 기반 대표 3D 도해'} (정적
-        이미지와 별개 · 외부 전문가 모션 검수 미완료) · 개인별 생체역학 측정, 의료적 교정, 통증 치료 효과를
-        주장하지 않습니다.
+        출처 수준: {dedicated3d ? '카탈로그 절차적 3D 참조 도해' : '자세 유형 기반 대표 3D 도해'}{' '}
+        (정적 이미지와 별개 · 외부 전문가 모션 검수 미완료) · 개인별 생체역학 측정, 의료적 교정,
+        통증 치료 효과를 주장하지 않습니다.
       </p>
       {binding?.sourceUrl && (
         <div className="pf-orbit3d-source-row">

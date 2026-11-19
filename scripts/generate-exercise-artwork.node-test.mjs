@@ -9,6 +9,7 @@ import {
   runArtworkJobs,
   sha256,
   verifyArtworkBytes,
+  verifyArtworkSubject,
 } from './generate-exercise-artwork.mjs';
 
 const source = '/images/motion-atlas-v3/practitioner.webp';
@@ -111,6 +112,23 @@ test('rejects corrupted bytes, wrong dimensions and a non-WebP image', async () 
   );
   const png = await sharp(buffer).png().toBuffer();
   await assert.rejects(verifyArtworkBytes(png, { bytes: png.length, sha256: sha256(png) }), /WebP/);
+});
+
+test('rejects a uniform studio backdrop and accepts the same backdrop with a visible subject', async () => {
+  const background = { create: { width: 640, height: 400, channels: 3, background: '#bbbbbb' } };
+  const empty = await sharp(background).webp().toBuffer();
+  await assert.rejects(
+    verifyArtworkSubject(empty, 'demo/start'),
+    /Empty studio frame: demo\/start/,
+  );
+  const subject = Buffer.from(
+    '<svg width="640" height="400"><circle cx="320" cy="200" r="40" fill="#31574a"/></svg>',
+  );
+  const visible = await sharp(background)
+    .composite([{ input: subject }])
+    .webp()
+    .toBuffer();
+  await verifyArtworkSubject(visible, 'demo/start');
 });
 
 test('bounds active work to four and allows authored result ordering', async () => {

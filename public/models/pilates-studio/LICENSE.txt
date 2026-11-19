@@ -2,8 +2,8 @@ Pilates Flow Studio 3D Apparatus & Reference Mannequin Assets (.glb)
 SPDX-License-Identifier: MIT AND CC-BY-4.0
 
 Provenance:
-- Authored from scratch via procedural Python bmesh/bpy scripts in Blender 5.2.0 LTS
-  and Meshopt-compressed/validated with GLBForge 0.8.0 for Pilates Flow Studio.
+- Authored from scratch via procedural Python bmesh/bpy scripts in Blender 5.3.0. Exported as
+  glTF 2.0 with embedded texture atlases and inspected with GLBForge.
 - Contains zero third-party copyrighted meshes, scans, or external textures.
 
 Non-Diagnostic & Instructional Notice:

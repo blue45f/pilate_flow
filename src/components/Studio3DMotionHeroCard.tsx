@@ -426,6 +426,9 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   const binding = getExpandedMovementVisualBinding(exercise);
   const dedicated3d = hasDedicated3DExerciseRig(exercise);
   const rigSample = useMemo(() => sampleUniversal3DExerciseRig(exercise, 1), [exercise]);
+  const rigDescription = rigSample.rigId === exercise.id
+    ? '동작별 3D 도해'
+    : dedicated3d ? '같은 동작군의 대표 자세' : '자세 유형을 바탕으로 만든 도해';
   const [mode, setMode] = useState<Studio3DViewMode>('motion');
   const [previewLayer, setPreviewLayer] = useState<'easy' | 'standard' | 'hard'>('standard');
   const prefersReduced = useReducedMotion();
@@ -462,9 +465,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               exercise.bodyPosition}
           </span>
           <span className="pf-studio3d-honest-pill">
-            {dedicated3d
-              ? '전용 3D 모션 재구성 · 임상 각도는 강사 현장 확인'
-              : '절차적 3D 모션 재구성 · 세부 수행은 큐·연결 영상 확인'}
+            {rigDescription} · {dedicated3d ? '실제 자세와 범위는 강사가 확인하세요.' : '동작 설명과 함께 확인하세요.'}
           </span>
           {binding?.sourceUrl && (
             <a

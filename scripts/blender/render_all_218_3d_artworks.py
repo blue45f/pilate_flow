@@ -31,6 +31,10 @@ from pilates_3d_modeling_kernel import (
 )
 
 
+FLOOR_RADIUS = 3.6
+COVE_RADIUS = 5.4
+
+
 def build_infinity_cyclorama_bowl(collection, mat) -> bpy.types.Object:
     """
     Constructs a smooth, continuous 360-degree L-sweep studio cyclorama bowl:
@@ -40,8 +44,8 @@ def build_infinity_cyclorama_bowl(collection, mat) -> bpy.types.Object:
     """
     bm = bmesh.new()
     ang_segs = 64
-    r_flat = 3.6
-    r_cove = 5.4
+    r_flat = FLOOR_RADIUS
+    r_cove = COVE_RADIUS
 
     profile_rz = [(0.0, 0.0), (1.4, 0.0), (2.6, 0.0), (r_flat, 0.0)]
     for k in range(1, 17):
@@ -199,6 +203,25 @@ def collect_exercise_envelope_points(ex: dict) -> list[Vector]:
     return pts
 
 
+def frame_inside_studio(cam, envelope, exercise_id):
+    # Wide poses can put the long-lens camera behind the curved cyclorama.
+    # Keep the same subject margin while moving the camera inside its visible surface.
+    # Show the opened arms across the frame and a side bend in the frontal plane.
+    azimuth, elevation = {
+        "original-cadillac-seated-rotation": (-27.0, 28.0),
+        "original-cadillac-seated-side-reach": (-18.0, 14.0),
+    }.get(exercise_id, (-64.0, 20.0))
+    for focal_length in (66, 50, 35, 24):
+        cam.data.lens = focal_length
+        aim_camera_perspective_exact(cam, envelope, azim_deg=azimuth, elev_deg=elevation,
+                                     margin=1.15, aspect=640.0 / 400.0)
+        height = max(0, min(cam.location.z, COVE_RADIUS))
+        wall_radius = FLOOR_RADIUS + math.sqrt(height * (2 * COVE_RADIUS - height))
+        if math.hypot(cam.location.x, cam.location.y) < wall_radius - 0.05:
+            return
+    raise RuntimeError("Cannot frame the pose inside the studio cyclorama")
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
@@ -223,7 +246,7 @@ def main():
     rendered = 0
     for idx, ex in enumerate(subset):
         env_pts = collect_exercise_envelope_points(ex)
-        aim_camera_perspective_exact(cam, env_pts, azim_deg=-64.0, elev_deg=20.0, margin=1.15, aspect=640.0 / 400.0)
+        frame_inside_studio(cam, env_pts, ex["id"])
         for phase in ("start", "middle", "end"):
             out_png = os.path.join(args.outdir, f"{ex['id']}.{phase}.png")
             clear_subject_collection(subj_col)
