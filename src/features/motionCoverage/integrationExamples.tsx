@@ -142,7 +142,7 @@ export const MotionCoverageUnifiedViewer: React.FC<MotionCoverageUnifiedViewerPr
         {descriptor.resolution.threePhase2d.sourceComparison?.matchedReliableSources.map(
           (source) => (
             <p key={source.url}>
-              <a href={source.url} target="_blank" rel="noreferrer">
+              <a href={source.url} target="_blank" rel="noopener noreferrer">
                 {source.titleKo}
               </a>
             </p>

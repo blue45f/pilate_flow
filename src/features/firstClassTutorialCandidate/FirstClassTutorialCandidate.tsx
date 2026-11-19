@@ -14,6 +14,7 @@ import {
   resolveFirstClassTutorialContext,
 } from './firstClassTutorialModel';
 import { FirstClassTutorialIllustration } from './FirstClassTutorialIllustrations';
+import { useManagedRaf } from '../../hooks/useManagedRaf';
 import {
   FIRST_CLASS_TUTORIAL_FIXTURE_PRESETS,
   getTutorialFixturePresetById,
@@ -82,6 +83,7 @@ export function FirstClassTutorialCandidate({
   onStepAction,
   onReturnToWorkbench,
 }: FirstClassTutorialCandidateProps) {
+  const { scheduleRaf } = useManagedRaf();
   const instanceId = useId();
   const headingId = `fctc-heading-${instanceId}`;
   const tabRefs = useRef<Record<FirstClassTutorialStepId, HTMLButtonElement | null>>({
@@ -262,11 +264,11 @@ export function FirstClassTutorialCandidate({
     onStepChange?.(nextStep.id, boundedIndex);
 
     if (optionsConfig?.focusTab) {
-      requestAnimationFrame(() => {
+      scheduleRaf(() => {
         tabRefs.current[nextStep.id]?.focus();
       });
     } else if (optionsConfig?.focusHeading) {
-      requestAnimationFrame(() => {
+      scheduleRaf(() => {
         activeStepHeadingRef.current?.focus();
       });
     }
@@ -298,7 +300,7 @@ export function FirstClassTutorialCandidate({
       setInternalVisibility('skipped');
     }
     onSkip?.(activeStep.id);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       reopenBtnRef.current?.focus();
     });
   };
@@ -308,7 +310,7 @@ export function FirstClassTutorialCandidate({
       setInternalVisibility('dismissed');
     }
     onDismiss?.(activeStep.id);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       reopenBtnRef.current?.focus();
     });
   };
@@ -318,7 +320,7 @@ export function FirstClassTutorialCandidate({
       setInternalVisibility('open');
     }
     onReopen?.(activeStep.id);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       activeStepHeadingRef.current?.focus();
     });
   };
@@ -332,7 +334,7 @@ export function FirstClassTutorialCandidate({
     }
     onStepChange?.('new-movement', 0);
     onReopen?.('new-movement');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       activeStepHeadingRef.current?.focus();
     });
   };

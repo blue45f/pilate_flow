@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { getAccessibleScrollBehavior } from './utils/scrollBehavior';
+import { useManagedTimeouts } from './hooks/useManagedTimeouts';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowDownToLine,
@@ -268,6 +270,7 @@ export function App() {
   const [installOpen, setInstallOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [landmarkAnnouncement, setLandmarkAnnouncement] = useState('');
+  const { scheduleTimeout } = useManagedTimeouts();
   const workbenchDetailAddRef = useRef<
     ((exerciseId: string) => { success: boolean; message?: string }) | null
   >(null);
@@ -474,7 +477,7 @@ export function App() {
         section === 'wallet' ? 'member-wallet-section' : 'member-bookings-section';
       const el =
         document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
-      el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      el?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
     });
   };
   const completeStageTransition = (tab: ActiveWorkspaceTab) => {
@@ -567,7 +570,7 @@ export function App() {
       anchor.href = url;
       anchor.download = `flow-atelier-backup-${new Date().toISOString().slice(0, 10)}.json`;
       anchor.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      scheduleTimeout(() => URL.revokeObjectURL(url), 1000);
       setBackupMessage('백업 파일을 만들었습니다. 기기 변경 전 안전한 곳에 보관해 주세요.');
     } catch {
       setBackupMessage('백업을 만들 수 없습니다. 브라우저 저장 권한을 확인해 주세요.');
@@ -1458,7 +1461,7 @@ export function App() {
             새로 생기거나 악화하는 통증·저림·근력 저하는 전문가에게 평가받으세요. 허리 통증과 함께
             양쪽 다리 증상, 회음부 감각 저하 또는 배뇨·배변 변화가 있으면 즉시 응급 평가를 받으세요.
           </p>
-          <a href="https://www.nhs.uk/conditions/back-pain/" target="_blank" rel="noreferrer">
+          <a href="https://www.nhs.uk/conditions/back-pain/" target="_blank" rel="noopener noreferrer">
             NHS 허리 통증·응급 증상 안내
           </a>
         </details>

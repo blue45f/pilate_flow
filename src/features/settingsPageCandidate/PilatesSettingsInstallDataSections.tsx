@@ -504,7 +504,7 @@ export function PilatesSettingsInstallDataSections({
               className="pf-settings-page__link-btn"
               href="https://www.nhs.uk/conditions/back-pain/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               data-testid="settings-nhs-safety-link"
             >
               NHS 허리 통증·응급 증상 안내

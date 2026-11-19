@@ -511,7 +511,7 @@ export const PreviewHarnessStageView: React.FC<PreviewHarnessStageViewProps> = (
           {activeDescriptor.resolution.threePhase2d.sourceComparison?.matchedReliableSources.map(
             (source) => (
               <p key={source.url} style={{ margin: '0 0 8px' }}>
-                <a href={source.url} target="_blank" rel="noreferrer">
+                <a href={source.url} target="_blank" rel="noopener noreferrer">
                   {source.titleKo}
                 </a>
               </p>
