@@ -136,7 +136,7 @@
   }
 
   .recovery-preview-layout .recovery-count-scroll table {
-    min-width: 380px;
+    min-width: min(380px, 100%);
     font-size: 13px;
   }
 

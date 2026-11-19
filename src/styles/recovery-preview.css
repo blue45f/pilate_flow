@@ -26,7 +26,7 @@
 }
 .recovery-count-scroll table {
   border-collapse: collapse;
-  min-width: 480px;
+  min-width: min(480px, 100%);
   width: 100%;
   font-size: 13px;
 }

@@ -72,7 +72,7 @@
   margin: 0 0 12px;
 }
 .recovery-preview-layout .recovery-count-scroll table {
-  min-width: 520px;
+  min-width: min(520px, 100%);
 }
 .recovery-preview-layout .recovery-count-scroll th:first-child {
   position: sticky;
