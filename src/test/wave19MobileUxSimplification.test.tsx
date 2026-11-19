@@ -40,6 +40,13 @@ describe('Wave 19 Mobile UI/UX Simplification & Korean Typography Gate', () => {
     expect(css).toContain('.pf-binder-blocks-grid');
   });
 
+  it('enforces touch-action: none on 3D orbit canvas and 44px HUD controls on mobile', () => {
+    expect(css).toContain('.pf-orbit3d-canvas');
+    expect(css).toContain('touch-action: none !important');
+    expect(css).toContain('.pf-orbit3d-icon-btn');
+    expect(css).toContain('.pf-orbit3d-hotspot-card');
+  });
+
   it('hardens mobile tables against horizontal overflow with tabular-nums', () => {
     expect(css).toContain('main#main-content table');
     expect(css).toContain('dialog[open] table');

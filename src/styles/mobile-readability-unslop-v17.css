@@ -548,3 +548,73 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ==========================================================================
+   Wave 26 — Mobile 3D Viewport (pf-orbit3d) Touch-Orbit & HUD Ergonomics
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* Dedicated 1-finger 3D orbit without fighting vertical page scroll */
+  html #root .pf-orbit3d-canvas {
+    touch-action: none !important;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html #root .pf-orbit3d-canvas-wrap {
+    min-height: 240px;
+    max-height: 46dvh;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* 44px thumb targets on 3D camera/playback/export controls */
+  html #root .pf-orbit3d-icon-btn,
+  html #root .pf-orbit3d-export-btn {
+    min-height: 44px !important;
+    min-width: 44px;
+    font-size: 0.84375rem !important;
+    word-break: keep-all;
+  }
+
+  /* Calm single-row scrollable strips for 3D style/modeler/export toolbars */
+  html #root .pf-orbit3d-lab-style-bar,
+  html #root .pf-orbit3d-modeler-strip,
+  html #root .pf-orbit3d-export-row {
+    display: flex;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px !important;
+  }
+
+  html #root .pf-orbit3d-lab-style-bar::-webkit-scrollbar,
+  html #root .pf-orbit3d-modeler-strip::-webkit-scrollbar,
+  html #root .pf-orbit3d-export-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  html #root .pf-orbit3d-lab-style-bar > *,
+  html #root .pf-orbit3d-modeler-strip > *,
+  html #root .pf-orbit3d-export-row > * {
+    flex: 0 0 auto;
+  }
+
+  /* Anatomical hotspot card never clips on 360px phones */
+  html #root .pf-orbit3d-hotspot-card {
+    max-width: calc(100% - 16px) !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    word-break: keep-all;
+  }
+
+  html #root .pf-orbit3d-hotspot-card__cue {
+    font-size: 0.875rem !important;
+    line-height: 1.55 !important;
+  }
+
+  html #root .pf-orbit3d-hotspot-card__metric {
+    font-size: 0.8125rem !important;
+    font-variant-numeric: tabular-nums;
+  }
+}
