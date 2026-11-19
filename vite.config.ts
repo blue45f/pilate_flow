@@ -219,6 +219,20 @@ export default defineConfig(({ mode }) => ({
             return 'data-pilates-catalog';
           }
           if (
+            id.includes('/src/store/') ||
+            id.includes('/src/utils/sequenceEngine.ts') ||
+            id.includes('/src/utils/sequenceSimulation.ts') ||
+            id.includes('/src/utils/teachingHistorySnapshot.ts')
+          ) {
+            return 'core-store';
+          }
+          if (id.includes('/src/components/SequenceStudioWorkbench.tsx')) {
+            return 'feature-studio-workbench';
+          }
+          if (id.includes('/src/components/DatedSequencePlanningDialog.tsx')) {
+            return 'feature-dated-planning';
+          }
+          if (
             id.includes('/src/components/MemberBookingView.tsx') ||
             id.includes('/src/booking-core/')
           ) {
