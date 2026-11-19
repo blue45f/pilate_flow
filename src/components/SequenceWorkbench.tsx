@@ -3992,6 +3992,7 @@ export function SequenceWorkbench({
                   undoCount={s.undoStack.length}
                   redoCount={s.redoStack.length}
                   hasPersistenceError={Boolean(s.persistenceError)}
+                  startActionLabelKo="라이브 진행 열기"
                   onOpenConditions={() => setConditionsOpen(true)}
                   onOpenFinder={openExerciseFinder}
                   onFitDuration={() => {

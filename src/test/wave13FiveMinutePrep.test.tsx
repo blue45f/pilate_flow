@@ -21,11 +21,11 @@ describe('Wave 13 Five-Minute Pre-Class Prep Drawer & Honest Provenance Audit', 
         locked: true,
       },
       {
+        kind: 'rest',
         stepId: 'rest-1',
         order: 2,
-        stepType: 'rest',
-        blockCategory: 'cooldown-stretch',
-        exerciseId: '__rest__',
+        blockCategory: 'core',
+        exerciseId: '',
         durationMin: 2,
         selectedLayer: 'standard',
       },
@@ -59,7 +59,7 @@ describe('Wave 13 Five-Minute Pre-Class Prep Drawer & Honest Provenance Audit', 
     const onUndo = vi.fn();
     const onRedo = vi.fn();
 
-    const { getByText } = render(
+    const { getByText, queryByText } = render(
       <FiveMinutePrepDrawer
         activeSteps={[
           {
@@ -87,6 +87,9 @@ describe('Wave 13 Five-Minute Pre-Class Prep Drawer & Honest Provenance Audit', 
         onRedo={onRedo}
       />,
     );
+
+    expect(queryByText('조건 조정')).not.toBeInTheDocument();
+    fireEvent.click(getByText(/수업 5분 전 한 손 점검/));
 
     fireEvent.click(getByText('조건 조정'));
     fireEvent.click(getByText('동작 담기'));
