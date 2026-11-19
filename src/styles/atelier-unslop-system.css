@@ -2989,3 +2989,35 @@ html body #root .step-inspector-badges span {
   }
 }
 
+/* ==========================================================================
+   23. Wave 5 Dated Sequence Planning & Shell Footer Mobile Ergonomics
+       - Prevent mid-syllable Hangul breaks (overflow-wrap: break-word)
+       - Add overscroll-behavior-x: contain & tabular-nums to planning calendars
+       - Protect dated planning dialog body & app footer with safe-area padding
+   ========================================================================== */
+html body #root .dated-planning,
+html body #root .dated-planning :is(button, input, select, summary, p, label) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+html body #root :is(.dated-planning-range, .dated-planning-calendar, .dated-planning-revision table) {
+  font-variant-numeric: tabular-nums;
+}
+
+html body #root :is(.dated-planning-calendar-scroll, .dated-planning-revision-table-scroll) {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  html body #root .dated-planning-dialog .atelier-modal-body {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  }
+
+  html body #root .flow-app .app-footer {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+
