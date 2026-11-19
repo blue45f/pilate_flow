@@ -2751,3 +2751,93 @@ html
   color: #56685f;
   word-break: keep-all;
 }
+
+/* ==========================================================================
+   19. Mobile Touch Ergonomics, Safe-Area Modals & Narrow-Phone Korean Polish
+       - Eliminate 300ms double-tap zoom friction on rapid teaching/timer taps
+       - Guarantee >= 44px mobile touch targets on balance window & binder pills
+       - Protect bottom modal/sheet actions above iOS home indicator safe-area
+       - Prevent cramped Hangul wrapping on <= 420px phones
+   ========================================================================== */
+html
+  body
+  #root
+  :is(.flow-app, dialog)
+  :is(
+    button,
+    a[href],
+    summary,
+    [role='tab'],
+    .pf-btn,
+    .chip,
+    .pf-step-guide-chip,
+    .pf-member-day-btn,
+    .pf-teaching-balance-window-btn,
+    .pf-binder-qr-import-pill
+  ) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html
+  body
+  #root
+  :is(
+    .pf-home-3d-hero-showcase__copy,
+    .pf-teaching-balance-gap-tip,
+    .pf-teaching-balance-kpi,
+    .pf-page-intent-banner,
+    .pf-detail-intent-banner
+  ) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  html
+    body
+    #root
+    :is(
+      .pf-teaching-balance-window-btn,
+      .pf-binder-qr-import-pill,
+      .pf-step-secondary-actions.workbench-welcome-actions > button
+    ) {
+    min-height: 44px !important;
+  }
+
+  html
+    body
+    #root
+    :is(dialog.light-dismiss-dialog[open], .atelier-modal-dialog[open])
+    .atelier-modal-body {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 420px) {
+  html body #root .pf-home-3d-hero-showcase {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  html body #root .pf-home-3d-hero-showcase__img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  html body #root .pf-teaching-balance-kpis {
+    gap: 6px;
+  }
+
+  html body #root .pf-teaching-balance-kpi {
+    padding: 8px 6px;
+  }
+
+  html body #root .pf-page-intent-banner,
+  html body #root .pf-detail-intent-banner {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+}
