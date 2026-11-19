@@ -632,7 +632,7 @@ export function inspectCanonicalProductionReadiness({
         (item) => item.key === 'Cache-Control' && String(item.value).includes('immutable'),
       ),
   );
-  const noCacheSources = ['/sw.js', '/index.html', '/site.webmanifest'];
+  const noCacheSources = ['/', '/sw.js', '/index.html', '/site.webmanifest'];
   const hasNoCacheShellHeaders = noCacheSources.every((src) =>
     headers.some(
       (h) =>

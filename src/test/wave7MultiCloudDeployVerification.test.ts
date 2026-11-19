@@ -185,6 +185,18 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
 
     expect(
       verifyCanonicalProductionConfig({
+        firebaseJson: {
+          hosting: {
+            ...firebaseJson.hosting,
+            headers: firebaseJson.hosting?.headers?.filter((rule) => rule.source !== '/'),
+          },
+        },
+        firebaserc,
+      }).aligned,
+    ).toBe(false);
+
+    expect(
+      verifyCanonicalProductionConfig({
         firebaseJson,
         firebaserc,
         branch: 'feature/experimental',

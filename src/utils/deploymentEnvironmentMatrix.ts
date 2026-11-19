@@ -15,7 +15,7 @@ export interface CanonicalProductionDeploySpec {
   rollbackCommand: string;
   firebaseToolsVersion: string;
   immutableAssetPath: '/assets/**';
-  pwaNoCachePaths: readonly ['/sw.js', '/index.html', '/site.webmanifest'];
+  pwaNoCachePaths: readonly ['/', '/sw.js', '/index.html', '/site.webmanifest'];
   atelierV2AssetPaths: readonly [
     '/images/atelier-v2/reformer-studio-3d.png',
     '/images/atelier-v2/cadillac-studio-3d.png',
@@ -78,7 +78,7 @@ export const CANONICAL_PRODUCTION_DEPLOY_SPEC: CanonicalProductionDeploySpec = {
   rollbackCommand: 'pnpm deploy:rollback',
   firebaseToolsVersion: '13.29.1',
   immutableAssetPath: '/assets/**',
-  pwaNoCachePaths: ['/sw.js', '/index.html', '/site.webmanifest'],
+  pwaNoCachePaths: ['/', '/sw.js', '/index.html', '/site.webmanifest'],
   atelierV2AssetPaths: [
     '/images/atelier-v2/reformer-studio-3d.png',
     '/images/atelier-v2/cadillac-studio-3d.png',
@@ -149,7 +149,7 @@ export function verifyCanonicalProductionConfig(input?: ProductionConfigValidati
           hasHeaderContaining(headerRules, noCachePath, 'Cache-Control', 'no-cache') &&
           hasHeaderContaining(headerRules, noCachePath, 'Cache-Control', 'must-revalidate'),
       )
-    : spec.pwaNoCachePaths.length === 3;
+    : spec.pwaNoCachePaths.length === 4;
 
   return {
     aligned:
