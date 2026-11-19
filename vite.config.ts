@@ -218,6 +218,12 @@ export default defineConfig(({ mode }) => ({
           ) {
             return 'data-pilates-catalog';
           }
+          if (
+            id.includes('/src/components/MemberBookingView.tsx') ||
+            id.includes('/src/booking-core/')
+          ) {
+            return 'feature-member-booking';
+          }
           return undefined;
         },
       },
