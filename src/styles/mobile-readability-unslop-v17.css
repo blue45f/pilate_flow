@@ -692,3 +692,47 @@ html body #root .pf-orbit3d-camera-settings .pf-orbit3d-zoom-controls {
     min-width: 44px;
   }
 }
+
+@media (min-width: 641px) {
+  #root .flow-studio :is(.flow-condition-button, .flow-text-button, .pf-routine-tag-add-trigger),
+  #root .flow-studio :is(.flow-chips, .flow-pick-card, .pf-ai-quick-bar) button,
+  #root
+    .flow-studio
+    :is(.flow-field input, .flow-search, .flow-checkbox, .pf-ai-caution-disclosure > summary),
+  #root .flow-studio :is(.pf-ai-quick-bar__field, .pf-ai-quick-bar__input),
+  #root
+    .flow-atlas
+    :is(
+      .flow-atlas__button,
+      .flow-atlas__favorites,
+      .flow-atlas__favorite-button,
+      .flow-atlas__class-link
+    ),
+  #root .flow-atlas :is(.flow-atlas__chips, .flow-atlas__active-filters) button,
+  #root .flow-binder .flow-binder-secondary-actions button,
+  #root :is(.pf-member-360-drawer, .mb-card-details, details.settings-section) > summary {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  html body #root .flow-app :is(.topbar-actions, .desktop-nav) button,
+  html body #root .flow-app .sidebar :is(.sidebar-study-link, .pwa-sidebar-button, summary),
+  html body #root .flow-app .pf-mobile-subpage-btn,
+  html body #root .atelier-modal-header .icon-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+}
+
+#root :is(.pf-crawled-pack-section, .pvl-card-links) a[href] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Imported repertoire cards also specify smaller button sizes in inline styles. */
+#root .pf-crawled-pack-section button {
+  min-height: 44px !important;
+  min-width: 44px;
+}
