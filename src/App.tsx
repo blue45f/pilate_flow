@@ -1,6 +1,5 @@
 import { getActiveWorkspaceOwner } from './lib/accountStorage';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { getAccessibleScrollBehavior } from './utils/scrollBehavior';
 import { useManagedTimeouts } from './hooks/useManagedTimeouts';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -470,17 +469,7 @@ export function App() {
       },
       { kind: switchingPortal ? 'portal' : 'fade' },
     );
-    requestAnimationFrame(() => {
-      if (section === 'schedule') {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-        return;
-      }
-      const targetId =
-        section === 'wallet' ? 'member-wallet-section' : 'member-bookings-section';
-      const el =
-        document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
-      el?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
-    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
   const completeStageTransition = (tab: ActiveWorkspaceTab) => {
     const pending = pendingStageTransition.current;
@@ -1048,7 +1037,7 @@ export function App() {
           {portalRole === 'member' ? (
             <MemberBookingView
               activeSection={memberSection}
-              onSwitchToInstructor={() => setPortalRole('instructor')}
+              onOpenSchedule={() => focusMemberSection('schedule')}
             />
           ) : (
             <>

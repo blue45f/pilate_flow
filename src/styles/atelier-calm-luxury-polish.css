@@ -1549,3 +1549,56 @@ html #root .flow-app .desktop-nav > button.active {
     animation: none !important;
   }
 }
+
+
+.pf-ai-quick-bar__disclosure-icon {
+  margin-inline-start: auto;
+}
+
+.pf-ai-quick-bar[open] .pf-ai-quick-bar__disclosure-icon {
+  transform: rotate(180deg);
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  .flow-studio .flow-class-brief .flow-condition-button,
+  .flow-studio .flow-mobile-panes button,
+  .flow-studio .flow-chips button,
+  .flow-studio .flow-picker-controls .flow-checkbox,
+  .flow-studio .flow-pick-card .flow-name-button,
+  .flow-studio .flow-time-overview .flow-text-button,
+  .flow-studio .pf-ai-quick-bar :is(button, summary, .pf-ai-quick-bar__field) {
+    min-height: 44px;
+    height: auto;
+  }
+
+  .flow-studio .flow-search button,
+  .flow-studio .flow-pick-card__actions button,
+  .flow-studio .flow-sequence-list :is(.flow-section-copy-btn, .flow-layer-pill, .flow-time-nudge) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .flow-studio .flow-condition-button span {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .flow-studio .flow-picker {
+    scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px));
+  }
+
+  .flow-studio .flow-plan:has(.flow-empty-plan) .flow-time-overview,
+  .flow-studio .flow-empty-icon {
+    display: none;
+  }
+
+  .flow-studio .flow-empty-plan {
+    padding: 8px 12px 16px;
+  }
+
+  .flow-studio .flow-empty-plan > .flow-button--primary {
+    align-self: stretch;
+    margin-top: 12px;
+  }
+}

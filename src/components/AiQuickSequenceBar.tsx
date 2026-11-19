@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { RefreshCw, ShieldCheck, Wand2 } from 'lucide-react';
+import { ChevronDown, RefreshCw, ShieldCheck, Wand2 } from 'lucide-react';
 import {
   BODY_CAUTION_META,
   composeAiSmartSequence,
@@ -24,6 +24,9 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
   onError,
   compact = false,
 }) => {
+  const [startsOnPhone] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px)').matches === true,
+  );
   const [prompt, setPrompt] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const [cautions, setCautions] = useState<BodyCautionArea[]>([]);
@@ -112,7 +115,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
                   event.preventDefault();
                 }
               }}
-              placeholder="원하는 수업을 적거나 아래 테마를 선택하세요 (예: 리포머 초급 50분 코어)"
+              placeholder="예: 매트 50분 코어"
               maxLength={180}
             />
           </div>
@@ -237,7 +240,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
     </>
   );
 
-  if (compact && !lastSummary) {
+  if ((compact || startsOnPhone) && !lastSummary) {
     return (
       <details
         className="pf-ai-quick-bar pf-ai-quick-bar--collapsed"
@@ -246,8 +249,8 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
       >
         <summary className="pf-ai-quick-bar__collapsed-summary">
           <Wand2 size={15} strokeWidth={1.5} aria-hidden="true" />
-          <span>한 줄 설명·추천 테마로 수업 자동 채우기</span>
-          <small>전신 · 코어 · 하체 · 이완</small>
+          <span>수업 자동 구성</span>
+          <ChevronDown className="pf-ai-quick-bar__disclosure-icon" size={16} aria-hidden="true" />
         </summary>
         <div className="pf-ai-quick-bar__collapsed-body">{bodyContent}</div>
       </details>

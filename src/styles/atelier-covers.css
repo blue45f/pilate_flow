@@ -1,0 +1,80 @@
+/* A shared photograph and left-hand scrim keep each workspace recognizable
+   without moving frequently used actions into a second toolbar. */
+.atelier-cover--reformer {
+  --atelier-photo: url('../assets/atelier/reformer-1280.webp');
+}
+.atelier-cover--notebook {
+  --atelier-photo: url('../assets/atelier/notebook-1280.webp');
+}
+.atelier-cover--apparatus {
+  --atelier-photo: url('../assets/atelier/apparatus-1280.webp');
+}
+
+#root .flow-app header.atelier-cover {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  min-height: clamp(92px, 9vw, 132px);
+  padding: clamp(14px, 2vw, 26px);
+  border-radius: 14px;
+  background: #2d392e;
+}
+
+#root .flow-app header.atelier-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(20, 31, 23, .91), rgba(26, 34, 23, .67) 40%, transparent 78%),
+    var(--atelier-photo) center 52% / cover no-repeat;
+}
+
+html body #root .flow-app header.atelier-cover :is(h1, .eyebrow, .muted, .flow-atlas__subcopy, .flow-studio__title-group > p) {
+  color: #fffaf1 !important;
+}
+html body #root .flow-app header.atelier-cover h1 {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+}
+#root .flow-app .atelier-cover :is(.eyebrow, .flow-atlas__subcopy, .muted, .flow-studio__title-group > p) {
+  max-width: 38ch;
+}
+#root .flow-app .pf-member-header.atelier-cover {
+  align-items: center;
+  margin-bottom: 0 !important;
+}
+@media (max-width: 639px) {
+  .atelier-cover--reformer { --atelier-photo: url('../assets/atelier/reformer-640.webp'); }
+  .atelier-cover--apparatus { --atelier-photo: url('../assets/atelier/apparatus-640.webp'); }
+  .atelier-cover--notebook { --atelier-photo: url('../assets/atelier/notebook-640.webp'); }
+
+  html body #root .flow-app header.atelier-cover {
+    padding: 14px 12px;
+    min-height: 86px;
+  }
+  #root .flow-app header.atelier-cover :is(.eyebrow, .muted) {
+    display: none !important;
+  }
+  html body #root .flow-app .atelier-cover .pf-studio-spring-meter {
+    display: none;
+  }
+}
+@media (max-width: 1023px), (pointer: coarse) {
+  html body #root .flow-app :is(.sidebar .desktop-nav button, .pf-role-switcher__btn) {
+    min-width: 44px;
+    min-height: 44px !important;
+  }
+}
+@media print {
+  #root .flow-app header.atelier-cover {
+    background: white;
+    min-height: 0;
+    padding: 0;
+  }
+  #root .flow-app header.atelier-cover::before { display: none; }
+  html body #root .flow-app header.atelier-cover :is(h1, .eyebrow, p, .flow-atlas__subcopy) { color: black !important; }
+}

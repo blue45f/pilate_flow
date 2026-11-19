@@ -1216,7 +1216,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     <div
       className={`teaching-collection flow-binder ${view === 'history' ? 'teaching-collection--history' : 'teaching-collection--saved'}`}
     >
-      <header className="teaching-page-header">
+      <header className="teaching-page-header atelier-cover atelier-cover--notebook">
         <div>
           <span className="eyebrow">
             {view === 'saved' ? '수업 라이브러리' : '다음 수업을 위한 기억'}

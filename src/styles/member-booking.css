@@ -904,3 +904,33 @@ html body #root .pf-member-view .pf-member-steps li.is-active {
     transition: none;
   }
 }
+
+.pf-member-demo-notice {
+  margin: 0;
+  color: var(--pf-color-text-secondary, #3d4f45);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.pf-member-filters-disclosure {
+  border-block: 1px solid var(--pf-color-border-subtle, #d5ddd0);
+}
+
+.pf-member-filters-disclosure > summary {
+  padding: 12px 4px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pf-member-filters-disclosure > summary span {
+  margin-inline-start: 12px;
+  font-size: 13px;
+  color: var(--pf-color-text-secondary, #3d4f45);
+  font-weight: 400;
+}
+
+.pf-member-filters-disclosure[open] > div {
+  margin-block-end: 8px;
+}

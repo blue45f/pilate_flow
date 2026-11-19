@@ -17,6 +17,7 @@ import { App } from './App';
 import './styles/atelier-unslop-system.css';
 import './styles/pf-motion-studio.css';
 import './styles/mobile-readability-unslop-v17.css';
+import './styles/atelier-covers.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { startPwa } from './lib/pwa';

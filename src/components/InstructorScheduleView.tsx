@@ -1026,7 +1026,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       aria-label="강사 일정"
       style={{ minWidth: 0, paddingBottom: '24px' }}
     >
-      <header className="schedule-page-header">
+      <header className="schedule-page-header atelier-cover atelier-cover--reformer">
         <div>
           <span className="eyebrow">오늘부터 다음 수업까지</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>

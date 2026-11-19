@@ -9,6 +9,15 @@ afterEach(() => {
 });
 
 describe('ClassCueSheetPreview', () => {
+  it('shows ordinary punctuation in saved class titles and movement names', () => {
+    render(<ClassCueSheetPreview sourceInput={{
+      title: '호흡 & 균형',
+      steps: [{ id: 'breathing', nameKo: '들이쉬기 & 내쉬기' }],
+    }} />);
+    expect(screen.getByRole('heading', { name: '호흡 & 균형' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '들이쉬기 & 내쉬기' })).toBeTruthy();
+  });
+
   it('renders empty class state cleanly without crashing and disables step navigation buttons', () => {
     render(<ClassCueSheetPreview initialFixtureId="empty-class" />);
 

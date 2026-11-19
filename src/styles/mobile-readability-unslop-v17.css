@@ -618,3 +618,77 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Camera settings stay available beside playback without covering the movement. */
+.pf-orbit3d-camera-settings > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 10px;
+  color: var(--pf-unslop-text-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.pf-orbit3d-camera-settings > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-orbit3d-camera-settings > summary::after {
+  content: '';
+  margin-inline-start: auto;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+}
+
+.pf-orbit3d-camera-settings[open] > summary::after {
+  transform: rotate(225deg);
+}
+
+.pf-orbit3d-camera-settings__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-block: 4px 8px;
+}
+
+html body #root .pf-orbit3d-camera-settings .pf-orbit3d-shader-pills {
+  display: flex;
+  flex-wrap: wrap !important;
+  max-width: 100%;
+  border: 0;
+  padding: 0;
+  gap: 4px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pf-orbit3d-camera-settings .pf-orbit3d-shader-btn {
+  min-height: 44px;
+  padding-inline: 9px;
+  border-radius: 8px;
+}
+
+html body #root .pf-orbit3d-camera-settings .pf-orbit3d-zoom-controls {
+  position: static;
+  flex-direction: row !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 639px) {
+  #root .pf-p07-clean-detail .yt-preview-step-guide .pf-step-guide-nav {
+    display: none !important;
+  }
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  #root .flow-atlas__chips button,
+  #root .flow-binder .flow-binder-secondary-actions button[aria-expanded] {
+    min-width: 44px;
+  }
+}

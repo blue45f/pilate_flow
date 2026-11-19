@@ -1141,8 +1141,13 @@ export function SequenceStudioWorkbench(props: Props) {
   const showLibrary = () => {
     setMobilePane('library');
     scheduleRaf(() => {
-      searchRef.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
-      searchRef.current?.focus({ preventScroll: true });
+      const search = searchRef.current;
+      if (window.matchMedia?.('(max-width: 767px)').matches) {
+        search?.closest('.flow-picker')?.scrollIntoView?.({ behavior: 'instant', block: 'start' });
+      } else {
+        search?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+      }
+      search?.focus({ preventScroll: true });
     });
   };
   const save = async () => {
@@ -1230,7 +1235,7 @@ export function SequenceStudioWorkbench(props: Props) {
 
   return (
     <section className="flow-studio" data-testid="sequence-studio" data-mobile-pane={mobilePane}>
-      <header className="flow-studio__heading">
+      <header className="flow-studio__heading atelier-cover atelier-cover--reformer">
         <div className="flow-studio__title-group">
           <h1 id="workspace-main-heading" tabIndex={-1}>
             수업 만들기
@@ -2061,11 +2066,6 @@ export function SequenceStudioWorkbench(props: Props) {
                     <Plus size={24} strokeWidth={1.5} />
                   </span>
                   <h3>첫 동작부터 시작해 볼까요?</h3>
-                  <p>
-                    동작 목록에서 원하는 동작을 추가하거나
-                    <br />
-                    끌어서 순서를 바꿀 수 있어요
-                  </p>
                   <button className="flow-button flow-button--primary" onClick={showLibrary}>
                     <Plus size={16} strokeWidth={1.5} /> 동작 고르기
                   </button>

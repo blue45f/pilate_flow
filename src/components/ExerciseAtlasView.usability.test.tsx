@@ -202,6 +202,9 @@ describe('ExerciseAtlasView movement comparison, pre-add readiness cues, and seq
     );
     const returnBar = document.querySelector('.ml-selection-return') as HTMLElement;
     expect(returnBar).toHaveAttribute('data-has-selection', 'true');
+    expect(returnBar).toHaveAttribute('data-pinned', 'true');
+    fireEvent.click(screen.getByRole('tab', { name: /공개 자료/ }));
+    expect(returnBar).toHaveAttribute('data-pinned', 'false');
     expect(returnBar).toHaveTextContent(`#1 ${matCorePending.nameKo}`);
   }, 15000); // Covers the full comparison, filtering, motion-preview and add flow with real SVGs.
 

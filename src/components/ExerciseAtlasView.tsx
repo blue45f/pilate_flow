@@ -1362,7 +1362,11 @@ const ATLAS_UNSLOP_CSS = `
   }
 }
 
-@media (max-width: 959px) {
+@media (pointer: coarse), (max-width: 1023px) {
+  .flow-atlas--unslop .flow-atlas__active-filters button,
+  .flow-atlas--unslop .flow-atlas__card h2 button,
+  .flow-atlas--unslop .flow-atlas__text-button,
+  .flow-atlas--unslop .flow-atlas__owned-filter,
   .flow-atlas--unslop .flow-atlas__button,
   .flow-atlas--unslop .flow-atlas__chips button,
   .flow-atlas--unslop .flow-atlas__favorites,
@@ -1495,7 +1499,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   return (
     <section className="flow-atlas flow-atlas--unslop" aria-labelledby="workspace-main-heading">
       <style>{ATLAS_UNSLOP_CSS}</style>
-      <header className="flow-atlas__heading">
+      <header className="flow-atlas__heading atelier-cover atelier-cover--apparatus">
         <div className="flow-atlas__intro">
           <h1 id="workspace-main-heading" tabIndex={-1}>
             동작 라이브러리
@@ -4011,7 +4015,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           </p>
         </div>
       )}
-      <div className="ml-selection-return" data-has-selection={selectedCount > 0}>
+      <div
+        className="ml-selection-return"
+        data-has-selection={selectedCount > 0}
+        data-pinned={selectedCount > 0 && collection === 'notes'}
+      >
         <p>
           <strong>{selectedCount}개</strong>
           <span>현재 수업안에 담긴 동작</span>

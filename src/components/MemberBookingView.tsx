@@ -232,12 +232,17 @@ export type MemberPortalSection = 'schedule' | 'bookings' | 'wallet';
 export interface MemberBookingViewProps {
   readonly onSwitchToInstructor?: () => void;
   readonly activeSection?: MemberPortalSection;
+  readonly onOpenSchedule?: () => void;
 }
 
 export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   onSwitchToInstructor,
   activeSection,
+  onOpenSchedule,
 }) => {
+  // Embedded views expose all sections. The app's three navigation destinations
+  // each present a single task while sharing the booking and filter state.
+  const page = onOpenSchedule ? activeSection : undefined;
   const schedule = usePilatesStore((s) => s.instructorSchedule);
   const savedSequences = usePilatesStore((s) => s.savedSequences);
   const exercises = usePilatesStore((s) => s.exercises);
@@ -292,6 +297,11 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   }, [portalState]);
 
   useEffect(() => {
+    if (page) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.getElementById('workspace-main-heading')?.focus({ preventScroll: true });
+      return;
+    }
     if (!activeSection) return;
     if (activeSection === 'schedule') {
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -300,7 +310,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     const sectionId =
       activeSection === 'wallet' ? 'member-wallet-section' : 'member-bookings-section';
     document.getElementById(sectionId)?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
-  }, [activeSection]);
+  }, [activeSection, page]);
 
   useEffect(() => {
     const onOnline = () => setIsBrowserOnline(true);
@@ -970,19 +980,11 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       aria-labelledby="workspace-main-heading"
       data-testid="member-booking-view"
     >
-      <header className="pf-member-header">
+      <header className="pf-member-header atelier-cover atelier-cover--apparatus">
         <div>
-          <span className="eyebrow">
-            수업 예약 · 수강권
-          </span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            회원 수업 예약·수강권
+            {page === 'bookings' ? '내 예약' : page === 'wallet' ? '내 수강권' : '회원 수업 시간표'}
           </h1>
-          <p>남은 횟수를 확인하고, 원하는 날짜와 수업별 빈 자리를 골라 바로 예약하세요.</p>
-          <p className="pf-member-demo-notice" data-testid="member-booking-storage-notice">
-            <strong>예약 체험</strong>
-            <span>수강권과 잔여 좌석은 예시이며, 예약·취소는 이 기기에만 기록됩니다.</span>
-          </p>
         </div>
         {onSwitchToInstructor && (
           <button type="button" className="pf-member-chip" onClick={onSwitchToInstructor}>
@@ -990,8 +992,12 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           </button>
         )}
       </header>
+      <p className="pf-member-demo-notice" data-testid="member-booking-storage-notice">
+        <strong>예약 체험</strong>{' '}
+        수강권과 잔여 좌석은 예시이며, 예약·취소는 이 기기에만 기록됩니다.
+      </p>
 
-      <div
+      {page !== 'wallet' && <div
         className="pf-member-quick-status-strip"
         data-testid="member-quick-status-strip"
         role="region"
@@ -1000,9 +1006,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         <strong>남은 수강권 {portalState.pass.remainingCount}회</strong>
         <span>예약 확정 {portalState.pass.pendingReservedCount}건</span>
         <span>선택 날짜 {selectedDate}</span>
-      </div>
+      </div>}
 
-      <ol
+      {!page && <ol
         className="pf-member-steps"
         aria-label="회원 예약 3단계 안내"
         data-testid="member-step-guide"
@@ -1025,7 +1031,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         >
           3. 자리·예약 확정
         </li>
-      </ol>
+      </ol>}
 
       {isOfflineReadOnly && (
         <div
@@ -1042,7 +1048,13 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </div>
       )}
 
-      <section
+      {isPassExpired && (
+        <p className="pf-member-wallet-hero__expired">
+          선택한 날짜({selectedDate})는 수강권 만료일 이후입니다. 만료일 이전 날짜를 선택해 주세요.
+        </p>
+      )}
+
+      {(!page || page === 'wallet') && <section
         id="member-wallet-section"
         className={`pf-member-wallet-hero ${activeSection !== 'wallet' ? 'is-compact-schedule-mode' : ''}`.trim()}
         aria-label="내 수강권 현황"
@@ -1079,12 +1091,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             <strong>{passDdaySummary.ddayLabelKo}</strong> ·{' '}
             {passDdaySummary.creditSimulationNoteKo}
           </p>
-          {isPassExpired && (
-            <p className="pf-member-wallet-hero__expired">
-              선택한 날짜({selectedDate})는 수강권 유효기간 이후입니다. 만료일 이전 날짜를 선택해
-              주세요.
-            </p>
-          )}
+
         </div>
 
         <div className="pf-member-wallet-ring" aria-hidden="true">
@@ -1115,9 +1122,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             <small>남음</small>
           </div>
         </div>
-      </section>
+      </section>}
 
-      {myActiveBookingEntries.length > 0 ? (
+      {(!page || page === 'bookings') && (myActiveBookingEntries.length > 0 ? (
         <section
           id="member-bookings-section"
           className="pf-member-my-bookings"
@@ -1197,6 +1204,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       onClick={() => {
                         setHasInteractedSchedule(true);
                         setSelectedDate(info.slotDate!);
+                        onOpenSchedule?.();
                       }}
                     >
                       해당 날짜 보기
@@ -1311,13 +1319,14 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               예정된 내 예약이 아직 없어요
             </strong>
             <p className="pf-member-empty-desc">
-              아래 주간 시간표에서 원하는 기구와 빈 자리를 골라 바로 예약해 보세요.
+              시간표에서 수업을 고른 뒤 빈 자리를 선택하세요.
             </p>
           </div>
           <button
             type="button"
             className="pf-member-chip"
             onClick={() => {
+              if (onOpenSchedule) return onOpenSchedule();
               document
                 .getElementById('member-schedule-section')
                 ?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
@@ -1326,7 +1335,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             시간표에서 수업 고르기
           </button>
         </section>
-      ) : null}
+      ) : null)}
 
       {errorAlert && (
         <p className="status error" role="alert" data-testid="member-booking-error">
@@ -1339,6 +1348,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </p>
       )}
 
+      {(!page || page === 'schedule') && <>
       <section id="member-schedule-section" aria-label="주간 수업 날짜 선택">
         <div className="pf-member-filter-row pf-member-week-toolbar">
           <div className="pf-member-week-range">
@@ -1415,6 +1425,15 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </div>
       </section>
 
+      <details className="pf-member-filters-disclosure" open={!page || undefined}>
+        <summary>
+          수업 필터
+          <span>{[
+            apparatusFilter !== 'all' && APPARATUS_FILTERS.find((item) => item.value === apparatusFilter)?.label,
+            focusFilter !== 'all' && FOCUS_PROP_FILTERS.find((item) => item.value === focusFilter)?.label,
+            availableOnly && '예약 가능',
+          ].filter(Boolean).join(' · ') || '전체 수업'}</span>
+        </summary>
       <div className="pf-member-filter-row">
         <div className="pf-member-apparatus-chips" role="group" aria-label="기구별 수업 필터">
           {APPARATUS_FILTERS.map((filter) => {
@@ -1475,6 +1494,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           </button>
         ))}
       </div>
+
+      </details>
 
       <div className="pf-member-slot-list" aria-label="선택한 날짜의 수업 목록">
         {filteredSlots.length === 0 ? (
@@ -1687,6 +1708,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           })
         )}
       </div>
+
+      </>}
 
       <details className="pf-member-pass-card">
         <summary

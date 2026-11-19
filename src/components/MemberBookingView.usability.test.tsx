@@ -32,6 +32,22 @@ describe('MemberBookingView usability improvements (discovery, quick-spot, chang
     });
   });
 
+  it('opens distinct portal pages and keeps the selected date on return', () => {
+    let requested = false;
+    const onOpenSchedule = () => { requested = true; };
+    const view = render(<MemberBookingView activeSection="schedule" onOpenSchedule={onOpenSchedule} />);
+    fireEvent.click(screen.getByRole('button', { name: '다음 주 보기' }));
+    expect(screen.queryByTestId('member-pass-metrics')).not.toBeInTheDocument();
+    view.rerender(<MemberBookingView activeSection="wallet" onOpenSchedule={onOpenSchedule} />);
+    expect(screen.getByTestId('member-pass-metrics')).toBeVisible();
+    expect(screen.queryByRole('group', { name: '요일별 날짜 선택' })).not.toBeInTheDocument();
+    view.rerender(<MemberBookingView activeSection="bookings" onOpenSchedule={onOpenSchedule} />);
+    fireEvent.click(screen.getByRole('button', { name: '시간표에서 수업 고르기' }));
+    expect(requested).toBe(true);
+    view.rerender(<MemberBookingView activeSection="schedule" onOpenSchedule={onOpenSchedule} />);
+    expect(screen.getByTestId('member-quick-status-strip')).toHaveTextContent(addScheduleDays(localScheduleDate(), 7));
+  });
+
   it('shows per-apparatus class counts and recovers from zero-result filters in one tap', () => {
     render(<MemberBookingView />);
 

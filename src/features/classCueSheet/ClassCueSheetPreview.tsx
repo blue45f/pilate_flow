@@ -267,6 +267,11 @@ function formatStepNumber(order: number): string {
   return String(Math.max(0, order)).padStart(2, '0');
 }
 
+// The projection also feeds exports. Restore ordinary punctuation for React text nodes.
+function displayCueText(value: string): string {
+  return value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+}
+
 function renderItemCueBlock(item: ClassCueSheetItem): React.ReactNode {
   const { cueContent } = item;
   const noteClassName = cueContent.isLongCue
@@ -289,29 +294,29 @@ function renderItemCueBlock(item: ClassCueSheetItem): React.ReactNode {
       {cueContent.cues.length > 0 && (
         <ul
           className="cue-sheet-cue-list"
-          aria-label={`${item.nameKo} 티칭 큐 목록`}
+          aria-label={`${displayCueText(item.nameKo)} 티칭 큐 목록`}
         >
           {cueContent.cues.map((cueText, cueIdx) => (
             <li
               key={`${item.cueItemId}-cue-${cueIdx}`}
               className="cue-sheet-cue-text"
             >
-              {cueText}
+              {displayCueText(cueText)}
             </li>
           ))}
         </ul>
       )}
       {cueContent.layerCue && (
-        <p className={noteClassName}>레이어 큐: {cueContent.layerCue}</p>
+        <p className={noteClassName}>레이어 큐: {displayCueText(cueContent.layerCue)}</p>
       )}
       {cueContent.breathPattern && (
-        <p className={noteClassName}>호흡: {cueContent.breathPattern}</p>
+        <p className={noteClassName}>호흡: {displayCueText(cueContent.breathPattern)}</p>
       )}
       {cueContent.instructorNote && (
-        <p className={noteClassName}>강사 메모: {cueContent.instructorNote}</p>
+        <p className={noteClassName}>강사 메모: {displayCueText(cueContent.instructorNote)}</p>
       )}
       {cueContent.precautions && (
-        <p className={noteClassName}>주의사항: {cueContent.precautions}</p>
+        <p className={noteClassName}>주의사항: {displayCueText(cueContent.precautions)}</p>
       )}
     </div>
   );
@@ -665,9 +670,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       >
         <div className="cue-sheet-compact-header-main">
           <div>
-            <h1 className="cue-sheet-title">{activeProjection.title}</h1>
+            <h1 className="cue-sheet-title">{displayCueText(activeProjection.title)}</h1>
             {activeProjection.subtitle && (
-              <p className="cue-sheet-subtitle">{activeProjection.subtitle}</p>
+              <p className="cue-sheet-subtitle">{displayCueText(activeProjection.subtitle)}</p>
             )}
           </div>
           <div className="cue-sheet-badge-row">
@@ -786,13 +791,13 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
         >
           {!currentItem
             ? '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음'
-            : `현재 진행: #${formatStepNumber(currentItem.order)}/${formatStepNumber(totalItems)} ${currentItem.nameKo}${
+            : `현재 진행: #${formatStepNumber(currentItem.order)}/${formatStepNumber(totalItems)} ${displayCueText(currentItem.nameKo)}${
                 currentItem.duplicateDisambiguatorKo
                   ? ` (${currentItem.duplicateDisambiguatorKo})`
                   : ''
               } · 다음 준비: ${
                 nextItem
-                  ? `#${formatStepNumber(nextItem.order)} ${nextItem.nameKo}`
+                  ? `#${formatStepNumber(nextItem.order)} ${displayCueText(nextItem.nameKo)}`
                   : '없음 (마지막 항목)'
               }${
                 selectionResolution === 'fallback-adjacent-after-delete'
@@ -814,7 +819,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                 removedItemNameKo ? `(${removedItemNameKo})` : ''
               }이 편집으로 삭제되어 인접 항목(#${formatStepNumber(
                 currentItem.order,
-              )} ${currentItem.nameKo})으로 위치를 유지했습니다.`}
+              )} ${displayCueText(currentItem.nameKo)})으로 위치를 유지했습니다.`}
             </div>
           )}
 
@@ -866,10 +871,10 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               </p>
             ) : (
               <>
-                <h2 className="cue-sheet-title">{currentItem.nameKo}</h2>
+                <h2 className="cue-sheet-title">{displayCueText(currentItem.nameKo)}</h2>
                 <div className="cue-sheet-badge-row">
                   <span className="cue-sheet-badge">
-                    {currentItem.blockMeta.sectionLabelKo}
+                    {displayCueText(currentItem.blockMeta.sectionLabelKo)}
                   </span>
                   {currentItem.blockMeta.blockCategoryLabelKo && (
                     <span className="cue-sheet-badge">
@@ -878,7 +883,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                   )}
                   {currentItem.blockMeta.blockPathTitles.length > 0 && (
                     <span className="cue-sheet-badge">
-                      블록: {currentItem.blockMeta.blockPathTitles.join(' › ')}
+                      블록: {displayCueText(currentItem.blockMeta.blockPathTitles.join(' › '))}
                     </span>
                   )}
                   {currentItem.blockMeta.blockRepetitionCount > 1 && (
@@ -905,7 +910,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                   {currentItem.timing.detailLabelKo}
                 </p>
                 <p className="cue-sheet-meta-line">
-                  세팅: {currentItem.setup.setupSummaryKo}
+                  세팅: {displayCueText(currentItem.setup.setupSummaryKo)}
                 </p>
                 {renderItemCueBlock(currentItem)}
               </>
@@ -938,7 +943,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               </p>
             ) : (
               <>
-                <h3 className="cue-sheet-title">{nextItem.nameKo}</h3>
+                <h3 className="cue-sheet-title">{displayCueText(nextItem.nameKo)}</h3>
                 <div className="cue-sheet-badge-row">
                   <span className="cue-sheet-badge">
                     {nextItem.practice.sideBadgeKo}
@@ -957,12 +962,12 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                   수행: {nextItem.practice.practiceSummaryKo}
                 </p>
                 <p className="cue-sheet-meta-line">
-                  세팅: {nextItem.setup.setupSummaryKo}
+                  세팅: {displayCueText(nextItem.setup.setupSummaryKo)}
                 </p>
                 <p className="cue-sheet-note">
-                  {nextItem.cueContent.cues[0] ??
+                  {displayCueText(nextItem.cueContent.cues[0] ??
                     (nextItem.cueContent.instructorNote ||
-                      nextItem.cueContent.emptyCueLabelKo)}
+                      nextItem.cueContent.emptyCueLabelKo))}
                 </p>
               </>
             )}
@@ -1107,7 +1112,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                         onClick={() => selectStepByIndex(idx, 'user-navigation')}
                       >
                         <span>#{formatStepNumber(item.order)}</span>
-                        <span>{item.nameKo}</span>
+                        <span>{displayCueText(item.nameKo)}</span>
                         {item.isDuplicateName &&
                           item.duplicateDisambiguatorKo && (
                             <span className="cue-sheet-badge is-warning">
@@ -1121,7 +1126,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                           {getOriginBadgeLabelKo(item.originKind)}
                         </span>
                         <span className="cue-sheet-badge">
-                          {item.blockMeta.sectionLabelKo}
+                          {displayCueText(item.blockMeta.sectionLabelKo)}
                         </span>
                         {item.blockMeta.blockCategoryLabelKo && (
                           <span className="cue-sheet-badge">
@@ -1130,7 +1135,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                         )}
                         {item.blockMeta.blockPathTitles.length > 0 && (
                           <span className="cue-sheet-badge">
-                            블록: {item.blockMeta.blockPathTitles.join(' › ')}
+                            블록: {displayCueText(item.blockMeta.blockPathTitles.join(' › '))}
                           </span>
                         )}
                         {item.blockMeta.blockRepetitionCount > 1 && (
@@ -1159,7 +1164,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                       {item.timing.detailLabelKo}
                     </p>
                     <p className="cue-sheet-meta-line">
-                      세팅: {item.setup.setupSummaryKo}
+                      세팅: {displayCueText(item.setup.setupSummaryKo)}
                     </p>
                     {renderItemCueBlock(item)}
                   </li>
@@ -1207,7 +1212,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                           펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
                           {formatStepNumber(row.parentItemOrder)})
                         </span>
-                        <strong>{row.nameKo}</strong>
+                        <strong>{displayCueText(row.nameKo)}</strong>
                         {row.duplicateDisambiguatorKo && (
                           <span className="cue-sheet-badge is-warning">
                             {row.duplicateDisambiguatorKo}
@@ -1216,7 +1221,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                       </button>
                       {row.blockHeaderKo && (
                         <span className="cue-sheet-badge">
-                          {row.blockHeaderKo}
+                          {displayCueText(row.blockHeaderKo)}
                         </span>
                       )}
                       {row.sideLabelKo && (
@@ -1242,11 +1247,11 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                       </span>
                     </div>
                     <p className="cue-sheet-meta-line">
-                      세팅: {row.setupSummaryKo}
+                      세팅: {displayCueText(row.setupSummaryKo)}
                     </p>
                     <p className="cue-sheet-note">
-                      큐: {row.primaryCueKo}
-                      {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
+                      큐: {displayCueText(row.primaryCueKo)}
+                      {row.instructorNote ? ` · 메모: ${displayCueText(row.instructorNote)}` : ''}
                     </p>
                   </li>
                 );
