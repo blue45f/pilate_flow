@@ -72,11 +72,31 @@ function createStudioAiServerPlugin(mode: string): Plugin {
       if (req.method === 'POST' && parsedUrl.pathname === '/api/studio/ai/assist') {
         const chunks: Buffer[] = [];
         let totalBytes = 0;
+        let payloadTooLarge = false;
         req.on('data', (chunk: Buffer) => {
           totalBytes += chunk.length;
-          if (totalBytes <= 512_000) chunks.push(chunk);
+          if (totalBytes > 512_000) {
+            payloadTooLarge = true;
+            return;
+          }
+          chunks.push(chunk);
         });
         req.on('end', () => {
+          if (payloadTooLarge) {
+            sendRouterResponse({
+              statusCode: 413,
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Cache-Control': 'private, no-store',
+              },
+              body: JSON.stringify({
+                error: 'payload_too_large',
+                code: 'payload_too_large',
+                message: '요청 본문이 허용 크기(512KB)를 초과했습니다.',
+              }),
+            });
+            return;
+          }
           let body: unknown;
           try {
             const rawBody = Buffer.concat(chunks).toString('utf8');
@@ -145,6 +165,58 @@ export default defineConfig(({ mode }) => ({
           }
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-lucide';
+          }
+          if (id.includes('node_modules/framer-motion') || id.includes('node_modules/motion-dom') || id.includes('node_modules/motion-utils')) {
+            return 'vendor-motion';
+          }
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'vendor-radix';
+          }
+          if (
+            id.includes('node_modules/@tanstack/') ||
+            id.includes('node_modules/zod') ||
+            id.includes('node_modules/zustand')
+          ) {
+            return 'vendor-state';
+          }
+          if (id.includes('/src/data/exerciseArtworkManifest.json')) {
+            return 'data-artwork-manifest';
+          }
+          if (
+            id.includes('/src/data/expandedPilatesVideoCatalog.json') ||
+            id.includes('/src/data/expandedPilatesVideoProvenance.json')
+          ) {
+            return 'data-video-catalog';
+          }
+          if (
+            id.includes('/src/data/motionStudyLedger.json') ||
+            id.includes('/src/data/extendedMotionSourceLedger.json') ||
+            id.includes('/src/data/motionReviewSourceManifest.json') ||
+            id.includes('/src/data/courseCollectionSource.json')
+          ) {
+            return 'data-motion-ledgers';
+          }
+          if (id.includes('/src/features/motionEvidenceReview/trackDExtendedApparatusEvidence.ts')) {
+            return 'data-evidence-apparatus';
+          }
+          if (id.includes('/src/features/motionEvidenceReview/trackCExtendedMatEvidence.ts')) {
+            return 'data-evidence-mat';
+          }
+          if (id.includes('/src/data/movementVisualRigCatalog.ts')) {
+            return 'data-visual-rigs';
+          }
+          if (id.includes('/src/data/universal3dExerciseRigs.ts')) {
+            return 'data-universal-3d-rigs';
+          }
+          if (id.includes('/src/data/classBlockPresets.ts')) {
+            return 'data-class-presets';
+          }
+          if (
+            id.includes('/src/data/pilatesCatalog.ts') ||
+            id.includes('/src/data/originalMovements.ts') ||
+            id.includes('/src/data/expandedMovements.ts')
+          ) {
+            return 'data-pilates-catalog';
           }
           return undefined;
         },
