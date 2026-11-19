@@ -1,4 +1,6 @@
 import React, { useId, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
+import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import {
   ArrowDown,
   ArrowUp,
@@ -87,6 +89,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   onClose,
   onAddedToClass,
 }) => {
+  const { scheduleRaf } = useManagedRaf();
   const exercises = usePilatesStore((state) => state.exercises);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
   const savedIdeaExercises = exercises.filter(isMovementIdeaExercise);
@@ -350,7 +353,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
       if (!result.success || !result.exercise) {
         setError(result.error || '초안을 저장하지 못했습니다. 입력 내용은 그대로 유지됩니다.');
-        requestAnimationFrame(() => ideaInputRef.current?.focus());
+        scheduleRaf(() => ideaInputRef.current?.focus());
         return;
       }
 
@@ -377,7 +380,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다. 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
       );
       setReflectionOpen(true);
-      reflectionDetailsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      reflectionDetailsRef.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
     } finally {
       submitLockRef.current = false;
     }
@@ -581,7 +584,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     setTransitionSec('15');
     setError('');
     setStatusMessage('새 한 줄 아이디어를 적을 수 있도록 입력창을 비웠습니다.');
-    requestAnimationFrame(() => ideaInputRef.current?.focus());
+    scheduleRaf(() => ideaInputRef.current?.focus());
   };
 
   const handleApplyBlankStarter = (starterId: string) => {
@@ -607,7 +610,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     setLevel(bundle.movementIdeaBuffer.level);
     setError('');
     setStatusMessage(`‘${starter.titleKo}’ 초안 예시로 시작합니다. 자유롭게 고쳐 적으세요.`);
-    requestAnimationFrame(() => ideaInputRef.current?.focus());
+    scheduleRaf(() => ideaInputRef.current?.focus());
   };
 
   const isAlreadyInClass = Boolean(

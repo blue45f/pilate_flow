@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ArrowDownRight, ExternalLink, FileText, Info } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -74,6 +75,7 @@ const focusNoteControl = (control: HTMLElement | null | undefined) => {
 
 /** A source handoff creates a separate, unreviewed note. Source verification never approves it. */
 export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDialogProps) {
+  const { scheduleRaf } = useManagedRaf();
   const closing = useRef(false);
   const saving = useRef(false);
   const saved = useRef(false);
@@ -163,7 +165,7 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
   const nextRemainingErrorField = remainingErrorFields[0] ?? null;
 
   const focusField = (field: NoteField) => {
-    requestAnimationFrame(() =>
+    scheduleRaf(() =>
       focusNoteControl(
         formRef.current?.querySelector<HTMLElement>(
           `input[data-note-field="${field}"],select[data-note-field="${field}"],textarea[data-note-field="${field}"],button[data-note-field="${field}"]`,
@@ -177,7 +179,7 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
   };
   const resumeEditing = () => {
     clearDismissal();
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const previous = lastInput.current;
       const fallback = formRef.current?.querySelector<HTMLElement>(
         'input[data-note-field="nameKo"]',
@@ -194,7 +196,7 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
     }
     deferredClose.current = request.close;
     setDismissalRequested(true);
-    requestAnimationFrame(() => decisionRef.current?.focus());
+    scheduleRaf(() => decisionRef.current?.focus());
     return false;
   };
   const clearFieldError = (field: NoteField) => {

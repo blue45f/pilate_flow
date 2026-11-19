@@ -1,4 +1,5 @@
 import { StudioMotionImage } from './StudioMotionImage';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import {
   formatActualDurationDetailText,
@@ -366,6 +367,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   onOpenLogModal,
   view = 'saved',
 }) => {
+  const { scheduleRaf } = useManagedRaf();
   const prefersReduced = useReducedMotion();
   const storeState = usePilatesStore();
   const {
@@ -890,7 +892,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       overwriteTriggerRef.current = triggerEl ?? null;
       setPendingDelete(null);
       setPendingOverwrite({ sequenceId: sequence.id, mode });
-      requestAnimationFrame(() => {
+      scheduleRaf(() => {
         overwriteConfirmBtnRef.current?.focus();
       });
       return;
@@ -1024,7 +1026,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setSavedPreviewError('');
     setSavedPreview({ sequence: currentSource, expectedState, confirmCopy });
     if (confirmCopy) {
-      requestAnimationFrame(() => savedPreviewConfirmRef.current?.focus());
+      scheduleRaf(() => savedPreviewConfirmRef.current?.focus());
     }
   };
 
@@ -1032,7 +1034,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     const trigger = savedPreviewTriggerRef.current;
     setSavedPreview(null);
     setSavedPreviewError('');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       (trigger?.isConnected ? trigger : savedSearchInputRef.current)?.focus();
     });
   };
@@ -1060,7 +1062,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     if (!savedPreview || openingCopyRef.current) return;
     if (hasUnsavedWorkbenchDraft && !savedPreview.confirmCopy) {
       setSavedPreview({ ...savedPreview, confirmCopy: true });
-      requestAnimationFrame(() => savedPreviewConfirmRef.current?.focus());
+      scheduleRaf(() => savedPreviewConfirmRef.current?.focus());
       return;
     }
     executeOpenCopy(savedPreview.sequence.id, savedPreview.expectedState);
@@ -1076,7 +1078,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     }
     setSavedPreviewError('');
     setSavedPreview({ sequence, expectedState: current, confirmCopy: false });
-    requestAnimationFrame(() => savedPreviewCopyActionRef.current?.focus());
+    scheduleRaf(() => savedPreviewCopyActionRef.current?.focus());
   };
   const copyingRef = useRef(false);
   const copyHistory = (logId: string) => {
@@ -2027,7 +2029,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                                 deleteSavedSequence(sequence.id);
                                 setPendingDelete(null);
                                 setMessage('시퀀스를 삭제했습니다.');
-                                requestAnimationFrame(() =>
+                                scheduleRaf(() =>
                                   (trigger?.isConnected ? trigger : next)?.focus(),
                                 );
                               }}

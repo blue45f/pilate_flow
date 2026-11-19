@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { Coffee, Plus, RotateCcw } from 'lucide-react';
 import type { SequenceStep } from '../types/pilates';
 import { formatSecondsToMMSS, getSequenceDurations } from '../utils/sequenceEngine';
@@ -11,6 +12,7 @@ interface RestBudgetControlProps {
 }
 
 export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudgetControlProps) {
+  const { scheduleRaf } = useManagedRaf();
   const [custom, setCustom] = useState(false);
   const [edit, setEdit] = useState<{ value: string; source: number } | null>(null);
   const errorId = useId();
@@ -59,7 +61,7 @@ export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudge
           aria-pressed={customOpen}
           onClick={() => {
             setCustom(true);
-            requestAnimationFrame(() => {
+            scheduleRaf(() => {
               customInputRef.current?.focus();
             });
           }}

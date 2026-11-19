@@ -1,4 +1,5 @@
 import { ClassPlanSummary } from './ClassPlanSummary';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
 import { SequenceQrShareDialog } from './SequenceQrShareDialog';
@@ -112,6 +113,7 @@ export function SequencePlanPreview({
   canStartClass = false,
   startReadiness,
 }: SequencePlanPreviewProps) {
+  const { scheduleRaf } = useManagedRaf();
   const [snapshot, setSnapshot] = useState(() => {
     const state = usePilatesStore.getState();
     return JSON.parse(
@@ -293,7 +295,7 @@ export function SequencePlanPreview({
   const focusHeading = (target: 'selected' | 'order') => {
     // Only explicit navigation moves focus. Waiting for the selected item to render
     // also prevents focusing content that is about to be replaced.
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const heading = target === 'selected' ? selectedHeadingRef.current : orderHeadingRef.current;
       if (!dialogRef.current?.open || !heading?.isConnected) return;
       heading.focus({ preventScroll: true });

@@ -311,7 +311,7 @@ export function MotionAuthoringBatchPlayer({
         <ul>
           {selected.sources.map((entry) => (
             <li key={entry.sourceId}>
-              <a href={entry.url} target="_blank" rel="noreferrer">
+              <a href={entry.url} target="_blank" rel="noopener noreferrer">
                 {entry.label} · 새 탭
               </a>
               <p>{entry.context}</p>

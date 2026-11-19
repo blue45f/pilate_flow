@@ -124,6 +124,7 @@ import { AtelierQuickStartGallery } from './workbench/AtelierQuickStartGallery';
 import { SequenceQuickFlowCoachStrip } from './workbench/SequenceQuickFlowCoachStrip';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
+import { FiveMinutePrepDrawer } from './workbench/FiveMinutePrepDrawer';
 import { resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
 import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
@@ -3981,6 +3982,28 @@ export function SequenceWorkbench({
                     />
                   </details>
                 )}
+                <FiveMinutePrepDrawer
+                  activeSteps={s.activeSteps}
+                  exercisesById={exerciseMap}
+                  targetMinutes={s.activeTargetMinutes}
+                  selectedEquipmentCount={selectedEquipment.length}
+                  canStartClass={canStartClass}
+                  canAutoFitDuration={canAutoFitDuration}
+                  undoCount={s.undoStack.length}
+                  redoCount={s.redoStack.length}
+                  hasPersistenceError={Boolean(s.persistenceError)}
+                  onOpenConditions={() => setConditionsOpen(true)}
+                  onOpenFinder={openExerciseFinder}
+                  onFitDuration={() => {
+                    s.fitActiveDuration();
+                    setNotice(
+                      '목표 시간에 맞춰 잠그지 않은 항목 시간을 자동 조정했어요. 되돌리기로 복구할 수 있습니다.',
+                    );
+                  }}
+                  onStartClass={startClass}
+                  onUndo={performUndoSequence}
+                  onRedo={performRedoSequence}
+                />
                 <details className="workbench-automation-tools">
                   <summary>기구별 스프링·수업 주제 안내</summary>
                   <ApparatusVisualGuideRibbon

@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ArrowRight, CalendarDays, History, PencilLine, Users } from 'lucide-react';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
 import { INITIAL_HISTORY_LOGS } from '../data/pilatesCatalog';
@@ -82,6 +83,7 @@ function isProfileDraftDirty(draft: ClassGroupProfile, baseline: ClassGroupProfi
 }
 
 export function GroupPrepPanel({ groupId }: { groupId?: string }) {
+  const { scheduleRaf } = useManagedRaf();
   const store = usePilatesStore();
   const group = store.classGroups.find((item) => item.id === groupId);
 
@@ -201,7 +203,7 @@ export function GroupPrepPanel({ groupId }: { groupId?: string }) {
     }
     deferredCloseRef.current = request.close;
     setDismissalRequested(true);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       decisionRef.current?.focus();
     });
     return false;
@@ -229,7 +231,7 @@ export function GroupPrepPanel({ groupId }: { groupId?: string }) {
     if (!result.success) {
       setEditorError(result.message);
       if (!editing.name.trim()) {
-        requestAnimationFrame(() => {
+        scheduleRaf(() => {
           formRef.current?.querySelector<HTMLInputElement>('input[name="groupAlias"]')?.focus();
         });
       }
@@ -457,7 +459,7 @@ export function GroupPrepPanel({ groupId }: { groupId?: string }) {
                   onClick={() => {
                     deferredCloseRef.current = null;
                     setDismissalRequested(false);
-                    requestAnimationFrame(() => {
+                    scheduleRaf(() => {
                       const prevInput = lastInputRef.current;
                       const fallback = formRef.current?.querySelector<HTMLElement>(
                         'input, select, textarea',

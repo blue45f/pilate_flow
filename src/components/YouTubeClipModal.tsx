@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { CheckCircle2, FileText, Info, ListPlus, Plus, Youtube } from 'lucide-react';
 import { CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -425,12 +426,12 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
     setClipperStep(nextStep);
     scheduleRaf(() => {
       if (nextStep === 1) {
-        step1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        step1Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
       } else if (nextStep === 2) {
-        step2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        step2Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
       } else {
         if (step3Ref.current) step3Ref.current.open = true;
-        step3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        step3Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
       }
     });
   };

@@ -1,4 +1,5 @@
 import { parseSpringVisualChips } from '../utils/springVisualParser';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import {
   Fragment,
   lazy,
@@ -732,6 +733,7 @@ function StepEditor({
 
 /** A single persistent canvas. Advanced authoring tools share the same store and remain optional. */
 export function SequenceStudioWorkbench(props: Props) {
+  const { scheduleRaf } = useManagedRaf();
   const s = usePilatesStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
@@ -978,6 +980,7 @@ export function SequenceStudioWorkbench(props: Props) {
     const message = `추천 동작 ${gapFillCandidates.length}개를 수업표 끝에 추가했어요. 되돌리기로 복구할 수 있습니다.`;
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
+      redoStack: [],
       activeSteps: [...current.activeSteps, ...appendedSteps],
       generationError: null,
       saveFeedback: message,
@@ -1126,7 +1129,7 @@ export function SequenceStudioWorkbench(props: Props) {
   };
   const revealStep = (stepId: string) => {
     setMobilePane('plan');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const title = document.getElementById(`flow-step-${stepId}`);
       title?.closest('article')?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
       const focusTarget = title?.matches(':disabled')
@@ -1137,7 +1140,7 @@ export function SequenceStudioWorkbench(props: Props) {
   };
   const showLibrary = () => {
     setMobilePane('library');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       searchRef.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
       searchRef.current?.focus({ preventScroll: true });
     });
@@ -1214,7 +1217,7 @@ export function SequenceStudioWorkbench(props: Props) {
           className="flow-button"
           onClick={() => {
             setAdvanced(false);
-            requestAnimationFrame(() => toolsSummaryRef.current?.focus());
+            scheduleRaf(() => toolsSummaryRef.current?.focus());
           }}
         >
           <ArrowLeft size={16} strokeWidth={1.5} /> 간편 작성으로 돌아가기
@@ -1269,7 +1272,7 @@ export function SequenceStudioWorkbench(props: Props) {
               <button
                 onClick={() => {
                   setAdvanced(true);
-                  requestAnimationFrame(() => advancedReturnRef.current?.focus());
+                  scheduleRaf(() => advancedReturnRef.current?.focus());
                 }}
               >
                 자동 구성 · 고급 편집
@@ -1562,6 +1565,7 @@ export function SequenceStudioWorkbench(props: Props) {
           };
           usePilatesStore.setState({
             undoStack: [...current.undoStack.slice(-19), preUndoSnapshot],
+            redoStack: [],
             activeTitle: composed.title,
             activeSubtitle: composed.subtitle,
             activeApparatus: composed.intent.apparatus,
@@ -2402,7 +2406,7 @@ export function SequenceStudioWorkbench(props: Props) {
                                 s.activeSteps[index - 1]?.stepId;
                               s.removeStep(index);
                               setNotice(`${title}을 삭제했습니다. 되돌리기로 복원할 수 있어요.`);
-                              requestAnimationFrame(() => {
+                              scheduleRaf(() => {
                                 const titleButton = nextId
                                   ? document.getElementById(`flow-step-${nextId}`)
                                   : null;
@@ -3108,6 +3112,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   } else {
                     usePilatesStore.setState({
                       undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
+                      redoStack: [],
                       activeSteps: transitionDiffPlan.afterSteps,
                       generationError: null,
                       saveFeedback: null,

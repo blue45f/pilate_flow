@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ArrowUpRight, BookOpen, Check, Layers, Search, SlidersHorizontal, X } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { COURSE_REFERENCES as defaultCourses } from '../data/courseReferences';
@@ -81,6 +82,7 @@ export interface CourseReferenceBrowserProps {
 export function CourseReferenceBrowser({
   entries = defaultCourses,
 }: CourseReferenceBrowserProps = {}) {
+  const { scheduleRaf } = useManagedRaf();
   const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
   const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
 
@@ -142,7 +144,7 @@ export function CourseReferenceBrowser({
   const compareExpandBtnRef = useRef<HTMLButtonElement | null>(null);
   const lastCompareTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-  const focusSearch = () => requestAnimationFrame(() => searchInput.current?.focus());
+  const focusSearch = () => scheduleRaf(() => searchInput.current?.focus());
   const resetFilters = () => {
     setFilters({ ...INITIAL_COURSE_FILTERS });
     focusSearch();
@@ -200,7 +202,7 @@ export function CourseReferenceBrowser({
         limitNotice: null,
       };
     });
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (remainingCount > 0 && compareExpandBtnRef.current?.isConnected) {
         compareExpandBtnRef.current.focus();
       } else if (lastCompareTriggerRef.current?.isConnected) {
@@ -213,7 +215,7 @@ export function CourseReferenceBrowser({
 
   const clearCompared = () => {
     setCompareState({ ids: [], expanded: false, limitNotice: null });
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (lastCompareTriggerRef.current?.isConnected) {
         lastCompareTriggerRef.current.focus();
       } else {
@@ -224,7 +226,7 @@ export function CourseReferenceBrowser({
 
   const collapseComparePanel = () => {
     setCompareState((previous) => ({ ...previous, expanded: false, limitNotice: null }));
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (compareExpandBtnRef.current?.isConnected) {
         compareExpandBtnRef.current.focus();
       } else {

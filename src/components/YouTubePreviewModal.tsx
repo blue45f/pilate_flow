@@ -1,4 +1,5 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
+import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
@@ -888,9 +889,9 @@ const MovementDetails: React.FC<{
     }
     scheduleRaf(() => {
       if (nextStep === 1) {
-        step1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        step1Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
       } else {
-        step2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        step2Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
       }
     });
   };

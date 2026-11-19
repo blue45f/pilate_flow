@@ -2459,7 +2459,7 @@ export function MovementTriptychDiagramSvg({
             : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}
         </p>
         {sourceOnly && visualBinding.sourceUrl ? (
-          <a href={visualBinding.sourceUrl} target="_blank" rel="noreferrer">
+          <a href={visualBinding.sourceUrl} target="_blank" rel="noopener noreferrer">
             제작자 동작 설명 열기
           </a>
         ) : null}

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ArrowUpRight, Plus, X } from 'lucide-react';
 import { MOTION_PATTERN_REFERENCES } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
@@ -46,6 +47,7 @@ export function MotionPatternGallery({
   active = true,
   className = '',
 }: MotionPatternGalleryProps) {
+  const { scheduleRaf } = useManagedRaf();
   const [selected, setSelected] = useState<MotionPatternReference | null>(null);
   const exercises = usePilatesStore((state) => state.exercises);
   const preview = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ export function MotionPatternGallery({
             onClick={(event) => {
               trigger.current = event.currentTarget;
               setSelected(reference);
-              requestAnimationFrame(() => preview.current?.focus());
+              scheduleRaf(() => preview.current?.focus());
             }}
           >
             <div className="mpg-thumbnail">

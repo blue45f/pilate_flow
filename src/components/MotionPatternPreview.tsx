@@ -537,7 +537,7 @@ function PatternPlayback({
         <ul>
           {definition.sources.map((source) => (
             <li key={source.url}>
-              <a href={source.url} target="_blank" rel="noreferrer">
+              <a href={source.url} target="_blank" rel="noopener noreferrer">
                 {source.label} ↗
               </a>
               {source.context && <p>{source.context}</p>}

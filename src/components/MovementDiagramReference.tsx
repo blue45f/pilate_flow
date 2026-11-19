@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import type { PilatesExercise } from '../types/pilates';
 import { toMovementPhaseDiagramProps } from '../features/motionCoverage/adapters';
 import {
@@ -157,7 +158,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
     });
 
     if (typeof sectionRef.current?.scrollIntoView === 'function') {
-      sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      sectionRef.current.scrollIntoView({ behavior: getAccessibleScrollBehavior(), block: 'start' });
     }
     sectionRef.current?.focus({ preventScroll: true });
   };

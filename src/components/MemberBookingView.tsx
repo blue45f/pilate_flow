@@ -1,4 +1,5 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { burstFrom } from '../motion';
 import {
@@ -298,7 +299,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     }
     const sectionId =
       activeSection === 'wallet' ? 'member-wallet-section' : 'member-bookings-section';
-    document.getElementById(sectionId)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    document.getElementById(sectionId)?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
   }, [activeSection]);
 
   useEffect(() => {
@@ -1319,7 +1320,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             onClick={() => {
               document
                 .getElementById('member-schedule-section')
-                ?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+                ?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'start' });
             }}
           >
             시간표에서 수업 고르기

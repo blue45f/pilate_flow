@@ -2588,3 +2588,166 @@ html
     outline-offset: 2px !important;
   }
 }
+
+/* ==========================================================================
+   18. Wave 13 — Five-Minute Pre-Class One-Hand Prep Drawer (Calm Atelier)
+   ========================================================================== */
+.pf-five-min-prep-drawer .pf-five-min-prep-body {
+  display: grid;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.pf-five-min-prep-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-five-min-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  word-break: keep-all;
+  background: #f2efe7;
+  color: #1e4636;
+}
+
+.pf-five-min-status-chip.is-offline,
+.pf-five-min-status-chip.is-warn {
+  background: #f6ebe6;
+  color: #9c4a32;
+}
+
+.pf-five-min-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pf-five-min-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9f7f1;
+}
+
+.pf-five-min-step.is-done {
+  background: #eef4f0;
+}
+
+.pf-five-min-step-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.pf-five-min-step-icon {
+  color: #1e4636;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pf-five-min-step-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pf-five-min-step-copy strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #173d34;
+  word-break: keep-all;
+}
+
+.pf-five-min-step-copy span {
+  font-size: 0.8125rem;
+  color: #4f5e56;
+  word-break: keep-all;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-five-min-step-action,
+.pf-five-min-recovery-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #d5d0c4;
+  background: #ffffff;
+  color: #173d34;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  word-break: keep-all;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.pf-five-min-step-action.is-primary {
+  background: #1e4636;
+  border-color: #1e4636;
+  color: #ffffff;
+}
+
+.pf-five-min-step-action:disabled,
+.pf-five-min-recovery-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.pf-five-min-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.pf-five-min-metric {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f2efe7;
+}
+
+.pf-five-min-metric span {
+  font-size: 0.75rem;
+  color: #56685f;
+  word-break: keep-all;
+}
+
+.pf-five-min-metric strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #173d34;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-five-min-recovery-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-five-min-honest-note {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #56685f;
+  word-break: keep-all;
+}

@@ -1,4 +1,5 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown, Clock3, Info, Plus, ShieldCheck } from 'lucide-react';
 import { PfBadge, PfButton, PfField, PfFormError, PfInput, PfSelect, PfTextarea } from '../design-system';
@@ -126,6 +127,7 @@ export const LogSessionModal: React.FC<LogSessionModalProps> = (props) =>
 const SessionLogForm: React.FC<
   Omit<LogSessionModalProps, 'sequenceId'> & { sequenceId: string }
 > = ({ sequenceId, onClose, context }) => {
+  const { scheduleRaf } = useManagedRaf();
   const {
     savedSequences,
     classGroups,
@@ -203,7 +205,7 @@ const SessionLogForm: React.FC<
       setStepsOpen(true);
     }
     const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (nextStep === 1) {
         logStep1Ref.current?.scrollIntoView?.({ behavior, block: 'nearest' });
       } else if (nextStep === 2) {
@@ -224,7 +226,7 @@ const SessionLogForm: React.FC<
       setStepsOpen(true);
     }
     const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const element = resolveElement();
       if (!element || !element.isConnected) return;
       element.scrollIntoView?.({ behavior, block: 'nearest' });
