@@ -53,7 +53,7 @@
 .schedule-date-nav label {
   display: grid;
   gap: 5px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .schedule-date-nav input {
   min-width: 0;
@@ -120,7 +120,7 @@
   font-size: 14px;
 }
 .schedule-badge {
-  font-size: 11px;
+  font-size: 13px;
   border-radius: 20px;
   background: var(--sage, #e7ede5);
   padding: 4px 8px;
@@ -192,7 +192,7 @@
   margin-top: 13px;
 }
 .schedule-card-actions .btn-secondary {
-  font-size: 12px;
+  font-size: 13px;
   padding: 8px 10px;
 }
 .schedule-closure {
@@ -370,7 +370,7 @@
 .schedule-day-actions .text-button {
   min-height: 44px;
   padding: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .schedule-date-nav input {
   box-sizing: border-box;
@@ -414,7 +414,7 @@
 }
 .schedule-storage-note {
   color: var(--pf-color-text-muted, #526358);
-  font-size: 12px;
+  font-size: 13px;
 }
 .schedule-storage-note > span {
   display: inline-block;
@@ -456,7 +456,7 @@
 }
 .schedule-week-caption > span {
   color: var(--pf-color-text-muted, #526358);
-  font-size: 12px;
+  font-size: 13px;
 }
 .schedule-week-strip {
   display: grid;
@@ -506,7 +506,7 @@
 }
 .schedule-weekday,
 .schedule-week-count {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 .schedule-week-count {
@@ -524,7 +524,7 @@
   padding: 3px 8px;
   margin-right: 6px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   background: var(--pf-color-bg-surface-muted, #e4eadf);
 }
@@ -615,7 +615,7 @@
 .schedule-planning-copy p {
   margin: 4px 0 0;
   color: var(--pf-color-text-muted, #526358);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .schedule-planning-actions {

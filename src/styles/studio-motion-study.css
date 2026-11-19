@@ -18,7 +18,7 @@
   min-height: 44px;
   padding: 10px 12px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .catalog-motion-interactive-player.is-studio {
@@ -46,8 +46,8 @@
 }
 
 .catalog-motion-interactive-player.is-studio .mpp-eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 13px;
+  letter-spacing: 0;
 }
 
 .catalog-motion-interactive-player.is-studio .mpp-status {
@@ -96,7 +96,7 @@
   gap: 12px;
   margin-top: -2px;
   color: #586e61;
-  font-size: 10.5px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -104,7 +104,7 @@
 .pf-motion-illustration-note {
   margin: 0 0 14px;
   color: #55685c;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
@@ -133,7 +133,7 @@
   justify-content: center;
   gap: 6px;
   margin-top: 10px;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .motion-source-reference__copy h3 {
@@ -144,7 +144,7 @@
 
 .motion-source-reference__copy p:not(.mpp-eyebrow) {
   color: #5b6a5f;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.75;
 }
 
@@ -159,7 +159,7 @@
   background: #ebf0e7;
   color: #1c4a3b;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -195,7 +195,7 @@
 
 .mpp-phase-number {
   display: block;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 500;
   opacity: 0.75;
   margin-bottom: 3px;
@@ -208,7 +208,7 @@
 
 .catalog-motion-interactive-player.is-studio .mpp-view-options label {
   min-height: 40px;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .mpp-compare-toggle,
@@ -225,7 +225,7 @@
   background: #f4f6ef;
   color: #214b3f;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
   cursor: pointer;
 }
@@ -266,7 +266,7 @@
   padding: 9px 10px;
   background: #eff1e8;
   color: #355449;
-  font-size: 11px;
+  font-size: 13px;
   text-align: center;
 }
 
@@ -308,13 +308,13 @@
 
 .pf-hero-3d-modeler-bar__copy strong {
   color: #173d34;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 750;
 }
 
 .pf-hero-3d-modeler-bar__copy span {
   color: #52675b;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -329,7 +329,7 @@
   background: #ffffff;
   color: #173d34;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
   white-space: nowrap;
@@ -367,7 +367,7 @@
   .pf-motion-view-tabs .pf-studio3d-mode-btn {
     flex-basis: 72px;
     padding: 8px 5px;
-    font-size: 11px;
+    font-size: 13px;
   }
 
   .catalog-motion-interactive-player.is-studio .mpp-controls {

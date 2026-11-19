@@ -25,7 +25,7 @@
 .inventory-summary-counts {
   color: #1d3f33;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.45;
 }
@@ -46,7 +46,7 @@
   border-radius: 999px;
   background: #e7efe0;
   color: #244a3b;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
   max-width: 100%;
@@ -72,7 +72,7 @@
   align-items: baseline;
   gap: 8px;
   min-width: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -163,7 +163,7 @@
   border-radius: 9px;
   background: #f4f7ef;
   color: #23483b;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -190,7 +190,7 @@
   border-radius: 9px;
   background: #ffffff;
   color: #314b3f;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.35;
@@ -223,7 +223,7 @@
 
 .inventory-view-status__text {
   color: #495b44;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   min-width: 0;
   word-break: keep-all;
@@ -242,7 +242,7 @@
   border-radius: 8px;
   background: #f3f6ee;
   color: #214538;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -258,7 +258,7 @@
 
 .inventory-fieldset__legend {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #203d35;
   margin-bottom: 6px;
 }
@@ -275,7 +275,7 @@
 
 .inventory-fieldset__meta {
   color: #53644d;
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -291,7 +291,7 @@
   border-radius: 8px;
   background: #fafbf7;
   color: #24483b;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -315,7 +315,7 @@
   border-radius: 10px;
   background: #f7f9f3;
   color: #3f523a;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -336,7 +336,7 @@
 .inventory-empty-results p {
   margin: 0;
   color: #334a3c;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   word-break: keep-all;
   overflow-wrap: anywhere;

@@ -306,7 +306,7 @@
 }
 
 .offline-preset-card span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   font-weight: 500;
   color: var(--pf-unslop-text-muted, #6b6257);
@@ -403,7 +403,7 @@
 }
 
 .offline-preset-impact-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-weight: 500;
 }
@@ -415,7 +415,7 @@
 }
 
 .offline-preset-impact-col small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
 

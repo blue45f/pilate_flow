@@ -20,7 +20,7 @@
   letter-spacing: -0.04em;
 }
 #root .flow-schedule .schedule-page-header .eyebrow {
-  font-size: 12px;
+  font-size: 13px;
   color: #617568;
   letter-spacing: 0;
 }
@@ -141,7 +141,7 @@
   background: #fff;
 }
 #root .flow-schedule .flow-schedule-today-label {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0;
   color: #7c8777;
 }
@@ -224,7 +224,7 @@
   margin: 0 0 12px;
 }
 #root .flow-schedule .schedule-week-caption > span {
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-schedule .schedule-week-strip {
   gap: 6px;
@@ -256,11 +256,11 @@
   border-radius: 12px;
 }
 #root .flow-schedule .schedule-prep-counts {
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-schedule .schedule-prep-filter > button {
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-schedule .schedule-days-day {
   gap: 16px;
@@ -327,7 +327,7 @@
   gap: 6px;
 }
 #root .flow-schedule .pf-class-spring-wrap {
-  font-size: 11px;
+  font-size: 13px;
 }
 #root .flow-schedule .pf-v70-preclass-briefing {
   background: #f5f6ef;
@@ -341,7 +341,7 @@
   padding: 0;
   background: transparent;
   border: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #617053;
 }
 #root .flow-schedule .schedule-prep-zone {
@@ -362,7 +362,7 @@
   gap: 6px 10px;
 }
 #root .flow-schedule .schedule-card-actions button {
-  font-size: 12px;
+  font-size: 13px;
   color: #607059;
   background: transparent;
   border-color: transparent;
@@ -403,7 +403,7 @@
 }
 #root .flow-schedule .flow-schedule-automation > summary small {
   color: #7b8673;
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-schedule .flow-schedule-automation-body {
   padding: 0 18px 18px;

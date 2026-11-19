@@ -239,7 +239,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
   gap: 6px;
 }
 .teaching-collection--saved .teaching-saved-filter-count {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   opacity: 0.85;
 }
 .teaching-collection--saved .teaching-saved-filter-status {
@@ -309,7 +309,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
 .teaching-saved-sample-label {
   display: inline-block;
   margin-bottom: 12px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #536960;
 }
 .teaching-overwrite-confirm {
@@ -420,7 +420,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
 .teaching-saved-preview-summary dt {
   margin-bottom: 4px;
   color: #536960;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 .teaching-saved-preview-summary dd {
   margin: 0;
@@ -433,7 +433,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
   display: block;
   margin-top: 2px;
   color: #536960;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 400;
 }
 .teaching-saved-preview-summary > p,
@@ -515,7 +515,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #4f6359;
   cursor: pointer;
@@ -528,7 +528,7 @@ body:has(.teaching-collection--history) { min-width: 0; }
 }
 .pf-balance-criteria-details__body p {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   line-height: 1.55;
   font-variant-numeric: tabular-nums;
 }

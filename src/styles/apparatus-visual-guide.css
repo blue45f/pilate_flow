@@ -50,10 +50,10 @@
 }
 
 .pf-apparatus-guide-ribbon__kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: #1f5c4d;
   background: #e3efe9;
   padding: 2px 8px;
@@ -61,7 +61,7 @@
 }
 
 .pf-apparatus-guide-ribbon__role-badge {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #54665d;
   background: rgba(255, 255, 255, 0.78);
@@ -73,13 +73,13 @@
 .pf-apparatus-guide-ribbon__heading {
   margin: 0;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   color: #172b23;
   line-height: 1.35;
 }
 
 .pf-apparatus-guide-ribbon__heading small {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: #607067;
   margin-left: 6px;
@@ -117,7 +117,7 @@
   border: none;
   background: transparent;
   color: #3c5047;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   padding: 5px 10px;
   border-radius: 999px;
@@ -141,12 +141,12 @@
   border: 1px solid #b8cbbd;
   background: #ffffff;
   color: #1f5c4d;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   padding: 7px 13px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-apparatus-guide-toggle-btn:hover {
@@ -168,7 +168,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #243b32;
   background: #ffffff;
@@ -176,7 +176,7 @@
   border-radius: 999px;
   padding: 4px 10px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-apparatus-guide-part-pill:hover,
@@ -195,8 +195,8 @@
   border-radius: 50%;
   background: #1f5c4d;
   color: #ffffff;
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .pf-apparatus-guide-body {
@@ -222,10 +222,10 @@
   border: 1px solid #d4cbbd;
   background: rgba(255, 255, 255, 0.75);
   color: #384d43;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-apparatus-guide-tab[aria-selected='true'] {
@@ -267,7 +267,7 @@
 }
 
 .pf-apparatus-blueprint-caption {
-  font-size: 11.5px;
+  font-size: 13px;
   color: #4b5e54;
   line-height: 1.45;
   margin: 0;
@@ -293,7 +293,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  transition: all 0.16s ease;
+  transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-apparatus-part-card:hover,
@@ -318,8 +318,8 @@
   border-radius: 50%;
   background: #1f5c4d;
   color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   flex-shrink: 0;
 }
 
@@ -329,13 +329,13 @@
 
 .pf-apparatus-part-card__title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #172b23;
 }
 
 .pf-apparatus-part-card__role {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #3f5249;
   line-height: 1.45;
   word-break: keep-all;
@@ -343,7 +343,7 @@
 
 .pf-apparatus-part-card__tip {
   margin: 0;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f5c4d;
   background: #ebf3ee;
@@ -364,7 +364,7 @@
   border: 1px solid #dad1c3;
   border-radius: 10px;
   padding: 8px 11px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.42;
   word-break: keep-all;
 }
@@ -372,7 +372,7 @@
 .pf-apparatus-fit-item strong {
   display: block;
   color: #7a3e24;
-  font-size: 11.5px;
+  font-size: 13px;
   margin-bottom: 2px;
 }
 
@@ -404,7 +404,7 @@
   align-items: center;
   gap: 7px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #172b23;
 }
 
@@ -417,7 +417,7 @@
 }
 
 .pf-apparatus-spring-tension {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #4f6158;
   background: #f2efe8;
@@ -427,7 +427,7 @@
 
 .pf-apparatus-spring-usage {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #394d43;
   line-height: 1.45;
   word-break: keep-all;
@@ -464,8 +464,8 @@
 }
 
 .pf-apparatus-idea-badge {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #1f5c4d;
   background: #e6f1ec;
   padding: 2px 8px;
@@ -473,7 +473,7 @@
 }
 
 .pf-apparatus-idea-source {
-  font-size: 11px;
+  font-size: 13px;
   color: #2b5c8f;
   text-decoration: underline;
   font-weight: 600;
@@ -482,7 +482,7 @@
 .pf-apparatus-idea-headline {
   margin: 0;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #182b23;
   line-height: 1.38;
   word-break: keep-all;
@@ -490,7 +490,7 @@
 
 .pf-apparatus-idea-pitch {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #41544b;
   line-height: 1.46;
   word-break: keep-all;
@@ -507,7 +507,7 @@
 }
 
 .pf-apparatus-idea-theme {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #5a6b62;
 }
@@ -516,12 +516,12 @@
   border: 1px solid #1f5c4d;
   background: #f2f8f5;
   color: #1f5c4d;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   padding: 4px 10px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-apparatus-idea-apply-btn:hover {
@@ -548,7 +548,7 @@
 }
 
 .pf-apparatus-idea-script-item {
-  font-size: 11.5px;
+  font-size: 13px;
   line-height: 1.45;
   color: #2f433a;
   word-break: keep-all;
@@ -556,7 +556,7 @@
 
 .pf-apparatus-idea-script-item strong {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   color: #1f5c4d;
   margin-bottom: 2px;
 }

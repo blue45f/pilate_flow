@@ -48,7 +48,7 @@
 .ml-inventory p span,
 .ml-inventory-note {
   color: #5d685c;
-  font-size: 11px;
+  font-size: 13px;
 }
 .ml-inventory-note {
   margin-left: auto;
@@ -93,8 +93,8 @@
 }
 .ml-section-heading span {
   color: #4f594b;
-  letter-spacing: 1.8px;
-  font-size: 9px;
+  letter-spacing: 0;
+  font-size: 13px;
 }
 .ml-section-heading h2 {
   font-family: Georgia, 'Noto Serif KR', serif;
@@ -112,11 +112,11 @@
   gap: 5px;
   padding: 10px 0 8px 8px;
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
 }
 .ml-pattern-discovery > p {
-  font-size: 11px;
+  font-size: 13px;
   color: #697466;
   line-height: 1.8;
   margin: 9px 0 14px;
@@ -163,8 +163,8 @@
   background: rgba(220, 228, 212, 0.92);
   border: 1px solid rgba(40, 76, 64, 0.12);
   color: #25493b;
-  font-weight: 700;
-  font-size: 9px;
+  font-weight: 600;
+  font-size: 13px;
   z-index: 1;
 }
 .ml-pattern-tile-art svg:not(svg svg) {
@@ -174,7 +174,7 @@
 }
 .ml-pattern-tile strong {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   font-weight: 500;
   padding: 9px 2px 0;
@@ -187,7 +187,7 @@
   justify-content: space-between;
   color: #4f594b;
   padding: 4px 2px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .ml-pattern-tile:hover .ml-pattern-tile-art {
   border-color: #8f9d87;
@@ -217,7 +217,7 @@
   margin-top: 1px;
 }
 .ml-pattern-pages span {
-  font-size: 9px;
+  font-size: 13px;
   color: #4f594b;
   margin-right: auto;
 }
@@ -230,7 +230,7 @@
   border-radius: 7px;
   background: #f5f6ed;
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
   cursor: pointer;
 }
 .ml-pattern-pages button:disabled {
@@ -267,7 +267,7 @@
   color: #173f36;
 }
 .ml-preview-exercise-header span {
-  font-size: 11px;
+  font-size: 13px;
   padding: 3px 8px;
   border-radius: 999px;
   background: #e6eadf;
@@ -276,20 +276,20 @@
 .ml-preview-exercise-cues h4,
 .ml-preview-exercise-precautions h4 {
   margin: 0 0 4px;
-  font-size: 11px;
+  font-size: 13px;
   color: #4c5f4c;
 }
 .ml-preview-exercise-cues ul {
   margin: 0;
   padding-left: 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: #26382b;
   display: grid;
   gap: 3px;
 }
 .ml-preview-exercise-precautions p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #5c3a21;
   background: #f5ebe1;
   padding: 6px 9px;
@@ -304,7 +304,7 @@
 .ml-preview-exercise-actions button {
   min-height: 44px;
   min-width: 44px;
-  font-size: 12px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -339,7 +339,7 @@
   color: #667362;
   line-height: 1.8;
   margin: -1px 0 15px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .library-active-filters {
   display: flex;
@@ -361,7 +361,7 @@
   background: #eef3e8;
   color: #284b39;
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
   cursor: pointer;
   word-break: keep-all;
@@ -427,13 +427,13 @@
   right: 8px;
   bottom: 9px;
   color: #586b57;
-  font-size: 9px;
+  font-size: 13px;
   letter-spacing: 0;
   line-height: 1.4;
   opacity: 1;
 }
 .motion-library .movement-equipment-label {
-  font-size: 9px;
+  font-size: 13px;
   left: 10px;
   top: 10px;
   background: #fffcf0e6;
@@ -454,13 +454,13 @@
   margin-bottom: 8px;
 }
 .motion-library .movement-review-status {
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
   margin: 0 0 6px;
 }
 .motion-library .movement-target {
   margin-bottom: 8px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .movement-selected-badge {
   display: inline-flex;
@@ -486,7 +486,7 @@
   background: #f4f6ee;
   color: #3f5843;
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
   cursor: pointer;
   word-break: keep-all;
@@ -520,7 +520,7 @@
 }
 .ml-unmapped-art .ml-unmapped-meta {
   font-family: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0;
   color: #465d49;
@@ -536,7 +536,7 @@
   color: #55614d;
 }
 .ml-unmapped-art .ml-unmapped-focus {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0;
   color: #5b6955;
   max-width: 100%;
@@ -544,8 +544,8 @@
   overflow-wrap: anywhere;
 }
 .ml-unmapped-art span:last-child {
-  font-size: 7px;
-  letter-spacing: 1.6px;
+  font-size: 13px;
+  letter-spacing: 0;
   color: #4a5446;
 }
 .ml-unmapped-art i {
@@ -560,7 +560,7 @@
   margin-top: auto;
 }
 .ml-card-patterns p {
-  font-size: 10px;
+  font-size: 13px;
   color: #45624d;
   margin: 0 0 6px;
   line-height: 1.7;
@@ -584,7 +584,7 @@
   margin-top: 5px;
   font: inherit;
   line-height: 1.7;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -606,7 +606,7 @@
   border-top: 1px solid #e9e8dd;
   margin-top: auto;
   margin-bottom: 13px;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.8;
   color: #4f594b;
 }
@@ -620,7 +620,7 @@
   color: #687560;
   margin-top: 18px;
   padding-top: 16px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.9;
 }
 .ml-review-details summary {
@@ -669,7 +669,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 7px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .ml-selection-return strong {
   font-size: 17px;
@@ -690,7 +690,7 @@
   border: 0;
   border-radius: 9px;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -721,18 +721,18 @@
     gap: 7px;
   }
   .motion-library .library-heading-actions > button {
-    font-size: 10px;
+    font-size: 13px;
     min-height: 39px;
     padding: 8px 10px;
   }
   .motion-library .library-heading p {
-    font-size: 11px;
+    font-size: 13px;
     max-width: none;
   }
   #root .motion-library .library-heading-actions > button {
     min-height: 44px;
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .ml-inventory {
     gap: 14px;
@@ -749,7 +749,7 @@
     font-size: 25px;
   }
   .ml-inventory p span {
-    font-size: 9px;
+    font-size: 13px;
   }
   .ml-inventory-note {
     display: none;
@@ -784,10 +784,10 @@
     font-size: 22px;
   }
   .ml-section-heading button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .ml-pattern-discovery > p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .ml-pattern-rail {
     grid-auto-columns: minmax(150px, 43%);
@@ -797,7 +797,7 @@
     height: 116px;
   }
   .ml-pattern-tile strong {
-    font-size: 11px;
+    font-size: 13px;
   }
   .ml-direct-preview {
     padding: 12px;
@@ -816,12 +816,12 @@
     font-size: 15px;
   }
   .motion-library .movement-card-tags {
-    font-size: 9px;
+    font-size: 13px;
     flex-wrap: wrap;
     justify-content: flex-start;
   }
   .motion-library .movement-equipment-label {
-    font-size: 8px;
+    font-size: 13px;
     top: 8px;
     left: 8px;
     padding: 4px 6px;
@@ -831,18 +831,18 @@
     right: 3px;
   }
   .motion-library .art-caption {
-    font-size: 8px;
+    font-size: 13px;
     bottom: 7px;
   }
   .ml-unmapped-art span:nth-of-type(2) {
     font-size: 13px;
   }
   .ml-unmapped-art span:last-child {
-    font-size: 6px;
-    letter-spacing: 1px;
+    font-size: 13px;
+    letter-spacing: 0;
   }
   .ml-card-patterns button {
-    font-size: 10px;
+    font-size: 13px;
     padding: 7px;
     min-height: 44px;
   }
@@ -854,7 +854,7 @@
     gap: 4px;
   }
   .motion-library .movement-card-footer > button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .ml-selection-return {
     bottom: calc(80px + env(safe-area-inset-bottom, 0px));
@@ -865,13 +865,13 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 3px;
-    font-size: 9px;
+    font-size: 13px;
   }
   .ml-selection-return strong {
     font-size: 16px;
   }
   .ml-selection-return button {
-    font-size: 11px;
+    font-size: 13px;
     padding-inline: 11px;
   }
   .motion-library .library-toast {
@@ -889,7 +889,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .ml-selection-return button {
-    font-size: 10px;
+    font-size: 13px;
     padding-inline: 8px;
     gap: 3px;
   }
@@ -943,14 +943,14 @@
   color: #274a38;
 }
 .atlas-flow-step-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.45;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 .atlas-flow-step-meta {
-  font-size: 11px;
+  font-size: 13px;
   color: #536451;
   line-height: 1.45;
   word-break: keep-all;
@@ -964,7 +964,7 @@
   min-height: 44px;
   min-width: 44px;
   padding: 8px 12px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;

@@ -8,7 +8,7 @@
   flex-wrap: wrap;
   gap: 6px 12px;
   color: #53614f;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .source-note-layout-dialog .source-note-form-status strong {
@@ -16,7 +16,7 @@
   border-radius: 7px;
   color: #765939;
   background: #f6f0e6;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .source-note-layout-dialog .source-note-form-status span {
@@ -51,10 +51,10 @@
   margin: 6px 0;
 }
 .source-note-layout-dialog .source-note-origin p {
-  font-size: 12px;
+  font-size: 13px;
 }
 .source-note-layout-dialog .source-note-origin .eyebrow {
-  font-size: 11px;
+  font-size: 13px;
 }
 .source-note-layout-dialog .source-note-origin-facts {
   display: grid;
@@ -74,12 +74,12 @@
   min-width: 0;
 }
 .source-note-layout-dialog .source-note-origin-facts dt {
-  font-size: 11px;
+  font-size: 13px;
   color: #63745a;
 }
 .source-note-layout-dialog .source-note-origin-facts dd {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #2f4f3c;
   word-break: keep-all;
@@ -88,7 +88,7 @@
 .source-note-layout-dialog .source-note-origin-safety {
   margin: 6px 0 4px;
   color: #775a3c;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .source-note-layout-dialog .source-note-section-nav {
@@ -119,7 +119,7 @@
   border-radius: 999px;
   background: #e6ede0;
   color: #3d5c45;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -177,7 +177,7 @@
 }
 .source-note-layout-dialog .source-note-section header p {
   margin: 4px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   color: #63745a;
 }
@@ -193,7 +193,7 @@
 }
 .source-note-layout-dialog .source-note-cue-count {
   color: #63745a;
-  font-size: 11px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 .source-note-layout-dialog .source-note-cue-count.is-over {
@@ -210,7 +210,7 @@
   min-height: 44px;
   min-width: 44px;
   padding: 8px 11px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .source-note-layout-dialog .source-note-section .source-note-precautions-help {
   margin: -6px 0 0;
@@ -246,7 +246,7 @@
     align-items: center;
     justify-content: center;
     gap: 3px;
-    font-size: 12px;
+    font-size: 13px;
     padding: 7px 5px;
     text-align: center;
   }
@@ -260,7 +260,7 @@
     min-height: 48px;
     min-width: 44px;
     padding: 9px 10px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .source-note-layout-dialog .source-note-section .library-form-grid {
     grid-template-columns: 1fr;

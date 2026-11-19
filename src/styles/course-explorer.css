@@ -66,7 +66,7 @@
   border-radius: 12px;
   background: #e1eadc;
   color: #294b3d;
-  font-size: 12px;
+  font-size: 13px;
 }
 .course-explorer .course-language-row {
   display: flex;
@@ -98,7 +98,7 @@
   font-weight: 600;
 }
 .course-explorer .course-language-row > span {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--lib-muted, #687460);
   line-height: 1.6;
 }
@@ -122,7 +122,7 @@
   background: #fff;
   color: #3d5348;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
   cursor: pointer;
   word-break: keep-all;
@@ -151,7 +151,7 @@
   gap: 8px;
 }
 .course-explorer .course-active-filters > span {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--lib-muted, #687460);
 }
 .course-explorer .course-active-filters button {
@@ -166,7 +166,7 @@
   background: #eff4ec;
   color: #294c3c;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
@@ -182,14 +182,14 @@
   background: #f8faf7;
 }
 .course-explorer .course-filters > p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .course-explorer .course-result-row {
   padding-top: 4px;
 }
 .course-explorer .course-result-row p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
 }
 
@@ -226,11 +226,11 @@
   border-radius: 999px;
   background: #173f35;
   color: #fcfbf5;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .course-explorer .course-compare-note {
-  font-size: 12px;
+  font-size: 13px;
   color: #4f6152;
 }
 .course-explorer .course-compare-header-actions {
@@ -250,7 +250,7 @@
   padding: 7px 12px;
   border-radius: 9px;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -281,7 +281,7 @@
   border-radius: 999px;
   border: 1px solid #cbd7c6;
   background: #fff;
-  font-size: 12px;
+  font-size: 13px;
   color: #1d4236;
 }
 .course-explorer .course-compare-chip > span {
@@ -309,7 +309,7 @@
   background: #faf0e4;
   border: 1px solid #e2c5a8;
   color: #6b4018;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .course-explorer .course-compare-grid {
@@ -349,14 +349,14 @@
   border-radius: 999px;
   background: #eef3ec;
   color: #355545;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .course-explorer .course-compare-dl {
   display: grid;
   gap: 7px;
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .course-explorer .course-compare-dl > div {
@@ -393,7 +393,7 @@
   margin-top: auto;
   min-height: 44px;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .course-explorer .course-reference-grid {
@@ -413,7 +413,7 @@
   border: 1px solid #e2e6df;
   border-radius: 6px;
   background: #f6f8f4;
-  font-size: 11px;
+  font-size: 13px;
 }
 .course-explorer .course-card-kicker > .course-kicker-amended {
   border-color: #b7cdb9;
@@ -444,7 +444,7 @@
   font-weight: 500;
 }
 .course-explorer .course-card-state {
-  font-size: 12px;
+  font-size: 13px;
 }
 .course-explorer .course-reference-card summary {
   font-size: 13px;
@@ -462,7 +462,7 @@
   background: #f6f8f1;
   color: #25493a;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -520,7 +520,7 @@
   .course-explorer .course-language-choices button {
     flex: 1;
     padding-inline: 8px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .course-explorer .course-compare-header-actions {
     width: 100%;

@@ -46,15 +46,15 @@ html #root .flow-app .brand > span {
 }
 html #root .flow-app .brand small {
   font-family: inherit;
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 13px;
+  letter-spacing: 0;
   font-weight: 600;
   color: var(--flow-muted);
   margin-top: 5px;
 }
 html #root .flow-app .sidebar-label {
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--flow-muted);
   padding: 0 14px;
   margin-bottom: 9px;
@@ -92,7 +92,7 @@ html #root .flow-app .desktop-nav button.active small {
   margin-left: auto;
   background: transparent !important;
   color: var(--flow-muted) !important;
-  font-size: 12px;
+  font-size: 13px;
 }
 html #root .flow-app .pf-sidebar-quick-stage,
 html #root .flow-app .pf-sidebar-quick-stage.is-active {
@@ -105,7 +105,7 @@ html #root .flow-app .pf-sidebar-quick-stage.is-active {
   margin-top: 22px;
   padding: 12px;
   box-shadow: none;
-  font-size: 12px;
+  font-size: 13px;
 }
 html #root .flow-app .pf-sidebar-quick-stage small {
   display: none;
@@ -117,14 +117,14 @@ html #root .flow-app .pf-sidebar-more-drawer {
 }
 html #root .flow-app .pf-sidebar-more-drawer > summary {
   color: var(--flow-muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 12px 6px;
   min-height: 44px;
 }
 html #root .flow-app .sidebar-study-link,
 html #root .flow-app .pwa-sidebar-button {
   min-height: 44px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--flow-muted);
 }
 html #root .flow-app .workspace-button {
@@ -136,10 +136,10 @@ html #root .flow-app .workspace-button {
   background: transparent;
 }
 html #root .flow-app .workspace-button > span:not(.studio-avatar) {
-  font-size: 12px;
+  font-size: 13px;
 }
 html #root .flow-app .workspace-button small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--flow-muted);
 }
 html #root .flow-app .studio-avatar {
@@ -164,7 +164,7 @@ html #root .flow-app .topbar {
   gap: 12px !important;
 }
 html #root .flow-app .breadcrumb {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--flow-muted);
 }
 html #root .flow-app .breadcrumb > span {
@@ -188,7 +188,7 @@ html #root .flow-app .pf-role-switcher {
 html #root .flow-app .pf-role-switcher__btn {
   background: transparent;
   color: var(--flow-muted);
-  font-size: 12px !important;
+  font-size: 13px !important;
   min-height: 44px;
   padding: 8px !important;
 }
@@ -205,14 +205,14 @@ html #root .flow-app .pf-topbar-cmdk-btn {
   border: 1px solid #e0e8d9;
   border-radius: 9px;
   color: var(--flow-muted);
-  font-size: 12px;
+  font-size: 13px;
   min-height: 44px;
 }
 html #root .flow-app .app-create-movement {
   background: transparent;
   color: var(--flow-muted);
   min-height: 44px;
-  font-size: 12px;
+  font-size: 13px;
 }
 html #root .flow-app .icon-btn {
   min-width: 44px;
@@ -231,13 +231,13 @@ html #root .flow-app .app-footer {
   justify-content: space-between;
   gap: 15px;
   padding: 15px 30px 24px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--flow-muted);
   background: transparent;
   border: 0;
 }
 html #root .flow-app .app-footer button {
-  font-size: 12px;
+  font-size: 13px;
   min-height: 44px;
   background: transparent;
   border: 0;
@@ -264,7 +264,7 @@ html #root .flow-app .bottom-nav {
 html #root .flow-app .bottom-nav > button {
   color: var(--flow-muted);
   min-height: 58px;
-  font-size: 12px;
+  font-size: 13px;
   padding: 5px 3px;
   min-width: 0;
 }
@@ -345,10 +345,10 @@ html #root .flow-app .mobile-sub-page-bar {
     color: #2f5538;
   }
   html #root .flow-app .vnext-wordmark small {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--flow-muted);
-    letter-spacing: 0.1em;
+    letter-spacing: 0;
     margin-top: 2px;
   }
   html #root .flow-app .breadcrumb {

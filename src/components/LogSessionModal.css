@@ -122,7 +122,7 @@
 .class-log-modal .teaching-log-summary p,
 .class-log-modal .teaching-duration-field > p,
 .class-log-modal .form-field small {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.65;
 }
 
@@ -138,7 +138,7 @@
 .class-log-provenance summary {
   min-height: 44px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   display: list-item;
   align-content: center;
   color: var(--pf-unslop-text-secondary, #5e554a);
@@ -153,7 +153,7 @@
 .class-log-provenance .teaching-record-source-badge {
   border-radius: 6px;
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
   background: var(--pf-unslop-subtle, #faf8f4);
@@ -276,7 +276,7 @@
 }
 
 .teaching-log-steps-status {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--pf-unslop-text-secondary, #5e554a);
   min-width: 0;
@@ -294,7 +294,7 @@
   min-height: 44px;
   padding: 8px 12px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -383,7 +383,7 @@
 
 .class-log-modal .teaching-log-footnote {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   grid-column: 1;
   grid-row: 1;

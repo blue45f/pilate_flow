@@ -25,8 +25,8 @@
 
 .spine-diagram-eyebrow {
   display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #2c6858;
   background: #eaf3ef;
   padding: 3px 9px;
@@ -105,8 +105,8 @@
 }
 
 .spine-phase-tab-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #9e4923;
 }
 
@@ -150,7 +150,7 @@
 }
 
 .spine-meta-pill {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
@@ -192,7 +192,7 @@
 }
 
 .spine-cue-grid dt {
-  font-weight: 700;
+  font-weight: 600;
   color: #24594c;
   margin-bottom: 2px;
 }
@@ -211,7 +211,7 @@
 
 .spine-readout-title {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: #7d3b1c;
   margin-bottom: 6px;
 }
@@ -226,7 +226,7 @@
 }
 
 .spine-vertebra-chip {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   background: #ffffff;
   border: 1px solid #e4cfc2;
   border-radius: 6px;
@@ -237,7 +237,7 @@
 }
 
 .spine-chip-code {
-  font-weight: 700;
+  font-weight: 600;
   color: #9e4923;
 }
 
@@ -252,7 +252,7 @@
   padding: 10px 12px;
   border-radius: 10px;
   background: #f5f9f7;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: #334e44;
 }
 
@@ -345,8 +345,8 @@
 }
 
 .spine-triptych-phase-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #24594c;
 }
 
@@ -357,7 +357,7 @@
 
 .spine-triptych-focus {
   margin: 0;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #466157;
   line-height: 1.4;
 }
@@ -370,7 +370,7 @@
 }
 
 .spine-source-disclosure > summary {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.88rem;
   color: #24594c;
   cursor: pointer;
@@ -399,13 +399,13 @@
 .spine-source-aspect {
   margin: 2px 0 0;
   color: #526c62;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
 }
 
 .spine-truthfulness-footer {
   border-top: 1px solid #e2ebe7;
   padding-top: 10px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: #4c645b;
   display: flex;
   flex-direction: column;

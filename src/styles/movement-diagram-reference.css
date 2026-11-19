@@ -44,7 +44,7 @@
   padding: 10px 12px;
   border-top: 1px solid var(--motion-border, #cdd9d0);
   color: var(--motion-muted, #51685c);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -105,7 +105,7 @@
 .movement-diagram-display-options legend {
   margin-bottom: 2px;
   color: var(--motion-muted, #51685c);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .movement-diagram-display-options label {

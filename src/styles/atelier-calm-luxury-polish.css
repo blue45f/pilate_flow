@@ -164,7 +164,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .flow-studio .flow-class-brief .flow-field {
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 16px;
   font-weight: 500;
   color: #5b6b60;
@@ -246,7 +246,7 @@ html #root .flow-app .desktop-nav > button.active {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -291,7 +291,7 @@ html #root .flow-app .desktop-nav > button.active {
   border-radius: 8px;
   border: 1px solid rgba(33, 62, 50, 0.08);
   background: #fafaf8;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #4f6358;
   transition:
@@ -322,7 +322,7 @@ html #root .flow-app .desktop-nav > button.active {
   padding: 0;
   margin: 0;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .flow-studio .flow-picker-controls .flow-insertion-control {
@@ -339,7 +339,7 @@ html #root .flow-app .desktop-nav > button.active {
   border-radius: 8px;
   border-color: rgba(33, 62, 50, 0.14);
   background: #fafaf8;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .flow-studio .flow-insertion-error,
@@ -484,7 +484,7 @@ html #root .flow-app .desktop-nav > button.active {
 .flow-studio .flow-studio-status {
   min-height: 0;
   padding: 0 4px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .flow-studio .flow-studio-status:empty {
@@ -519,7 +519,7 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .flow-step-3d-disclosure__summary small {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #52665a;
 }
@@ -555,13 +555,13 @@ html #root .flow-app .desktop-nav > button.active {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #1f4435;
 }
 
 .pf-orbit3d-hotspot-card__metric {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   padding: 2px 6px;
   border-radius: 6px;
@@ -587,7 +587,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .pf-orbit3d-hotspot-card__cue {
   margin: 5px 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.44;
   color: #2f4539;
 }
@@ -614,7 +614,7 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .pf-cmdk-kbd-hint {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   padding: 3px 8px;
   border-radius: 6px;
@@ -658,7 +658,7 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .pf-hero-3d-modeler-bar__copy span {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #5e554a;
   line-height: 1.45;
 }
@@ -673,7 +673,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid #1f4435;
   background: #1f4435;
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -828,7 +828,7 @@ html #root .flow-app .desktop-nav > button.active {
   background: #fafaf8;
   border: 1px solid rgba(33, 62, 50, 0.14);
   color: #344e41;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
@@ -863,7 +863,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(33, 62, 50, 0.14);
   background: #fafaf8;
   color: #2e453b;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -895,7 +895,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(33, 62, 50, 0.12);
   background: #fafaf8;
   color: #344e41;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   word-break: keep-all;
@@ -922,7 +922,7 @@ html #root .flow-app .desktop-nav > button.active {
   border-radius: 8px;
   background: #f4f7f1;
   color: #1d3c2f;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   word-break: keep-all;
 }
@@ -980,7 +980,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(34, 62, 48, 0.14);
   background: #faf9f5;
   color: #4f6358;
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -1000,7 +1000,7 @@ html #root .flow-app .desktop-nav > button.active {
   align-items: center;
   gap: 6px;
   margin: 4px 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #2b5444;
   word-break: keep-all;
 }
@@ -1027,7 +1027,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(34, 62, 48, 0.14);
   background: #faf9f5;
   color: #355043;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -1064,7 +1064,7 @@ html #root .flow-app .desktop-nav > button.active {
 .yt-preview-step-guide .pf-step-guide-chip {
   min-height: 32px !important;
   padding: 4px 11px !important;
-  font-size: 0.78rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .yt-preview-step-guide .pf-step-guide-Subrow {
@@ -1079,7 +1079,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .yt-preview-step-guide .pf-step-guide-focus {
   margin: 0;
-  font-size: 0.75rem !important;
+  font-size: 0.8125rem !important;
   color: #4c6055 !important;
   word-break: keep-all;
 }
@@ -1087,7 +1087,7 @@ html #root .flow-app .desktop-nav > button.active {
 .yt-preview-step-guide .pf-step-nav-btn {
   min-height: 30px !important;
   padding: 3px 10px !important;
-  font-size: 0.74rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .pf-unified-motion-hero .pf-studio3d-hero-card__top {
@@ -1117,7 +1117,7 @@ html #root .flow-app .desktop-nav > button.active {
   flex: 0 0 auto !important;
   min-height: 30px !important;
   padding: 4px 13px !important;
-  font-size: 0.78rem !important;
+  font-size: 0.8125rem !important;
   white-space: nowrap !important;
   background: transparent !important;
   color: #465a4f !important;
@@ -1159,7 +1159,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .catalog-motion-interactive-player.is-studio .mpp-figure figcaption {
   margin-top: 6px !important;
-  font-size: 0.8rem !important;
+  font-size: 0.8125rem !important;
 }
 
 @media (min-width: 640px) {
@@ -1185,7 +1185,7 @@ html #root .flow-app .desktop-nav > button.active {
 }
 
 .pf-detail-layer-switcher__tabs > span {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #354e42;
   margin-right: 4px;
@@ -1198,7 +1198,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(31, 27, 22, 0.14);
   background: #ffffff;
   color: #1f1b16;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1211,7 +1211,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .pf-detail-layer-switcher__text {
   margin: 0;
-  font-size: 0.81rem;
+  font-size: 0.8125rem;
   color: #243b31;
   line-height: 1.48;
   word-break: keep-all;
@@ -1229,7 +1229,7 @@ html #root .flow-app .desktop-nav > button.active {
 .pf-preview-secondary-group__heading {
   margin: 0;
   padding: 10px 14px 6px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #5b6e63;
   letter-spacing: 0.01em;
@@ -1249,7 +1249,7 @@ html #root .flow-app .desktop-nav > button.active {
   flex-wrap: wrap;
   gap: 8px 12px;
   padding-top: 6px;
-  font-size: 0.77rem;
+  font-size: 0.8125rem;
 }
 
 .pf-ai-quick-bar__summary {
@@ -1273,7 +1273,7 @@ html #root .flow-app .desktop-nav > button.active {
   border: 1px solid rgba(34, 62, 48, 0.18);
   background: #ffffff;
   color: #214536;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -1374,7 +1374,7 @@ html #root .flow-app .desktop-nav > button.active {
     height: auto;
     min-width: 44px;
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .flow-studio .flow-heading-actions > .flow-button svg {
@@ -1398,7 +1398,7 @@ html #root .flow-app .desktop-nav > button.active {
     align-self: end;
     justify-self: stretch;
     padding: 0 8px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .flow-studio .flow-class-brief > .flow-field:nth-of-type(2) {
@@ -1446,7 +1446,7 @@ html #root .flow-app .desktop-nav > button.active {
   .pf-ai-quick-bar__shuffle {
     width: auto;
     padding: 0 12px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .pf-ai-caution-disclosure {
@@ -1525,7 +1525,7 @@ html #root .flow-app .desktop-nav > button.active {
     height: auto;
     min-height: 44px;
     padding: 10px 12px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .pf-hero-3d-modeler-toggle {

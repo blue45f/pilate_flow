@@ -16,8 +16,8 @@
   min-width: 0;
 }
 .group-prep-heading .eyebrow {
-  font-size: 9px;
-  letter-spacing: 0.12em;
+  font-size: 13px;
+  letter-spacing: 0;
 }
 .group-prep-heading h3 {
   margin: 4px 0 0;
@@ -50,7 +50,7 @@
   gap: 7px 14px;
   margin: 12px 0;
   color: #65725c;
-  font-size: 11px;
+  font-size: 13px;
 }
 .group-prep-meta span {
   display: inline-flex;
@@ -68,17 +68,17 @@
   align-items: center;
   gap: 6px;
   color: #6a795c;
-  font-size: 10px;
+  font-size: 13px;
 }
 .group-prep-memory p {
   margin: 8px 0 4px;
   line-height: 1.7;
-  font-size: 12px;
+  font-size: 13px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .group-prep-memory .muted {
-  font-size: 10px;
+  font-size: 13px;
 }
 .group-prep-actions {
   display: grid;
@@ -89,12 +89,12 @@
 .group-prep-actions button {
   min-height: 44px;
   padding: 9px 10px;
-  font-size: 11px;
+  font-size: 13px;
   justify-content: center;
 }
 .group-prep-details {
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .group-prep-details summary {
   cursor: pointer;
@@ -109,7 +109,7 @@
 .group-prep-feedback {
   margin: 12px 0 0;
   line-height: 1.7;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .group-profile-form {
@@ -171,17 +171,17 @@
   }
   .mobile-plan-steps button > span {
     opacity: 0.6;
-    font-size: 10px;
+    font-size: 13px;
   }
   .mobile-plan-steps button > small {
-    font-size: 10px;
+    font-size: 13px;
     opacity: 0.8;
   }
   .mobile-plan-helper {
     display: block;
     margin: 0 2px 18px;
     color: #74806b;
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.7;
   }
   .plan-view[data-mobile-view='brief'] .sequence-column {

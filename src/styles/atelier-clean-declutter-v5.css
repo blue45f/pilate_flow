@@ -60,7 +60,7 @@ html #root .vnext-shell {
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   background: var(--pf-v5-emerald-soft);
@@ -78,7 +78,7 @@ html #root .vnext-shell {
   gap: 5px;
   padding: 4px 11px;
   border-radius: 999px;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: #173d34;
   color: #fffef9;
@@ -137,9 +137,9 @@ html #root .vnext-shell {
 }
 
 .pf-detail-intent-banner__eyebrow {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   color: #99f6e4;
 }
 
@@ -167,7 +167,7 @@ html #root .vnext-shell {
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: rgba(255, 254, 249, 0.13);
   border: 1px solid rgba(255, 254, 249, 0.18);
@@ -231,7 +231,7 @@ html #root .vnext-shell [data-testid='studio-journey-bar'] {
 }
 
 .pf-home-3d-hero-showcase__copy span {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--pf-v5-muted);
   line-height: 1.4;
 }
@@ -273,7 +273,7 @@ html #root .pf-step-secondary-actions.workbench-welcome-actions > button {
   min-height: 40px;
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   background: var(--pf-v5-surface-soft);
   border: 1px solid var(--pf-v5-border);
   color: var(--pf-v5-ink);
@@ -327,7 +327,7 @@ html #root .workbench-automation-tools {
   border-radius: 999px;
   background: rgba(23, 61, 52, 0.86);
   color: #fffef9;
-  font-size: 0.71rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   backdrop-filter: blur(6px);
   pointer-events: none;
@@ -360,7 +360,7 @@ html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-status {
   border-radius: 999px;
   background: rgba(94, 234, 212, 0.16);
   color: #99f6e4;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -413,7 +413,7 @@ html #root .pf-live-brand-mini-btn {
   min-height: 40px;
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -460,7 +460,7 @@ html #root .pf-live-brand-mini-btn {
   border-radius: 999px;
   border: 0;
   background: transparent;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v5-muted);
   cursor: pointer;
@@ -488,7 +488,7 @@ html #root .pf-live-brand-mini-btn {
 }
 
 .pf-teaching-balance-kpi small {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--pf-v5-muted);
 }
 
@@ -512,7 +512,7 @@ html #root .pf-live-brand-mini-btn {
 .pf-teaching-balance-plane-label {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v5-ink);
 }

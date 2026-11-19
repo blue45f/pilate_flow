@@ -180,14 +180,14 @@ img {
 .brand small {
   display: block;
   font-family: 'DM Sans', sans-serif;
-  letter-spacing: 1.6px;
-  font-size: 8px;
+  letter-spacing: 0;
+  font-size: 13px;
   margin-top: 10px;
   font-weight: 600;
 }
 .sidebar-label {
-  font-size: 10px;
-  letter-spacing: 1.8px;
+  font-size: 13px;
+  letter-spacing: 0;
   color: #788171;
   margin: 0 15px 15px;
   font-weight: 600;
@@ -218,7 +218,7 @@ img {
   box-shadow: inset 3px 0 0 var(--green);
 }
 .desktop-nav small {
-  font-size: 10px;
+  font-size: 13px;
   border: 1px solid #bccbb7;
   border-radius: 6px;
   padding: 1px 6px;
@@ -238,7 +238,7 @@ img {
   letter-spacing: -0.5px;
 }
 .sidebar-note small {
-  font-size: 10px;
+  font-size: 13px;
 }
 .small-leaf {
   display: inline-flex;
@@ -268,12 +268,12 @@ img {
 }
 .workspace-button > span:nth-child(2) {
   flex: 1;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .workspace-button small {
   display: block;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   font-weight: 400;
 }
@@ -289,7 +289,7 @@ img {
   border-bottom: 1px solid var(--line);
 }
 .breadcrumb {
-  font-size: 12px;
+  font-size: 13px;
   color: #778174;
 }
 .breadcrumb span {
@@ -302,7 +302,7 @@ img {
   gap: 20px;
 }
 .local-state {
-  font-size: 11px;
+  font-size: 13px;
   color: #727c6d;
   display: flex;
   align-items: center;
@@ -328,8 +328,8 @@ img {
 }
 .eyebrow {
   display: block;
-  font-size: 10px;
-  letter-spacing: 2.2px;
+  font-size: 13px;
+  letter-spacing: 0;
   font-weight: 600;
   color: #7c8b70;
   margin-bottom: 9px;
@@ -344,12 +344,12 @@ img {
   color: #9fae8c;
 }
 .page-heading p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   margin-top: 8px;
 }
 .today-label {
-  font-size: 11px;
+  font-size: 13px;
   color: #727d6b;
   white-space: nowrap;
   padding-bottom: 4px;
@@ -384,7 +384,7 @@ img {
   gap: 14px;
   padding: 24px;
   font-size: 17px;
-  letter-spacing: 1.5px;
+  letter-spacing: 0;
   line-height: 1.6;
   font-family: Georgia, serif;
 }
@@ -392,7 +392,7 @@ img {
   position: absolute;
   bottom: 18px;
   left: 24px;
-  font-size: 10px;
+  font-size: 13px;
   opacity: 0.85;
 }
 .reuse-button {
@@ -411,14 +411,14 @@ img {
   flex: 1;
 }
 .reuse-button strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   display: block;
 }
 .reuse-button small {
   display: block;
   color: #737f68;
-  font-size: 10px;
+  font-size: 13px;
   margin-top: 2px;
 }
 .reuse-button:disabled {
@@ -448,7 +448,7 @@ img {
   margin-bottom: 20px;
 }
 .brief-field legend {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   margin-bottom: 9px;
   display: flex;
@@ -474,7 +474,7 @@ img {
   padding: 6px;
 }
 .duration-options small {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 400;
 }
 .duration-options .selected {
@@ -489,7 +489,7 @@ img {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  font-size: 9px;
+  font-size: 13px;
   background: #fafbf5;
   gap: 2px;
   padding: 3px;
@@ -520,7 +520,7 @@ img {
   border-radius: 6px;
   padding: 8px 11px;
   min-height: 36px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .chip.selected {
   background: #e7eddf;
@@ -536,13 +536,13 @@ img {
   min-width: 0;
 }
 .form-field > span {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .form-field input,
 .form-field select {
   width: 100%;
-  font-size: 12px;
+  font-size: 13px;
 }
 .brief-pair {
   display: grid;
@@ -561,7 +561,7 @@ img {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 36px;
 }
 .advanced-brief summary svg {
@@ -572,7 +572,7 @@ img {
 }
 .muted {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
 }
 .btn-primary,
@@ -581,7 +581,7 @@ img {
   border-radius: 8px;
   min-height: 44px;
   padding: 10px 16px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -614,12 +614,12 @@ img {
 .btn-sm {
   min-height: 36px;
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .btn-xs {
   min-height: 32px;
   padding: 5px 9px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .icon-btn {
   min-width: 44px;
@@ -643,7 +643,7 @@ img {
 }
 .recommendation-note {
   text-align: center;
-  font-size: 9px;
+  font-size: 13px;
   color: #8b9381;
   margin: 9px 0 0;
 }
@@ -659,7 +659,7 @@ img {
 .template-save input {
   min-width: 0;
   width: 100%;
-  font-size: 11px;
+  font-size: 13px;
 }
 .template-link {
   display: flex;
@@ -670,7 +670,7 @@ img {
   border: 0;
   border-bottom: 1px solid var(--line);
   background: transparent;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 44px;
 }
 .sequence-column {
@@ -687,7 +687,7 @@ img {
   align-items: center;
 }
 .sequence-heading .eyebrow {
-  font-size: 9px;
+  font-size: 13px;
   margin-bottom: 7px;
 }
 .sequence-heading h2 {
@@ -696,7 +696,7 @@ img {
   font-weight: 600;
 }
 .sequence-heading p {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   margin-top: 9px;
 }
@@ -706,7 +706,7 @@ img {
 }
 .save-flow {
   padding: 7px 12px;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 38px;
 }
 .sequence-title-label {
@@ -719,7 +719,7 @@ img {
   border-bottom: 1px dashed #ccd6c1;
   border-radius: 0;
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   padding: 5px 0;
   min-height: 36px;
   text-overflow: ellipsis;
@@ -733,7 +733,7 @@ img {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 13px;
   color: #6f7e64;
 }
 .time-summary strong {
@@ -747,7 +747,7 @@ img {
 }
 .time-status {
   color: #a46b45;
-  font-size: 9px;
+  font-size: 13px;
   display: flex;
   gap: 4px;
   align-items: center;
@@ -769,7 +769,7 @@ img {
   border-radius: 4px;
 }
 .time-summary > p {
-  font-size: 9px;
+  font-size: 13px;
   color: #89937e;
 }
 .sequence-tools {
@@ -778,7 +778,7 @@ img {
   align-items: center;
   margin: 18px 0 12px;
   gap: 8px;
-  font-size: 9px;
+  font-size: 13px;
   color: #77836b;
 }
 .sequence-tools > div {
@@ -795,7 +795,7 @@ img {
   border: 0;
   background: transparent;
   min-height: 40px;
-  font-size: 10px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -815,9 +815,9 @@ img {
   border-radius: 5px;
   background: #e9eedf;
   padding: 7px 10px;
-  font-size: 9px;
+  font-size: 13px;
   color: #78866b;
-  letter-spacing: 1.3px;
+  letter-spacing: 0;
   margin-bottom: 2px;
 }
 .flow-section-label > span:first-child {
@@ -827,12 +827,12 @@ img {
 }
 .flow-section-label strong {
   font-weight: 500;
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0;
   color: #5e7250;
 }
 .flow-section-label > span:last-child {
-  letter-spacing: 0.4px;
+  letter-spacing: 0;
 }
 .flow-step {
   border-bottom: 1px solid #e1e6d7;
@@ -846,7 +846,7 @@ img {
 }
 .step-number {
   font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   color: #93a082;
   width: 18px;
   flex-shrink: 0;
@@ -874,14 +874,14 @@ img {
   padding: 6px 0;
 }
 .step-title strong {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   display: block;
   font-weight: 500;
   word-break: keep-all;
 }
 .step-title > span {
-  font-size: 9px;
+  font-size: 13px;
   color: #7a866d;
   display: block;
   margin-top: 5px;
@@ -905,7 +905,7 @@ img {
 }
 .step-details {
   padding: 6px 0 16px 27px;
-  font-size: 10px;
+  font-size: 13px;
   color: #647557;
 }
 .step-details > p {
@@ -930,13 +930,13 @@ img {
   gap: 8px;
 }
 .time-adjust > span {
-  font-size: 11px;
+  font-size: 13px;
 }
 .step-details .form-field {
   margin-bottom: 0;
 }
 .step-details textarea {
-  font-size: 11px;
+  font-size: 13px;
 }
 .button-row {
   display: flex;
@@ -953,12 +953,12 @@ img {
   flex-shrink: 0;
 }
 .regenerate-bar select {
-  font-size: 10px;
+  font-size: 13px;
   max-width: 100px;
   padding-left: 9px;
 }
 .regenerate-bar .btn-secondary {
-  font-size: 10px;
+  font-size: 13px;
   padding: 8px 10px;
   flex: 1;
 }
@@ -986,7 +986,7 @@ img {
   border-left: 1px solid #718b70;
 }
 .start-class-bar p {
-  font-size: 9px;
+  font-size: 13px;
   text-align: center;
   color: #89947c;
   margin-top: 10px;
@@ -1002,7 +1002,7 @@ img {
   background: transparent;
   text-decoration: underline;
   text-underline-offset: 3px;
-  font-size: 9px;
+  font-size: 13px;
   min-height: 32px;
   color: #7b876f;
 }
@@ -1012,7 +1012,7 @@ img {
   border-radius: 8px;
   background: #edf1e6;
   border: 1px solid #cbd7bf;
-  font-size: 12px;
+  font-size: 13px;
   color: #3f6038;
   line-height: 1.8;
 }
@@ -1028,8 +1028,8 @@ img {
   gap: 12px;
   padding: 25px 44px;
   color: #a0a891;
-  font-size: 9px;
-  letter-spacing: 0.6px;
+  font-size: 13px;
+  letter-spacing: 0;
 }
 .app-footer span span {
   margin: 0 8px;
@@ -1037,7 +1037,7 @@ img {
 .app-footer button {
   border: 0;
   background: transparent;
-  font-size: 10px;
+  font-size: 13px;
   min-height: 32px;
   color: #778567;
 }
@@ -1071,7 +1071,7 @@ img {
   letter-spacing: -0.6px;
 }
 .atelier-modal-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 8px;
   color: var(--muted);
   max-width: 48ch;
@@ -1088,7 +1088,7 @@ img {
   font-size: 16px;
 }
 .settings-section p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   color: #6a7860;
   margin: 12px 0;
@@ -1106,7 +1106,7 @@ img {
   color: #4c6942;
 }
 .empty-state p {
-  font-size: 12px;
+  font-size: 13px;
   margin: 10px 0;
 }
 .replacement-search {
@@ -1140,13 +1140,13 @@ img {
   min-width: 0;
 }
 .replacement-item strong {
-  font-size: 12px;
+  font-size: 13px;
   display: block;
   font-weight: 500;
 }
 .replacement-item small {
   display: block;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -1172,11 +1172,11 @@ img {
   background: #edf1e6;
   border-radius: 8px;
   color: #3f6038;
-  font-size: 12px;
+  font-size: 13px;
 }
 .error-message {
   color: #93482e;
-  font-size: 12px;
+  font-size: 13px;
 }
 .print-only {
   display: none;
@@ -1223,11 +1223,11 @@ img {
     width: 20px;
   }
   .brand small {
-    font-size: 7px;
-    letter-spacing: 1.3px;
+    font-size: 13px;
+    letter-spacing: 0;
   }
   .desktop-nav button {
-    font-size: 12px;
+    font-size: 13px;
     gap: 10px;
     padding: 12px;
   }
@@ -1255,14 +1255,14 @@ img {
     height: 47px;
   }
   .step-number {
-    font-size: 10px;
+    font-size: 13px;
     width: 15px;
   }
   .step-main {
     gap: 7px;
   }
   .step-title strong {
-    font-size: 11px;
+    font-size: 13px;
   }
   .step-actions {
     flex-direction: column;
@@ -1371,10 +1371,10 @@ img {
     font-size: 20px;
   }
   .sequence-heading p {
-    font-size: 9px;
+    font-size: 13px;
   }
   .sequence-bottom-actions .text-button {
-    font-size: 9px;
+    font-size: 13px;
   }
   .regenerate-bar select {
     max-width: 100%;
@@ -1488,11 +1488,11 @@ img {
     letter-spacing: -1.3px;
   }
   .page-heading p {
-    font-size: 11px;
+    font-size: 13px;
     margin-top: 7px;
   }
   .eyebrow {
-    font-size: 9px;
+    font-size: 13px;
     margin-bottom: 7px;
   }
   .plan-layout {
@@ -1522,17 +1522,17 @@ img {
     bottom: 14px;
     left: auto;
     right: 17px;
-    font-size: 9px;
+    font-size: 13px;
   }
   .reuse-button {
     padding: 12px 14px;
     margin-bottom: 15px;
   }
   .reuse-button strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .reuse-button small {
-    font-size: 10px;
+    font-size: 13px;
   }
   .class-brief {
     padding: 22px 20px 15px;
@@ -1542,7 +1542,7 @@ img {
   }
   .brief-field legend,
   .form-field > span {
-    font-size: 12px;
+    font-size: 13px;
   }
   .duration-options {
     gap: 8px;
@@ -1555,7 +1555,7 @@ img {
     font-size: 16px;
   }
   .chip {
-    font-size: 11px;
+    font-size: 13px;
     min-height: 40px;
     padding: 8px 11px;
   }
@@ -1571,7 +1571,7 @@ img {
     margin-bottom: 15px;
   }
   .advanced-brief summary {
-    font-size: 11px;
+    font-size: 13px;
     min-height: 40px;
   }
   .generate-button {
@@ -1582,7 +1582,7 @@ img {
     padding: 9px 6px 0;
   }
   .condition-template summary {
-    font-size: 11px;
+    font-size: 13px;
   }
   .sequence-column {
     padding: 24px 19px 14px;
@@ -1597,29 +1597,29 @@ img {
     padding: 9px 12px !important;
   }
   .sequence-heading p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .time-summary {
     margin-top: 18px;
   }
   .time-summary > div:first-child {
-    font-size: 10px;
+    font-size: 13px;
     flex-wrap: nowrap;
   }
   .time-status {
-    font-size: 9px;
+    font-size: 13px;
   }
   .sequence-tools {
     margin-top: 14px;
   }
   .recent-count {
     display: inline;
-    font-size: 9px;
+    font-size: 13px;
     margin-left: 4px;
     padding-left: 7px;
   }
   .sequence-tools .text-button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .step-main {
     min-height: 84px;
@@ -1630,11 +1630,11 @@ img {
     height: 50px;
   }
   .step-title strong {
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.6;
   }
   .step-title > span {
-    font-size: 9px;
+    font-size: 13px;
   }
   .step-actions {
     flex-direction: row;
@@ -1648,15 +1648,15 @@ img {
     width: 15px;
   }
   .flow-section-label {
-    font-size: 9px;
+    font-size: 13px;
     padding: 7px 9px;
   }
   .step-details {
     padding-left: 0;
-    font-size: 11px;
+    font-size: 13px;
   }
   .step-details .form-field textarea {
-    font-size: 12px;
+    font-size: 13px;
   }
   .regenerate-bar {
     flex-wrap: nowrap;
@@ -1667,15 +1667,15 @@ img {
   }
   .regenerate-bar .btn-secondary {
     min-width: 0;
-    font-size: 10px;
+    font-size: 13px;
   }
   .regenerate-bar select {
     width: 83px;
     max-width: 83px;
-    font-size: 10px;
+    font-size: 13px;
   }
   .sequence-bottom-actions .text-button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .start-class-bar {
     padding-top: 16px;
@@ -1685,11 +1685,11 @@ img {
     min-height: 51px;
   }
   .start-class-bar p {
-    font-size: 9px;
+    font-size: 13px;
   }
   .app-footer {
     padding: 20px 20px 100px;
-    font-size: 8px;
+    font-size: 13px;
     letter-spacing: 0;
     align-items: center;
   }
@@ -1700,7 +1700,7 @@ img {
     margin: 0 4px;
   }
   .app-footer button {
-    font-size: 9px;
+    font-size: 13px;
   }
   .bottom-nav {
     position: fixed;
@@ -1724,7 +1724,7 @@ img {
     border: 0;
     background: transparent;
     color: #8b967f;
-    font-size: 10px;
+    font-size: 13px;
     min-height: 51px;
     border-radius: 8px;
     position: relative;
@@ -1758,13 +1758,13 @@ img {
     font-size: 19px;
   }
   .atelier-modal-subtitle {
-    font-size: 11px;
+    font-size: 13px;
   }
   .atelier-modal-body {
     padding: 20px 17px;
   }
   .settings-section p {
-    font-size: 12px;
+    font-size: 13px;
   }
   .form-grid-2 {
     grid-template-columns: 1fr;
@@ -1777,7 +1777,7 @@ img {
     width: 58px;
   }
   .replacement-item small {
-    font-size: 9px;
+    font-size: 13px;
   }
   .studio-cover {
     margin-top: -2px;
@@ -1801,7 +1801,7 @@ img {
     height: 47px;
   }
   .step-title strong {
-    font-size: 11px;
+    font-size: 13px;
   }
   .step-main {
     gap: 6px;
@@ -1814,7 +1814,7 @@ img {
     display: none;
   }
   .regenerate-bar .btn-secondary {
-    font-size: 9px;
+    font-size: 13px;
     padding: 8px;
   }
   .duration-options {
@@ -1897,7 +1897,7 @@ img {
   background: #fdfcf8;
   border-radius: 10px;
   z-index: 60;
-  font-size: 12px;
+  font-size: 13px;
 }
 .desktop-nav button {
   white-space: nowrap;
@@ -1913,7 +1913,7 @@ img {
     font-size: 14px;
   }
   .reuse-button small {
-    font-size: 11px;
+    font-size: 13px;
   }
   .brief-field legend,
   .form-field > span {
@@ -1924,7 +1924,7 @@ img {
     font-size: 14px;
   }
   .chip {
-    font-size: 12px;
+    font-size: 13px;
   }
   .sequence-title-label input {
     font-size: 13px;
@@ -1933,40 +1933,40 @@ img {
     font-size: 13px;
   }
   .step-title > span {
-    font-size: 11px;
+    font-size: 13px;
   }
   .flow-section-label strong {
-    font-size: 11px;
+    font-size: 13px;
   }
   .time-summary > div:first-child {
-    font-size: 11px;
+    font-size: 13px;
     flex-wrap: wrap;
   }
   .time-status {
-    font-size: 10px;
+    font-size: 13px;
   }
   .sequence-tools {
-    font-size: 10px;
+    font-size: 13px;
   }
   .time-summary > p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .regenerate-bar .btn-secondary {
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.5;
   }
   .start-class-bar p,
   .workbench-footnotes button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .recommendation-note {
-    font-size: 10px;
+    font-size: 13px;
   }
   .today-label {
-    font-size: 12px;
+    font-size: 13px;
   }
   .sequence-heading p {
-    font-size: 11px;
+    font-size: 13px;
   }
 }
 @media (max-width: 767px) {
@@ -2035,8 +2035,8 @@ img {
     min-height: 44px;
   }
 }
-.inventory-panel fieldset{margin:18px 0}.inventory-panel legend{font-size:12px;font-weight:600;margin-bottom:8px}.inventory-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px}.inventory-options label{display:flex;align-items:center;gap:8px;min-height:44px;font-size:12px;line-height:1.6;border:1px solid #d8e0d0;border-radius:8px;padding:7px 10px;background:#fafbf5}.inventory-options input{min-height:0;width:17px;height:17px;padding:0;accent-color:#234c3f}.inventory-options label:has(input:checked){background:#e9efdf;border-color:#aabf98}.safety-notes summary{min-height:44px;cursor:pointer;font-size:13px;font-weight:600}.safety-notes p{font-size:12px;line-height:1.9;margin:12px 0;color:#5f6c58}.safety-notes a{font-size:12px}.planning-goals{margin-top:18px}.planning-goals label{display:flex;align-items:center;gap:7px;font-size:11px;min-height:44px}.planning-goals input{min-height:0;width:16px;height:16px;accent-color:#234c3f}.planning-goals legend{font-size:12px;font-weight:600}
+.inventory-panel fieldset{margin:18px 0}.inventory-panel legend{font-size:13px;font-weight:600;margin-bottom:8px}.inventory-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px}.inventory-options label{display:flex;align-items:center;gap:8px;min-height:44px;font-size:13px;line-height:1.6;border:1px solid #d8e0d0;border-radius:8px;padding:7px 10px;background:#fafbf5}.inventory-options input{min-height:0;width:17px;height:17px;padding:0;accent-color:#234c3f}.inventory-options label:has(input:checked){background:#e9efdf;border-color:#aabf98}.safety-notes summary{min-height:44px;cursor:pointer;font-size:13px;font-weight:600}.safety-notes p{font-size:13px;line-height:1.9;margin:12px 0;color:#5f6c58}.safety-notes a{font-size:13px}.planning-goals{margin-top:18px}.planning-goals label{display:flex;align-items:center;gap:7px;font-size:13px;min-height:44px}.planning-goals input{min-height:0;width:16px;height:16px;accent-color:#234c3f}.planning-goals legend{font-size:13px;font-weight:600}
 @media(max-width:390px){.inventory-options{grid-template-columns:1fr}.inventory-options label{font-size:13px}}
 
-.instructor-review-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;margin-bottom:24px;border:1px solid #c8d3bc;border-radius:10px;background:#eef2e6;color:#4c6343;font-size:12px;line-height:1.8}.instructor-review-notice button{flex-shrink:0;min-height:44px;font-size:12px}
-@media(max-width:767px){.instructor-review-notice{align-items:flex-start;gap:7px;font-size:12px;padding:12px;margin-bottom:20px}.instructor-review-notice button{font-size:11px;max-width:60px;white-space:normal;line-height:1.5}}
+.instructor-review-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;margin-bottom:24px;border:1px solid #c8d3bc;border-radius:10px;background:#eef2e6;color:#4c6343;font-size:13px;line-height:1.8}.instructor-review-notice button{flex-shrink:0;min-height:44px;font-size:13px}
+@media(max-width:767px){.instructor-review-notice{align-items:flex-start;gap:7px;font-size:13px;padding:12px;margin-bottom:20px}.instructor-review-notice button{font-size:13px;max-width:60px;white-space:normal;line-height:1.5}}

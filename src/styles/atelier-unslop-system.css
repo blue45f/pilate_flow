@@ -205,7 +205,7 @@ html body #root .flow-app .brand small.brand-tagline-deco {
   display: block !important;
   margin-top: 0 !important;
   font-family: var(--pf-font-sans) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 400 !important;
   letter-spacing: 0 !important;
@@ -218,7 +218,7 @@ html body #root .flow-app .sidebar-label {
   display: block !important;
   margin: 0 0 8px !important;
   padding: 0 12px !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
@@ -284,7 +284,7 @@ html body #root .flow-app .desktop-nav > button.active small {
   border-radius: 0 !important;
   background: transparent !important;
   color: var(--pf-unslop-text-muted-on-linen) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 400 !important;
   font-variant-numeric: tabular-nums !important;
@@ -318,7 +318,7 @@ html body #root .flow-app .pf-sidebar-quick-stage > svg {
 html body #root .flow-app .pf-sidebar-quick-stage small {
   display: inline-block !important;
   margin-left: auto !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 400 !important;
   color: var(--pf-unslop-text-muted) !important;
@@ -424,7 +424,7 @@ html body #root .flow-app .workspace-button > span:not(.studio-avatar) {
 }
 
 html body #root .flow-app .workspace-button small {
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 400 !important;
   color: var(--pf-unslop-text-muted-on-linen) !important;
 }
@@ -628,7 +628,7 @@ html body #root .flow-app .topbar .icon-btn:hover {
     border-radius: var(--pf-unslop-radius-segment) !important;
     background: transparent !important;
     color: var(--pf-unslop-text-secondary) !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 16px !important;
     font-weight: 400 !important;
     letter-spacing: 0 !important;
@@ -1002,7 +1002,7 @@ html body #root .flow-app .pf-mobile-subpage-btn.is-active .pf-mobile-subpage-bt
   border-radius: 0 !important;
   background: transparent !important;
   color: var(--pf-unslop-text-muted) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 400 !important;
   font-variant-numeric: tabular-nums !important;
 }
@@ -1048,7 +1048,7 @@ html
     .schedule-prep-pill
   ) {
   border-radius: var(--pf-unslop-radius-keycap) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
@@ -1421,7 +1421,7 @@ html body #root .pf-cmdk-feedback {
 }
 
 html body #root .pf-cmdk-section__head {
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--pf-unslop-text-secondary) !important;
   font-variant-numeric: tabular-nums !important;
@@ -1434,7 +1434,7 @@ html body #root .pf-cmdk-brand-chip {
   border: 1px solid var(--pf-unslop-border-control) !important;
   background: var(--pf-unslop-subtle) !important;
   color: var(--pf-unslop-text-primary) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
 }
 
@@ -1497,7 +1497,7 @@ html body #root :is(.pf-cmdk-btn-ghost, .pf-cmdk-btn-add) {
   min-height: 32px;
   padding: 4px 10px !important;
   border-radius: var(--pf-unslop-radius-row) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
 }
 
@@ -1563,7 +1563,7 @@ html body #root .pf-cmdk-nav-icon {
 }
 
 .pf-settings-page .pf-settings-page__eyebrow {
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
@@ -1656,7 +1656,7 @@ html body #root .pf-cmdk-nav-icon {
   border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14)) !important;
   background: var(--pf-unslop-subtle, #faf8f4) !important;
   color: var(--pf-unslop-text-secondary, #5e554a) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   font-variant-numeric: tabular-nums !important;
 }
@@ -2003,7 +2003,7 @@ html body #root .pf-member-view .pf-member-wallet-metrics strong {
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background: #fef3eb;
   border: 1px solid #f3c6ad;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #9a3412;
 }
@@ -2171,7 +2171,7 @@ html body #root .pf-ai-quick-bar__collapsed-summary::-webkit-details-marker {
 
 html body #root .pf-ai-quick-bar__collapsed-summary small {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--pf-unslop-text-muted);
 }
 
@@ -2229,7 +2229,7 @@ html body #root .pf-ai-quick-bar__collapsed-body {
   }
 
   html body #root .flow-app .teaching-stage .teaching-step-progress-next {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
 
   html body #root .flow-app .teaching-stage .pf-live-stage-subbar {
@@ -2244,7 +2244,7 @@ html body #root .pf-ai-quick-bar__collapsed-body {
   html body #root .flow-app .teaching-stage .pf-live-thumb-dock__btn {
     min-height: 44px !important;
     padding: 4px 8px !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
   }
 }
 
@@ -2335,7 +2335,7 @@ html body #root .pf-orbit3d-zoom-readout {
   align-items: center;
   justify-content: center;
   padding: 0 5px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-variant-numeric: tabular-nums;
@@ -2377,7 +2377,7 @@ html body #root .pf-orbit3d-zoom-readout {
 
   html body #root .pf-orbit3d-zoom-readout {
     padding: 2px 0;
-    font-size: 10.5px;
+    font-size: 13px;
   }
 
   html body #root .pf-orbit3d-hotspot-card {
@@ -2435,7 +2435,7 @@ html body #root .pf-orbit3d-zoom-readout {
     min-width: 0 !important;
     min-height: 52px !important;
     padding: 6px 2px !important;
-    font-size: 11.5px !important;
+    font-size: 13px !important;
   }
 
   html body #root .pf-studio-spots-grid {
@@ -2726,7 +2726,7 @@ html
 }
 
 .pf-five-min-metric span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #56685f;
   word-break: keep-all;
 }
@@ -2746,7 +2746,7 @@ html
 
 .pf-five-min-honest-note {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: #56685f;
   word-break: keep-all;

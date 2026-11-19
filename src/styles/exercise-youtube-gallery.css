@@ -25,16 +25,16 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
   color: #2f5b4a;
 }
 
 .eyg-header h4 {
   margin: 4px 0 0;
   font-size: 0.96rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #16372d;
 }
 
@@ -53,7 +53,7 @@
   color: #365347;
   padding: 5px 11px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -97,13 +97,13 @@
 }
 
 .eyg-embed-meta small {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #b8ccc2;
 }
 
 .eyg-region-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
 }
@@ -128,7 +128,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #d6e6dd;
   text-decoration: none;
 }
@@ -142,7 +142,7 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
@@ -216,8 +216,8 @@
   gap: 4px;
   padding: 3px 8px;
   border-radius: 999px;
-  font-size: 0.69rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #fff;
   backdrop-filter: blur(4px);
 }
@@ -241,8 +241,8 @@
   border-radius: 999px;
   background: rgba(18, 38, 32, 0.84);
   color: #fffdf8;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .eyg-card-body {
@@ -254,8 +254,8 @@
 }
 
 .eyg-card-title {
-  font-size: 0.81rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   line-height: 1.35;
   color: #18362d;
   display: -webkit-box;
@@ -265,13 +265,13 @@
 }
 
 .eyg-card-channel {
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #466257;
 }
 
 .eyg-card-reason {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: #5e746a;
   margin-bottom: 4px;
 }
@@ -295,13 +295,13 @@
   color: #174b3f;
   padding: 4px 9px;
   border-radius: 7px;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .eyg-inline-ext {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #4d675c;
   text-decoration: none;
@@ -309,7 +309,7 @@
 
 .eyg-disclaimer {
   margin: 10px 0 0;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: #62756b;
 }
 
@@ -348,13 +348,13 @@
 .eyg-disclosure-copy strong span {
   margin-left: 4px;
   color: #60806e;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 .eyg-disclosure-copy small {
   display: block;
   margin-top: 3px;
   color: #5b7064;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 .eyg-disclosure-chevron {

@@ -36,7 +36,7 @@
   padding: 4px 8px;
   color: #75512d;
   background: #faf1e7;
-  font-size: 12px;
+  font-size: 13px;
 }
 .recovery-preview-layout .recovery-source-kind {
   margin: 0 0 12px;
@@ -103,7 +103,7 @@
   padding-top: 12px;
   border-top: 1px solid #e2e9e6;
   color: #57666c;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
 }
 .recovery-preview-layout .recovery-preview-actions {

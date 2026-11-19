@@ -15,11 +15,11 @@
 }
 .mpp-eyebrow {
   margin: 0 0 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: #4f6659;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .mpp-heading h3 {
   font-size: 21px;
@@ -35,8 +35,8 @@
   color: #1f4d3f;
   border: 1px solid rgba(31, 77, 63, 0.14);
   border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .mpp-variant {
   font-size: 13px;
@@ -45,7 +45,7 @@
   color: #2f433b;
 }
 .mpp-equipment {
-  font-size: 11.5px;
+  font-size: 13px;
   color: #5f6d62;
   margin: 0 0 15px;
 }
@@ -70,8 +70,8 @@
   padding: 12px 16px;
   background: linear-gradient(180deg, #efece2 0%, #e7e3d6 100%);
   border-top: 1px solid #d9d3c3;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #1a3b32;
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@
   flex-wrap: wrap;
 }
 .mpp-figure figcaption span {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #546358;
 }
@@ -338,7 +338,7 @@
   text[data-leg-label='left'] {
   transform: translate(44px, 8px);
   fill: #1d4b3d;
-  font-weight: 700;
+  font-weight: 600;
 }
 .motion-pattern-preview
   .mpp-figure
@@ -373,8 +373,8 @@
   align-items: center;
   justify-content: center;
   padding: 9px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   transition:
     background 0.16s ease,
     border-color 0.16s ease;
@@ -402,7 +402,7 @@
   display: flex;
   gap: 6px;
   align-items: center;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #3f5247;
 }
@@ -420,7 +420,7 @@
   min-height: 44px;
 }
 .mpp-seek {
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #3f5247;
   display: flex;
@@ -456,8 +456,8 @@
   border: 1px solid #cfcabe;
   background: #ffffff;
   color: #1f4d3f;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -483,8 +483,8 @@
   cursor: default;
 }
 .mpp-phase-counter {
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #1f4d3f;
   text-align: center;
   overflow-wrap: anywhere;
@@ -503,21 +503,21 @@
   min-height: 44px;
   flex: 1;
   padding: 7px 6px;
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 600;
 }
 .mpp-phases button[aria-pressed='true'] {
   background: #1f4d3f;
   color: #ffffff;
   border-color: #1f4d3f;
-  font-weight: 700;
+  font-weight: 600;
 }
 .mpp-view-options {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 11.5px;
+  font-size: 13px;
   line-height: 1.5;
   color: #3f5247;
 }
@@ -534,7 +534,7 @@
   accent-color: #1f4d3f;
 }
 .mpp-playback-state {
-  font-size: 10.5px;
+  font-size: 13px;
   color: #5f6d62;
   margin: 12px 0;
 }
@@ -543,8 +543,8 @@
   border: 1px solid #d4cfc1;
   background: #f8f6ef;
   color: #1f4d3f;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .mpp-still-stage-btn:hover {
   background: #e9efe9;
@@ -553,18 +553,18 @@
 .mpp-source-details {
   border-top: 1px solid #dfdace;
   padding-top: 13px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.75;
   color: #546458;
 }
 .mpp-source-details summary {
-  font-weight: 700;
+  font-weight: 600;
   color: #1f4d3f;
   min-height: 44px;
 }
 .mpp-source-details h4 {
   margin: 13px 0 5px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .mpp-source-details ul {
   padding-left: 18px;
@@ -632,7 +632,7 @@
     font-size: 18px;
   }
   .mpp-status {
-    font-size: 9px;
+    font-size: 13px;
     padding: 5px 7px;
   }
   .mpp-figure > svg {
@@ -648,27 +648,27 @@
     padding: 9px 10px;
   }
   .mpp-phases button {
-    font-size: 9.5px;
+    font-size: 13px;
     min-width: 45px;
   }
 }
 .mpp-support {
-  font-size: 11px;
+  font-size: 13px;
   color: #4f6156;
   line-height: 1.65;
   margin: 11px 0 4px;
 }
 .mpp-anatomy {
-  font-size: 9.5px;
+  font-size: 13px;
   color: #6d7c70;
   line-height: 1.6;
   margin: 0 0 12px;
 }
 .mpp-asset-record {
-  font-size: 10px;
+  font-size: 13px;
 }
 .mpp-asset-record dt {
-  font-weight: 700;
+  font-weight: 600;
   margin-top: 8px;
 }
 .mpp-asset-record dd {
@@ -676,7 +676,7 @@
   overflow-wrap: anywhere;
 }
 .mpp-asset-record code {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -689,6 +689,6 @@
 }
 
 .mpp-transitions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block: 10px; }
-.mpp-transitions > span { color: var(--pf-color-text-secondary, #47584d); font-size: .8rem; }
+.mpp-transitions > span { color: var(--pf-color-text-secondary, #47584d); font-size: 0.8125rem; }
 .mpp-transitions button { min-height: 44px; border: 1px solid var(--pf-color-border-default, #cdd7d0); border-radius: 9px; padding: 7px 12px; background: var(--pf-color-bg-surface, #fffef9); color: inherit; cursor: pointer; }
 .mpp-transitions button[aria-pressed="true"] { border-color: #2d6652; background: #e8f0e9; }

@@ -10,8 +10,8 @@
   gap: 12px;
 }
 .mpg-heading p {
-  font-size: 8px;
-  letter-spacing: 0.17em;
+  font-size: 13px;
+  letter-spacing: 0;
   margin: 0 0 5px;
   color: #4f594b;
 }
@@ -30,20 +30,20 @@
   background: transparent;
   border: 0;
   color: #405e49;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 44px;
   cursor: pointer;
   padding: 5px 0;
 }
 .mpg-inventory {
-  font-size: 10px;
+  font-size: 13px;
   color: #64775b;
   margin: 10px 0 15px;
 }
 .mpg-inventory span {
   margin-left: 10px;
   color: #4f594b;
-  font-size: 9px;
+  font-size: 13px;
 }
 .mpg-cards {
   display: grid;
@@ -92,18 +92,18 @@
   background: rgba(224, 232, 217, 0.92);
   border: 1px solid rgba(40, 76, 64, 0.12);
   color: #21483b;
-  font-weight: 700;
-  font-size: 8.5px;
+  font-weight: 600;
+  font-size: 13px;
   backdrop-filter: blur(4px);
 }
 .mpg-card > strong {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 10px 0 3px;
 }
 .mpg-card > small {
-  font-size: 9px;
+  font-size: 13px;
   color: #4f594b;
 }
 .mpg-card[aria-pressed='true'] .mpg-thumbnail {
@@ -129,7 +129,7 @@
   background: none;
   border: 0;
   color: #576d4e;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 44px;
   cursor: pointer;
 }
@@ -154,7 +154,7 @@
   color: #173f36;
 }
 .mpg-exercise-summary-header span {
-  font-size: 11px;
+  font-size: 13px;
   padding: 3px 8px;
   border-radius: 999px;
   background: #e6eadf;
@@ -163,20 +163,20 @@
 .mpg-exercise-cues h4,
 .mpg-exercise-precautions h4 {
   margin: 0 0 4px;
-  font-size: 11px;
+  font-size: 13px;
   color: #4c5f4c;
 }
 .mpg-exercise-cues ul {
   margin: 0;
   padding-left: 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: #26382b;
   display: grid;
   gap: 3px;
 }
 .mpg-exercise-precautions p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #5c3a21;
   background: #f5ebe1;
   padding: 6px 9px;
@@ -190,7 +190,7 @@
 }
 .mpg-exercise-actions button {
   min-height: 44px;
-  font-size: 12px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -213,18 +213,18 @@
     top: 6px;
     left: 6px;
     padding: 3px 5px;
-    font-size: 7px;
+    font-size: 13px;
   }
   .mpg-card > strong {
-    font-size: 10px;
+    font-size: 13px;
     line-height: 1.6;
     margin-top: 8px;
   }
   .mpg-inventory {
-    font-size: 9px;
+    font-size: 13px;
   }
   .mpg-inventory span {
-    font-size: 8px;
+    font-size: 13px;
     margin-left: 6px;
   }
 }

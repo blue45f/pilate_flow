@@ -108,7 +108,7 @@
     margin-right: 0;
   }
   #root .sequence-order-controls button span {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
   #root .vnext-workbench .flow-step .step-main {
     padding: 14px 12px;
@@ -301,7 +301,7 @@ body:has(#root .vnext-workbench) {
 }
 
 #root .workbench-block-combo-item span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--studio-muted, #6c756c);
 }
 

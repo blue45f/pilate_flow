@@ -27,7 +27,7 @@
   border: 1px solid #d3ddd0;
   background: #f3f7ef;
   color: #244839;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
   word-break: keep-all;
@@ -84,7 +84,7 @@
   background: #f6f8f1;
   color: #25493a;
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.35;
   cursor: pointer;
@@ -155,14 +155,14 @@
   border-radius: 6px;
   background: #173f35;
   color: #fcfbf5;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .motion-library .atlas-compare-hint {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #4f6152;
 }
 
@@ -185,7 +185,7 @@
   border: 1px solid #cbd7c6;
   background: #ffffff;
   color: #1d4236;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .motion-library .atlas-compare-chip-label {
@@ -265,7 +265,7 @@
   background: #faf0e4;
   border: 1px solid #e2c5a8;
   color: #6b4018;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -316,7 +316,7 @@
 
 .motion-library .atlas-compare-card-titles p {
   margin: 2px 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #5b6a5d;
   overflow-wrap: anywhere;
 }
@@ -328,7 +328,7 @@
   border-radius: 6px;
   background: #eef3ec;
   color: #355545;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -378,7 +378,7 @@
   justify-content: space-between;
   gap: 6px;
   margin-top: 4px;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   color: #49604d;
   line-height: 1.35;
 }
@@ -387,7 +387,7 @@
   display: grid;
   gap: 7px;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -450,7 +450,7 @@
   padding: 7px 10px;
   border-radius: 9px;
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   word-break: keep-all;
@@ -499,7 +499,7 @@
 }
 
 .motion-library .atlas-selection-total-time {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #d6e4cf;
   margin-right: 4px;
   white-space: nowrap;
@@ -528,7 +528,7 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fcfbf4;
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -541,7 +541,7 @@
 }
 
 .motion-library .atlas-selection-more {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #cfe0c8;
   padding-inline: 4px;
 }

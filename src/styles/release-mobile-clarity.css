@@ -3,7 +3,7 @@
   display: block;
   margin-top: 4px;
   color: #745630;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 
@@ -32,8 +32,8 @@ body:has(.plan-view) {
   border-radius: 999px;
   background: rgba(27, 67, 50, 0.1);
   color: #1b4332;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -78,9 +78,9 @@ body:has(.plan-view) {
 }
 
 #root .vnext-workbench .workbench-recent-kicker {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
   color: #5b6860;
 }
 
@@ -91,7 +91,7 @@ body:has(.plan-view) {
   gap: 6px;
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #18221e;
 }
 
@@ -137,13 +137,13 @@ body:has(.plan-view) {
 
 #root .vnext-workbench .workbench-recent-card__info strong {
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #18221e;
   overflow-wrap: anywhere;
 }
 
 #root .vnext-workbench .workbench-recent-card__info span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #57635c;
 }
 
@@ -305,7 +305,7 @@ body:has(.plan-view) {
   #root .vnext-shell .vnext-workbench .workbench-flow-btn {
     width: 100%;
     padding: 6px 10px;
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
     word-break: keep-all;
     white-space: normal;
   }
@@ -372,7 +372,7 @@ body:has(.plan-view) {
   border-color: #1b4332;
   background: #1b4332;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-step-guide-subrow,
@@ -414,7 +414,7 @@ body:has(.plan-view) {
   border-radius: 8px;
   background: #ffffff;
   color: #1c2420;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -447,7 +447,7 @@ body:has(.plan-view) {
   border: 1px solid #d4ddd3;
   background: #f5f7f3;
   color: #4f5d55;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   word-break: keep-all;
 }
@@ -457,12 +457,12 @@ body:has(.plan-view) {
   border-color: rgba(27, 67, 50, 0.35);
   background: #e6efe9;
   color: #1b4332;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-idea-step-arrow {
   color: #7c8981;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 /* ==========================================================================

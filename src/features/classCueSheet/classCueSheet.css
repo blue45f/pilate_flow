@@ -86,7 +86,7 @@
 
 .class-cue-sheet-root .cue-sheet-scale-label {
   font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 700;
+  font-weight: 600;
   color: #27272a;
 }
 
@@ -103,7 +103,7 @@
 .class-cue-sheet-root .cue-sheet-boundary-title {
   margin: 0;
   font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 700;
+  font-weight: 600;
   color: #18181b;
 }
 
@@ -218,7 +218,7 @@
 .class-cue-sheet-root .cue-sheet-title {
   margin: 0;
   font-size: calc(1.25rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.35;
   color: #09090b;
 }
@@ -254,7 +254,7 @@
 
 .class-cue-sheet-root .cue-sheet-summary-value {
   font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 700;
+  font-weight: 600;
   color: #18181b;
 }
 
@@ -307,7 +307,7 @@
 .class-cue-sheet-root .cue-sheet-truncation-title {
   margin: 0;
   font-size: calc(0.9375rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .class-cue-sheet-root .cue-sheet-truncation-list {
@@ -478,7 +478,7 @@
   background-color: #ffffff;
   color: #18181b;
   font-size: calc(0.9375rem * var(--cue-sheet-font-scale, 1));
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   white-space: normal;
   cursor: pointer;
@@ -553,7 +553,7 @@
   padding: 0.75rem;
   background-color: #fffbeb;
   color: #78350f;
-  font-weight: 700;
+  font-weight: 600;
   font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
 }
 

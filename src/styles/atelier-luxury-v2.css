@@ -97,16 +97,16 @@ html #root .vnext-shell .brand > span {
 html #root .vnext-shell .brand small {
   display: block;
   font: 700 0.56rem/1.4 var(--pf-font-sans);
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   color: #767d72;
   margin-top: 3px;
 }
 
 html #root .vnext-shell .sidebar-label {
   color: #8a8f85;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   margin-bottom: 8px;
 }
 
@@ -144,7 +144,7 @@ html #root .vnext-shell .desktop-nav small {
   border-radius: 999px;
   background: #f3efe8;
   color: #42554a;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   opacity: 1;
 }
@@ -162,7 +162,7 @@ html #root .vnext-shell .v2-sidebar-upcoming {
 }
 
 html #root .vnext-shell .v2-sidebar-upcoming h2 {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 750;
   color: #6b7268;
   letter-spacing: 0.02em;
@@ -170,13 +170,13 @@ html #root .vnext-shell .v2-sidebar-upcoming h2 {
 
 html #root .vnext-shell .v2-sidebar-upcoming > p {
   color: #767d72;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 html #root .vnext-shell .v2-sidebar-upcoming .text-button {
   color: var(--pf-atelier-sage-mid);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 html #root .vnext-shell .v2-upcoming-link {
@@ -268,7 +268,7 @@ html #root .vnext-shell .pf-role-switcher__btn {
   border: 0;
   background: transparent;
   color: #5c6259;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -288,7 +288,7 @@ html #root .vnext-shell .local-state {
   background: var(--pf-atelier-sage-tint);
   border: 1px solid #c5d9cd;
   color: var(--pf-atelier-sage-deep);
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -338,9 +338,9 @@ html #root .vnext-shell .page-heading h1 {
 html #root .vnext-shell .vnext-workbench-eyebrow,
 html #root .vnext-shell .eyebrow {
   color: var(--pf-atelier-sage-mid);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 750;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
 }
 
 html #root .vnext-shell .today-label {
@@ -349,7 +349,7 @@ html #root .vnext-shell .today-label {
   background: #ffffff;
   border: 1px solid var(--pf-atelier-line);
   color: #4f564d;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 650;
 }
 
@@ -585,10 +585,10 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: #8a6834;
   background: rgba(184, 138, 85, 0.15);
   padding: 4px 10px;
@@ -654,7 +654,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   border-radius: 999px;
   background: rgba(31, 77, 63, 0.9);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   backdrop-filter: blur(6px);
@@ -668,7 +668,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--pf-atelier-sage-deep);
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   border: 1px solid var(--pf-atelier-line);
 }
@@ -700,7 +700,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 }
 
 .pf-quickstart-card__flow {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #7c6238;
   font-weight: 600;
   margin-bottom: 4px;
@@ -741,7 +741,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   gap: 4px;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: #f6f3eb;
   border: 1px solid #dfd9cd;
@@ -771,7 +771,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   color: #35493f;
   margin-bottom: 8px;
@@ -826,7 +826,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 
 .pf-member-wallet-hero .eyebrow {
   color: #ebd3a4;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
 }
 
 .pf-member-wallet-metrics {
@@ -861,7 +861,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 }
 
 .pf-member-wallet-ring__label small {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: rgba(255, 253, 248, 0.82);
 }
 
@@ -896,9 +896,9 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 
 .pf-studio-spot-map__zone {
   text-align: center;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   color: #6d5b3e;
   padding: 4px 10px;
   border-radius: 999px;
@@ -949,7 +949,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 }
 
 .pf-studio-spot-btn small {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .pf-rig-3d-render-frame {
@@ -1011,7 +1011,7 @@ html #root .vnext-shell .pf-sidebar-quick-stage.is-ready {
 
 html #root .vnext-shell .pf-sidebar-quick-stage small {
   margin-left: auto;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   opacity: 0.86;
 }
@@ -1070,7 +1070,7 @@ html #root .vnext-shell .pf-step-stage-frame {
     min-width: 0;
     min-height: 46px;
     padding: 4px 2px;
-    font-size: 0.72rem;
+    font-size: 0.8125rem;
     letter-spacing: -0.02em;
     white-space: nowrap;
     overflow: hidden;
@@ -1079,7 +1079,7 @@ html #root .vnext-shell .pf-step-stage-frame {
 
   html #root .vnext-shell .pf-role-switcher__btn {
     padding: 6px 8px;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     white-space: nowrap;
   }
 }

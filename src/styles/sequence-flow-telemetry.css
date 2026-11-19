@@ -61,12 +61,12 @@
 
 .sequence-flow-telemetry__score-value {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
 }
 
 .sequence-flow-telemetry__score-label {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -79,17 +79,17 @@
 }
 
 .sequence-flow-telemetry__eyebrow {
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #214f43;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .sequence-flow-telemetry__title {
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #173d34;
   line-height: 1.3;
 }
@@ -117,7 +117,7 @@
   border: 1px solid #d5ddd0;
   background: #f6f7f2;
   color: #1e3129;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -212,13 +212,13 @@
 }
 
 .sequence-flow-telemetry__card-title {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #1e3129;
 }
 
 .sequence-flow-telemetry__card-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #3d4f45;
   font-variant-numeric: tabular-nums;
 }
@@ -245,7 +245,7 @@
   border: 1px solid #d5ddd0;
   background: #ffffff;
   color: #1e3129;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -276,7 +276,7 @@
   border: 1px solid #e0c08b;
   background: #fdf3e1;
   color: #5c350b;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 
@@ -288,8 +288,8 @@
 
 .sequence-flow-telemetry__alert-title {
   margin: 0 0 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .sequence-flow-telemetry__alert-list {
@@ -349,8 +349,8 @@
   border-radius: 6px;
   background: #173d34;
   color: #fffef9;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .sequence-flow-telemetry__step-name-btn {
@@ -361,7 +361,7 @@
   background: transparent;
   color: #173d34;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
 }
@@ -377,7 +377,7 @@
 
 .sequence-flow-telemetry__step-name-static {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #173d34;
 }
 
@@ -396,7 +396,7 @@
   border: 1px solid #d5ddd0;
   background: #f3f5ee;
   color: #1e3129;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 

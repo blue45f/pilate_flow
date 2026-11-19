@@ -20,7 +20,7 @@
 .motion-authoring-batch :is(h2, p, figure) { margin: 0; }
 .mab-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .mab-header h2 { font-size: clamp(1.2rem, 3vw, 1.65rem); line-height: 1.4; letter-spacing: -0.03em; }
-.mab-eyebrow { color: var(--mab-muted); font-size: 0.8rem; }
+.mab-eyebrow { color: var(--mab-muted); font-size: 0.8125rem; }
 .mab-status { padding: 4px 10px; border: 1px solid #b79670; border-radius: 99px; background: #f2e7d7; color: #65452c; font-size: 0.8125rem; }
 .mab-note, .mab-legend, .mab-playback-state { color: var(--mab-muted); font-size: 0.875rem; }
 .mab-picker, .mab-progress { display: grid; gap: 6px; }

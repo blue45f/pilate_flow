@@ -16,8 +16,8 @@
   box-sizing: border-box;
 }
 .posture-guide-heading > span {
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 13px;
+  letter-spacing: 0;
   color: #52675e;
   font-weight: 750;
 }
@@ -29,7 +29,7 @@
 .posture-guide-heading p {
   margin: 0 0 14px;
   color: #52675e;
-  font-size: 12px;
+  font-size: 13px;
 }
 .posture-guide-layout {
   display: grid;
@@ -59,10 +59,10 @@
 .posture-guide-position > span {
   display: block;
   margin-block: 5px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .posture-guide-position > small {
-  font-size: 11px;
+  font-size: 13px;
   color: #59675d;
   line-height: 1.6;
 }
@@ -90,12 +90,12 @@
 .posture-guide-planes strong,
 .posture-guide-planes small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .posture-guide-planes small {
   color: #59675d;
-  font-size: 10px;
+  font-size: 13px;
   margin-top: 3px;
 }
 .posture-guide-anatomy {
@@ -114,8 +114,8 @@
 }
 .posture-map-view {
   fill: #40584f;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .posture-map-spine {
   stroke: #7d8b7d;
@@ -139,8 +139,8 @@
 }
 .posture-map-number {
   fill: white;
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .posture-anatomy-guide .posture-guide-legend {
   list-style: none;
@@ -154,7 +154,7 @@
   align-items: flex-start;
   gap: 7px;
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .posture-legend-number {
@@ -165,8 +165,8 @@
   border-radius: 50%;
   color: white;
   background: #284b45;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .posture-guide-legend li > div {
   min-width: 0;
@@ -180,7 +180,7 @@
 }
 .posture-guide-empty,
 .posture-guide-unmapped {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .posture-guide-unmapped strong,
@@ -189,13 +189,13 @@
 }
 .posture-guide-unmapped > span {
   color: #59675d;
-  font-size: 11px;
+  font-size: 13px;
 }
 .posture-anatomy-guide .posture-guide-boundary {
   margin: 14px 0 0;
   padding-top: 12px;
   border-top: 1px solid #d8dfd8;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
   color: #53645b;
 }
@@ -208,8 +208,8 @@
   min-width: 44px;
   padding: 11px 0;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #284b45;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -221,7 +221,7 @@
   border-radius: 3px;
 }
 .posture-guide-notes > div {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .posture-guide-notes ul {
@@ -288,10 +288,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .posture-map-view {
-    font-size: 11px;
+    font-size: 13px;
   }
   .posture-map-number {
-    font-size: 10.5px;
+    font-size: 13px;
   }
 }
 @media (forced-colors: active) {
@@ -315,7 +315,7 @@
 .posture-guide-legend .posture-legend-role {
   display: block;
   color: #435f53;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
   margin-top: 3px;
 }

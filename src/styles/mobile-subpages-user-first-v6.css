@@ -149,7 +149,7 @@ html #root .vnext-shell .main-content > * {
 
 .pf-sidebar-more-drawer > summary {
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
   list-style: none;
@@ -263,11 +263,11 @@ html #root .vnext-shell .main-content > * {
 
   html #root .vnext-shell .pf-role-switcher__btn {
     padding: 5px 9px !important;
-    font-size: 0.76rem !important;
+    font-size: 0.8125rem !important;
   }
 
   html #root .vnext-shell .app-create-movement span {
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
   }
 
   @media (max-width: 374px) {
@@ -314,7 +314,7 @@ html #root .vnext-shell .main-content > * {
   gap: 4px;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.25;
   backdrop-filter: blur(8px);
@@ -748,7 +748,7 @@ html #root .workbench-task-focused .step-bundle-provenance-row {
 }
 
 .pf-b05-summary-box__val small {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -1297,7 +1297,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-coral-bg);
   border: 1px solid rgba(201, 91, 60, 0.28);
   color: #9a371e;
-  font-size: 0.79rem;
+  font-size: 0.8125rem;
   display: flex;
   align-items: flex-start;
   gap: 6px;
@@ -1342,7 +1342,7 @@ dialog .pf-mobile-subpage-bar {
   min-height: 40px;
   border-radius: 999px !important;
   border: 0 !important;
-  font-size: 0.81rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 600 !important;
   background: transparent !important;
   color: var(--pf-v6-muted) !important;
@@ -1431,7 +1431,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-mint) !important;
   color: var(--pf-v6-emerald-dark) !important;
   border: 0 !important;
-  font-size: 0.8rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 600 !important;
 }
 
@@ -1444,7 +1444,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 12px;
   background: var(--pf-v6-surface-subtle);
   border: 1px solid var(--pf-v6-border);
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -1548,7 +1548,7 @@ dialog .pf-mobile-subpage-bar {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -1575,7 +1575,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-p05-chip-label {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -1593,7 +1593,7 @@ dialog .pf-mobile-subpage-bar {
   border: 1px solid var(--pf-v6-border);
   background: var(--pf-v6-track);
   color: var(--pf-v6-ink);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -1737,7 +1737,7 @@ dialog .pf-mobile-subpage-bar {
   color: var(--pf-v6-emerald-dark);
   font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   margin-bottom: 6px;
 }
 
@@ -1792,7 +1792,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-ai-unlinked-box__top span {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
 }
 
@@ -1829,7 +1829,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-ai-unlinked-meta strong {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-ink);
   word-break: keep-all;
 }
@@ -1898,7 +1898,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px;
   background: rgba(23, 61, 52, 0.88);
   color: #ffffff;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -1927,7 +1927,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-ai-preset-card__body p {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted);
   word-break: keep-all;
   flex: 1;
@@ -1992,7 +1992,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-ai-quick-recipe-card strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-ink);
   word-break: keep-all;
 }
@@ -2109,7 +2109,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-visual-apparatus-card__meta strong {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-ink);
 }
@@ -2309,7 +2309,7 @@ dialog .pf-mobile-subpage-bar {
 }
 
 .pf-breath-pacer-pill__copy strong {
-  font-size: 0.79rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald-dark);
 }
@@ -2939,7 +2939,7 @@ html #root .vnext-workbench .flow-step {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.76rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--pf-v6-emerald);
   }
@@ -3271,7 +3271,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.16);
   background: #ffffff;
   color: var(--pf-v6-emerald);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 750;
   cursor: pointer;
   white-space: nowrap;
@@ -3391,7 +3391,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-border);
   background: #ffffff;
   color: var(--pf-v6-ink);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -3483,7 +3483,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-border);
   background: #ffffff;
   color: var(--pf-v6-ink);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(23, 61, 52, 0.05);
@@ -3571,7 +3571,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-mint);
   border: 1px solid var(--pf-v6-mint-strong);
   color: var(--pf-v6-emerald-dark);
-  font-size: 0.81rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -3589,7 +3589,7 @@ html #root .movement-card .movement-card-footer {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-muted);
 }
@@ -3614,7 +3614,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-border);
   background: var(--pf-v6-surface-subtle);
   color: var(--pf-v6-ink);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -3970,7 +3970,7 @@ html #root .movement-card .movement-card-footer {
 }
 
 .pf-handsfree-remote-keys {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted, #57635e);
   font-weight: 600;
 }
@@ -3982,7 +3982,7 @@ html #root .movement-card .movement-card-footer {
   background: #ffffff;
   border: 1px solid rgba(23, 61, 52, 0.18);
   color: var(--pf-v6-emerald, #173d34);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -3996,7 +3996,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-handsfree-guide-drawer > summary {
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
@@ -4014,13 +4014,13 @@ html #root .movement-card .movement-card-footer {
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--pf-v6-surface-subtle, #f3f1ea);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted, #57635e);
 }
 
 .pf-handsfree-guide-item strong {
   color: var(--pf-v6-ink, #1c2623);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .pf-handsfree-guide-cat {
@@ -4087,7 +4087,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-v70-adaptive-subs {
   margin: 2px 0 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #c95b3c;
 }
@@ -4171,7 +4171,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.16);
   background: #ffffff;
   color: var(--pf-v6-ink, #1c2623);
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -4206,7 +4206,7 @@ html #root .movement-card .movement-card-footer {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-emerald, #173d34);
 }
 
@@ -4285,7 +4285,7 @@ html #root .movement-card .movement-card-footer {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--pf-v6-muted, #57635e);
 }
 
@@ -4327,7 +4327,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-v70-week-top p {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.42;
 }
 
@@ -4339,7 +4339,7 @@ html #root .movement-card .movement-card-footer {
 }
 
 .pf-v70-layer-pill {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
@@ -4366,7 +4366,7 @@ html #root .movement-card .movement-card-footer {
   border-radius: 12px;
   background: #dff0e8;
   color: #173d34;
-  font-size: 0.79rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 

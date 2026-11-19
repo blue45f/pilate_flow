@@ -33,7 +33,7 @@
 }
 #root .flow-binder .teaching-page-header .eyebrow {
   color: #617568;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0;
 }
 #root .flow-binder .teaching-count {
@@ -78,7 +78,7 @@
 }
 #root .flow-binder .teaching-collection-toolbar > .muted {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 #root .flow-binder .teaching-saved-quick-filters {
@@ -198,7 +198,7 @@
 #root .flow-binder .flow-binder-card .pf-class-apparatus-pill {
   color: #3b5c49;
   background: #edf1e9;
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-binder .teaching-sequence-subtitle {
   display: -webkit-box;
@@ -230,7 +230,7 @@
 }
 #root .flow-binder .flow-binder-recency {
   flex-basis: 100%;
-  font-size: 12px;
+  font-size: 13px;
   color: #6c786d;
 }
 #root .flow-binder .teaching-saved-primary-actions {
@@ -256,7 +256,7 @@
 }
 #root .flow-binder .flow-binder-secondary-actions button {
   padding: 8px 5px;
-  font-size: 12px;
+  font-size: 13px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -292,7 +292,7 @@
 }
 #root .flow-binder .flow-binder-utilities > summary small {
   color: #768074;
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-binder .flow-binder-utilities-content {
   padding: 4px 20px 20px;
@@ -302,7 +302,7 @@
   padding: 12px 14px;
   border-radius: 10px;
   background: #f4f5ef;
-  font-size: 12px;
+  font-size: 13px;
 }
 #root .flow-binder .flow-binder-utilities-content .teaching-template-panel {
   margin: 12px 0 20px;

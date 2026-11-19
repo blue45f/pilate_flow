@@ -78,7 +78,7 @@
 .motion-library .library-asset-status-note {
   margin: 6px 0 14px;
   color: var(--lib-muted, #657064);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   word-break: keep-all;
   overflow-wrap: anywhere;

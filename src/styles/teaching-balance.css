@@ -43,7 +43,7 @@
 .pf-balance-kpi-row {
   gap: 0.5rem 1rem;
   margin-top: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .pf-balance-kpi-row strong {
@@ -54,7 +54,7 @@
 .pf-balance-data-note,
 .pf-balance-disclaimer {
   margin: 0.75rem 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 
@@ -72,14 +72,14 @@
 }
 
 .pf-balance-plane-row__top {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 
 .pf-balance-low-tag {
   margin-left: 0.4rem;
   color: #805223;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-style: normal;
 }
 
@@ -117,7 +117,7 @@
   padding: 0.35rem 0.55rem;
   border-radius: 999px;
   background: #f1f5f2;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .pf-balance-coach-box {
@@ -133,7 +133,7 @@
 
 .pf-balance-coach-box p {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 

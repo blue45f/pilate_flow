@@ -46,7 +46,7 @@
 
 .movement-triptych-heading > span {
   color: var(--motion-muted);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .movement-triptych-grid {
@@ -114,8 +114,8 @@ button.movement-triptych-phase-heading {
   height: 30px;
   border: 1px solid currentColor;
   border-radius: 50%;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -131,7 +131,7 @@ button.movement-triptych-phase-heading {
 }
 
 .movement-triptych-phase-label > span {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   overflow-wrap: anywhere;
 }
 
@@ -154,7 +154,7 @@ button.movement-triptych-phase-heading {
 
 .movement-triptych-metadata {
   color: var(--motion-muted);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .movement-triptych-metadata > summary {

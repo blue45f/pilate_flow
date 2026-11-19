@@ -371,7 +371,7 @@ body {
   margin: 4px 0 0;
 }
 #root .vnext-shell .sequence-heading .pf-ai-status-badge {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   padding: 3px 8px;
 }
 #root .vnext-shell .save-flow {
@@ -484,7 +484,7 @@ body {
 }
 #root .vnext-shell .flow-step .step-title small {
   color: var(--studio-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 #root .vnext-shell .step-source-state {
   background: var(--studio-subtle);
@@ -492,7 +492,7 @@ body {
   color: var(--studio-muted);
   padding: 2px 7px;
   width: fit-content;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
 }
 #root .vnext-shell .sequence-order-controls {
   padding: 6px 8px;
@@ -571,7 +571,7 @@ body {
   min-height: 48px;
   border-radius: 9px;
   color: var(--studio-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   gap: 3px;
 }
 #root .vnext-shell .bottom-nav button.active {
@@ -646,7 +646,7 @@ body {
     line-height: 1.3;
   }
   #root .vnext-shell .today-label {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     white-space: nowrap;
   }
   #root .vnext-shell .workbench-welcome-copy {
@@ -701,7 +701,7 @@ body {
     font-size: 1.0625rem;
   }
   #root .vnext-shell .sequence-heading p {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
   #root .vnext-shell .flow-step .step-main {
     padding: 10px;
@@ -712,7 +712,7 @@ body {
     gap: 4px;
   }
   #root .vnext-shell .composition-order-hint {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     margin: 6px 0 10px;
   }
   #root .vnext-shell .flow-sections {
@@ -745,7 +745,7 @@ body {
   }
   #root .vnext-shell .v2-condition-chips > button {
     padding-inline: 6px;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -844,7 +844,7 @@ body {
   border: 0;
   background: transparent;
   border-radius: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--studio-muted);
 }
@@ -878,7 +878,7 @@ body {
   font-weight: 600;
 }
 #root .vnext-shell .sequence-context p {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--studio-muted);
   line-height: 1.5;
 }
@@ -958,7 +958,7 @@ body {
 }
 #root .vnext-shell .ml-inventory :is(p span, .ml-inventory-note) {
   color: var(--studio-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 #root .vnext-shell .ml-section-heading h2 {
   font-size: 1.25rem;

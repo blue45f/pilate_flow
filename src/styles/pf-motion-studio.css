@@ -220,7 +220,7 @@ html body #root .flow-app .pf-nav-group {
 html body #root .flow-app .pf-nav-group > .sidebar-label {
   margin: 0 0 6px !important;
   padding: 0 12px !important;
-  font-size: 11.5px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 500 !important;
   color: var(--pf-unslop-text-muted-on-linen) !important;
@@ -319,7 +319,7 @@ html body #root .flow-app .desktop-nav .pf-nav-group > button small {
   background: transparent !important;
   border: 0 !important;
   color: var(--pf-unslop-text-muted-on-linen) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   line-height: 16px !important;
   font-weight: 400 !important;
   font-variant-numeric: tabular-nums !important;
@@ -352,7 +352,7 @@ html body #root .flow-app .pf-sidebar-next-peek__kicker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--pf-unslop-accent);
 }
@@ -371,7 +371,7 @@ html body #root .flow-app .pf-sidebar-next-peek > strong {
 }
 
 html body #root .flow-app .pf-sidebar-next-peek > small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--pf-unslop-text-secondary);
   max-width: 100%;
   overflow: hidden;
@@ -402,7 +402,7 @@ html body #root .flow-app .pf-breadcrumb-meta {
   border-radius: 6px;
   background: var(--pf-unslop-raised);
   color: var(--pf-unslop-text-secondary);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -427,7 +427,7 @@ html body #root .flow-app .pf-role-switcher__btn {
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  font-size: 12.5px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--pf-unslop-text-secondary) !important;
 }
@@ -686,7 +686,7 @@ html body #root .flow-app .pf-spring-horizon__active {
 
 html body #root .flow-app .pf-studio-spring-meter > em {
   font-style: normal;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--pf-unslop-text-secondary);
   font-variant-numeric: tabular-nums;
@@ -858,7 +858,7 @@ html body #root .flow-app .pf-atlas-sequence-dock__summary > strong {
 
 html body #root .flow-app .pf-atlas-sequence-dock__summary > span:last-child {
   color: rgba(247, 244, 238, 0.76);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 html body #root .flow-app .pf-atlas-sequence-dock__cta {
@@ -1171,7 +1171,7 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
     border: 1px solid var(--pf-unslop-accent);
     background: var(--pf-unslop-accent) !important;
     color: #ffffff !important;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -1208,7 +1208,7 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
   html body #root .flow-app .topbar .pf-role-switcher__btn {
     min-height: 44px !important;
     padding: 0 8px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     white-space: nowrap !important;
   }
 
@@ -1265,7 +1265,7 @@ html body #root .flow-app .bottom-nav button > :not(.pf-bottom-nav-pill) {
 
   html body #root .flow-app .topbar .pf-role-switcher__btn {
     padding: 0 6px !important;
-    font-size: 11.5px !important;
+    font-size: 13px !important;
   }
 }
 

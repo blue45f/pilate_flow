@@ -62,7 +62,7 @@
   margin-bottom: 22px;
 }
 .teaching-collection-toolbar > .muted {
-  font-size: 12px;
+  font-size: 13px;
 }
 .teaching-search {
   display: flex;
@@ -108,12 +108,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--teaching-muted);
 }
 .teaching-card-label {
-  font-size: 11px;
-  letter-spacing: 0.6px;
+  font-size: 13px;
+  letter-spacing: 0;
   font-weight: 650;
 }
 .teaching-level {
@@ -131,7 +131,7 @@
   overflow-wrap: anywhere;
 }
 .teaching-sequence-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   margin: 0 0 18px;
 }
@@ -140,7 +140,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--teaching-muted);
 }
 .teaching-card-stats > span {
@@ -164,7 +164,7 @@
   padding: 0;
 }
 .teaching-flow-preview li {
-  font-size: 11px;
+  font-size: 13px;
   padding: 5px 7px;
   border-radius: 5px;
   background: #f3f4ee;
@@ -173,7 +173,7 @@
 }
 .teaching-card-date {
   margin-top: auto;
-  font-size: 11px;
+  font-size: 13px;
   color: #5f6c58;
   padding-top: 12px;
 }
@@ -185,7 +185,7 @@
 }
 .teaching-card-main-actions > button {
   min-width: 0;
-  font-size: 12px;
+  font-size: 13px;
   padding: 10px 8px;
   min-height: 44px;
 }
@@ -198,7 +198,7 @@
   gap: 1px;
 }
 .teaching-card-tools .btn-ghost {
-  font-size: 11px;
+  font-size: 13px;
   padding: 8px;
   min-height: 44px;
   gap: 5px;
@@ -222,7 +222,7 @@
   padding: 8px 0;
   min-height: 44px;
   color: #64755e;
-  font-size: 12px;
+  font-size: 13px;
   font-family: inherit;
   cursor: pointer;
   text-decoration: underline;
@@ -235,7 +235,7 @@
   border: 1px solid #d8baac;
   border-radius: 9px;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .teaching-delete-confirm p {
   line-height: 1.7;
@@ -282,7 +282,7 @@
   font-size: 18px;
 }
 .teaching-template-panel p {
-  font-size: 12px;
+  font-size: 13px;
   margin: 0;
 }
 .teaching-template-list {
@@ -292,10 +292,10 @@
   flex-wrap: wrap;
 }
 .teaching-template-list button {
-  font-size: 12px;
+  font-size: 13px;
 }
 .teaching-local-note {
-  font-size: 11px;
+  font-size: 13px;
   color: #5f6c58;
   margin-top: 30px;
   line-height: 1.8;
@@ -342,7 +342,7 @@
   background: #fffef9;
   color: #5f6c58;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.3;
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -368,7 +368,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #35503d;
   white-space: nowrap;
@@ -392,7 +392,7 @@
   background: #ffffff;
   color: #485946;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
   cursor: pointer;
 }
@@ -413,7 +413,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   background: rgba(52, 82, 62, 0.12);
   color: inherit;
@@ -427,7 +427,7 @@
   background: transparent;
   color: #34523e;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -477,7 +477,7 @@
   font-weight: 650;
 }
 .teaching-history-date-count {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #526450;
   background: #ffffff;
@@ -520,7 +520,7 @@
   border-radius: 6px;
   background: #e8efe3;
   color: #2f4b37;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .teaching-history-time-pill {
@@ -532,7 +532,7 @@
   background: #f1f4ec;
   border: 1px solid #d9e2d2;
   color: #465944;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .teaching-history-card h2 {
@@ -554,7 +554,7 @@
   border: 1px solid #dce4d5;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   min-width: 0;
   max-width: 100%;
@@ -577,7 +577,7 @@
   min-width: 0;
 }
 .teaching-history-exercises span {
-  font-size: 11px;
+  font-size: 13px;
   background: #f1f3eb;
   color: #5f6c58;
   padding: 5px 8px;
@@ -596,13 +596,13 @@
   border-top: 1px solid #e7ece1;
 }
 .teaching-history-bottom .muted {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   flex: 1 1 200px;
   min-width: 0;
 }
 .teaching-history-bottom button {
-  font-size: 12px;
+  font-size: 13px;
   min-height: 44px;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -623,7 +623,7 @@
   margin: 8px 0;
 }
 .teaching-memory-card p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
 }
 .teaching-overlap-row {
@@ -643,14 +643,14 @@
 }
 .teaching-overlap-row strong {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
   overflow-wrap: anywhere;
 }
 .teaching-overlap-row div > span {
   display: block;
   color: #5f6c58;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 6px;
 }
 .teaching-overlap-row b {
@@ -659,7 +659,7 @@
   white-space: nowrap;
 }
 .teaching-overlap-row small {
-  font-size: 12px;
+  font-size: 13px;
   color: #5f6c58;
   font-weight: 400;
 }
@@ -675,7 +675,7 @@
   gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid #edf0e6;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
   min-width: 0;
 }
@@ -685,7 +685,7 @@
 }
 .teaching-frequency-list strong {
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-insight-empty {
   background: #f2f4eb;
@@ -697,7 +697,7 @@
 }
 .teaching-sample-label {
   display: inline-block;
-  font-size: 11px;
+  font-size: 13px;
   border: 1px solid #d8d7c5;
   background: #f0f0df;
   border-radius: 4px;
@@ -730,7 +730,7 @@
   align-items: center;
   min-height: 44px;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--teaching-muted);
   padding: 0;
   background: none;
@@ -744,7 +744,7 @@
   margin: 5px 0 10px;
 }
 .teaching-stage-header p {
-  font-size: 12px;
+  font-size: 13px;
   margin: 0;
   display: flex;
   align-items: center;
@@ -752,7 +752,7 @@
   gap: 6px;
 }
 .teaching-stage-header p > span {
-  font-size: 11px;
+  font-size: 13px;
   padding-left: 5px;
 }
 .teaching-stage-utility {
@@ -763,7 +763,7 @@
 .teaching-stage-utility .btn-secondary {
   min-height: 44px;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
 }
 .teaching-stage-utility .icon-btn {
   min-width: 44px;
@@ -787,7 +787,7 @@
   min-width: 0;
 }
 .teaching-current-meta {
-  font-size: 11px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -806,7 +806,7 @@
   overflow-wrap: anywhere;
 }
 .teaching-current-en {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--teaching-muted);
   margin: 0;
 }
@@ -815,7 +815,7 @@
   padding: 32px 0 14px;
 }
 .teaching-timer-status {
-  font-size: 11px;
+  font-size: 13px;
   display: inline-block;
   padding: 7px 13px;
   background: var(--teaching-sage);
@@ -842,7 +842,7 @@
   flex-wrap: wrap;
   gap: 7px 12px;
   color: var(--teaching-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .teaching-timing-breakdown span + span:before {
@@ -851,7 +851,7 @@
   color: var(--teaching-muted);
 }
 .teaching-side-note {
-  font-size: 11px;
+  font-size: 13px;
   padding: 9px;
   margin: 14px 0 0;
   color: var(--teaching-muted);
@@ -890,7 +890,7 @@
 }
 .teaching-step-control {
   gap: 5px !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   padding: 12px 7px !important;
 }
 .teaching-timer-options {
@@ -901,7 +901,7 @@
   padding: 12px 0 21px;
 }
 .teaching-timer-options .btn-ghost {
-  font-size: 11px;
+  font-size: 13px;
   min-height: 44px;
   padding: 6px 0;
 }
@@ -909,7 +909,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 13px;
   min-height: 44px;
   cursor: pointer;
   line-height: 1.5;
@@ -954,7 +954,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   margin-top: 18px;
   color: var(--teaching-muted);
@@ -964,10 +964,10 @@
   background: var(--teaching-sage);
   border-radius: 4px;
   padding: 1px 7px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-instructor-note {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   color: var(--teaching-muted);
   border-top: 1px solid var(--teaching-line);
@@ -975,7 +975,7 @@
 }
 .teaching-instructor-note strong {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-stage-aside {
   display: flex;
@@ -997,7 +997,7 @@
   overflow-wrap: anywhere;
 }
 .teaching-next-panel > .muted {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
 }
 .teaching-next-setup {
@@ -1009,18 +1009,18 @@
   gap: 6px;
 }
 .teaching-next-setup span {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--teaching-muted);
 }
 .teaching-next-setup strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
   line-height: 1.8;
   margin-bottom: 9px;
   overflow-wrap: anywhere;
 }
 .teaching-next-cue {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   color: var(--teaching-muted);
   margin: 9px 0 0;
@@ -1039,7 +1039,7 @@
   justify-content: space-between;
   gap: 14px;
   border-bottom: 1px solid var(--teaching-line);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .teaching-setup-panel dt {
@@ -1049,11 +1049,11 @@
 .teaching-setup-panel dd {
   margin: 0;
   text-align: right;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .teaching-safety {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.9;
   color: var(--teaching-muted);
   margin: 20px 0 0;
@@ -1084,7 +1084,7 @@
   margin: 0;
 }
 .teaching-outline-heading .muted {
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-stage-outline ol {
   display: flex;
@@ -1119,15 +1119,15 @@
   border-color: #8ca180;
 }
 .teaching-stage-outline li span {
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-stage-outline li strong {
   font-weight: 550;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .teaching-stage-outline li small {
-  font-size: 11px;
+  font-size: 13px;
   margin-top: auto;
 }
 .teaching-stage-footer {
@@ -1139,7 +1139,7 @@
   color: var(--teaching-muted);
 }
 .teaching-stage-footer > .muted {
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-stage-footer > .muted:last-child {
   margin-left: auto;
@@ -1187,7 +1187,7 @@
   color: #2c4436;
 }
 .teaching-log-form .form-field {
-  font-size: 12px;
+  font-size: 13px;
   min-width: 0;
 }
 .teaching-log-form .form-field input,
@@ -1198,7 +1198,7 @@
   line-height: 1.8;
 }
 .teaching-log-form .form-field small {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
 }
 .teaching-log-summary {
@@ -1215,7 +1215,7 @@
 }
 .teaching-log-summary p {
   margin: 5px 0 0;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .teaching-log-form > .teaching-log-link {
@@ -1248,7 +1248,7 @@
 }
 .teaching-duration-field legend {
   padding: 0 7px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
 }
 .teaching-duration-field > div {
@@ -1257,7 +1257,7 @@
   gap: 13px;
 }
 .teaching-duration-field > p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
   margin: 12px 0 0;
 }
@@ -1265,12 +1265,12 @@
   margin-top: 0;
 }
 .teaching-log-footnote {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
   margin: -9px 0 0;
 }
 .teaching-error {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
   color: #994a35;
   padding: 12px;
@@ -1285,7 +1285,7 @@
   color: #344c3a;
 }
 .teaching-finish-summary > span {
-  font-size: 12px;
+  font-size: 13px;
 }
 .teaching-finish-summary > strong {
   display: block;
@@ -1296,11 +1296,11 @@
   margin: 10px 0;
 }
 .teaching-finish-summary > p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
 }
 .teaching-print-sheet {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
   color: #263e33;
 }
@@ -1311,7 +1311,7 @@
   background: #f8f9f2;
   padding: 20px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.9;
 }
 @media (min-width: 1600px) {
@@ -1388,7 +1388,7 @@
   }
   .teaching-page-header > .btn-primary,
   .teaching-page-header > .btn-secondary {
-    font-size: 12px;
+    font-size: 13px;
     white-space: nowrap;
   }
   .teaching-form-grid {
@@ -1411,14 +1411,14 @@
     margin: 8px 0 10px;
   }
   .teaching-page-header p {
-    font-size: 12px;
+    font-size: 13px;
   }
   .teaching-page-header > button {
     margin-top: 20px;
     min-height: 44px;
   }
   .teaching-count {
-    font-size: 12px;
+    font-size: 13px;
   }
   .teaching-collection-toolbar {
     display: block;
@@ -1426,7 +1426,7 @@
   .teaching-collection-toolbar > .muted {
     display: block;
     margin-top: 12px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-search {
     width: 100%;
@@ -1445,18 +1445,18 @@
     margin-top: 17px;
   }
   .teaching-card-main-actions > button {
-    font-size: 12px;
+    font-size: 13px;
     min-height: 46px;
   }
   .teaching-card-tools {
     gap: 5px;
   }
   .teaching-card-tools .btn-ghost {
-    font-size: 11px;
+    font-size: 13px;
     padding: 8px 10px;
   }
   .teaching-sequence-subtitle {
-    font-size: 12px;
+    font-size: 13px;
   }
   .teaching-template-panel {
     padding: 21px;
@@ -1498,7 +1498,7 @@
     grid-column: auto;
   }
   .teaching-local-note {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-stage-header {
     display: block;
@@ -1523,24 +1523,24 @@
     padding: 8px;
   }
   .teaching-stage-utility .btn-secondary {
-    font-size: 11px;
+    font-size: 13px;
     padding: 9px 11px;
   }
   .teaching-fullscreen {
     display: none !important;
   }
   .teaching-stage-header p {
-    font-size: 11px;
+    font-size: 13px;
     gap: 4px;
   }
   .teaching-stage-header p > span {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-current-panel {
     padding: 21px 18px;
   }
   .teaching-current-meta {
-    font-size: 11px;
+    font-size: 13px;
     gap: 8px;
   }
   .teaching-current-meta > span:last-child {
@@ -1556,7 +1556,7 @@
     letter-spacing: -0.8px;
   }
   .teaching-current-en {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-timer-area {
     padding-top: 28px;
@@ -1567,17 +1567,17 @@
     margin: 11px 0;
   }
   .teaching-timer-status {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-timing-breakdown {
-    font-size: 11px;
+    font-size: 13px;
     gap: 5px 8px;
   }
   .teaching-timing-breakdown span + span:before {
     margin-right: 8px;
   }
   .teaching-side-note {
-    font-size: 11px;
+    font-size: 13px;
     margin-top: 10px;
   }
   .teaching-timer-progress {
@@ -1596,7 +1596,7 @@
     gap: 6px !important;
   }
   .teaching-step-control {
-    font-size: 11px !important;
+    font-size: 13px !important;
     gap: 1px !important;
   }
   .teaching-step-control > svg {
@@ -1610,7 +1610,7 @@
   }
   .teaching-timer-options .btn-ghost,
   .teaching-switch {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-switch {
     gap: 6px;
@@ -1653,7 +1653,7 @@
   .teaching-outline-heading .muted {
     display: block;
     margin-top: 9px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-stage-outline ol {
     padding-top: 14px;
@@ -1665,7 +1665,7 @@
     gap: 0 12px;
   }
   .teaching-stage-footer > .muted {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-stage-footer > .muted:last-child {
     margin-left: 0;
@@ -1682,14 +1682,14 @@
     font-size: 90px;
   }
   .teaching-high-contrast .teaching-play {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   .teaching-inline-group {
     gap: 9px;
     padding: 12px;
   }
   .teaching-inline-group button {
-    font-size: 11px;
+    font-size: 13px;
     padding: 10px;
   }
   .teaching-log-form {
@@ -1700,17 +1700,17 @@
     gap: 12px;
   }
   .teaching-log-form .form-field {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-log-summary {
     padding: 14px 12px;
     gap: 10px;
   }
   .teaching-log-summary strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .teaching-log-summary p {
-    font-size: 11px;
+    font-size: 13px;
   }
   .teaching-log-summary > svg {
     flex-shrink: 0;
@@ -1776,7 +1776,7 @@
   padding: 0 16px;
 }
 .teaching-log-steps summary {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
   min-height: 48px;
   display: list-item;
@@ -1785,7 +1785,7 @@
   line-height: 1.7;
 }
 .teaching-log-steps > p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
   margin: 0 0 10px;
 }
@@ -1799,7 +1799,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
   min-height: 44px;
   cursor: pointer;
@@ -1867,12 +1867,12 @@
   border-radius: 10px;
   background: #f4f7f1;
   border: 1px solid #d8e1d0;
-  font-size: 12px;
+  font-size: 13px;
   color: #36493a;
 }
 .teaching-contract-status {
   color: #5b6b59;
-  font-size: 11px;
+  font-size: 13px;
 }
 .teaching-log-badge-row,
 .teaching-history-badges {
@@ -1889,7 +1889,7 @@
   gap: 5px;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -1907,7 +1907,7 @@
   align-items: center;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   background: #eef2ea;
   color: #4a5a48;
 }
@@ -1917,7 +1917,7 @@
   align-items: center;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   background: #fdf3dc;
   color: #7c5211;
@@ -1925,7 +1925,7 @@
 }
 .teaching-storage-warning {
   margin-top: 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: #9b3b2b;
   font-weight: 550;
 }
@@ -1961,7 +1961,7 @@
   min-width: 0;
 }
 .teaching-history-detail-grid dt {
-  font-size: 11px;
+  font-size: 13px;
   color: #647360;
   margin-bottom: 2px;
 }
@@ -2025,11 +2025,11 @@
   border-radius: 6px;
   background: #e8efe2;
   color: #2f4b37;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .teaching-step-block-badge {
-  font-size: 11px;
+  font-size: 13px;
   padding: 2px 8px;
   border-radius: 6px;
   background: #eff3eb;
@@ -2039,7 +2039,7 @@
 }
 .teaching-step-duration {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #2f4b37;
 }
@@ -2047,7 +2047,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
-  font-size: 12px;
+  font-size: 13px;
   color: #526150;
   line-height: 1.6;
   min-width: 0;
@@ -2092,7 +2092,7 @@
   }
   .teaching-date-chip {
     padding: 6px 10px;
-    font-size: 11.5px;
+    font-size: 13px;
   }
   .teaching-history-date-header {
     padding: 7px 10px;

@@ -193,7 +193,7 @@
   align-items: center;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: var(--pf-weight-medium, 500);
   background: var(--pf-color-bg-surface-muted, #e4eadf);
   color: var(--pf-color-text-brand, #173d34);
@@ -249,7 +249,7 @@
   flex-wrap: wrap;
 }
 .study-recall-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-color-text-muted, #526358);
   margin: 0.45rem 0 0.55rem;
 }
@@ -363,7 +363,7 @@
 }
 .study-guide-actions li::marker {
   color: #1d695e;
-  font-weight: 700;
+  font-weight: 600;
 }
 .study-guide-return {
   width: 100%;
@@ -385,7 +385,7 @@
 .instructor-study-dialog .study-browser-heading p {
   margin: 4px 0 2px;
   color: var(--pf-color-text-muted, #526358);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 .instructor-study-dialog .study-search-row {
@@ -412,13 +412,13 @@
 }
 .instructor-study-dialog .study-results-row p {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 .instructor-study-dialog .study-results-row button {
   min-height: 44px;
   padding-inline: 4px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 .instructor-study-dialog .study-exercise-list {
   scrollbar-gutter: stable;

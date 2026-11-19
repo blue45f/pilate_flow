@@ -69,7 +69,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 750;
   flex-shrink: 0;
   background: rgba(31, 77, 63, 0.1);
@@ -91,12 +91,12 @@
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   word-break: keep-all;
 }
 
 .pf-journey-bar__text small {
-  font-size: 11.5px;
+  font-size: 13px;
   opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;

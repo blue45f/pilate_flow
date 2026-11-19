@@ -11,7 +11,7 @@
   font: inherit;
 }
 .pf-motion-ledger__phases button > span {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 .pf-motion-ledger__phases button > strong {
   font-size: 0.875rem;
@@ -32,7 +32,7 @@
   cursor: pointer;
   color: var(--pf-color-text-brand);
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 .pf-motion-ledger__details summary::marker {
   color: var(--pf-color-action-primary);
@@ -41,7 +41,7 @@
   display: block;
   margin-top: 2px;
   color: var(--pf-color-text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 400;
 }
 .pf-motion-ledger__details[open] summary {

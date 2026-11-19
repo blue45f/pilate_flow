@@ -25,8 +25,8 @@
 
 .hip-leg-diagram-eyebrow {
   display: inline-block;
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #244d44;
   background: #eaf3ef;
   padding: 3px 10px;
@@ -102,8 +102,8 @@
 }
 
 .hip-leg-phase-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #9a502d;
 }
 
@@ -137,8 +137,8 @@
 }
 
 .hip-leg-scrub-readout {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #7c4225;
   font-variant-numeric: tabular-nums;
 }
@@ -182,8 +182,8 @@
 }
 
 .hip-leg-pelvis-callout-title {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #9a502d;
 }
 
@@ -201,7 +201,7 @@
 }
 
 .hip-leg-invariant-chip {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
@@ -229,7 +229,7 @@
 
 .hip-leg-narrative-breath {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #2b6a58;
 }
@@ -251,19 +251,19 @@
 }
 
 .hip-leg-muscle-role {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #9a502d;
 }
 
 .hip-leg-muscle-name {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #1e352e;
 }
 
 .hip-leg-muscle-reason {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #4f665e;
   line-height: 1.35;
 }
@@ -289,7 +289,7 @@
 
 .hip-leg-triptych-caption {
   margin-top: 6px;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #244d44;
   text-align: center;
@@ -303,7 +303,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: #4b4337;
 }
 

@@ -14,9 +14,9 @@
   display: block;
   margin-bottom: 8px;
   color: #586c5c;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
 }
 #root .vnext-workbench .v2-workbench-heading h1 {
   margin: 0;
@@ -175,8 +175,8 @@
   margin-bottom: 12px;
 }
 #root .vnext-workbench .sequence-heading .eyebrow {
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
 }
 #root .vnext-workbench .sequence-heading h2 {
   font-family: 'Noto Serif KR', 'Batang', Georgia, serif;
@@ -233,13 +233,13 @@
   padding: 1px;
   border-radius: 3px;
   background: #f7f5efe8;
-  font-size: 8px;
+  font-size: 13px;
   line-height: 1.4;
   text-align: center;
 }
 #root .vnext-workbench .workbench-movement-mark.is-unavailable > small {
   position: static;
-  font-size: 10px;
+  font-size: 13px;
 }
 #root .vnext-workbench .step-actions .icon-btn,
 #root .vnext-workbench .v3-step-more,
@@ -406,15 +406,15 @@
     margin-bottom: 16px;
   }
   #root .vnext-workbench .vnext-workbench-eyebrow {
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
+    font-size: 0.8125rem;
+    letter-spacing: 0;
     margin-bottom: 5px;
   }
   #root .vnext-workbench .v2-workbench-heading h1 {
     font-size: clamp(1.625rem, 6.7vw, 2rem);
   }
   #root .vnext-workbench .today-label {
-    font-size: 0.6875rem;
+    font-size: 0.8125rem;
     line-height: 1.5;
     max-width: 7em;
     text-align: right;
@@ -452,7 +452,7 @@
     font-size: 1rem;
   }
   #root .vnext-workbench .workbench-reviewed-count {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
   #root .vnext-workbench .workbench-preparation-steps {
     gap: 3px;
@@ -461,7 +461,7 @@
   #root .vnext-workbench .workbench-preparation-steps button {
     gap: 5px;
     padding: 8px 3px;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
   #root .vnext-workbench .workbench-preparation-steps button > span {
     flex-basis: 21px;
@@ -523,7 +523,7 @@
     aspect-ratio: auto;
   }
   .workbench-finder-dialog .ief-card-image > span {
-    font-size: 0.625rem;
+    font-size: 0.8125rem;
   }
   .workbench-finder-dialog .ief-equipment-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -615,7 +615,7 @@
 }
 
 #root .vnext-workbench .workbench-hierarchy-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #586c5c;
   font-weight: 600;
 }
@@ -623,11 +623,11 @@
 #root .vnext-workbench .workbench-hierarchy-value {
   font-size: 0.875rem;
   color: var(--wb-forest, #173d34);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 #root .vnext-workbench .workbench-hierarchy-meta {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: #5f6f61;
 }
 
@@ -651,7 +651,7 @@
   border: 1px solid #ced4c5;
   background: #fffdf8;
   color: var(--wb-forest, #173d34);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.3;
   word-break: keep-all;
@@ -678,7 +678,7 @@
   border-radius: 6px;
   background: #f1eee5;
   color: #4d6253;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   word-break: keep-all;
 }
@@ -698,7 +698,7 @@
   border: 1px solid #ced4c5;
   background: #fffdf8;
   color: var(--wb-forest, #173d34);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   word-break: keep-all;
   cursor: pointer;
@@ -764,7 +764,7 @@
 .pf-curriculum-progression__title,
 .pf-rig-preview__title {
   font-size: var(--pf-text-sm, 0.8125rem);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-color-text-brand, #173d34);
   line-height: 1.4;
 }
@@ -892,7 +892,7 @@
   background: var(--pf-color-bg-surface-elevated, #ffffff);
   color: var(--pf-color-text-primary, #1e3129);
   font-family: var(--pf-font-mono, monospace);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;

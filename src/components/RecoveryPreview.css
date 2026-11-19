@@ -80,7 +80,7 @@
 
 .recovery-file-summary dt {
   color: #53676b;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .recovery-file-summary dd {
@@ -137,7 +137,7 @@
 
   .recovery-preview-layout .recovery-count-scroll table {
     min-width: 380px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .recovery-preview-layout .recovery-count-scroll th:first-child {

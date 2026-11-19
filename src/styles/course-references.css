@@ -67,7 +67,7 @@
   margin: 0;
 }
 .course-filters legend {
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 0.65rem;
 }
 .course-chips {
@@ -149,7 +149,7 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .course-reference-card h3 {
@@ -185,7 +185,7 @@
   flex-wrap: wrap;
 }
 .course-card-tags span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   padding: 0.25rem 0.5rem;
   background: #f4f5f0;
   border-radius: 0.4rem;
@@ -296,6 +296,6 @@
   color: #285b4c;
 }
 .course-publisher-evidence code {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   word-break: break-word;
 }

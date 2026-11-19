@@ -96,7 +96,7 @@ body {
   display: block;
   margin: 0 8px 8px;
   font-size: 0.8125rem;
-  letter-spacing: 0.07em;
+  letter-spacing: 0;
 }
 
 #root .desktop-nav {

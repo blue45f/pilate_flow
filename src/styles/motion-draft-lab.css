@@ -47,7 +47,7 @@
 }
 .mdl-eyebrow {
   font-size: 0.8125rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   color: #6d7a61;
   margin: 0;
 }
@@ -306,7 +306,7 @@
   }
   .mdl-boundary > span {
     padding: 5px 4px;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     text-align: center;
   }
   .mdl-proposals > button {
@@ -390,7 +390,7 @@
   margin-top: 12px;
 }
 .mdl-source-hash {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #64735d;
   overflow-wrap: anywhere;
 }

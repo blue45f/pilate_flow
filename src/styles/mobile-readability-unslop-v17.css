@@ -207,11 +207,53 @@
 
   /* 11. Bottom navigation readability: 12.5px label floor, zero cramped clipping */
   html #root nav.bottom-nav button span {
-    font-size: 0.78125rem !important;
+    font-size: 0.8125rem !important;
     line-height: 1.2 !important;
     letter-spacing: 0 !important;
     white-space: nowrap;
   }
+
+  /* 12. Wave 18 — Full-surface subpages, dialogs & sheets on narrow phones (320px–430px) */
+  html #root dialog[open],
+  html #root [role='dialog'] {
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 14px !important;
+    overflow-x: clip;
+  }
+
+  html #root dialog[open] button,
+  html #root [role='dialog'] button,
+  html #root .atlas-view button,
+  html #root .binder-view button,
+  html #root .schedule-view button,
+  html #root .member-booking-view button {
+    min-height: 44px;
+    word-break: keep-all;
+  }
+
+  html #root .atlas-view .library-card,
+  html #root .binder-view .binder-card,
+  html #root .schedule-view .schedule-card,
+  html #root .member-booking-view .booking-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Unslop nested radius math: 12px card -> 8px controls -> 6px tags */
+  html #root .library-badge,
+  html #root .step-target,
+  html #root .pf-step-kicker-badge,
+  html #root .pf-studio-kicker-pill,
+  html #root .pf-b05-pill {
+    border-radius: 6px !important;
+  }
+}
+
+/* Crisp keyboard & switch focus rings across mobile tablets and desktop */
+html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #2b6f5c;
+  outline-offset: 2px;
 }
 
 @media (max-width: 380px) {

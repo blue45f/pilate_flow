@@ -56,9 +56,9 @@
 }
 .flow-atlas__eyebrow {
   margin-bottom: 9px !important;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--atlas-muted);
 }
 .flow-atlas h1 {
@@ -176,7 +176,7 @@
   height: 20px;
   border-radius: 7px;
   background: var(--atlas-soft);
-  font-size: 11px;
+  font-size: 13px;
 }
 .flow-atlas__browse-row {
   display: flex;
@@ -241,7 +241,7 @@
   gap: 7px;
   min-width: 0;
   color: #52655a;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .flow-atlas__filter-fields select {
@@ -287,7 +287,7 @@
   border: 0;
   background: transparent;
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -312,7 +312,7 @@
   border-radius: 8px;
   background: #f7f9f3;
   color: #536858;
-  font-size: 11px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .flow-atlas__active-filters .flow-atlas__reset {
@@ -339,7 +339,7 @@
 .flow-atlas__results-bar p > span {
   margin-left: 10px;
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-atlas__class-link {
   display: inline-flex;
@@ -465,7 +465,7 @@
   border-radius: 7px;
   background: rgba(246, 250, 241, 0.97);
   color: #315d3b;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 .flow-atlas__card-content {
@@ -479,7 +479,7 @@
   flex-wrap: wrap;
   gap: 7px;
   color: var(--atlas-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .flow-atlas__card-meta > span + span::before {
@@ -528,7 +528,7 @@
   flex-wrap: wrap;
   gap: 8px;
   color: var(--atlas-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .flow-atlas__preview-hint > span:last-child {
@@ -545,7 +545,7 @@
 .flow-atlas__card-note {
   margin: 0 0 12px !important;
   color: #7a6a48;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -596,7 +596,7 @@
 }
 .flow-atlas__more p {
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-atlas__tools-top {
   display: flex;
@@ -698,7 +698,7 @@
   }
   .flow-atlas__class-link {
     padding-inline: 10px;
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

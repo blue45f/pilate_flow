@@ -32,7 +32,7 @@
   margin: 0 0 24px;
 }
 .flow-eyebrow {
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0;
   font-weight: 500;
   color: #5e554a;
@@ -94,7 +94,7 @@
   color: #316d52;
   background: transparent;
   border: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
 }
 .flow-icon-button {
@@ -173,7 +173,7 @@
   flex-direction: column;
   gap: 7px;
   color: #65736e;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
   min-width: 0;
 }
@@ -193,7 +193,7 @@
   box-shadow: none;
 }
 .flow-class-title input {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16px;
 }
 .flow-field input[aria-invalid='true'] {
@@ -240,14 +240,14 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   background: #edf4eb;
   color: #457054;
   flex: none;
 }
 .flow-count {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #5b6b60;
   white-space: nowrap;
@@ -301,7 +301,7 @@
   border-radius: 8px;
   min-height: 44px;
   padding: 8px 11px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #5b6b60;
 }
@@ -316,7 +316,7 @@
   gap: 8px;
   min-height: 44px;
   color: #67786a;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 .flow-checkbox input {
@@ -384,7 +384,7 @@
   color: #253f32;
   font-size: 14px;
   min-height: 44px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -394,7 +394,7 @@
 }
 .flow-pick-card__info > span,
 .flow-pick-card__info > small {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-pick-card__info > small {
@@ -436,7 +436,7 @@
   letter-spacing: -0.02em;
 }
 .flow-time-overview > div:first-child > span {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-time-overview .flow-text-button {
@@ -464,7 +464,7 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-section-legend span {
@@ -492,7 +492,7 @@
   font-weight: 650;
 }
 .flow-time-overview p {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
   margin-top: 12px;
 }
@@ -507,13 +507,13 @@
   padding: 15px 3px 7px;
 }
 .flow-section-heading h3 {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #5e554a;
 }
 .flow-section-heading span {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-sequence-row {
@@ -540,8 +540,8 @@
   cursor: grab;
 }
 .flow-row-number {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #5b6b60;
   text-align: center;
 }
@@ -557,7 +557,7 @@
   gap: 6px;
   flex-wrap: wrap;
   color: #5b6b60;
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 5px;
 }
 .flow-row-meta span {
@@ -573,10 +573,10 @@
   display: block;
   margin-top: 6px;
   color: #80571f;
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-row-note {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
   margin-top: 5px;
   white-space: nowrap;
@@ -593,7 +593,7 @@
   border: 0;
   border-radius: 8px;
   color: #506844;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -631,7 +631,7 @@
   flex-wrap: wrap;
   padding: 12px 18px;
   border-top: 1px solid #e7ece1;
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-plan-footer > span:first-child {
@@ -686,7 +686,7 @@
 }
 .flow-recent-plans > span {
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-recent-plans button {
@@ -709,7 +709,7 @@
   font-weight: 650;
 }
 .flow-recent-plans small {
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .flow-no-results {
@@ -726,12 +726,12 @@
   color: #526a44;
 }
 .flow-no-results p {
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-studio-status {
   min-height: 30px;
   padding: 9px 3px;
-  font-size: 12px;
+  font-size: 13px;
   color: #3d7351;
 }
 .flow-studio-status:empty {
@@ -761,7 +761,7 @@
   font-size: 13px;
 }
 .flow-actionbar small {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
 }
 .flow-actionbar .flow-button {
@@ -771,7 +771,7 @@
   margin: 4px 0 0;
   padding-left: 18px;
   color: #9c523d;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
@@ -794,7 +794,7 @@
   gap: 12px;
 }
 .flow-hint {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
   line-height: 1.7;
 }
@@ -802,7 +802,7 @@
   padding: 13px;
   background: #f1f6eb;
   border-radius: 9px;
-  font-size: 12px;
+  font-size: 13px;
   color: #577246;
 }
 .flow-dialog-actions {
@@ -826,7 +826,7 @@
 }
 .flow-conditions legend {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 .flow-fit-preview {
@@ -914,7 +914,7 @@
     font-size: 25px;
   }
   .flow-studio__heading p:not(.flow-eyebrow) {
-    font-size: 12px;
+    font-size: 13px;
   }
   .flow-heading-actions {
     gap: 6px;
@@ -922,13 +922,13 @@
   .flow-heading-actions > .flow-button {
     min-width: 44px;
     padding: 9px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .flow-heading-actions > .flow-button svg {
     display: none;
   }
   .flow-eyebrow {
-    font-size: 12px;
+    font-size: 13px;
   }
   .flow-class-brief {
     grid-template-columns: 1fr 1fr 1fr;
@@ -964,7 +964,7 @@
     background: transparent;
     color: #5b6b60;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
   }
   .flow-mobile-panes button[aria-pressed='true'] {
     background: #fff;
@@ -972,7 +972,7 @@
     box-shadow: 0 1px 3px #34502310;
   }
   .flow-mobile-panes span {
-    font-size: 12px;
+    font-size: 13px;
     border-radius: 4px;
     background: #eaf2e1;
     padding: 2px 5px;
@@ -1016,7 +1016,7 @@
     min-width: 0;
   }
   .flow-actionbar strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .flow-actionbar small {
     display: none;
@@ -1024,7 +1024,7 @@
   .flow-actionbar .flow-button {
     min-width: 0;
     padding: 10px 12px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .flow-actionbar .flow-button svg {
     width: 15px;
@@ -1033,7 +1033,7 @@
     display: none;
   }
   .flow-studio-status {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 @media (max-width: 390px) {
@@ -1099,7 +1099,7 @@
 }
 .flow-insertion-control > label {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
   color: #526152;
 }
@@ -1113,12 +1113,12 @@
   background: #fffefb;
   color: #324936;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-insertion-error {
   margin: 6px 0 12px;
   color: #8b442e;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .flow-added-receipt {
@@ -1132,7 +1132,7 @@
   border-radius: 10px;
   background: #edf3e8;
   color: #31543b;
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-added-receipt > span {
   display: flex;
@@ -1200,7 +1200,7 @@
 }
 .flow-conflict-banner p {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: #5f422b;
   line-height: 1.5;
 }
@@ -1220,7 +1220,7 @@
 }
 .flow-next-class-card__info strong {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: #193c33;
 }
 .flow-next-class-badge,
@@ -1230,7 +1230,7 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   background: #f3efe7;
   border: 1px solid rgba(31, 27, 22, 0.12);
@@ -1242,13 +1242,13 @@
 }
 .flow-next-class-warning {
   flex-basis: 100%;
-  font-size: 12px;
+  font-size: 13px;
   color: #8b442e;
 }
 .flow-location-copy-bar {
   padding: 10px 16px;
   background: #f6f4ed;
-  font-size: 12.5px;
+  font-size: 13px;
   color: #385143;
 }
 .flow-location-copy-bar > span {
@@ -1281,8 +1281,8 @@
   border-radius: 9px;
   background: #f4f8f4;
   color: #1f4435;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .flow-section-copy-btn {
@@ -1296,7 +1296,7 @@
   border-radius: 8px;
   background: #fff;
   color: #2f5443;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .flow-row-spring-pill.is-unknown,
@@ -1318,12 +1318,12 @@
 }
 .flow-row-incompatible-bar small {
   color: #8a3f28;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
 }
 .flow-time-budget-formula {
   margin: 4px 0 6px;
-  font-size: 12px;
+  font-size: 13px;
   color: #4c6154;
   font-variant-numeric: tabular-nums;
 }
@@ -1357,14 +1357,14 @@
   background: #f6f4ed;
 }
 .flow-fit-impossible__stats dt {
-  font-size: 12px;
+  font-size: 13px;
   color: #5b6b60;
   margin-bottom: 4px;
 }
 .flow-fit-impossible__stats dd {
   margin: 0;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: #193c33;
   font-variant-numeric: tabular-nums;
 }
@@ -1391,7 +1391,7 @@
   align-items: center;
   min-height: 36px;
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: #4c6154;
   padding: 2px 0;

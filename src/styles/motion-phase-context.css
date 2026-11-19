@@ -18,7 +18,7 @@
 }
 .motion-phase-context .mpc-heading > span {
   color: #52634f;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 .motion-phase-context :is(.mpc-pose, .mpc-contact, .mpc-support, .mpc-stale) {
   margin: 6px 0;

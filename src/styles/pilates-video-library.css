@@ -17,10 +17,10 @@
 }
 .pvl-eyebrow {
   display: block;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 13px;
+  letter-spacing: 0;
   color: #846d52;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 .pvl-heading h2 {
@@ -42,7 +42,7 @@
   padding: 12px 16px;
   background: #e9eee6;
   border-radius: 14px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .pvl-filters {
@@ -82,7 +82,7 @@
 .pvl-region {
   display: grid;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--pvl-muted);
 }
 .pvl-region select {
@@ -110,7 +110,7 @@
   color: #4c6454;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 .pvl-apparatus button[aria-pressed='true'] {
   background: var(--pvl-ink);
@@ -123,7 +123,7 @@
   align-items: center;
   gap: 10px;
   margin: 14px 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 .pvl-result-bar p {
   margin: 0;
@@ -199,7 +199,7 @@
   color: white;
   background: #1d3b35d9;
   padding: 4px 7px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .pvl-card-copy {
   padding: 14px;
@@ -207,8 +207,8 @@
 .pvl-card-equipment {
   margin: 0 0 6px;
   color: #846d52;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 .pvl-card-copy h3 {
   margin: 0;
@@ -218,7 +218,7 @@
 }
 .pvl-author {
   color: var(--pvl-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 8px 0;
 }
@@ -237,7 +237,7 @@
   min-height: 36px;
   color: #315f4d;
   text-decoration: none;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 650;
 }
 .pvl-card-links a:hover,
@@ -247,7 +247,7 @@
 .pvl-check {
   display: block;
   color: #788277;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.5;
   margin-top: 5px;
 }
@@ -277,11 +277,11 @@
 }
 .pvl-player-top span {
   color: var(--pvl-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .pvl-player-top button {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 .pvl-player iframe {
   display: block;
@@ -294,7 +294,7 @@
   padding: 8px 16px;
 }
 .pvl-player-links small {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--pvl-muted);
 }
 .pvl-empty {
@@ -331,7 +331,7 @@
 }
 .pvl-more p,
 .pvl-source-note {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--pvl-muted);
   line-height: 1.7;
 }
@@ -351,7 +351,7 @@
   }
   .pvl-total {
     padding: 10px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .pvl-total svg {
     display: none;
@@ -366,7 +366,7 @@
     gap: 12px;
   }
   .pvl-heading p {
-    font-size: 12px;
+    font-size: 13px;
   }
   .pvl-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -376,7 +376,7 @@
     padding: 10px;
   }
   .pvl-card-copy h3 {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 @media (max-width: 370px) {

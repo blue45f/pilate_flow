@@ -22,7 +22,7 @@
   gap: 5px;
 }
 .cloud-backup-status {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--sage-dark, #49635a);
 }
 .cloud-actions {
@@ -36,7 +36,7 @@
 }
 .cloud-delete > .text-button {
   color: #9b5147;
-  font-size: 12px;
+  font-size: 13px;
 }
 @media (max-width: 480px) {
   .cloud-account {
