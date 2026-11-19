@@ -1,4 +1,5 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
@@ -689,6 +690,7 @@ const LocalInstructorReview: React.FC<{
     onDraftStatusChange({ baseRevision: exerciseRevision(edited), dirty: false });
     setAllConditionsReviewed(false);
   };
+  const { scheduleRaf } = useManagedRaf();
   const missingNote = !draft.cues.some((cue) => cue.trim())
     ? {
         field: 'cues',
@@ -716,7 +718,7 @@ const LocalInstructorReview: React.FC<{
   const focusMissingNote = () => {
     if (!missingNote) return;
     onEditorOpenChange(true);
-    requestAnimationFrame(() =>
+    scheduleRaf(() =>
       editorRef.current
         ?.querySelector<HTMLTextAreaElement>(`[data-review-field="${missingNote.field}"]`)
         ?.focus(),
@@ -869,6 +871,7 @@ const MovementDetails: React.FC<{
   const [reviewerAlias, setReviewerAlias] = useState('');
   const [reviewEditorOpen, setReviewEditorOpen] = useState<boolean>(() => restoredDraft !== null);
   const [additionError, setAdditionError] = useState('');
+  const { scheduleRaf } = useManagedRaf();
   const step1Ref = useRef<HTMLDivElement>(null);
   const step2Ref = useRef<HTMLDetailsElement>(null);
   const unsavedDescriptionId = React.useId();
@@ -883,7 +886,7 @@ const MovementDetails: React.FC<{
       }
       setReviewEditorOpen(true);
     }
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (nextStep === 1) {
         step1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
       } else {
@@ -1329,6 +1332,7 @@ const MovementDetailDialog: React.FC<
     return restored ? { baseRevision: exerciseRevision(currentExercise), dirty: true } : null;
   });
   const [dismissalRevision, setDismissalRevision] = useState<string | null>(null);
+  const { scheduleRaf } = useManagedRaf();
   const contentRef = useRef<HTMLDivElement>(null);
   const decisionRef = useRef<HTMLDivElement>(null);
   const lastReviewInput = useRef<HTMLElement | null>(null);
@@ -1342,7 +1346,7 @@ const MovementDetailDialog: React.FC<
   const focusReview = (save: boolean) => {
     setDismissalRevision(null);
     deferredClose.current = null;
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const saveButton = contentRef.current?.querySelector<HTMLElement>(
         '[data-review-action="save-memo"]',
       );
@@ -1358,7 +1362,7 @@ const MovementDetailDialog: React.FC<
     if (!hasUnsavedReview) return true;
     deferredClose.current = request.close;
     setDismissalRevision(currentRevision);
-    requestAnimationFrame(() => decisionRef.current?.focus());
+    scheduleRaf(() => decisionRef.current?.focus());
     return false;
   };
   return (

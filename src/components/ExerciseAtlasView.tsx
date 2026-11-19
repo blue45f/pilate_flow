@@ -1,4 +1,6 @@
 import { EquipmentChoice } from './EquipmentChoice';
+import { useManagedRaf } from '../hooks/useManagedRaf';
+import { isImeComposing } from '../utils/imeGuard';
 import { MobileSubPageBar } from './MobileSubPageBar';
 import type { MotionDraftId } from '../models/types';
 import {
@@ -1598,7 +1600,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           aria-label="추가 검색 조건"
           hidden={!filtersOpen}
           onKeyDown={(event) => {
-            if (event.key !== 'Escape') return;
+            if (isImeComposing(event) || event.key !== 'Escape') return;
             event.preventDefault();
             event.stopPropagation();
             closeFilters();
@@ -1942,6 +1944,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     reformerBrand,
     setReformerBrand,
   } = usePilatesStore();
+  const { scheduleRaf } = useManagedRaf();
   const [showAdvancedTools, setShowAdvancedTools] = useState(initialView === 'tools');
   const [collection, setCollection] = useState<
     'notes' | 'repertoire' | 'videos' | 'references' | 'courses'
@@ -2007,14 +2010,14 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const inspectExercise = (exercise: PilatesExercise, trigger: HTMLButtonElement) => {
     inspectorTrigger.current = trigger;
     setInspectedExerciseId(exercise.id);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       inspectorHeading.current?.focus({ preventScroll: true });
       inspectorHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
     });
   };
   const closeInspector = () => {
     setInspectedExerciseId(null);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const trigger = inspectorTrigger.current;
       if (trigger?.isConnected) trigger.focus();
       else searchInput.current?.focus();
@@ -2024,7 +2027,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const cardGridRef = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const previewTrigger = useRef<HTMLButtonElement | null>(null);
-  const focusSearch = () => requestAnimationFrame(() => searchInput.current?.focus());
+  const focusSearch = () => scheduleRaf(() => searchInput.current?.focus());
   const resetFilters = () => {
     setFilters({ ...INITIAL_FILTERS });
     focusSearch();
@@ -2036,7 +2039,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const closePatternPreview = () => {
     setPreviewReference(null);
     setPreviewCatalogMotionId(null);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const trigger = previewTrigger.current;
       if (trigger?.isConnected && !trigger.closest('details:not([open])')) {
         trigger.focus({ preventScroll: true });
@@ -2157,7 +2160,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         limitNotice: null,
       };
     });
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (remainingCount > 0 && compareExpandBtnRef.current?.isConnected) {
         compareExpandBtnRef.current.focus();
       } else if (lastCompareTriggerRef.current?.isConnected) {
@@ -2170,7 +2173,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
 
   const clearComparedExercises = () => {
     setCompareState({ ids: [], expanded: false, limitNotice: null });
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (lastCompareTriggerRef.current?.isConnected) {
         lastCompareTriggerRef.current.focus();
       } else {
@@ -2181,7 +2184,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
 
   const collapseComparePanel = () => {
     setCompareState((previous) => ({ ...previous, expanded: false, limitNotice: null }));
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (compareExpandBtnRef.current?.isConnected) {
         compareExpandBtnRef.current.focus();
       } else {
@@ -2194,7 +2197,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     previewTrigger.current = trigger;
     setPreviewCatalogMotionId(null);
     setPreviewReference(reference);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       previewHeading.current?.focus();
       previewHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
     });
@@ -2203,7 +2206,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     previewTrigger.current = trigger;
     setPreviewReference(null);
     setPreviewCatalogMotionId(exerciseId);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       previewHeading.current?.focus();
       previewHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
     });
@@ -2311,7 +2314,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             setShowFilters(true);
           }
           setShowAdvancedTools(true);
-          requestAnimationFrame(() => document.getElementById('workspace-main-heading')?.focus());
+          scheduleRaf(() => document.getElementById('workspace-main-heading')?.focus());
         }}
         onReturnToClass={() => setActiveTab('workbench')}
         onOpenDetails={(exercise) => {
@@ -2331,7 +2334,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         onLoadMore={() => {
           const firstNewIndex = notesVisibleCount;
           setNotesVisible({ signature: notesSignature, limit: notesVisibleCount + 12 });
-          requestAnimationFrame(() => {
+          scheduleRaf(() => {
             const firstNewCard = cardGridRef.current
               ?.querySelectorAll<HTMLElement>('.flow-atlas__card')
               .item(firstNewIndex);
@@ -2411,6 +2414,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         role="tablist"
         aria-label="자료 모음"
         onKeyDown={(event) => {
+          if (isImeComposing(event)) return;
           if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
             event.preventDefault();
             const collections = ['notes', 'repertoire', 'videos', 'references', 'courses'] as const;
@@ -2926,6 +2930,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   aria-label="선택 동작 비교"
                   data-testid="atlas-compare-region"
                   onKeyDown={(event) => {
+                    if (isImeComposing(event)) return;
                     if (event.key === 'Escape' && compareState.expanded) {
                       event.preventDefault();
                       event.stopPropagation();
@@ -3662,7 +3667,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         signature: notesSignature,
                         limit: notesVisibleCount + 12,
                       });
-                      requestAnimationFrame(() => {
+                      scheduleRaf(() => {
                         const cards =
                           cardGridRef.current?.querySelectorAll<HTMLElement>('.movement-card');
                         const nextCardButton =
@@ -3756,7 +3761,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   const summary = event.currentTarget.querySelector('summary');
                   setPreviewReference(null);
                   setPreviewCatalogMotionId(null);
-                  requestAnimationFrame(() => {
+                  scheduleRaf(() => {
                     if (summary?.isConnected) summary.focus({ preventScroll: true });
                   });
                 }

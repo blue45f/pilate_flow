@@ -1,4 +1,5 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { EquipmentChoice } from './EquipmentChoice';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -316,6 +317,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     loadDatedSequencePlanAsDraft,
     replaceDatedSequencePlanSnapshot,
   } = usePilatesStore();
+  const { scheduleRaf } = useManagedRaf();
   const browseDefaults = useMemo<ScheduleBrowseState>(
     () => ({
       selectedDate: today,
@@ -710,7 +712,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   };
   const closeChangeScope = () => {
     setChangeTarget(null);
-    requestAnimationFrame(restoreChangeFocus);
+    scheduleRaf(restoreChangeFocus);
   };
   const openChangeScope = (
     row: InstructorScheduleOccurrence,
@@ -723,7 +725,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       classFingerprint: JSON.stringify(base),
       selectionId: ++changeSelectionRef.current,
     });
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       changeHeadingRef.current?.focus({ preventScroll: true });
       const panel = changeHeadingRef.current?.closest('aside');
       panel?.scrollIntoView?.({
@@ -737,7 +739,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     if (!changeTarget || changeTargetStale || !currentChangeClass || !currentChangeRow) return;
     const target = changeTarget;
     setChangeTarget(null);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       restoreChangeFocus();
       const latest = usePilatesStore.getState().instructorSchedule;
       const base = latest.classes.find((item) => item.id === target.row.classId);

@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useRef, useState, type RefObject } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
@@ -232,7 +233,7 @@ export function FlowAtlasCatalog({
           aria-label="추가 검색 조건"
           hidden={!filtersOpen}
           onKeyDown={(event) => {
-            if (event.key !== 'Escape') return;
+            if (isImeComposing(event) || event.key !== 'Escape') return;
             event.preventDefault();
             event.stopPropagation();
             closeFilters();

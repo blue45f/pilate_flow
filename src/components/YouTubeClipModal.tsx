@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { CheckCircle2, FileText, Info, ListPlus, Plus, Youtube } from 'lucide-react';
 import { CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getEquipmentFamily } from '../data/equipmentCatalog';
@@ -303,6 +304,7 @@ function readClipperDraft(): ClipperWorkingDraft | null {
 }
 
 export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, onClose }) => {
+  const { scheduleRaf } = useManagedRaf();
   const addCustomExercise = usePilatesStore((state) => state.addCustomExercise);
   const addBatchExercisesFromClips = usePilatesStore((state) => state.addBatchExercisesFromClips);
   const [initialDraft] = useState(() => readClipperDraft());
@@ -421,7 +423,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
 
   const navigateClipperStep = (nextStep: 1 | 2 | 3) => {
     setClipperStep(nextStep);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (nextStep === 1) {
         step1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
       } else if (nextStep === 2) {

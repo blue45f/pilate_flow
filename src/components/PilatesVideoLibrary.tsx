@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { isImeComposing } from '../utils/imeGuard';
 import { ExternalLink, Film, Play, Search, X } from 'lucide-react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { VERIFIED_YOUTUBE_VIDEO_POOL } from '../data/exerciseYouTubeCatalog';
@@ -160,6 +161,7 @@ export function PilatesVideoLibrary() {
           tabIndex={-1}
           aria-label={`${active.title} 영상 플레이어`}
           onKeyDown={(event) => {
+            if (isImeComposing(event)) return;
             if (event.key === 'Escape') {
               event.stopPropagation();
               closePlayer();

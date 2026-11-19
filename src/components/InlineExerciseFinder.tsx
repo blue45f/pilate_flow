@@ -1,4 +1,5 @@
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
+import { useManagedRaf } from '../hooks/useManagedRaf';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
@@ -207,6 +208,7 @@ export function InlineExerciseFinder({
   insertionPlacement: controlledInsertionPlacement,
   onInsertionPlacementChange,
 }: InlineExerciseFinderProps) {
+  const { scheduleRaf } = useManagedRaf();
   const exercises = usePilatesStore((state) => state.exercises);
   const ownedEquipment = usePilatesStore((state) => state.ownedEquipment);
   const ownedProps = usePilatesStore((state) => state.ownedProps);
@@ -316,7 +318,7 @@ export function InlineExerciseFinder({
   };
   const clearQueryOnly = () => {
     update('query', '');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       searchInputRef.current?.focus();
     });
   };
@@ -499,7 +501,7 @@ export function InlineExerciseFinder({
   const handleRemoveChip = (index: number, removeAction: () => void) => {
     const remainingCount = activeFilterChips.length - 1;
     removeAction();
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (remainingCount <= 0) {
         searchInputRef.current?.focus();
         return;
@@ -537,7 +539,7 @@ export function InlineExerciseFinder({
     if (targetIndex >= visibleCount) {
       setPage({ signature, count: Math.ceil((targetIndex + 1) / 6) * 6 });
     }
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const targetBtn = resultsRef.current?.querySelector<HTMLButtonElement>(
         `[data-ief-exercise-title="${exerciseId}"]`,
       );
@@ -560,7 +562,7 @@ export function InlineExerciseFinder({
       jumpToExerciseCard(targetExerciseId);
       return;
     }
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       searchInputRef.current?.focus();
     });
   };
@@ -578,7 +580,7 @@ export function InlineExerciseFinder({
     setFeedback({ success: result.success, message: result.message });
     if (result.success) {
       if (result.stepId) setInsertionPlacement({ kind: 'step', stepId: result.stepId });
-      requestAnimationFrame(() => {
+      scheduleRaf(() => {
         if (source === 'preview') {
           previewCloseBtnRef.current?.focus();
           return;

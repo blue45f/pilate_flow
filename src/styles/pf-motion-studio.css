@@ -1441,3 +1441,11 @@ html body #root .flow-app .pf-balance-bar-fill {
     transform: none !important;
   }
 }
+
+/* Wave 12: Korean typography discipline for motion studio cards and controls */
+.pf-motion-studio-card h2,
+.pf-motion-studio-card h3,
+.pf-motion-studio-card button,
+.pf-motion-studio-card .pf-motion-label {
+  word-break: keep-all;
+}
