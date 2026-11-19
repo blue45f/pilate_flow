@@ -289,3 +289,42 @@ html #root :is(button, a, input, select, textarea, [tabindex]):focus-visible {
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   Wave 18 — Atlas, Booking & Dialog Small-Mobile Readability Polish
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* Native dialogs fill small viewports cleanly with zero horizontal overflow */
+  html #root dialog[open] {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    margin: auto !important;
+    border-radius: 14px !important;
+  }
+
+  /* 158-exercise Atlas & Video Library single-column readable cards */
+  html #root .atlas-card-grid,
+  html #root .library-card-grid,
+  html #root .video-library-grid,
+  html #root .member-booking-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  html #root .atlas-card-title,
+  html #root .library-card-title,
+  html #root .booking-slot-title {
+    font-size: 0.96875rem !important;
+    line-height: 1.38 !important;
+    font-weight: 600 !important;
+    word-break: keep-all;
+  }
+
+  html #root .booking-slot-time,
+  html #root .booking-capacity-badge,
+  html #root .schedule-time-label {
+    font-size: 0.875rem !important;
+    font-variant-numeric: tabular-nums;
+  }
+}
