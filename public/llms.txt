@@ -5,7 +5,7 @@
 ## Core Views
 
 - [수업 만들기 (Sequence Studio Workbench)](/): 리포머·캐딜락·체어·바렐·매트 동작 탐색, 구간별 시간 배분, 자동 시간 맞춤 및 로컬 저장/백업.
-- [실시간 3D 기구·관절 모델러](/models/pilates-studio/LICENSE.txt): 스튜디오 PBR·해부학 X-Ray·클레이 와이어 셰이더, 듀얼 정렬 비교, 관절 각도·CoM 오버레이, Blender 5.2 스크립트(.py) 및 Meshopt 검증 .glb 에셋.
+- [실시간 3D 기구·관절 모델러](/models/pilates-studio/LICENSE.txt): 스튜디오 PBR·해부학 X-Ray·클레이 와이어 셰이더, 듀얼 정렬 비교, 관절 각도·CoM 오버레이, Blender 모델링 스크립트와 Blender 5.3으로 제작한 GLBForge 검증 모델.
 
 ## Optional
 
