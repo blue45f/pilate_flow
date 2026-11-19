@@ -1,4 +1,5 @@
 import { StudioMotionImage } from './StudioMotionImage';
+import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import {
@@ -367,6 +368,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   onOpenLogModal,
   view = 'saved',
 }) => {
+  const { scheduleTimeout } = useManagedTimeouts();
   const { scheduleRaf } = useManagedRaf();
   const prefersReduced = useReducedMotion();
   const storeState = usePilatesStore();
@@ -877,7 +879,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       loadSequenceIntoWorkbench(sequenceId);
       if (mode === 'stage') setActiveTab('stage');
     } finally {
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         loadingSequenceRef.current = false;
       }, 0);
     }
@@ -918,7 +920,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     link.href = url;
     link.download = filename;
     link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    scheduleTimeout(() => URL.revokeObjectURL(url), 1000);
     setMessage(bannerMsg);
   };
   const exportText = (sequence: SavedSequence) =>
@@ -990,7 +992,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         );
       }
     } finally {
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         duplicatingRef.current = false;
       }, 0);
     }
@@ -1165,7 +1167,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setPrintSequence(null);
     if (trigger?.isConnected) {
       trigger.focus();
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         if (trigger.isConnected) trigger.focus();
       }, 0);
     }
@@ -1186,7 +1188,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setReopenedHistoryId(null);
     if (trigger?.isConnected) {
       trigger.focus();
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         if (trigger.isConnected) trigger.focus();
       }, 0);
     }

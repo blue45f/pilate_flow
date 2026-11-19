@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { Check, Copy, Download, Printer, QrCode, ShieldCheck, Upload } from 'lucide-react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { PfBadge, PfButton } from '../design-system';
@@ -45,6 +46,7 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
   steps,
   exercises,
 }) => {
+  const { scheduleTimeout } = useManagedTimeouts();
   const [includeInstructorNotes, setIncludeInstructorNotes] = useState(false);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
@@ -211,7 +213,7 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
               anchor.href = url;
               anchor.download = `${(title || 'pilates-sequence').replace(/[\\/:*?"<>|]/g, '-')}-qr.svg`;
               anchor.click();
-              window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+              scheduleTimeout(() => URL.revokeObjectURL(url), 1000);
             }}
           >
             <Download size={15} aria-hidden="true" /> QR SVG 저장

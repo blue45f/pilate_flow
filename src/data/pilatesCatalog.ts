@@ -487,42 +487,42 @@ export const INITIAL_HISTORY_LOGS: ClassHistoryLog[] = [
 export const CURATED_SEQUENCE_PROGRAMS: CuratedSequenceProgram[] = [
   {
     id: "prog-kr-reformer-50", titleKo: "🇰🇷 [국내 정석] 리포머+미니볼 50분 전신 밸런스 & 힙업 그룹 시퀀스", subtitleKo: "정혜선 원장 & 지영쌤 레퍼런스 기반 · 풋워크부터 스쿠터·런지·핏인스트랩까지 스프링 전환을 최소화한 50분 시그니처", durationMinutes: 50, requiredApparatus: ["reformer"],
-    recommendedProps: ["mini-ball"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/reformer-flow.jpg",
+    recommendedProps: ["mini-ball"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/atelier-v2/reformer-studio-3d.png",
     youtubeId: "9h__STRp5dA", youtubeChannel: "정혜선", focusPreset: "full-body", highlights: ["2R 1B → 1R 황금 동선","내전근·중둔근 집중 연결","4방향 척추 움직임 완비"],
   },
   {
     id: "prog-kr-cadillac-50", titleKo: "🇰🇷 [국내 인기] 캐딜락 푸쉬스루바 & 레그스프링 50분 코어·척추 교정", subtitleKo: "단필라 & 서아앤헤이즐 레퍼런스 · 롤다운 바 분절부터 푸쉬스루 티저, 레그스프링 프로그까지 알찬 50분 캐딜락 루틴", durationMinutes: 50, requiredApparatus: ["cadillac"],
-    recommendedProps: ["foam-roller"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/cadillac-chair.jpg",
+    recommendedProps: ["foam-roller"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/atelier-v2/cadillac-studio-3d.png",
     youtubeId: "E_K5eAr-D5M", youtubeChannel: "단필라", focusPreset: "posture-upper", highlights: ["캐딜락 단독 50분 완성","라운드숄더·흉추 가동성 극대화","상·하단 스프링 동선 최적화"],
   },
   {
     id: "prog-kr-combo-chair-barrel-50", titleKo: "🇰🇷 [콤비 시퀀스] 체어 & 래더 바렐 + 미니볼 50분 코어·옆구리 스컬프", subtitleKo: "혀니쌤 & Today Sequence 레퍼런스 · 바렐 사이드 밴드/스완과 운다 체어 페달 플랭크·파이크를 결합한 탄탄한 50분 수업", durationMinutes: 50, requiredApparatus: ["chair","barrel"],
-    recommendedProps: ["mini-ball"], level: "2.0", tempo: "athletic-burn", region: "kr", coverImage: "/images/cadillac-chair.jpg",
+    recommendedProps: ["mini-ball"], level: "2.0", tempo: "athletic-burn", region: "kr", coverImage: "/images/atelier-v2/cadillac-studio-3d.png",
     youtubeId: "l3WQl2L__qQ", youtubeChannel: "혀니쌤 플라잉요가&필라테스", focusPreset: "core-sculpt", highlights: ["체어+바렐 2기구 콤비","복부·외복사근·둔근 고강도 자극","지루할 틈 없는 전환 구성"],
   },
   {
     id: "prog-kr-reformer-30", titleKo: "🇰🇷 [30분 익스프레스] 유진쌤 리포머 상·하체 통합 쉼 없는 30분 플로우", subtitleKo: "런치타임 30분 수업이나 1:1 인트로 세션에 최적화된 무휴식 자연스러운 코어·하체 빌드업 프로그램", durationMinutes: 30, requiredApparatus: ["reformer"],
-    recommendedProps: ["none"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/hero-studio.jpg",
+    recommendedProps: ["none"], level: "1.5", tempo: "moderate-flow", region: "kr", coverImage: "/images/atelier-studio.webp",
     youtubeId: "IKIjw-5-AmI", youtubeChannel: "유진쌤 움직임 회복 필라테스", focusPreset: "full-body", highlights: ["30분 6블록 압축 구성","스프링 변경 최소(2회)","상·하체 코어 협응력 강화"],
   },
   {
     id: "prog-global-reformer-45", titleKo: "🌏 [해외 부티크 45분] Dez Fit 리포머+써클링 45분 인터미디어트 번", subtitleKo: "미국 부티크 스튜디오 스타일의 45분 타이트 클래스 · 매직써클 브릿지와 롱스트레치 변형으로 칼로리 소모 극대화", durationMinutes: 45, requiredApparatus: ["reformer"],
-    recommendedProps: ["magic-circle"], level: "2.0", tempo: "athletic-burn", region: "global", coverImage: "/images/reformer-flow.jpg",
+    recommendedProps: ["magic-circle"], level: "2.0", tempo: "athletic-burn", region: "global", coverImage: "/images/atelier-v2/reformer-studio-3d.png",
     youtubeId: "XMHUw3EhBlI", youtubeChannel: "Dez Fit", focusPreset: "glute-lower", highlights: ["45분 9블록 애슬레틱 템포","써클링 내전근·둔근 펄스","해외 모던 리포머 스타일"],
   },
   {
     id: "prog-global-core-15", titleKo: "🌏 [15분 부위 집중] Flow with Mira 코르셋 딥코어 & 척추 분절 15분", subtitleKo: "BASI 패컬티 Mira의 15분 단기 집중 루틴 · 대기구 수업 전 15분 웜업이나 홈트/매트 소그룹 코어 특강용", durationMinutes: 15, requiredApparatus: ["mat"],
-    recommendedProps: ["mini-ball","foam-roller"], level: "1.0", tempo: "slow-precise", region: "global", coverImage: "/images/mat-props.jpg",
+    recommendedProps: ["mini-ball","foam-roller"], level: "1.0", tempo: "slow-precise", region: "global", coverImage: "/images/atelier-ring-still-life.png",
     youtubeId: "1WDNTwAUjIw", youtubeChannel: "Flow with Mira", focusPreset: "core-sculpt", highlights: ["15분 4블록 초집중 코어","소도구/매트만으로 즉시 진행","초보자·재활 회원님 안전 적용"],
   },
   {
     id: "prog-kr-arms-20", titleKo: "🇰🇷 [20분 상체·웨딩케어] 리포머 스트랩 팔뚝 슬리밍 & 쇄골 라인 20분", subtitleKo: "혀니쌤 상체 시퀀스 기반 · 예비 신부 1:1 레슨이나 하체 운동 후 20분 상체 집중 루틴으로 결합하기 좋은 프로그램", durationMinutes: 20, requiredApparatus: ["reformer"],
-    recommendedProps: ["theraband"], level: "1.0", tempo: "moderate-flow", region: "kr", coverImage: "/images/hero-studio.jpg",
+    recommendedProps: ["theraband"], level: "1.0", tempo: "moderate-flow", region: "kr", coverImage: "/images/atelier-studio.webp",
     youtubeId: "wNRfJ45tDDo", youtubeChannel: "혀니쌤 플라잉요가&필라테스", focusPreset: "posture-upper", highlights: ["20분 5블록 상체·흉추 특화","승모근 개입 없는 삼두·광배 자극","웨딩/체형교정 맞춤"],
   },
   {
     id: "prog-global-master-60", titleKo: "🌏 [60분 마스터 클래스] 리포머+캐딜락+체어 원장 직강 60분 풀 시퀀스", subtitleKo: "Dez Fit & 필라디션 레퍼런스 · 60분 프라이빗 VIP 레슨 또는 강사 워크숍을 위한 대기구 총망라 풀 시퀀스", durationMinutes: 60, requiredApparatus: ["reformer","cadillac","chair"],
-    recommendedProps: ["mini-ball","magic-circle","foam-roller"], level: "2.0", tempo: "athletic-burn", region: "global", coverImage: "/images/cadillac-chair.jpg",
+    recommendedProps: ["mini-ball","magic-circle","foam-roller"], level: "2.0", tempo: "athletic-burn", region: "global", coverImage: "/images/atelier-v2/cadillac-studio-3d.png",
     youtubeId: "bTsHgSk0Hik", youtubeChannel: "Dez Fit", focusPreset: "full-body", highlights: ["60분 10블록 확장 마스터 루틴","리포머·캐딜락·체어 3기구 순환","VIP 1:1 및 심화반 추천"],
   },
 ];

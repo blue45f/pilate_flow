@@ -1346,6 +1346,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
       keyboardActionRef.current(event);
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -1,4 +1,5 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { useManagedRaf } from '../hooks/useManagedRaf';
 import { EquipmentChoice } from './EquipmentChoice';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -294,6 +295,7 @@ const exceptionLabel = (item: InstructorScheduleException) =>
 export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   today = localScheduleDate(),
 }) => {
+  const { scheduleTimeout } = useManagedTimeouts();
   const prefersReduced = useReducedMotion();
   const {
     instructorSchedule: data,
@@ -795,7 +797,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       }
     } finally {
       if (saved) {
-        window.setTimeout(() => {
+        scheduleTimeout(() => {
           savingScheduleRef.current = false;
         }, 0);
       } else {
@@ -891,7 +893,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       }
     } finally {
       if (saved) {
-        window.setTimeout(() => {
+        scheduleTimeout(() => {
           savingScheduleRef.current = false;
         }, 0);
       } else {
@@ -922,7 +924,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       }
     } finally {
       if (saved) {
-        window.setTimeout(() => {
+        scheduleTimeout(() => {
           savingScheduleRef.current = false;
         }, 0);
       } else {

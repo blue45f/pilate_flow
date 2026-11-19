@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { Check, Copy, Sparkles } from 'lucide-react';
 import type { StudioCareBriefing } from '../utils/studioCarePlaybookEngine';
 
@@ -14,6 +15,7 @@ export const StudioCarePlaybookPanel: React.FC<StudioCarePlaybookPanelProps> = (
   briefing,
   onJumpToOccurrencePrep,
 }) => {
+  const { scheduleTimeout } = useManagedTimeouts();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export const StudioCarePlaybookPanel: React.FC<StudioCarePlaybookPanelProps> = (
     try {
       await navigator.clipboard?.writeText(text);
       setCopiedId(id);
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         setCopiedId((current) => (current === id ? null : current));
       }, 2200);
     } catch {
