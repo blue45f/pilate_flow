@@ -433,7 +433,7 @@ export function ShoulderSupportTriptychDiagram({
                   border: '1px solid #244d44',
                   background: isSelected ? '#244d44' : '#ffffff',
                   color: isSelected ? '#ffffff' : '#244d44',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   fontSize: '0.8rem',
                   textAlign: 'left',
                   cursor: 'pointer',

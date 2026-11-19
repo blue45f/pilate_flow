@@ -341,7 +341,7 @@ export function LateralAndApparatusDiagramFigure({
               style={{
                 display: 'inline-block',
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 600,
                 padding: '2px 8px',
                 borderRadius: 999,
                 background: '#dcfce7',
@@ -576,7 +576,7 @@ export function LateralAndApparatusDiagramFigure({
           color: '#334155',
         }}
       >
-        <p style={{ margin: '0 0 6px', fontWeight: 700 }}>
+        <p style={{ margin: '0 0 6px', fontWeight: 600 }}>
           출처 검증 요약 및 비의료·비검증 고지 (anatomicalAccuracyAssumed:{' '}
           {String(LATERAL_AND_APPARATUS_SOURCE_LEDGER.anatomicalAccuracyAssumed)} ·
           professionalReviewCount: {LATERAL_AND_APPARATUS_SOURCE_LEDGER.professionalReviewCount} ·

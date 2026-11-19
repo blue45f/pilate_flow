@@ -963,7 +963,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
                   role="status"
                   aria-live="polite"
                   data-testid="special-preset-applied-status"
-                  style={{ margin: 0, background: '#e5f2ec', color: '#164438', fontWeight: 700 }}
+                  style={{ margin: 0, background: '#e5f2ec', color: '#164438', fontWeight: 600 }}
                 >
                   {appliedSpecialStatus}
                 </p>

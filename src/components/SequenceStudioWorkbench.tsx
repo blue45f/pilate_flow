@@ -2551,7 +2551,7 @@ export function SequenceStudioWorkbench(props: Props) {
                     };
                     const inner = (
                       <>
-                        <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
+                        <small style={{ fontSize: '0.8125rem', opacity: 0.8 }}>
                           {String(index + 1).padStart(2, '0')} · {minutes(durationSec)}
                         </small>
                         <strong style={{ fontSize: '0.86rem', lineHeight: 1.3 }}>

@@ -296,7 +296,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         data-testid="rig-glb-verified-meta"
         style={{
           margin: '0 0 6px',
-          fontSize: '0.74rem',
+          fontSize: '0.8125rem',
           color: '#476253',
           fontWeight: 600,
           fontVariantNumeric: 'tabular-nums',

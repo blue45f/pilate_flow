@@ -3151,7 +3151,7 @@ export function SequenceWorkbench({
                             if (!isRestStep(st)) openInspector(st, event.currentTarget);
                           }}
                         >
-                          <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
+                          <small style={{ fontSize: '0.8125rem', opacity: 0.8 }}>
                             {String(idx + 1).padStart(2, '0')} · {formatSecondsToMMSS(durationSec)}
                           </small>
                           <strong style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>

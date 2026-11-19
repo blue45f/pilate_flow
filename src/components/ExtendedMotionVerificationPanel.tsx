@@ -119,7 +119,7 @@ export function ExtendedMotionVerificationPanel({
           data-testid="extended-factual-sha256-badge"
           data-integrity-state={integrityState}
           style={{
-            fontSize: '0.74rem',
+            fontSize: '0.8125rem',
             fontFamily: 'monospace',
             padding: '4px 8px',
             borderRadius: '999px',
@@ -158,8 +158,8 @@ export function ExtendedMotionVerificationPanel({
               <span
                 style={{
                   display: 'inline-block',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '999px',
                   background: 'var(--pf-color-bg-surface-muted, #dbeafe)',
@@ -483,7 +483,7 @@ export function ExtendedMotionVerificationPanel({
         >
           <div
             style={{
-              fontWeight: 700,
+              fontWeight: 600,
               marginBottom: '8px',
               color: 'var(--pf-color-text-primary, #0f172a)',
             }}

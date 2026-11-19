@@ -356,7 +356,7 @@ function MovementDifferenceCompareViewContent({
           <span
             style={{
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-action-primary, #173D34)',
               backgroundColor: 'var(--pf-color-bg-surface-muted, #E4EADF)',
               padding: '4px 8px',
@@ -379,7 +379,7 @@ function MovementDifferenceCompareViewContent({
           style={{
             margin: 0,
             fontSize: 'var(--pf-text-base, 1rem)',
-            fontWeight: 700,
+            fontWeight: 600,
             color: 'var(--pf-color-text-primary, #1E3129)',
           }}
         >
@@ -424,7 +424,7 @@ function MovementDifferenceCompareViewContent({
               htmlFor={`compare-peer-select-${leftExercise.id}`}
               style={{
                 fontSize: 'var(--pf-text-xs, 0.75rem)',
-                fontWeight: 700,
+                fontWeight: 600,
                 color: 'var(--pf-color-text-primary, #1E3129)',
               }}
             >
@@ -522,7 +522,7 @@ function MovementDifferenceCompareViewContent({
         <span
           style={{
             fontSize: 'var(--pf-text-xs, 0.75rem)',
-            fontWeight: 700,
+            fontWeight: 600,
             color: 'var(--pf-color-text-secondary, #3D4F45)',
           }}
         >
@@ -1010,7 +1010,7 @@ function MovementVisualGuideCardContent({
             data-review-stage={sourceAudit.reviewStage}
             data-is-post-review={String(sourceAudit.isPostReview)}
             style={{
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
               padding: '4px 10px',
               borderRadius: 'var(--pf-radius-pill, 9999px)',
@@ -1050,7 +1050,7 @@ function MovementVisualGuideCardContent({
             data-testid="anatomical-non-assumption-badge"
             style={{
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               padding: '4px 10px',
               borderRadius: 'var(--pf-radius-pill, 9999px)',
               backgroundColor: 'var(--pf-color-bg-surface-subtle, #FDF4F0)',
@@ -1076,7 +1076,7 @@ function MovementVisualGuideCardContent({
               style={{
                 margin: 0,
                 fontSize: 'var(--pf-text-lg, 1.1875rem)',
-                fontWeight: 700,
+                fontWeight: 600,
                 color: 'var(--pf-color-text-primary, #1E3129)',
               }}
             >
@@ -1468,7 +1468,7 @@ function MovementVisualGuideCardContent({
             data-testid="max-joint-delta-badge"
             style={{
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               backgroundColor: 'var(--pf-color-bg-surface-muted, #E4EADF)',
               color: 'var(--pf-color-action-primary, #173D34)',
               padding: '3px 8px',
@@ -1587,7 +1587,7 @@ function MovementVisualGuideCardContent({
           <span
             style={{
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-text-secondary, #3D4F45)',
             }}
           >
@@ -1751,7 +1751,7 @@ function MovementVisualGuideCardContent({
             style={{
               margin: 0,
               fontSize: 'var(--pf-text-sm, 0.8125rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-action-primary, #173D34)',
             }}
           >
@@ -1806,7 +1806,7 @@ function MovementVisualGuideCardContent({
                     <span
                       style={{
                         fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: 'var(--pf-color-action-primary, #173D34)',
                       }}
                     >
@@ -1874,7 +1874,7 @@ function MovementVisualGuideCardContent({
             style={{
               margin: 0,
               fontSize: 'var(--pf-text-sm, 0.8125rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-action-primary, #173D34)',
             }}
           >
@@ -2016,7 +2016,7 @@ function MovementVisualGuideCardContent({
             style={{
               margin: 0,
               fontSize: 'var(--pf-text-sm, 0.8125rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-action-primary, #173D34)',
             }}
           >
@@ -2139,7 +2139,7 @@ function MovementVisualGuideCardContent({
             style={{
               margin: 0,
               fontSize: 'var(--pf-text-sm, 0.8125rem)',
-              fontWeight: 700,
+              fontWeight: 600,
               color: 'var(--pf-color-action-primary, #173D34)',
             }}
           >
@@ -2182,7 +2182,7 @@ function MovementVisualGuideCardContent({
                     <span
                       style={{
                         fontSize: 'var(--pf-text-2xs, 0.6875rem)',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         padding: '2px 8px',
                         borderRadius: 'var(--pf-radius-pill, 9999px)',
                         backgroundColor: roleStyle.badgeBg,
@@ -2267,7 +2267,7 @@ function MovementVisualGuideCardContent({
             justifyContent: 'space-between',
             gap: '8px',
             cursor: 'pointer',
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: 'var(--pf-text-sm, 0.8125rem)',
             color: 'var(--pf-color-text-primary, #1E3129)',
           }}
@@ -2415,7 +2415,7 @@ function MovementVisualGuideCardContent({
                     rel="noopener noreferrer"
                     style={{
                       color: 'var(--pf-color-action-primary, #173D34)',
-                      fontWeight: 700,
+                      fontWeight: 600,
                       textDecoration: 'underline',
                     }}
                   >

@@ -501,7 +501,7 @@ export function CoreAbdominalDiagramFigure({
               style={{
                 display: 'inline-block',
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 600,
                 padding: '2px 8px',
                 borderRadius: 999,
                 background: '#e0f2fe',
@@ -737,7 +737,7 @@ export function CoreAbdominalDiagramFigure({
                     border: id === activeDiagramId ? '1.5px solid #1e293b' : '1px solid #e2e8f0',
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
                     {spec.nameKo}
                   </div>
                   <CoreAbdominalPhaseSvg
@@ -803,7 +803,7 @@ export function CoreAbdominalDiagramFigure({
           color: '#334155',
         }}
       >
-        <p style={{ margin: '0 0 6px', fontWeight: 700 }}>
+        <p style={{ margin: '0 0 6px', fontWeight: 600 }}>
           출처 대조 및 비의료·비검증 고지 (anatomicalAccuracyAssumed:{' '}
           {String(CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.anatomicalAccuracyAssumed)} ·
           professionalReviewCount: {CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.professionalReviewCount}{' '}

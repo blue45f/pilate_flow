@@ -151,7 +151,7 @@ export const StudioCarePlaybookPanel: React.FC<StudioCarePlaybookPanelProps> = (
             </div>
           </div>
 
-          <small style={{ fontSize: '0.74rem', color: '#617269' }}>
+          <small style={{ fontSize: '0.8125rem', color: '#617269' }}>
             {briefing.provenanceNoteKo}
           </small>
         </div>

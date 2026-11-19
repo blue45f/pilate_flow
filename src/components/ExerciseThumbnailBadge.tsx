@@ -88,8 +88,8 @@ export function ExerciseThumbnailBadge({
           >
             <span
               style={{
-                fontSize: '10px',
-                fontWeight: 700,
+                fontSize: '12px',
+                fontWeight: 600,
                 color: 'var(--pf-color-action-primary, #173D34)',
                 textAlign: 'center',
               }}
@@ -141,7 +141,7 @@ export function ExerciseThumbnailBadge({
       {size !== 'xs' && (
         <span
           style={{
-            fontSize: '10px',
+            fontSize: '12px',
             fontWeight: 600,
             lineHeight: 1.2,
             padding: '2px 4px',
