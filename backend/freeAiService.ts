@@ -1661,14 +1661,21 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         },
       };
 
-      return fetchFn(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': config.apiKey!,
-        },
-        body: JSON.stringify(body),
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetchFn(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': config.apiKey!,
+          },
+          signal: controller.signal,
+          body: JSON.stringify(body),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
 
     const model = config.model!;
@@ -1706,14 +1713,21 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
       ],
     };
 
-    return fetchFn(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.apiKey!}`,
-      },
-      body: JSON.stringify(body),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetchFn(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey!}`,
+        },
+        signal: controller.signal,
+        body: JSON.stringify(body),
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   return {

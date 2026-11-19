@@ -2532,3 +2532,59 @@ html body #root .pf-orbit3d-zoom-readout {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   17. High-Contrast Parity (prefers-contrast: more / forced-colors: active)
+       & F6 Landmark Focus Visibility
+   ========================================================================== */
+html
+  body
+  #root
+  .flow-app
+  :is(header.topbar, aside.sidebar, nav.bottom-nav, aside.v2-inline-finder):focus-visible {
+  outline: 2px solid var(--pf-unslop-accent, #355441) !important;
+  outline-offset: -2px;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --pf-unslop-hairline: rgba(31, 27, 22, 0.36);
+    --pf-unslop-border-control: rgba(31, 27, 22, 0.56);
+    --pf-unslop-border-hover: rgba(31, 27, 22, 0.82);
+    --pf-unslop-text-secondary: #2e2923;
+    --pf-unslop-text-muted: #3d3730;
+    --pf-unslop-text-muted-on-linen: #3d3730;
+  }
+
+  html body #root .flow-app :is(button, a[href], input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--pf-unslop-accent, #355441) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@media (forced-colors: active) {
+  html
+    body
+    #root
+    .flow-app
+    :is(
+      button,
+      .btn-primary,
+      .btn-secondary,
+      .pf-btn,
+      .panel,
+      .pf-card,
+      dialog.light-dismiss-dialog,
+      input,
+      select,
+      textarea
+    ) {
+    border: 1px solid CanvasText !important;
+    forced-color-adjust: auto;
+  }
+
+  html body #root .flow-app :is(button, a[href], input, select, textarea, summary):focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+}

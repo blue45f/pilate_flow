@@ -60,6 +60,7 @@ import './styles/pf-motion-studio.css';
 import './styles/rea-studio-advancement.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
+import { cycleWorkspaceLandmark } from './utils/workspaceLandmarkNavigation';
 
 const InstructorStudyDialog = lazy(() =>
   import('./components/InstructorStudyDialog').then((module) => ({
@@ -266,6 +267,7 @@ export function App() {
   const [settingsSummaryOpen, setSettingsSummaryOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [landmarkAnnouncement, setLandmarkAnnouncement] = useState('');
   const workbenchDetailAddRef = useRef<
     ((exerciseId: string) => { success: boolean; message?: string }) | null
   >(null);
@@ -280,6 +282,21 @@ export function App() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.isComposing) return;
+      if (
+        event.key === 'F6' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !commandPaletteOpen &&
+        !document.querySelector('dialog[open], [aria-modal="true"]')
+      ) {
+        event.preventDefault();
+        const result = cycleWorkspaceLandmark(event.shiftKey ? -1 : 1, document);
+        if (result.moved && result.targetLabel) {
+          setLandmarkAnnouncement(`${result.targetLabel} 영역으로 이동했습니다.`);
+        }
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         if (!commandPaletteOpen && document.querySelector('dialog[open]')) return;
         event.preventDefault();
@@ -565,6 +582,15 @@ export function App() {
       <a className="skip-link" href="#main-content">
         본문으로 이동
       </a>
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="workspace-landmark-status"
+      >
+        {landmarkAnnouncement}
+      </p>
       <aside
         ref={sidebarRef}
         className={`sidebar ${menuOpen ? 'is-open' : ''}`}

@@ -61,7 +61,7 @@ html #root .vnext-shell {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
   background: var(--pf-v5-emerald-soft);
   color: var(--pf-v5-emerald);
@@ -97,7 +97,7 @@ html #root .vnext-shell {
 
 .pf-page-intent-banner__title {
   font-size: 0.96rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v5-ink);
   word-break: keep-all;
 }
@@ -138,7 +138,7 @@ html #root .vnext-shell {
 
 .pf-detail-intent-banner__eyebrow {
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.03em;
   color: #99f6e4;
 }
@@ -249,7 +249,7 @@ html #root .pf-step-nav-pill-btn.is-primary {
   color: #ffffff;
   border-radius: 16px;
   min-height: 50px;
-  font-weight: 700;
+  font-weight: 600;
   box-shadow: 0 8px 20px rgba(23, 61, 52, 0.18);
   transition:
     transform 0.14s ease,
@@ -361,14 +361,14 @@ html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-status {
   background: rgba(94, 234, 212, 0.16);
   color: #99f6e4;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-digits {
   color: #ffffff;
   font-variant-numeric: tabular-nums;
   font-size: clamp(3.25rem, 9vw, 4.8rem);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.06;
   margin: 8px 0;
@@ -461,7 +461,7 @@ html #root .pf-live-brand-mini-btn {
   border: 0;
   background: transparent;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v5-muted);
   cursor: pointer;
 }
@@ -553,7 +553,7 @@ html #root .pf-live-brand-mini-btn {
   background: var(--pf-v5-surface);
   color: var(--pf-v5-emerald);
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color 0.14s ease,

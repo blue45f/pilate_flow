@@ -196,6 +196,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   persistenceError: string | null;
   externalTabConflict: ExternalTabStorageConflict | null;
   undoStack: SequenceSnapshot[];
+  redoStack: SequenceSnapshot[];
   setActiveTab: (tab: ActiveWorkspaceTab) => void;
   loadDatedSequencePlanAsDraft: (
     assignmentId: string,
@@ -285,6 +286,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   regenerateUnlocked: (criteria: AutoGenerateCriteria, section?: SequenceSection) => void;
   fitActiveDuration: () => void;
   undoSequence: () => void;
+  redoSequence: () => void;
   saveConditionTemplate: (name: string) => void;
   applyConditionTemplate: (id: string) => void;
   exportBackup: () => string;
@@ -679,6 +681,7 @@ function edit(
 ): Partial<PilatesStudioState> {
   return {
     undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+    redoStack: [],
     generationError: null,
     saveFeedback: null,
     ...next,
@@ -1099,6 +1102,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
       externalTabConflict: null,
       conditionTemplates: [],
       undoStack: [],
+      redoStack: [],
       setActiveTab: (activeTab) => set({ activeTab }),
       loadDatedSequencePlanAsDraft: (assignmentId, expectedUpdatedAt) => {
         const state = get();
@@ -1759,6 +1763,20 @@ export const usePilatesStore = create<PilatesStudioState>()(
             ? {
                 ...previous,
                 undoStack: state.undoStack.slice(0, -1),
+                redoStack: [...state.redoStack.slice(-19), createSequenceSnapshot(state)],
+                generationError: null,
+                saveFeedback: null,
+              }
+            : state;
+        }),
+      redoSequence: () =>
+        set((state) => {
+          const next = state.redoStack.at(-1);
+          return next
+            ? {
+                ...next,
+                undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+                redoStack: state.redoStack.slice(0, -1),
                 generationError: null,
                 saveFeedback: null,
               }
@@ -2463,6 +2481,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           set({
             ...hydrated,
             undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+            redoStack: [],
             externalTabConflict: null,
             persistenceError: null,
             saveFeedback: '다른 탭에서 저장한 최신 수업을 불러왔습니다. (이전 초안은 되돌리기에 보관됨)',

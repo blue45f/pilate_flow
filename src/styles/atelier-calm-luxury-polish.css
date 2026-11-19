@@ -1128,7 +1128,7 @@ html #root .flow-app .desktop-nav > button.active {
 .pf-unified-motion-hero .pf-studio3d-mode-btn.is-active {
   background: #ffffff !important;
   color: #1b3d2f !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   border-color: rgba(34, 62, 48, 0.14) !important;
   box-shadow: 0 1px 3px rgba(24, 44, 35, 0.1) !important;
 }
@@ -1186,7 +1186,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .pf-detail-layer-switcher__tabs > span {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #354e42;
   margin-right: 4px;
 }
@@ -1230,7 +1230,7 @@ html #root .flow-app .desktop-nav > button.active {
   margin: 0;
   padding: 10px 14px 6px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #5b6e63;
   letter-spacing: 0.01em;
 }

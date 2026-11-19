@@ -88,7 +88,7 @@ html #root .vnext-shell .brand > svg {
 html #root .vnext-shell .brand > span {
   font-family: var(--pf-font-sans);
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--pf-atelier-ink);
@@ -105,7 +105,7 @@ html #root .vnext-shell .brand small {
 html #root .vnext-shell .sidebar-label {
   color: #8a8f85;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.12em;
   margin-bottom: 8px;
 }
@@ -145,7 +145,7 @@ html #root .vnext-shell .desktop-nav small {
   background: #f3efe8;
   color: #42554a;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   opacity: 1;
 }
 
@@ -175,7 +175,7 @@ html #root .vnext-shell .v2-sidebar-upcoming > p {
 
 html #root .vnext-shell .v2-sidebar-upcoming .text-button {
   color: var(--pf-atelier-sage-mid);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.8rem;
 }
 
@@ -195,7 +195,7 @@ html #root .vnext-shell .v2-upcoming-link:hover {
 
 html #root .vnext-shell .v2-upcoming-link strong {
   color: var(--pf-atelier-sage-deep);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 html #root .vnext-shell .v2-upcoming-link small {
@@ -228,7 +228,7 @@ html #root .vnext-shell .workspace-button small {
 html #root .vnext-shell .studio-avatar {
   background: var(--pf-atelier-sage-mid);
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 600;
   border-radius: 50%;
 }
 
@@ -269,7 +269,7 @@ html #root .vnext-shell .pf-role-switcher__btn {
   background: transparent;
   color: #5c6259;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -289,7 +289,7 @@ html #root .vnext-shell .local-state {
   border: 1px solid #c5d9cd;
   color: var(--pf-atelier-sage-deep);
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .vnext-shell .local-state i {
@@ -305,7 +305,7 @@ html #root .vnext-shell .app-create-movement {
   border: 1px solid var(--pf-atelier-sage-mid);
   color: #ffffff;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 7px 14px;
   min-height: 40px;
 }
@@ -332,7 +332,7 @@ html #root .vnext-shell .page-heading h1 {
   font-size: clamp(1.55rem, 2.1vw, 2.05rem);
   letter-spacing: -0.035em;
   line-height: 1.25;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 html #root .vnext-shell .vnext-workbench-eyebrow,
@@ -387,7 +387,7 @@ html #root .vnext-shell .btn-primary {
   color: #ffffff;
   border: 1px solid var(--pf-atelier-sage-mid);
   border-radius: 12px;
-  font-weight: 700;
+  font-weight: 600;
   box-shadow: 0 3px 10px rgba(53, 84, 65, 0.16);
 }
 
@@ -506,7 +506,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-b
   border: 1px solid rgba(167, 196, 178, 0.3);
   border-radius: 999px;
   padding: 6px 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .btn-secondary {
@@ -541,7 +541,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   html #root .vnext-shell .vnext-wordmark {
     font-family: var(--pf-font-sans);
     font-size: 1.12rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: -0.03em;
     color: var(--pf-atelier-ink);
   }
@@ -586,7 +586,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   align-items: center;
   gap: 6px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #8a6834;
@@ -598,7 +598,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 .pf-quickstart-gallery__title {
   margin: 6px 0 2px;
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-atelier-ink);
   word-break: keep-all;
 }
@@ -655,7 +655,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   background: rgba(31, 77, 63, 0.9);
   color: #ffffff;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   backdrop-filter: blur(6px);
 }
@@ -669,7 +669,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   background: rgba(255, 255, 255, 0.94);
   color: var(--pf-atelier-sage-deep);
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: 600;
   border: 1px solid var(--pf-atelier-line);
 }
 
@@ -714,7 +714,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   background: var(--pf-atelier-sage-mid);
   color: #ffffff;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -742,7 +742,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   background: #f6f3eb;
   border: 1px solid #dfd9cd;
   color: #263930;
@@ -897,7 +897,7 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
 .pf-studio-spot-map__zone {
   text-align: center;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: #6d5b3e;
   padding: 4px 10px;
@@ -995,7 +995,7 @@ html #root .vnext-shell .pf-sidebar-quick-stage {
   border: 1px solid var(--pf-atelier-line);
   background: var(--pf-atelier-cream);
   color: var(--pf-atelier-ink);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
   transition:
@@ -1012,7 +1012,7 @@ html #root .vnext-shell .pf-sidebar-quick-stage.is-ready {
 html #root .vnext-shell .pf-sidebar-quick-stage small {
   margin-left: auto;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   opacity: 0.86;
 }
 
@@ -1021,7 +1021,7 @@ html #root .vnext-shell .teaching-saved-quick-stage {
   border-color: #bfd3c6;
   background: var(--pf-atelier-sage-tint);
   color: var(--pf-atelier-sage-deep);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .vnext-shell .pf-step-stage-frame {

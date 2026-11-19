@@ -272,7 +272,7 @@ html #root .flow-app .bottom-nav > button.active {
   color: #3b6b44 !important;
   background: #f1f6e9 !important;
   border-radius: 9px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 html #root .flow-app .bottom-nav button::before,
 html #root .flow-app .bottom-nav button::after {

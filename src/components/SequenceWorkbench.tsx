@@ -30,6 +30,7 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
+  RotateCw,
   SlidersHorizontal,
   Sparkles,
   UnlockKeyhole,
@@ -446,10 +447,26 @@ export function SequenceWorkbench({
   const [freeAiOpen, setFreeAiOpen] = useState(false);
   const [homeToolsOpen, setHomeToolsOpen] = useState(false);
   const [movementReferenceOpen, setMovementReferenceOpen] = useState(false);
+  const pendingRafIdsRef = useRef<Set<number>>(new Set());
+  const scheduleRaf = useCallback((callback: () => void) => {
+    const frameId = requestAnimationFrame(() => {
+      pendingRafIdsRef.current.delete(frameId);
+      callback();
+    });
+    pendingRafIdsRef.current.add(frameId);
+    return frameId;
+  }, []);
+  useEffect(() => {
+    const rafSet = pendingRafIdsRef.current;
+    return () => {
+      rafSet.forEach((id) => cancelAnimationFrame(id));
+      rafSet.clear();
+    };
+  }, []);
   const openContextualAiAssistant = useCallback(() => {
     setHomeToolsOpen(true);
     setFreeAiOpen(true);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       const reduced =
         typeof window !== 'undefined' &&
         window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -458,7 +475,7 @@ export function SequenceWorkbench({
         behavior: reduced ? 'auto' : 'smooth',
       });
     });
-  }, []);
+  }, [scheduleRaf]);
   const [sequenceViewMode, setSequenceViewMode] = useState<
     'split' | 'list' | 'columns' | 'timeline'
   >('list');
@@ -487,10 +504,10 @@ export function SequenceWorkbench({
       replaceSuspendedRef.current = false;
       return;
     }
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       replaceSearchInputRef.current?.focus();
     });
-  }, [replaceIndex]);
+  }, [replaceIndex, scheduleRaf]);
   const selectedStepIndex = s.activeSteps.findIndex(
     (step) => step.stepId === previewStep && !isRestStep(step),
   );
@@ -499,11 +516,11 @@ export function SequenceWorkbench({
     const dialog = inspectorContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setPreviewStep(null);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (!document.querySelector('dialog[open]') && inspectorOpener.current?.isConnected)
         inspectorOpener.current.focus();
     });
-  }, []);
+  }, [scheduleRaf]);
   const handleInspectorNativeClose = useCallback(() => {
     // Source lookup, replacement modal, or conditions dialog suspends the mobile sheet;
     // layout changes also emit native close.
@@ -534,7 +551,7 @@ export function SequenceWorkbench({
     setReplaceIndex(null);
     setReplaceSearch('');
     setReplaceFromInspector(false);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (wasFromInspector && !wideEditor) {
         const inspectorTrigger = Array.from(
           inspectorContentRef.current?.querySelectorAll<HTMLElement>(
@@ -624,7 +641,7 @@ export function SequenceWorkbench({
   const navigateConditionStep = (nextStep: 1 | 2 | 3) => {
     setConditionStep(nextStep);
     const scrollBehavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (nextStep === 1) {
         conditionStep1Ref.current?.scrollIntoView?.({ behavior: scrollBehavior, block: 'nearest' });
       } else if (nextStep === 2) {
@@ -644,7 +661,7 @@ export function SequenceWorkbench({
     const dialog = conditionsContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setConditionsOpen(false);
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (conditionsOpenerRef.current?.isConnected && !document.querySelector('dialog[open]')) {
         conditionsOpenerRef.current.focus();
       }
@@ -681,11 +698,27 @@ export function SequenceWorkbench({
         : '되돌릴 변경 기록이 없습니다.',
     );
   };
+  const performRedoSequence = () => {
+    const canRedo = usePilatesStore.getState().redoStack.length > 0;
+    s.redoSequence();
+    const afterSteps = usePilatesStore.getState().activeSteps;
+    if (canRedo && afterSteps.length > 0) {
+      setWorkflowStep('arrange');
+    }
+    setNotice(
+      canRedo
+        ? `되돌린 변경을 다시 적용했어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`
+        : '다시 실행할 변경 기록이 없습니다.',
+    );
+  };
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented) return;
-      if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
-      if (event.key.toLowerCase() !== 'z') return;
+      if (event.defaultPrevented || event.isComposing) return;
+      if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
+      const key = event.key.toLowerCase();
+      const isUndo = key === 'z' && !event.shiftKey;
+      const isRedo = (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
+      if (!isUndo && !isRedo) return;
       if (document.querySelector('dialog[open]')) return;
       const target = event.target;
       if (
@@ -698,15 +731,28 @@ export function SequenceWorkbench({
         return;
       }
       const storeState = usePilatesStore.getState();
-      if (!storeState.undoStack.length) return;
+      if (isUndo) {
+        if (!storeState.undoStack.length) return;
+        event.preventDefault();
+        storeState.undoSequence();
+        const afterSteps = usePilatesStore.getState().activeSteps;
+        if (afterSteps.length > 0) {
+          setWorkflowStep('arrange');
+        }
+        setNotice(
+          `마지막 변경을 되돌렸어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`,
+        );
+        return;
+      }
+      if (!storeState.redoStack.length) return;
       event.preventDefault();
-      storeState.undoSequence();
+      storeState.redoSequence();
       const afterSteps = usePilatesStore.getState().activeSteps;
       if (afterSteps.length > 0) {
         setWorkflowStep('arrange');
       }
       setNotice(
-        `마지막 변경을 되돌렸어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`,
+        `되돌린 변경을 다시 적용했어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`,
       );
     };
     window.addEventListener('keydown', onKeyDown);
@@ -730,7 +776,7 @@ export function SequenceWorkbench({
     if (dialog?.open) dialog.close();
     setFinderOpen(false);
     setWorkflowStep(usePilatesStore.getState().activeSteps.length ? 'arrange' : 'select');
-    requestAnimationFrame(() => {
+    scheduleRaf(() => {
       if (document.querySelector('dialog[open]')) return;
       const heading = document.getElementById('sequence-outline-heading');
       if (finderOpener.current?.isConnected) finderOpener.current.focus();
@@ -755,7 +801,7 @@ export function SequenceWorkbench({
     if (!usePilatesStore.getState().activeSteps.length) return;
     closeFinder();
     setWorkflowStep('arrange');
-    requestAnimationFrame(() =>
+    scheduleRaf(() =>
       document.getElementById('sequence-outline-heading')?.scrollIntoView?.({ block: 'start' }),
     );
   };
@@ -1018,6 +1064,7 @@ export function SequenceWorkbench({
     const snapshot = captureUndoSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), snapshot],
+      redoStack: [],
       activeTitle: payload.title,
       activeSubtitle: payload.subtitle,
       activeTargetMinutes: payload.targetMinutes,
@@ -1137,7 +1184,7 @@ export function SequenceWorkbench({
     s.autoGenerateSequence(next);
     if (usePilatesStore.getState().activeSteps.length) setWorkflowStep('arrange');
     if (window.innerWidth < 768)
-      requestAnimationFrame(() =>
+      scheduleRaf(() =>
         document
           .querySelector(
             usePilatesStore.getState().generationError
@@ -1264,6 +1311,7 @@ export function SequenceWorkbench({
       const snapshot = captureUndoSnapshot(current);
       usePilatesStore.setState({
         undoStack: [...current.undoStack.slice(-19), snapshot],
+        redoStack: [],
         activeTitle: bundle.sequenceDraft.title,
         activeSubtitle: bundle.sequenceDraft.subtitle,
         activeApparatus: bundle.sequenceDraft.apparatus,
@@ -1349,6 +1397,7 @@ export function SequenceWorkbench({
       const perStepDelta = deltaMin / insertedCount;
       usePilatesStore.setState({
         undoStack: [...beforeState.undoStack.slice(-19), snapshot],
+        redoStack: [],
         activeSteps: current.activeSteps.map((step, idx) => {
           const baseStep = step.selectedLayer
             ? step
@@ -1407,6 +1456,7 @@ export function SequenceWorkbench({
     const snapshot = captureUndoSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), snapshot],
+      redoStack: [],
       ...(options?.meta
         ? {
             activeTitle: options.meta.title,
@@ -1538,6 +1588,7 @@ export function SequenceWorkbench({
     const previousSnapshot = captureUndoSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), previousSnapshot],
+      redoStack: [],
       activeSequenceId: `draft-new-${Date.now()}`,
       activeTitle: '새 수업 시퀀스',
       activeSubtitle: '동작을 골라 나만의 흐름으로 구성하세요',
@@ -3011,6 +3062,14 @@ export function SequenceWorkbench({
                     disabled={!s.undoStack.length}
                   >
                     <RotateCcw size={15} aria-hidden="true" /> 되돌리기
+                  </PfButton>
+                  <PfButton
+                    variant="text"
+                    data-testid="workbench-redo-btn"
+                    onClick={performRedoSequence}
+                    disabled={!s.redoStack.length}
+                  >
+                    <RotateCw size={15} aria-hidden="true" /> 다시 실행
                   </PfButton>
                 </div>
               )}
@@ -5363,7 +5422,7 @@ export function SequenceWorkbench({
                 setReplaceIndex(null);
                 setReplaceSearch('');
                 setReplaceFromInspector(false);
-                requestAnimationFrame(() => {
+                scheduleRaf(() => {
                   if (wasFromInspector && !wideEditor) {
                     inspectorContentRef.current
                       ?.querySelector<HTMLElement>('button, input, select, textarea')

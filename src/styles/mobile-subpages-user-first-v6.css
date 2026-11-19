@@ -150,7 +150,7 @@ html #root .vnext-shell .main-content > * {
 .pf-sidebar-more-drawer > summary {
   cursor: pointer;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
   list-style: none;
   display: flex;
@@ -192,7 +192,7 @@ html #root .vnext-shell .main-content > * {
     background: var(--pf-v6-emerald) !important;
     color: #ffffff !important;
     border-radius: 14px !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     box-shadow: 0 6px 16px rgba(23, 61, 52, 0.2);
   }
 
@@ -206,7 +206,7 @@ html #root .vnext-shell .main-content > * {
     color: var(--pf-v6-emerald) !important;
     border: 1px solid var(--pf-v6-mint-strong) !important;
     border-radius: 14px !important;
-    font-weight: 800 !important;
+    font-weight: 600 !important;
   }
 
   html #root .vnext-shell .pf-sidebar-quick-stage.is-active {
@@ -315,7 +315,7 @@ html #root .vnext-shell .main-content > * {
   padding: 3px 9px;
   border-radius: 999px;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25;
   backdrop-filter: blur(8px);
   max-width: 100%;
@@ -491,7 +491,7 @@ html #root .workbench-task-focused .step-quick-duration-stepper .v3-step-time {
   align-self: center;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .workbench-task-focused .workbench-step-options {
@@ -639,7 +639,7 @@ html #root .workbench-task-focused .step-bundle-provenance-row {
     justify-content: center;
     gap: 5px;
     font-size: 0.84rem !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     border-radius: 16px !important;
     white-space: nowrap;
     background: var(--pf-v6-surface) !important;
@@ -688,7 +688,7 @@ html #root .workbench-task-focused .step-bundle-provenance-row {
 .pf-b05-3sec-summary-panel__head h3 {
   margin: 0;
   font-size: 1.06rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
 }
 
@@ -727,7 +727,7 @@ html #root .workbench-task-focused .step-bundle-provenance-row {
 
 .pf-b05-summary-box > span {
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -962,7 +962,7 @@ dialog .pf-mobile-subpage-bar {
   background: transparent;
   color: var(--pf-v6-muted);
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -1008,7 +1008,7 @@ dialog .pf-mobile-subpage-bar {
   padding: 0 6px;
   border-radius: 999px;
   font-size: 0.71rem;
-  font-weight: 800;
+  font-weight: 600;
   background: rgba(23, 61, 52, 0.11);
   color: var(--pf-v6-emerald);
 }
@@ -1059,7 +1059,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-emerald);
   color: #ffffff;
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-studio3d-honest-pill {
@@ -1094,7 +1094,7 @@ dialog .pf-mobile-subpage-bar {
   background: transparent;
   color: var(--pf-v6-muted);
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color var(--pf-motion-fast) var(--pf-motion-smooth),
@@ -1186,7 +1186,7 @@ dialog .pf-mobile-subpage-bar {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   backdrop-filter: blur(8px);
   max-width: 100%;
 }
@@ -1241,7 +1241,7 @@ dialog .pf-mobile-subpage-bar {
   align-items: center;
   gap: 5px;
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -1254,7 +1254,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-detail-essential-pill__val strong {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
   word-break: keep-all;
 }
@@ -1343,7 +1343,7 @@ dialog .pf-mobile-subpage-bar {
   border-radius: 999px !important;
   border: 0 !important;
   font-size: 0.81rem !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   background: transparent !important;
   color: var(--pf-v6-muted) !important;
 }
@@ -1414,7 +1414,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-p08-yt-copy strong {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #ffffff;
   word-break: keep-all;
 }
@@ -1432,7 +1432,7 @@ dialog .pf-mobile-subpage-bar {
   color: var(--pf-v6-emerald-dark) !important;
   border: 0 !important;
   font-size: 0.8rem !important;
-  font-weight: 800 !important;
+  font-weight: 600 !important;
 }
 
 .pf-p07-honest-footnote {
@@ -1482,7 +1482,7 @@ dialog .pf-mobile-subpage-bar {
 .pf-p05-advanced-drawer > summary {
   cursor: pointer;
   font-size: 0.83rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-ink);
   display: flex;
   align-items: center;
@@ -1538,7 +1538,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-p05-hero-meta strong {
   font-size: 0.96rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
   word-break: keep-all;
 }
@@ -1576,7 +1576,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-p05-chip-label {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -1594,7 +1594,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-track);
   color: var(--pf-v6-ink);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color var(--pf-motion-fast) var(--pf-motion-smooth),
@@ -1644,7 +1644,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-inspector-3sec-item > span {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -1688,7 +1688,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-idea-3d-studio-banner__body strong {
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
   word-break: keep-all;
 }
@@ -1736,7 +1736,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-mint);
   color: var(--pf-v6-emerald-dark);
   font-size: 0.71rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.03em;
   margin-bottom: 6px;
 }
@@ -1762,7 +1762,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-mint);
   color: var(--pf-v6-emerald-dark);
   font-size: 0.83rem;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1837,7 +1837,7 @@ dialog .pf-mobile-subpage-bar {
 .pf-ai-unlinked-meta > span {
   font-size: 0.74rem;
   color: var(--pf-v6-emerald-bright);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-ai-unlinked-pills {
@@ -1899,7 +1899,7 @@ dialog .pf-mobile-subpage-bar {
   background: rgba(23, 61, 52, 0.88);
   color: #ffffff;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-ai-preset-springs {
@@ -2095,7 +2095,7 @@ dialog .pf-mobile-subpage-bar {
   background: var(--pf-v6-emerald);
   color: #ffffff;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2110,13 +2110,13 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-visual-apparatus-card__meta strong {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-ink);
 }
 
 .pf-visual-apparatus-card__meta small {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
   background: rgba(23, 61, 52, 0.1);
   padding: 1px 5px;
@@ -2219,7 +2219,7 @@ dialog .pf-mobile-subpage-bar {
   background: rgba(15, 38, 30, 0.84);
   color: #a7f3d0;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
   z-index: 2;
 }
 
@@ -2239,7 +2239,7 @@ dialog .pf-mobile-subpage-bar {
   background: rgba(255, 255, 255, 0.12);
   color: #d1fae5;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2310,7 +2310,7 @@ dialog .pf-mobile-subpage-bar {
 
 .pf-breath-pacer-pill__copy strong {
   font-size: 0.79rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald-dark);
 }
 
@@ -2354,13 +2354,13 @@ html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-area {
   margin: 8px 0 2px !important;
   color: #ffffff !important;
   font-size: 1.32rem !important;
-  font-weight: 800 !important;
+  font-weight: 600 !important;
 }
 
 html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-digits {
   color: #ffffff !important;
   font-size: clamp(3.4rem, 11vw, 5rem) !important;
-  font-weight: 800 !important;
+  font-weight: 600 !important;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
@@ -2404,7 +2404,7 @@ html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-area sma
 
 .pf-p09-cue-summary-card__head strong {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald-dark);
 }
 
@@ -2441,7 +2441,7 @@ html #root .pf-member-slot-cta:not(.is-secondary) {
   border-color: var(--pf-v6-emerald) !important;
   color: #ffffff !important;
   border-radius: 14px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 html #root .btn-primary:hover,
@@ -2529,7 +2529,7 @@ html #root .vnext-shell .bottom-nav button.active {
   background: var(--pf-v6-emerald) !important;
   color: #ffffff !important;
   border-radius: 14px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 html #root .class-insights-tabs {
@@ -2546,7 +2546,7 @@ html #root .class-insights-tabs button[role='tab'] {
   min-height: 40px;
   border-radius: 999px;
   border: 0;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html #root .class-insights-tabs button[role='tab'][aria-selected='true'] {
@@ -2674,7 +2674,7 @@ html #root .page-heading.v2-workbench-heading h1 {
 }
 
 .pf-b05-balance-summary-pill strong {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
   font-variant-numeric: tabular-nums;
 }
@@ -2713,7 +2713,7 @@ html #root .vnext-workbench .sequence-title-label {
 html #root .vnext-workbench .sequence-title-label input {
   width: 100%;
   font-size: 1.18rem !important;
-  font-weight: 800 !important;
+  font-weight: 600 !important;
   padding: 8px 12px !important;
   border-radius: 12px !important;
   border: 1px solid transparent !important;
@@ -2940,7 +2940,7 @@ html #root .vnext-workbench .flow-step {
     align-items: center;
     gap: 6px;
     font-size: 0.76rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--pf-v6-emerald);
   }
 
@@ -3091,12 +3091,12 @@ html #root .movement-card .movement-card-footer {
   background: rgba(23, 61, 52, 0.86);
   color: #ffffff;
   font-size: 0.64rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .pf-studio3d-frame-thumb__label {
   font-size: 0.73rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
 }
 
@@ -3183,7 +3183,7 @@ html #root .movement-card .movement-card-footer {
   background: transparent;
   color: var(--pf-v6-ink);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background 140ms ease,
@@ -3244,7 +3244,7 @@ html #root .movement-card .movement-card-footer {
   background: #ffffff;
   color: var(--pf-v6-muted);
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -3293,7 +3293,7 @@ html #root .movement-card .movement-card-footer {
   min-width: 36px;
   text-align: right;
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
   font-variant-numeric: tabular-nums;
 }
@@ -3343,7 +3343,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-emerald);
   color: #ffffff;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-orbit3d-lab-style-bar {
@@ -3380,7 +3380,7 @@ html #root .movement-card .movement-card-footer {
   display: grid;
   gap: 4px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -3412,7 +3412,7 @@ html #root .movement-card .movement-card-footer {
   background: #f5f7f2;
   color: var(--pf-v6-emerald);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
@@ -3430,7 +3430,7 @@ html #root .movement-card .movement-card-footer {
 .pf-orbit3d-export-notice {
   margin: 0;
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
 }
 
@@ -3462,7 +3462,7 @@ html #root .movement-card .movement-card-footer {
 .pf-live-3d-orbit-drawer > summary {
   cursor: pointer;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
 }
 
@@ -3484,7 +3484,7 @@ html #root .movement-card .movement-card-footer {
   background: #ffffff;
   color: var(--pf-v6-ink);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(23, 61, 52, 0.05);
   transition:
@@ -3505,7 +3505,7 @@ html #root .movement-card .movement-card-footer {
   color: var(--pf-v6-muted);
   font-family: inherit;
   font-size: 0.69rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 @media (max-width: 767px) {
@@ -3572,7 +3572,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid var(--pf-v6-mint-strong);
   color: var(--pf-v6-emerald-dark);
   font-size: 0.81rem;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -3590,7 +3590,7 @@ html #root .movement-card .movement-card-footer {
   justify-content: space-between;
   gap: 6px;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -3615,7 +3615,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-surface-subtle);
   color: var(--pf-v6-ink);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -3666,7 +3666,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-cmdk-exercise-meta strong {
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
 }
 
@@ -3691,7 +3691,7 @@ html #root .movement-card .movement-card-footer {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -3785,7 +3785,7 @@ html #root .movement-card .movement-card-footer {
 .pf-cmdk-nav-copy strong,
 .pf-cmdk-seq-card strong {
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink);
 }
 
@@ -3845,7 +3845,7 @@ html #root .movement-card .movement-card-footer {
   background: rgba(23, 61, 52, 0.84);
   color: #ffffff;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .atlas-compare-visual-bar {
@@ -3868,7 +3868,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-mint);
   color: var(--pf-v6-emerald-dark);
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -3889,7 +3889,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-surface-subtle) !important;
   border: 1px solid var(--pf-v6-border) !important;
   font-size: 0.72rem !important;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-muted);
 }
 
@@ -3901,7 +3901,7 @@ html #root .movement-card .movement-card-footer {
   display: block;
   margin-top: 2px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
 }
 
@@ -3920,7 +3920,7 @@ html #root .movement-card .movement-card-footer {
 .pf-member-360-drawer > summary {
   cursor: pointer;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald);
 }
 
@@ -3965,7 +3965,7 @@ html #root .movement-card .movement-card-footer {
   background: var(--pf-v6-mint, #dff0e8);
   color: var(--pf-v6-emerald, #173d34);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -3983,7 +3983,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.18);
   color: var(--pf-v6-emerald, #173d34);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-handsfree-guide-drawer {
@@ -3997,7 +3997,7 @@ html #root .movement-card .movement-card-footer {
 .pf-handsfree-guide-drawer > summary {
   cursor: pointer;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
 
@@ -4031,7 +4031,7 @@ html #root .movement-card .movement-card-footer {
   background: #dff0e8;
   color: #173d34;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 /* Adaptive History -> Next-Class Prescription Banner */
@@ -4064,7 +4064,7 @@ html #root .movement-card .movement-card-footer {
 .pf-v70-adaptive-main h3 {
   margin: 2px 0 0;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink, #1c2623);
 }
 
@@ -4088,7 +4088,7 @@ html #root .movement-card .movement-card-footer {
 .pf-v70-adaptive-subs {
   margin: 2px 0 0;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #c95b3c;
 }
 
@@ -4130,7 +4130,7 @@ html #root .movement-card .movement-card-footer {
 .pf-v70-curriculum-head h3 {
   margin: 4px 0 4px;
   font-size: 1.02rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink, #1c2623);
 }
 
@@ -4154,7 +4154,7 @@ html #root .movement-card .movement-card-footer {
 .pf-v70-chip-label,
 .pf-v70-field > span {
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
 
@@ -4172,7 +4172,7 @@ html #root .movement-card .movement-card-footer {
   background: #ffffff;
   color: var(--pf-v6-ink, #1c2623);
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -4251,7 +4251,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-v70-station-kicker {
   font-size: 0.69rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #173d34;
 }
 
@@ -4321,7 +4321,7 @@ html #root .movement-card .movement-card-footer {
 .pf-v70-week-top h4 {
   margin: 4px 0 2px;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--pf-v6-ink, #1c2623);
 }
 
@@ -4340,7 +4340,7 @@ html #root .movement-card .movement-card-footer {
 
 .pf-v70-layer-pill {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--pf-v6-emerald, #173d34);
 }
 
@@ -4367,7 +4367,7 @@ html #root .movement-card .movement-card-footer {
   background: #dff0e8;
   color: #173d34;
   font-size: 0.79rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Pre-Class 10-Second Briefing Strip on Schedule Cards */
@@ -4388,7 +4388,7 @@ html #root .movement-card .movement-card-footer {
   border: 1px solid rgba(23, 61, 52, 0.12);
   color: #1c2623;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .pf-v70-briefing-chip.is-spring {
