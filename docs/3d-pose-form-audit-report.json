@@ -1,0 +1,54 @@
+{
+  "generatedAtUtc": "2026-11-23T09:29:52.849763+00:00",
+  "totalExercises": 218,
+  "totalPosesAudited": 654,
+  "totalDefects": 0,
+  "passed": true,
+  "perApparatusSummary": {
+    "reformer": {
+      "exercises": 63,
+      "poses": 189,
+      "defects": 0
+    },
+    "mat": {
+      "exercises": 52,
+      "poses": 156,
+      "defects": 0
+    },
+    "cadillac": {
+      "exercises": 40,
+      "poses": 120,
+      "defects": 0
+    },
+    "chair": {
+      "exercises": 35,
+      "poses": 105,
+      "defects": 0
+    },
+    "barrel": {
+      "exercises": 28,
+      "poses": 84,
+      "defects": 0
+    }
+  },
+  "defectCountsByCategory": {
+    "floor_penetration": 0,
+    "reformer_supine_elbow": 0,
+    "reformer_strap_body_clip": 0,
+    "chair_foot_in_seat": 0,
+    "chair_shin_clips_seat": 0,
+    "chair_pedal_contact_miss": 0,
+    "chair_handle_grip_miss": 0,
+    "barrel_foot_in_rung": 0,
+    "barrel_shin_in_rung": 0,
+    "barrel_arch_sink": 0,
+    "barrel_prone_tpose_arm": 0,
+    "cadillac_rolldown_bar_miss": 0,
+    "cadillac_pushthrough_bar_miss": 0,
+    "mini_ball_placement_defect": 0,
+    "extreme_reach_overflow": 0,
+    "degenerate_pole": 0
+  },
+  "defects": {},
+  "verifiedSupineMiniBallKneePlacements": 15
+}

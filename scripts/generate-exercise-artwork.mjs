@@ -218,8 +218,8 @@ export async function generateExerciseArtwork({
         const inputSha256 = sha256(
           JSON.stringify({
             renderer: rigSample.rolldownBar
-              ? 'BlenderCycles3DStudio-rollbar-grip-v1'
-              : 'BlenderCycles3DStudio-v3',
+              ? 'BlenderCycles3DStudio-rollbar-grip-v2-atelier'
+              : 'BlenderCycles3DStudio-v4-atelier',
             svgSha256,
             settings: RASTER_SETTINGS,
             encoder: ENCODER_VERSIONS,

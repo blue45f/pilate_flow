@@ -115,9 +115,9 @@ def build_glb_pbr_atlas(size: int = 512):
 
 
 def build_glb_surface_atlas():
-    # Match the 16 base-color swatches. glTF reads G as a linear roughness value.
-    roughness = (0.22, 0.19, 0.21, 0.21, 0.21, 0.39, 0.51, 0.58,
-                 0.54, 0.33, 0.30, 0.36, 0.44, 0.28, 0.62, 0.60)
+    # Match the 16 base-color swatches. glTF reads G as a linear roughness value (matte fabric & natural skin/hair).
+    roughness = (0.24, 0.20, 0.22, 0.22, 0.22, 0.52, 0.76, 0.78,
+                 0.66, 0.36, 0.33, 0.38, 0.48, 0.46, 0.68, 0.66)
     size = 64
     img = bpy.data.images.new("StudioSurfaceAtlas", width=size, height=size, alpha=False)
     img.colorspace_settings.name = "Non-Color"
@@ -160,7 +160,19 @@ def assign_atlas_band_uvs(bm: bmesh.types.BMesh, band_idx: int) -> None:
 
 
 def build_cycles_studio_materials() -> dict[str, bpy.types.Material]:
-    def base_mat(name, srgb, roughness=0.5, metallic=0.0, coat=0.0, sheen=0.0, subsurf=0.0):
+    def base_mat(
+        name,
+        srgb,
+        roughness=0.5,
+        metallic=0.0,
+        coat=0.0,
+        coat_roughness=0.22,
+        sheen=0.0,
+        sheen_roughness=0.55,
+        subsurf=0.0,
+        specular=0.45,
+        anisotropic=0.0,
+    ):
         mat = bpy.data.materials.new(name)
         if mat.node_tree is None:
             mat.use_nodes = True
@@ -170,50 +182,57 @@ def build_cycles_studio_materials() -> dict[str, bpy.types.Material]:
         set_bsdf_input(bsdf, "Base Color", (*lin, 1.0))
         set_bsdf_input(bsdf, "Roughness", roughness)
         set_bsdf_input(bsdf, "Metallic", metallic)
+        set_bsdf_input(bsdf, "Specular IOR Level", specular)
         set_bsdf_input(bsdf, "Coat Weight", coat)
-        set_bsdf_input(bsdf, "Coat Roughness", 0.16)
+        set_bsdf_input(bsdf, "Coat Roughness", coat_roughness)
         set_bsdf_input(bsdf, "Sheen Weight", sheen)
-        set_bsdf_input(bsdf, "Sheen Roughness", 0.44)
+        set_bsdf_input(bsdf, "Sheen Roughness", sheen_roughness)
+        if anisotropic > 0:
+            set_bsdf_input(bsdf, "Anisotropic", anisotropic)
         if subsurf > 0:
             set_bsdf_input(bsdf, "Subsurface Weight", subsurf)
-            set_bsdf_input(bsdf, "Subsurface Scale", 0.014)
-            set_bsdf_input(bsdf, "Subsurface Radius", (1.0, 0.42, 0.28))
+            set_bsdf_input(bsdf, "Subsurface Scale", 0.008)
+            set_bsdf_input(bsdf, "Subsurface Radius", (1.0, 0.36, 0.22))
         mat.use_fake_user = True
         return mat
 
     mats = {
-        "skin": base_mat("PF5_PorcelainPeachSkin", (0.922, 0.768, 0.680), roughness=0.39, coat=0.06, subsurf=0.34),
-        "lip_tint": base_mat("PF5_CoralRoseLip", (0.815, 0.465, 0.435), roughness=0.30, coat=0.28, subsurf=0.22),
-        "iris_dark": base_mat("PF5_EspressoAmberIris", (0.20, 0.125, 0.095), roughness=0.08, coat=0.85),
-        "lash_ink": base_mat("PF5_VelvetLashInk", (0.095, 0.075, 0.075), roughness=0.42),
-        "suit": base_mat("PF5_SuitSage", (0.188, 0.338, 0.278), roughness=0.56, sheen=0.36),
-        "legging": base_mat("PF5_LeggingForest", (0.132, 0.248, 0.202), roughness=0.58, sheen=0.34),
-        "suit_accent": base_mat("PF5_SuitPiping", (0.952, 0.936, 0.902), roughness=0.46, coat=0.12, sheen=0.24),
-        "hair": base_mat("PF5_SilkEspressoHair", (0.135, 0.095, 0.082), roughness=0.28, coat=0.34, sheen=0.18),
-        "sock": base_mat("PF5_GripSockIvory", (0.945, 0.928, 0.892), roughness=0.66, sheen=0.30),
-        "oak": base_mat("PF5_CathedralWhiteOak", (0.770, 0.612, 0.442), roughness=0.33, coat=0.28),
-        "maple": base_mat("PF5_HardRockMaple", (0.862, 0.742, 0.582), roughness=0.30, coat=0.32),
-        "walnut": base_mat("PF5_AmericanWalnut", (0.365, 0.242, 0.165), roughness=0.36, coat=0.26),
-        "leather": base_mat("PF5_SaddleLeather", (0.495, 0.315, 0.205), roughness=0.44, coat=0.14),
-        "pad": base_mat("PF5_PebbledSageLeather", (0.195, 0.342, 0.282), roughness=0.46, coat=0.10, sheen=0.16),
-        "steel": base_mat("PF5_BrushedSteel", (0.835, 0.862, 0.890), roughness=0.19, metallic=1.0),
-        "brass": base_mat("PF5_SatinBrass", (0.845, 0.702, 0.452), roughness=0.22, metallic=1.0),
-        "charcoal": base_mat("PF5_CharcoalGrip", (0.175, 0.192, 0.202), roughness=0.62, metallic=0.0),
-        "strap": base_mat("PF5_CottonWebbing", (0.225, 0.245, 0.235), roughness=0.74, sheen=0.26),
-        "band": base_mat("PF5_LatexBand", (0.355, 0.535, 0.435), roughness=0.46, coat=0.10),
-        "ball": base_mat("PF5_MatteSageBall", (0.425, 0.575, 0.485), roughness=0.54, coat=0.06),
-        "spring_red": base_mat("PF5_SpringRed", (0.765, 0.205, 0.175), roughness=0.21, metallic=1.0),
-        "spring_blue": base_mat("PF5_SpringBlue", (0.195, 0.455, 0.725), roughness=0.21, metallic=1.0),
-        "spring_gold": base_mat("PF5_SpringGold", (0.875, 0.642, 0.175), roughness=0.21, metallic=1.0),
-        "studio_bg": base_mat("PF5_StudioCyclorama", (0.965, 0.952, 0.926), roughness=0.94),
-        "studio_floor": base_mat("PF5_StudioFloor", (0.955, 0.940, 0.912), roughness=0.84, coat=0.03),
+        # Natural matte-velvet subsurface skin (rich editorial warmth, zero plastic clearcoat!)
+        "skin": base_mat("PF5_PorcelainPeachSkin", (0.835, 0.648, 0.542), roughness=0.54, coat=0.0, sheen=0.12, sheen_roughness=0.70, subsurf=0.22, specular=0.26),
+        "lip_tint": base_mat("PF5_CoralRoseLip", (0.765, 0.415, 0.390), roughness=0.40, coat=0.10, coat_roughness=0.30, subsurf=0.16, specular=0.34),
+        "iris_dark": base_mat("PF5_EspressoAmberIris", (0.165, 0.102, 0.074), roughness=0.14, coat=0.60, coat_roughness=0.12),
+        "lash_ink": base_mat("PF5_VelvetLashInk", (0.07, 0.055, 0.055), roughness=0.58, specular=0.18),
+        # Matte performance jersey activewear (high roughness + soft velvet sheen + micro-knit bump)
+        "suit": base_mat("PF5_SuitSage", (0.195, 0.345, 0.282), roughness=0.78, coat=0.0, sheen=0.52, sheen_roughness=0.66, specular=0.15),
+        "legging": base_mat("PF5_LeggingForest", (0.132, 0.248, 0.200), roughness=0.80, coat=0.0, sheen=0.50, sheen_roughness=0.68, specular=0.14),
+        "suit_accent": base_mat("PF5_SuitPiping", (0.952, 0.938, 0.905), roughness=0.60, coat=0.0, sheen=0.32, specular=0.22),
+        # Silky-matte true Deep Espresso hair (kills washed-out sheen & plastic specular blobs!)
+        "hair": base_mat("PF5_SilkEspressoHair", (0.078, 0.048, 0.036), roughness=0.48, coat=0.0, coat_roughness=0.50, sheen=0.24, sheen_roughness=0.62, specular=0.18, anisotropic=0.28),
+        "sock": base_mat("PF5_GripSockIvory", (0.946, 0.930, 0.892), roughness=0.78, sheen=0.40, specular=0.16),
+        "oak": base_mat("PF5_CathedralWhiteOak", (0.742, 0.578, 0.406), roughness=0.36, coat=0.14, coat_roughness=0.28, specular=0.40),
+        "maple": base_mat("PF5_HardRockMaple", (0.836, 0.710, 0.548), roughness=0.34, coat=0.16, coat_roughness=0.26, specular=0.42),
+        "walnut": base_mat("PF5_AmericanWalnut", (0.338, 0.218, 0.146), roughness=0.38, coat=0.14, coat_roughness=0.28, specular=0.38),
+        "leather": base_mat("PF5_SaddleLeather", (0.472, 0.294, 0.188), roughness=0.48, coat=0.08, coat_roughness=0.34, specular=0.34),
+        "pad": base_mat("PF5_PebbledSageLeather", (0.188, 0.334, 0.274), roughness=0.52, coat=0.05, coat_roughness=0.36, sheen=0.16, specular=0.32),
+        "steel": base_mat("PF5_BrushedSteel", (0.825, 0.850, 0.880), roughness=0.21, metallic=1.0, anisotropic=0.35),
+        "brass": base_mat("PF5_SatinBrass", (0.835, 0.688, 0.436), roughness=0.24, metallic=1.0, anisotropic=0.28),
+        "charcoal": base_mat("PF5_CharcoalGrip", (0.165, 0.180, 0.190), roughness=0.72, metallic=0.0, specular=0.20),
+        "strap": base_mat("PF5_CottonWebbing", (0.215, 0.232, 0.222), roughness=0.84, sheen=0.30, specular=0.14),
+        "band": base_mat("PF5_LatexBand", (0.335, 0.515, 0.418), roughness=0.58, coat=0.0, specular=0.24),
+        "ball": base_mat("PF5_MatteSageBall", (0.365, 0.558, 0.478), roughness=0.70, coat=0.0, sheen=0.16, specular=0.18),
+        "spring_red": base_mat("PF5_SpringRed", (0.775, 0.188, 0.160), roughness=0.22, metallic=1.0),
+        "spring_blue": base_mat("PF5_SpringBlue", (0.180, 0.445, 0.720), roughness=0.22, metallic=1.0),
+        "spring_gold": base_mat("PF5_SpringGold", (0.865, 0.630, 0.165), roughness=0.22, metallic=1.0),
+        # Luminous warm morning linen studio cyclorama (#FAF7F0) with grounded contact shadow fidelity
+        "studio_bg": base_mat("PF5_StudioCyclorama", (0.986, 0.978, 0.958), roughness=0.92, specular=0.06),
+        "studio_floor": base_mat("PF5_StudioFloor", (0.974, 0.964, 0.942), roughness=0.86, specular=0.08),
     }
 
-    # True Directional Cathedral Wood Grain (Wave + Fine Pore Noise -> ColorRamp + Micro-Bump)
+    # True Directional Cathedral Wood Grain (Wave + Fine Pore Noise -> ColorRamp + Roughness + Micro-Bump)
     wood_palettes = {
-        "oak": ((0.715, 0.552, 0.388), (0.805, 0.655, 0.488), (1.6, 14.0, 14.0)),
-        "maple": ((0.815, 0.690, 0.525), (0.888, 0.778, 0.622), (1.5, 13.0, 13.0)),
-        "walnut": ((0.305, 0.195, 0.130), (0.415, 0.282, 0.196), (1.8, 15.0, 15.0)),
+        "oak": ((0.705, 0.542, 0.376), (0.812, 0.662, 0.494), (1.6, 14.0, 14.0)),
+        "maple": ((0.808, 0.682, 0.518), (0.892, 0.782, 0.626), (1.5, 13.0, 13.0)),
+        "walnut": ((0.295, 0.188, 0.124), (0.418, 0.284, 0.198), (1.8, 15.0, 15.0)),
     }
     for key, (dark_srgb, light_srgb, scale_xyz) in wood_palettes.items():
         nt = mats[key].node_tree
@@ -226,44 +245,113 @@ def build_cycles_studio_materials() -> dict[str, bpy.types.Material]:
         wave.wave_type = "BANDS"
         wave.bands_direction = "Y"
         wave.wave_profile = "SIN"
-        wave.inputs["Scale"].default_value = 3.6
-        wave.inputs["Distortion"].default_value = 3.2
-        wave.inputs["Detail"].default_value = 4.0
-        wave.inputs["Detail Scale"].default_value = 1.8
+        wave.inputs["Scale"].default_value = 3.8
+        wave.inputs["Distortion"].default_value = 3.4
+        wave.inputs["Detail"].default_value = 4.5
+        wave.inputs["Detail Scale"].default_value = 1.9
 
         ramp = nt.nodes.new("ShaderNodeValToRGB")
-        ramp.color_ramp.elements[0].position = 0.22
+        ramp.color_ramp.elements[0].position = 0.20
         ramp.color_ramp.elements[0].color = (*srgb_tuple(dark_srgb), 1.0)
         ramp.color_ramp.elements[1].position = 0.82
         ramp.color_ramp.elements[1].color = (*srgb_tuple(light_srgb), 1.0)
 
+        rough_map = nt.nodes.new("ShaderNodeMapRange")
+        rough_map.inputs["From Min"].default_value = 0.0
+        rough_map.inputs["From Max"].default_value = 1.0
+        rough_map.inputs["To Min"].default_value = 0.30
+        rough_map.inputs["To Max"].default_value = 0.44
+
         bump = nt.nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.14
-        bump.inputs["Distance"].default_value = 0.0006
+        bump.inputs["Strength"].default_value = 0.18
+        bump.inputs["Distance"].default_value = 0.0007
 
         nt.links.new(tex_coord.outputs["Object"], mapping.inputs["Vector"])
         nt.links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
         nt.links.new(wave.outputs["Fac"], ramp.inputs["Fac"])
         nt.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
+        nt.links.new(wave.outputs["Fac"], rough_map.inputs["Value"])
+        nt.links.new(rough_map.outputs["Result"], bsdf.inputs["Roughness"])
         nt.links.new(wave.outputs["Fac"], bump.inputs["Height"])
         nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
 
-    # Fine micro-pebble normal relief on botanical sage leather pad
+    # Fine micro-pebble leather relief on upholstery pad
     nt_pad = mats["pad"].node_tree
     bsdf_pad = nt_pad.nodes.get("Principled BSDF")
     tc_pad = nt_pad.nodes.new("ShaderNodeTexCoord")
     mp_pad = nt_pad.nodes.new("ShaderNodeMapping")
-    mp_pad.inputs["Scale"].default_value = (180.0, 180.0, 180.0)
+    mp_pad.inputs["Scale"].default_value = (195.0, 195.0, 195.0)
     ns_pad = nt_pad.nodes.new("ShaderNodeTexNoise")
-    ns_pad.inputs["Scale"].default_value = 8.0
-    ns_pad.inputs["Detail"].default_value = 3.0
+    ns_pad.inputs["Scale"].default_value = 9.0
+    ns_pad.inputs["Detail"].default_value = 3.5
     bm_pad = nt_pad.nodes.new("ShaderNodeBump")
-    bm_pad.inputs["Strength"].default_value = 0.14
-    bm_pad.inputs["Distance"].default_value = 0.0004
+    bm_pad.inputs["Strength"].default_value = 0.18
+    bm_pad.inputs["Distance"].default_value = 0.00045
     nt_pad.links.new(tc_pad.outputs["Object"], mp_pad.inputs["Vector"])
     nt_pad.links.new(mp_pad.outputs["Vector"], ns_pad.inputs["Vector"])
     nt_pad.links.new(ns_pad.outputs["Fac"], bm_pad.inputs["Height"])
     nt_pad.links.new(bm_pad.outputs["Normal"], bsdf_pad.inputs["Normal"])
+
+    # Matte knitted jersey micro-weave bump for activewear (suit, legging, sock, strap)
+    for fkey, fscale, fstrength in [
+        ("suit", 280.0, 0.11),
+        ("legging", 300.0, 0.11),
+        ("sock", 240.0, 0.13),
+        ("strap", 220.0, 0.16),
+    ]:
+        nt_f = mats[fkey].node_tree
+        bsdf_f = nt_f.nodes.get("Principled BSDF")
+        tc_f = nt_f.nodes.new("ShaderNodeTexCoord")
+        mp_f = nt_f.nodes.new("ShaderNodeMapping")
+        mp_f.inputs["Scale"].default_value = (fscale, fscale, fscale)
+        wv_f = nt_f.nodes.new("ShaderNodeTexWave")
+        wv_f.wave_type = "BANDS"
+        wv_f.bands_direction = "DIAGONAL"
+        wv_f.inputs["Scale"].default_value = 2.4
+        wv_f.inputs["Distortion"].default_value = 1.6
+        wv_f.inputs["Detail"].default_value = 2.5
+        bm_f = nt_f.nodes.new("ShaderNodeBump")
+        bm_f.inputs["Strength"].default_value = fstrength
+        bm_f.inputs["Distance"].default_value = 0.0003
+        nt_f.links.new(tc_f.outputs["Object"], mp_f.inputs["Vector"])
+        nt_f.links.new(mp_f.outputs["Vector"], wv_f.inputs["Vector"])
+        nt_f.links.new(wv_f.outputs["Fac"], bm_f.inputs["Height"])
+        nt_f.links.new(bm_f.outputs["Normal"], bsdf_f.inputs["Normal"])
+
+    # Silky combed hair-strand procedural bump (breaks up smooth specular highlight!)
+    nt_h = mats["hair"].node_tree
+    bsdf_h = nt_h.nodes.get("Principled BSDF")
+    tc_h = nt_h.nodes.new("ShaderNodeTexCoord")
+    mp_h = nt_h.nodes.new("ShaderNodeMapping")
+    mp_h.inputs["Scale"].default_value = (95.0, 95.0, 14.0)
+    wv_h = nt_h.nodes.new("ShaderNodeTexWave")
+    wv_h.wave_type = "BANDS"
+    wv_h.bands_direction = "X"
+    wv_h.inputs["Scale"].default_value = 4.2
+    wv_h.inputs["Distortion"].default_value = 2.4
+    wv_h.inputs["Detail"].default_value = 3.0
+    bm_h = nt_h.nodes.new("ShaderNodeBump")
+    bm_h.inputs["Strength"].default_value = 0.16
+    bm_h.inputs["Distance"].default_value = 0.0004
+    nt_h.links.new(tc_h.outputs["Object"], mp_h.inputs["Vector"])
+    nt_h.links.new(mp_h.outputs["Vector"], wv_h.inputs["Vector"])
+    nt_h.links.new(wv_h.outputs["Fac"], bm_h.inputs["Height"])
+    nt_h.links.new(bm_h.outputs["Normal"], bsdf_h.inputs["Normal"])
+
+    # Subtle organic micro-skin & soft matte mini-ball grain bump
+    for skey, sscale, sstrength in [("skin", 420.0, 0.025), ("ball", 240.0, 0.06)]:
+        nt_s = mats[skey].node_tree
+        bsdf_s = nt_s.nodes.get("Principled BSDF")
+        tc_s = nt_s.nodes.new("ShaderNodeTexCoord")
+        ns_s = nt_s.nodes.new("ShaderNodeTexNoise")
+        ns_s.inputs["Scale"].default_value = sscale
+        ns_s.inputs["Detail"].default_value = 3.0
+        bm_s = nt_s.nodes.new("ShaderNodeBump")
+        bm_s.inputs["Strength"].default_value = sstrength
+        bm_s.inputs["Distance"].default_value = 0.00025
+        nt_s.links.new(tc_s.outputs["Object"], ns_s.inputs["Vector"])
+        nt_s.links.new(ns_s.outputs["Fac"], bm_s.inputs["Height"])
+        nt_s.links.new(bm_s.outputs["Normal"], bsdf_s.inputs["Normal"])
 
     return mats
 
@@ -351,7 +439,7 @@ class MeshCollector:
         if bevel_width > 0:
             bev = obj.modifiers.new("Bevel", "BEVEL")
             bev.width = bevel_width
-            bev.segments = 2 if self.glb_mode else 3
+            bev.segments = 2 if self.glb_mode else 4
             bev.limit_method = "ANGLE"
             bev.angle_limit = math.radians(32.0)
             bev.use_clamp_overlap = True
@@ -591,9 +679,9 @@ def add_helical_spring_mesh(
     p2,
     spring_mat_key: str,
     strap_mat_key: str = "strap",
-    coils: int = 13,
-    coil_r: float = 0.0135,
-    wire_r: float = 0.0033,
+    coils: int = 15,
+    coil_r: float = 0.0148,
+    wire_r: float = 0.0038,
     max_coil_len: float | None = 0.44,
 ):
     """Manifold quad-swept 3D helical coil spring + tapered brass end cones & hook eyes."""
@@ -609,7 +697,7 @@ def add_helical_spring_mesh(
             mc, name + "_Coil", v1, s_end, spring_mat_key, strap_mat_key,
             coils=coils, coil_r=coil_r, wire_r=wire_r, max_coil_len=None,
         )
-        add_cylinder_rod(mc, name + "_Cord", s_end, v2, 0.0038, strap_mat_key, segs=8)
+        add_cylinder_rod(mc, name + "_Cord", s_end, v2, 0.0040, strap_mat_key, segs=10)
         return
 
     u_dir = dv.normalized()
@@ -618,11 +706,11 @@ def add_helical_spring_mesh(
     c2 = v2 - u_dir * hook_inset
     coil_L = (c2 - c1).length
 
-    add_cylinder_rod(mc, name + "_PlugA", v1, c1 + u_dir * 0.008, 0.0045, "brass", segs=8, r2=coil_r * 0.68)
-    add_cylinder_rod(mc, name + "_PlugB", c2 - u_dir * 0.008, v2, coil_r * 0.68, "brass", segs=8, r2=0.0045)
+    add_cylinder_rod(mc, name + "_PlugA", v1, c1 + u_dir * 0.008, 0.0048, "brass", segs=10, r2=coil_r * 0.72)
+    add_cylinder_rod(mc, name + "_PlugB", c2 - u_dir * 0.008, v2, coil_r * 0.72, "brass", segs=10, r2=0.0048)
 
-    steps = coils * (4 if mc.glb_mode else 8)
-    r_segs = 6 if mc.glb_mode else 7
+    steps = coils * (4 if mc.glb_mode else 10)
+    r_segs = 6 if mc.glb_mode else 9
     bm = bmesh.new()
     spine_pts = []
     for i in range(steps + 1):
@@ -816,10 +904,10 @@ def build_sculpted_head_and_hair(mc: MeshCollector, skull_center: Vector, up_axi
         (0, 0, 0, 1),
     ))
 
-    # 1) Stylized Korean Webtoon V-Line Face & Cranium Sculpt
+    # 1) Stylized Korean Webtoon V-Line Face & Cranium Sculpt (High-Density in Render Mode)
     bm = bmesh.new()
-    u_seg = 18 if mc.glb_mode else 36
-    v_seg = 14 if mc.glb_mode else 26
+    u_seg = 18 if mc.glb_mode else 48
+    v_seg = 14 if mc.glb_mode else 34
     bmesh.ops.create_uvsphere(bm, u_segments=u_seg, v_segments=v_seg, radius=1.0)
     for v in bm.verts:
         nx, ny, nz = v.co.x, v.co.y, v.co.z
@@ -1110,7 +1198,7 @@ def build_sculpted_hand(
         f"Hand_Palm_{side}",
         palm_stations,
         "skin",
-        radial_segs=14 if mc.glb_mode else 18,
+        radial_segs=14 if mc.glb_mode else 24,
         cap_start=0.006,
         cap_end=0.006,
         subsurf_levels=1,
@@ -1136,10 +1224,10 @@ def build_sculpted_hand(
         f"Thumb_Opposable_{side}",
         thumb_stations,
         "skin",
-        radial_segs=8 if mc.glb_mode else 10,
+        radial_segs=8 if mc.glb_mode else 12,
         cap_start=0.005,
         cap_end=0.005,
-        subsurf_levels=0,
+        subsurf_levels=0 if mc.glb_mode else 1,
     )
 
     finger_specs = [
@@ -1158,15 +1246,16 @@ def build_sculpted_hand(
         tip = dip + d3 * (flen * 0.25)
         f_pts = [mcp - d1 * 0.004, mcp.lerp(pip, 0.5), pip, dip, tip]
         if bar_grip is not None:
-            # Wrap each digit around the 34 mm maple bar; shorter fingers end earlier.
-            axis_point = wrist + fdir * 0.066 - dorsal * 0.022 + lat * (lat_u * 0.030)
-            radius = 0.017 + frad * 0.82
+            # Wrap each digit cleanly around the bar or chair handle grip
+            axis_point = wrist + fdir * 0.064 - dorsal * 0.022 + lat * (lat_u * 0.030)
+            radius = 0.0185 + frad * 0.82
             f_pts = [
                 axis_point + radius * (fdir * math.sin(t * flen / radius)
                                        + dorsal * math.cos(t * flen / radius))
                 for t in (0.0, 0.22, 0.44, 0.75, 1.0)
             ]
-        f_scales = [1.04, 0.96, 0.89, 0.79, 0.66]
+        # Subtle phalangeal joint contour (slightly fuller at MCP/PIP knuckles, slender phalanx shafts)
+        f_scales = [1.06, 0.93, 0.94, 0.80, 0.64]
         f_stations = []
         for idx_f, (fp, sc) in enumerate(zip(f_pts, f_scales)):
             tan_f = (f_pts[min(len(f_pts) - 1, idx_f + 1)] - f_pts[max(0, idx_f - 1)]).normalized()
@@ -1183,10 +1272,10 @@ def build_sculpted_hand(
             f"Finger_{fname}_{side}",
             f_stations,
             "skin",
-            radial_segs=8 if mc.glb_mode else 10,
+            radial_segs=8 if mc.glb_mode else 12,
             cap_start=0.004,
             cap_end=0.004,
-            subsurf_levels=0,
+            subsurf_levels=0 if mc.glb_mode else 1,
         )
 
 
@@ -1269,19 +1358,23 @@ def build_sculpted_grip_foot(
 
     foot_stations = []
     specs = [
-        (-0.043, -0.016, 0.027, 0.028),
-        (-0.008, -0.014, 0.032, 0.032),
-        (0.040, -0.018, 0.033, 0.025),
-        (0.090, -0.024, 0.041, 0.019),
-        (0.130, -0.025, 0.034, 0.014),
+        (-0.044, -0.015, 0.026, 0.028, 0.000),
+        (-0.008, -0.014, 0.032, 0.033, 0.001),
+        (0.042, -0.016, 0.032, 0.025, 0.0065),
+        (0.092, -0.023, 0.041, 0.019, 0.0010),
+        (0.132, -0.024, 0.033, 0.014, 0.000),
     ]
-    for f_off, u_off, hw, hh in specs:
+    for f_off, u_off, hw, hh, arch_lift in specs:
         c = ankle + foot_fwd * f_off + foot_up * u_off
 
-        def foot_prof(th, a=hw, b=hh):
+        def foot_prof(th, a=hw, b=hh, al=arch_lift, ms=med_sign):
             st = math.sin(th)
             ct = math.cos(th)
-            y_val = st * b * (0.62 if st < 0 else 1.12)
+            if st < 0:
+                medial_arch = al * math.exp(-(((ct - ms * 0.42) / 0.48) ** 2)) * (-st)
+                y_val = st * b * 0.62 + medial_arch
+            else:
+                y_val = st * b * 1.14
             return ct * a, y_val
 
         foot_stations.append((c, foot_lat, foot_up, foot_prof))
@@ -1291,7 +1384,7 @@ def build_sculpted_grip_foot(
         f"Foot_Sculpt_{side}",
         foot_stations,
         "sock",
-        radial_segs=14 if mc.glb_mode else 22,
+        radial_segs=14 if mc.glb_mode else 28,
         cap_start=0.010,
         cap_end=0.012,
         subsurf_levels=subsurf,
@@ -1351,16 +1444,16 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             f_ax = -f_ax
         return pt, r_ax, f_ax, tan
 
-    r_segs_torso = 20 if mc.glb_mode else 36
+    r_segs_torso = 20 if mc.glb_mode else 48
 
-    # 1A) High-Waisted Sculpted Legging Pelvis & Gluteal Loft (u = -0.10 .. 0.395, flush waistband hem)
+    # 1A) High-Waisted Sculpted Legging Pelvis & Gluteal Loft (u = -0.10 .. 0.395, flush waistband hem + iliac crest)
     legging_stations = []
     for u_s, rx, ry_front, ry_back, glute_cleft in [
-        (-0.10, 0.116, 0.078, 0.092, 0.010),
-        (0.00, 0.143, 0.089, 0.118, 0.014),
-        (0.12, 0.146, 0.090, 0.119, 0.011),
-        (0.24, 0.129, 0.084, 0.097, 0.003),
-        (0.35, 0.112, 0.079, 0.083, 0.000),
+        (-0.10, 0.116, 0.078, 0.092, 0.011),
+        (0.00, 0.144, 0.089, 0.120, 0.015),
+        (0.10, 0.148, 0.091, 0.121, 0.012),
+        (0.20, 0.136, 0.086, 0.104, 0.005),
+        (0.30, 0.120, 0.081, 0.089, 0.001),
         (0.395, 0.108, 0.077, 0.080, 0.000),
     ]:
         pt, r_ax, f_ax, _ = spine_frame(u_s)
@@ -1368,10 +1461,10 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
         def pelvis_prof(th, a=rx, bf=ry_front, bb=ry_back, cleft=glute_cleft):
             ct, st = math.cos(th), math.sin(th)
             if st >= 0:
-                y = (st ** 0.90) * bf
+                y = (st ** 0.88) * bf
             else:
-                glute_lobe = 1.0 + 0.13 * (math.sin(2.0 * th) ** 2)
-                sacral_dip = cleft * math.exp(-((ct / 0.22) ** 2))
+                glute_lobe = 1.0 + 0.145 * (math.sin(2.0 * th) ** 2)
+                sacral_dip = cleft * math.exp(-((ct / 0.21) ** 2))
                 y = st * bb * glute_lobe + sacral_dip
             return ct * a, y
 
@@ -1387,21 +1480,22 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
         subsurf_levels=subsurf,
     )
 
-    # 1B) Toned Slender Waist / Midriff Loft (u = 0.34 .. 0.57 — flush inside waistband & underbust)
+    # 1B) Toned Slender Waist / Midriff Loft (u = 0.34 .. 0.57 — S-curve waist + costal rib arch + linea alba)
     midriff_stations = []
-    for u_s, rx, ry in [
-        (0.34, 0.106, 0.075),
-        (0.42, 0.103, 0.074),
-        (0.50, 0.108, 0.078),
-        (0.57, 0.114, 0.082),
+    for u_s, rx, ry, lumbar_lordosis in [
+        (0.34, 0.106, 0.075, 0.002),
+        (0.41, 0.101, 0.073, 0.004),
+        (0.49, 0.107, 0.078, 0.002),
+        (0.57, 0.114, 0.082, 0.000),
     ]:
         pt, r_ax, f_ax, _ = spine_frame(u_s)
 
-        def mid_prof(th, a=rx, b=ry):
+        def mid_prof(th, a=rx, b=ry, ld=lumbar_lordosis):
             ct, st = math.cos(th), math.sin(th)
-            linea_alba = 0.0035 * math.exp(-((ct / 0.17) ** 2))
-            oblique_taper = -0.0020 * math.exp(-(((abs(ct) - 0.58) / 0.20) ** 2)) * max(0.0, st)
-            return ct * a, st * b - (linea_alba if st > 0 else -linea_alba * 0.7) + oblique_taper
+            linea_alba = 0.0038 * math.exp(-((ct / 0.16) ** 2))
+            oblique_taper = -0.0024 * math.exp(-(((abs(ct) - 0.58) / 0.20) ** 2)) * max(0.0, st)
+            erector_lobe = -0.0028 * math.exp(-(((abs(ct) - 0.34) / 0.22) ** 2)) * max(0.0, -st)
+            return ct * a, st * b - (linea_alba if st > 0 else -linea_alba * 0.85 - ld) + oblique_taper + erector_lobe
 
         midriff_stations.append((pt, r_ax, f_ax, mid_prof))
     build_loft_from_stations(
@@ -1415,17 +1509,17 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
         subsurf_levels=subsurf,
     )
 
-    # 1C) Sculpted Scoop-Neck Studio Crop Top Loft (u = 0.535 .. 0.875)
+    # 1C) Sculpted Scoop-Neck Studio Crop Top Loft (u = 0.535 .. 0.875 — ribcage + scapular blades + thoracic furrow)
     top_stations = []
-    for u_s, rx, ry_front, ry_back, bust_boost in [
-        (0.535, 0.115, 0.083, 0.083, 0.000),
-        (0.65, 0.126, 0.103, 0.088, 0.015),
-        (0.77, 0.136, 0.107, 0.090, 0.017),
-        (0.875, 0.139, 0.090, 0.086, 0.004),
+    for u_s, rx, ry_front, ry_back, bust_boost, scap_relief in [
+        (0.535, 0.115, 0.083, 0.083, 0.000, 0.001),
+        (0.64, 0.125, 0.102, 0.088, 0.015, 0.003),
+        (0.76, 0.136, 0.108, 0.091, 0.018, 0.0055),
+        (0.875, 0.140, 0.090, 0.087, 0.004, 0.0045),
     ]:
         pt, r_ax, f_ax, _ = spine_frame(u_s)
 
-        def chest_prof(th, a=rx, bf=ry_front, bb=ry_back, boost=bust_boost):
+        def chest_prof(th, a=rx, bf=ry_front, bb=ry_back, boost=bust_boost, sc=scap_relief):
             ct, st = math.cos(th), math.sin(th)
             if st >= 0:
                 bust_lobes = boost * st * (
@@ -1433,8 +1527,11 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
                 )
                 y = st * bf + bust_lobes
             else:
-                scap_groove = 0.0032 * math.exp(-((ct / 0.18) ** 2))
-                y = st * bb + scap_groove
+                spinous_furrow = 0.0042 * math.exp(-((ct / 0.16) ** 2))
+                scapula_blades = -sc * (
+                    math.exp(-(((ct - 0.46) / 0.24) ** 2)) + math.exp(-(((ct + 0.46) / 0.24) ** 2))
+                ) * (-st)
+                y = st * bb + spinous_furrow + scapula_blades
             return ct * a, y
 
         top_stations.append((pt, r_ax, f_ax, chest_prof))
@@ -1551,27 +1648,27 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
         s_p4 = pt_top_edge + r_te * (sign * 0.078) - f_te * 0.072
         add_swept_tube(mc, f"CropStrap_{side}", [s_p0, s_p1, s_p2, s_p3, s_p4], 0.0080, "suit", closed=False, radial_segs=8)
 
-    # 3) Continuous Muscle-Contoured Legging Loft
-    r_segs_limb = 12 if mc.glb_mode else 24
+    # 3) Continuous Muscle-Contoured Legging Loft (Quads + Patella + Gastrocnemius + Achilles)
+    r_segs_limb = 12 if mc.glb_mode else 32
     for side, hp, ft, kpole in [
         ("L", l_hip, l_foot, Vector(rig["lKneePole"])),
         ("R", r_hip, r_foot, Vector(rig["rKneePole"])),
     ]:
         knee, ankle, k_bend = solve_2bone_ik_with_bend(hp, ft, 0.40, 0.39, kpole)
         hem_ankle = knee.lerp(ankle, 0.85)
-        hp_embed = pelvis.lerp(hp, 0.88)
+        hp_embed = pelvis.lerp(hp, 0.72)
         leg_stations = []
         leg_profile_table = [
-            (0.00, 0.082, 0.086, 0.008),
-            (0.14, 0.076, 0.080, 0.006),
-            (0.30, 0.066, 0.070, 0.005),
-            (0.44, 0.053, 0.055, 0.003),
-            (0.50, 0.050, 0.052, 0.004),
+            (0.00, 0.072, 0.076, 0.004),
+            (0.11, 0.080, 0.085, 0.008),
+            (0.24, 0.071, 0.076, 0.006),
+            (0.41, 0.056, 0.058, 0.004),
+            (0.50, 0.050, 0.052, 0.005),
             (0.57, 0.046, 0.048, -0.002),
-            (0.68, 0.050, 0.055, -0.009),
-            (0.82, 0.041, 0.044, -0.004),
-            (0.94, 0.035, 0.037, 0.000),
-            (1.00, 0.034, 0.036, 0.000),
+            (0.67, 0.051, 0.056, -0.010),
+            (0.79, 0.043, 0.046, -0.005),
+            (0.92, 0.034, 0.037, -0.001),
+            (1.00, 0.033, 0.036, 0.000),
         ]
         for s_val, rx_l, ry_l, ant_shift in leg_profile_table:
             pt, tan = sample_rounded_2seg_chain(hp_embed, knee, hem_ankle, s_val, corner_blend=0.14)
@@ -1581,25 +1678,39 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             f_ax.normalize()
             lat_ax = f_ax.cross(tan).normalized()
             c_shifted = pt + f_ax * ant_shift
+            quad_w = math.exp(-(((s_val - 0.27) / 0.13) ** 2))
             patella_w = math.exp(-(((s_val - 0.50) / 0.055) ** 2))
-            calf_w = math.exp(-(((s_val - 0.68) / 0.095) ** 2))
+            calf_w = math.exp(-(((s_val - 0.67) / 0.095) ** 2))
+            achilles_w = math.exp(-(((s_val - 0.92) / 0.07) ** 2))
 
-            def leg_prof(th, a=rx_l, b=ry_l, pw=patella_w, cw=calf_w):
+            def leg_prof(th, a=rx_l, b=ry_l, qw=quad_w, pw=patella_w, cw=calf_w, aw=achilles_w):
                 ct, st = math.cos(th), math.sin(th)
                 dx = ct * a
                 dy = st * b
+                if qw > 0.05:
+                    if st > 0:
+                        # Rectus femoris & vastus medialis/lateralis teardrop sweep
+                        dy += 0.0040 * qw * math.exp(-((ct / 0.44) ** 2)) * st
+                        dx += math.copysign(0.0026 * qw * math.exp(-(((abs(ct) - 0.72) / 0.28) ** 2)), ct)
+                    else:
+                        dy -= 0.0022 * qw * math.exp(-((ct / 0.48) ** 2)) * (-st)
                 if pw > 0.05:
                     if st > 0:
-                        dy += 0.0042 * pw * math.exp(-((ct / 0.34) ** 2)) * st
+                        dy += 0.0046 * pw * math.exp(-((ct / 0.34) ** 2)) * st
                     else:
-                        dy += 0.0030 * pw * math.exp(-((ct / 0.45) ** 2)) * (-st)
-                    dx += math.copysign(0.0022 * pw * (ct * ct), ct)
+                        dy += 0.0032 * pw * math.exp(-((ct / 0.45) ** 2)) * (-st)
+                    dx += math.copysign(0.0024 * pw * (ct * ct), ct)
                 if cw > 0.05:
                     if st > 0:
-                        dy += 0.0020 * cw * math.exp(-((ct / 0.25) ** 2)) * st
+                        dy += 0.0024 * cw * math.exp(-((ct / 0.24) ** 2)) * st
                     else:
-                        twin = math.exp(-(((ct - 0.38) / 0.30) ** 2)) + math.exp(-(((ct + 0.38) / 0.30) ** 2))
-                        dy -= 0.0032 * cw * twin * (-st)
+                        twin = math.exp(-(((ct - 0.38) / 0.29) ** 2)) + math.exp(-(((ct + 0.38) / 0.29) ** 2))
+                        dy -= 0.0038 * cw * twin * (-st)
+                if aw > 0.05 and st < 0:
+                    # Distinct Achilles tendon narrowing flanked by malleolar hollows
+                    ach_ridge = -0.0030 * aw * math.exp(-((ct / 0.24) ** 2)) * (-st)
+                    hollows = 0.0026 * aw * math.exp(-(((abs(ct) - 0.56) / 0.22) ** 2)) * (-st)
+                    dy += ach_ridge + hollows
                 return dx, dy
 
             leg_stations.append((c_shifted, lat_ax, f_ax, leg_prof))
@@ -1636,18 +1747,40 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
                 if forward.length_squared > 0.99 and (candidate - sh).length <= 0.54 * 0.992:
                     wrist_target = candidate
                     bar_grip = (forward, lateral, dorsal)
+        elif rig.get("withChairHandles"):
+            # Wrap fingers neatly around Wunda Chair handle grip (x in [-0.09..+0.03], y=+-0.286, z=1.27)
+            if -0.11 <= hd.x <= 0.05 and abs(abs(hd.y) - 0.286) < 0.035 and abs(hd.z - 1.275) < 0.035:
+                sign_y = 1.0 if hd.y > 0 else -1.0
+                forward = Vector((0.0, sign_y, -0.35)).normalized()
+                lateral = Vector((-1.0 if side == "L" else 1.0, 0.0, 0.0))
+                dorsal = Vector((0.0, 0.35 * sign_y, 0.94)).normalized()
+                candidate = Vector((hd.x, hd.y, 1.275)) - forward * 0.056 + dorsal * 0.024
+                if (candidate - sh).length <= 0.54 * 0.992:
+                    wrist_target = candidate
+                    bar_grip = (forward, lateral, dorsal)
+        elif 0.44 <= hd.x <= 0.52 and 0.70 <= hd.z <= 1.04:
+            # Ladder barrel rung grip (e.g., Grasshopper & standing barrel ladder support)
+            forward = Vector((hd.x - sh.x, 0.0, hd.z - sh.z)).normalized()
+            lateral = Vector((0.0, 1.0 if side == "L" else -1.0, 0.0))
+            dorsal = Vector((-forward.z, 0.0, forward.x))
+            if dorsal.z < 0:
+                dorsal.negate()
+            candidate = hd - forward * 0.062 + dorsal * 0.022
+            if forward.length_squared > 0.99 and (candidate - sh).length <= 0.54 * 0.992:
+                wrist_target = candidate
+                bar_grip = (forward, lateral, dorsal)
 
         elb, wr, e_bend = solve_2bone_ik_with_bend(sh, wrist_target, 0.28, 0.26, epole)
-        sh_embed = chest.lerp(sh, 0.78)
+        sh_embed = chest.lerp(sh, 0.66)
         arm_stations = []
         arm_profile_table = [
-            (0.00, 0.051, 0.049),
-            (0.12, 0.048, 0.046),
-            (0.27, 0.039, 0.041),
-            (0.44, 0.034, 0.035),
+            (0.00, 0.043, 0.043),
+            (0.11, 0.052, 0.050),
+            (0.24, 0.041, 0.043),
+            (0.38, 0.037, 0.039),
             (0.50, 0.034, 0.034),
-            (0.61, 0.035, 0.033),
-            (0.78, 0.028, 0.025),
+            (0.61, 0.036, 0.034),
+            (0.77, 0.028, 0.025),
             (0.93, 0.023, 0.019),
             (1.00, 0.022, 0.018),
         ]
@@ -1658,12 +1791,14 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
                 f_ax = tan.cross(sp_up)
             f_ax.normalize()
             lat_ax = f_ax.cross(tan).normalized()
+            delt_w = math.exp(-(((s_val - 0.11) / 0.085) ** 2))
             elb_w = math.exp(-(((s_val - 0.50) / 0.05) ** 2))
 
-            def arm_prof(th, a=rx_a, b=ry_a, ew=elb_w):
+            def arm_prof(th, a=rx_a, b=ry_a, dw=delt_w, ew=elb_w):
                 ct, st = math.cos(th), math.sin(th)
-                olecranon = -0.0024 * ew * math.exp(-((ct / 0.30) ** 2)) * max(0.0, -st)
-                return ct * a, st * b + olecranon
+                deltoid_cap = 0.0042 * dw * math.exp(-(((abs(ct) - 0.65) / 0.42) ** 2))
+                olecranon = -0.0026 * ew * math.exp(-((ct / 0.30) ** 2)) * max(0.0, -st)
+                return ct * (a + deltoid_cap), st * b + olecranon
 
             arm_stations.append((pt, lat_ax, f_ax, arm_prof))
 
@@ -1672,7 +1807,7 @@ def build_sculpted_practitioner(mc: MeshCollector, rig: dict, subsurf: int = 2):
             f"Arm_Continuous_{side}",
             arm_stations,
             "skin",
-            radial_segs=12 if mc.glb_mode else 20,
+            radial_segs=12 if mc.glb_mode else 28,
             cap_start=0.014,
             cap_end=0.006,
             subsurf_levels=subsurf,
@@ -1757,27 +1892,60 @@ def add_four_slot_brass_gearbar_rack(mc: MeshCollector, name: str, center_x: flo
     mc.emit_bmesh(name, bm, "brass", bevel_width=0.0, smooth=False)
 
 
-def add_double_loop_strap(mc: MeshCollector, name: str, anchor_pt: Vector, forward_dir: Vector, side_axis: Vector):
+def add_double_loop_strap(
+    mc: MeshCollector,
+    name: str,
+    anchor_pt: Vector,
+    forward_dir: Vector,
+    side_axis: Vector,
+    mode: str = "foot",
+):
+    """
+    Precision Reformer double-loop cotton strap + brass swivel D-ring + saddle leather tab.
+    - mode='hand': inner loop (0.125m) terminates cleanly at the palm; unused outer loop drapes gently outward/downward
+      so it NEVER overshoots into the practitioner's thigh/pelvis!
+    - mode='foot': outer loop (0.178m) wraps around the foot arch.
+    - mode='docked': both loops rest neatly on the shoulder-block peg.
+    """
     fwd = forward_dir.normalized()
-    lat = side_axis.normalized()
+    lat = side_axis - fwd * side_axis.dot(fwd)
+    if lat.length < 1e-4:
+        lat = Vector((0.0, 1.0, 0.0))
+    lat.normalize()
     up = lat.cross(fwd).normalized()
 
     d_pts = []
-    for k in range(12):
-        a = 2.0 * math.pi * k / 12
+    for k in range(14):
+        a = 2.0 * math.pi * k / 14
         d_pts.append(anchor_pt + fwd * (0.011 * math.cos(a)) + lat * (0.014 * math.sin(a)))
-    add_swept_tube(mc, f"{name}_DRing", d_pts, 0.0032, "brass", closed=True, radial_segs=6)
+    add_swept_tube(mc, f"{name}_DRing", d_pts, 0.0034, "brass", closed=True, radial_segs=6 if mc.glb_mode else 8)
 
     tab_c = anchor_pt + fwd * 0.024
     quat = fwd.to_track_quat("X", "Z")
-    add_beveled_box(mc, f"{name}_LeatherTab", tab_c, (0.032, 0.026, 0.011), "leather", bevel=0.0, quat=quat)
+    add_beveled_box(mc, f"{name}_LeatherTab", tab_c, (0.030, 0.026, 0.011), "leather", bevel=0.0, quat=quat)
 
-    for loop_tag, loop_len, loop_w, z_drop in [
-        ("InnerLoop", 0.135, 0.034, 0.003),
-        ("OuterLoop", 0.215, 0.044, -0.004),
-    ]:
+    if mode == "hand":
+        loop_specs = [("InnerLoop", 0.116, 0.026, 0.002, 0.0, 0.0)]
+        # Unused outer loop folds compactly underneath the D-ring rather than jutting into the thigh
+        out_dir = (-fwd * 0.22 - Vector((0.0, 0.0, 0.94)) + lat * 0.14).normalized()
         l_pts = []
-        n_l = 16 if mc.glb_mode else 18
+        n_l = 16 if mc.glb_mode else 20
+        for k in range(n_l):
+            a = 2.0 * math.pi * k / n_l
+            u_long = 0.5 * (1.0 + math.cos(a))
+            pinch = 0.25 + 0.75 * math.sin(u_long * math.pi * 0.65)
+            p = tab_c + out_dir * (0.008 + u_long * 0.088) + lat * (math.sin(a) * 0.020 * pinch)
+            l_pts.append(p)
+        add_swept_tube(mc, f"{name}_OuterLoopDrape", l_pts, 0.0040, "strap", closed=True, radial_segs=6 if mc.glb_mode else 8)
+    else:
+        loop_specs = [
+            ("InnerLoop", 0.120, 0.030, 0.003, 0.0, 0.0),
+            ("OuterLoop", 0.175, 0.040, -0.004, 0.0, 0.0),
+        ]
+
+    for loop_tag, loop_len, loop_w, z_drop, _, _ in loop_specs:
+        l_pts = []
+        n_l = 16 if mc.glb_mode else 20
         for k in range(n_l):
             a = 2.0 * math.pi * k / n_l
             u_long = 0.5 * (1.0 + math.cos(a))
@@ -1823,7 +1991,7 @@ def add_brass_star_knob(mc: MeshCollector, name: str, center: Vector, shaft_dir:
 def add_open_c_frame_panel(mc: MeshCollector, name: str, cx: float, y_pos: float, thickness_y: float = 0.038):
     bm = bmesh.new()
     x_back = cx - 0.305
-    x_front = cx + 0.305
+    x_front = cx + 0.255
     z_bot = 0.038
     z_top = 0.556
     w_spine = 0.118
@@ -1985,8 +2153,7 @@ def add_sculpted_magic_circle(mc: MeshCollector, center: Vector, resting_horizon
             add_beveled_box(mc, f"McInnerPad_{tag}", (center.x, center.y + sign * (major_r - 0.015), center.z), (0.042, 0.018, 0.092), "charcoal", bevel=0.005)
 
 
-def add_beveled_eva_foam_roller(mc: MeshCollector, center_y: float):
-    cz = 0.068
+def add_beveled_eva_foam_roller(mc: MeshCollector, center_y: float, center_x: float = 0.0, cz: float = 0.068):
     r_outer = 0.068
     ax_x = Vector((0.0, 1.0, 0.0))
     ax_z = Vector((0.0, 0.0, 1.0))
@@ -2009,7 +2176,7 @@ def add_beveled_eva_foam_roller(mc: MeshCollector, center_y: float):
         (0.450, 0.051),
     ]
     stations = [
-        (Vector((x_p, center_y, cz)), ax_x, ax_z, lambda th, rad=r_p: (math.cos(th) * rad, math.sin(th) * rad))
+        (Vector((center_x + x_p, center_y, cz)), ax_x, ax_z, lambda th, rad=r_p: (math.cos(th) * rad, math.sin(th) * rad))
         for x_p, r_p in roller_profile
     ]
     build_loft_from_stations(
@@ -2017,39 +2184,76 @@ def add_beveled_eva_foam_roller(mc: MeshCollector, center_y: float):
         "FoamRoller_EVABody",
         stations,
         "pad",
-        radial_segs=24,
+        radial_segs=24 if mc.glb_mode else 32,
         cap_start=0.004,
         cap_end=0.004,
         subsurf_levels=0,
     )
     for sign, tag in [(-1.0, "L"), (1.0, "R")]:
-        x_in = sign * 0.446
-        x_out = sign * 0.458
+        x_in = center_x + sign * 0.446
+        x_out = center_x + sign * 0.458
         add_cylinder_rod(mc, f"FoamRoller_EndCap_{tag}", (x_in, center_y, cz), (x_out, center_y, cz), 0.054, "suit_accent", segs=22, r2=0.046 if sign > 0 else 0.054)
-        add_cylinder_rod(mc, f"FoamRoller_Boss_{tag}", (sign * 0.454, center_y, cz), (sign * 0.461, center_y, cz), 0.014, "brass", segs=14)
+        add_cylinder_rod(mc, f"FoamRoller_Boss_{tag}", (center_x + sign * 0.454, center_y, cz), (center_x + sign * 0.461, center_y, cz), 0.014, "brass", segs=14)
 
 
 def add_matte_sage_mini_ball(mc: MeshCollector, center_xy: tuple[float, float]):
     bx, by = center_xy
     r = 0.095
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=24, v_segments=16, radius=r)
+    bmesh.ops.create_uvsphere(bm, u_segments=24 if mc.glb_mode else 36, v_segments=16 if mc.glb_mode else 24, radius=r)
     for v in bm.verts:
         z_world = v.co.z + (r - 0.0015)
         if z_world < 0.0:
             z_world = 0.0
         v.co = (bx + v.co.x, by + v.co.y, z_world)
-    mc.emit_bmesh("MiniBall_MatteSage", bm, "ball", subsurf_levels=0)
+    mc.emit_bmesh("MiniBall_MatteSage", bm, "ball", subsurf_levels=0 if mc.glb_mode else 1)
     add_cylinder_rod(mc, "MiniBall_ValvePlug", (bx, by, 2.0 * r - 0.006), (bx, by, 2.0 * r - 0.001), 0.009, "suit_accent", segs=12)
+
+
+def solve_practitioner_key_joints(rig: dict) -> dict[str, Vector]:
+    """Solves exact IK knee, ankle, elbow, and wrist centers for zero-clip prop & strap attachment."""
+    pelvis = Vector(rig["pelvis"])
+    chest = Vector(rig["chest"])
+    ant_hint = Vector(rig["antHint"])
+    sp_up = (chest - pelvis).normalized() if (chest - pelvis).length > 1e-4 else Vector((0, 0, 1))
+    ant_proj = ant_hint - sp_up * ant_hint.dot(sp_up)
+    if ant_proj.length < 1e-4:
+        ant_proj = Vector((1, 0, 0)) - sp_up * sp_up.x
+    ant_n = ant_proj.normalized()
+    body_right = sp_up.cross(ant_n).normalized()
+    pelvis_right = Vector(rig.get("pelvisRight", body_right))
+    l_hip = pelvis - pelvis_right * 0.086
+    r_hip = pelvis + pelvis_right * 0.086
+    l_sh = chest - body_right * 0.148
+    r_sh = chest + body_right * 0.148
+    l_knee, l_ankle, _ = solve_2bone_ik_with_bend(l_hip, Vector(rig["lFoot"]), 0.40, 0.39, Vector(rig["lKneePole"]))
+    r_knee, r_ankle, _ = solve_2bone_ik_with_bend(r_hip, Vector(rig["rFoot"]), 0.40, 0.39, Vector(rig["rKneePole"]))
+    l_elb, l_wr, _ = solve_2bone_ik_with_bend(l_sh, Vector(rig["lHand"]), 0.28, 0.26, Vector(rig["lElbowPole"]))
+    r_elb, r_wr, _ = solve_2bone_ik_with_bend(r_sh, Vector(rig["rHand"]), 0.28, 0.26, Vector(rig["rElbowPole"]))
+    return {
+        "pelvis": pelvis,
+        "chest": chest,
+        "l_knee": l_knee,
+        "r_knee": r_knee,
+        "l_ankle": l_ankle,
+        "r_ankle": r_ankle,
+        "l_elb": l_elb,
+        "r_elb": r_elb,
+        "l_wr": l_wr,
+        "r_wr": r_wr,
+    }
 
 
 def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
     app = ex["apparatus"]
-    props = ex.get("props") or []
-    l_foot = Vector(rig["lFoot"])
-    r_foot = Vector(rig["rFoot"])
-    l_hand = Vector(rig["lHand"])
-    r_hand = Vector(rig["rHand"])
+    props = [p for p in (ex.get("props") or []) if p != "none"]
+    joints = solve_practitioner_key_joints(rig)
+    l_foot = joints["l_ankle"]
+    r_foot = joints["r_ankle"]
+    l_knee = joints["l_knee"]
+    r_knee = joints["r_knee"]
+    l_hand = joints["l_wr"]
+    r_hand = joints["r_wr"]
 
     if app == "reformer":
         cx = rig.get("carriageX", 0.12)
@@ -2107,40 +2311,55 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             fb_z = 0.48 if ex.get("footbar") == "low" else (0.53 if ex.get("footbar") == "mid" else 0.575)
             fb_x = 0.88 if ex.get("footbar") == "low" else (0.85 if ex.get("footbar") == "mid" else 0.825)
             for sy in (-0.282, 0.282):
-                add_cylinder_rod(mc, f"FbArm_{sy}", (0.955, sy, 0.335), (fb_x, sy, fb_z), 0.013, "steel", segs=12)
+                add_cylinder_rod(mc, f"FbArm_{sy}", (0.955, sy, 0.335), (fb_x, sy, fb_z), 0.013, "steel", segs=14)
                 add_ellipsoid(mc, f"FbKnob_{sy}", (0.955, sy * 1.08, 0.335), 0.016, 0.012, 0.016, "brass", u_seg=10, v_seg=8)
-            add_cylinder_rod(mc, "FbCore", (fb_x, -0.282, fb_z), (fb_x, 0.282, fb_z), 0.015, "steel", segs=12)
-            add_cylinder_rod(mc, "FbPadGrip", (fb_x, -0.255, fb_z), (fb_x, 0.255, fb_z), 0.022, "charcoal", segs=16)
+                add_torus(mc, f"FbGripCollar_{sy}", (fb_x, math.copysign(0.256, sy), fb_z), 0.0225, 0.0040, "brass", axis="Y", segs=16, tsegs=8)
+            add_cylinder_rod(mc, "FbCore", (fb_x, -0.282, fb_z), (fb_x, 0.282, fb_z), 0.015, "steel", segs=14)
+            add_cylinder_rod(mc, "FbPadGrip", (fb_x, -0.255, fb_z), (fb_x, 0.255, fb_z), 0.022, "charcoal", segs=20)
+            # Stitched French seam piping along the padded footbar cover
+            for seam_z in (fb_z + 0.0215, fb_z - 0.0215):
+                add_swept_tube(
+                    mc,
+                    f"FbPadStitch_{seam_z:.3f}",
+                    [Vector((fb_x, -0.248, seam_z)), Vector((fb_x, 0.248, seam_z))],
+                    0.0022,
+                    "suit_accent",
+                    closed=False,
+                    radial_segs=6,
+                )
 
         sp_anchor_x = cx + 0.455
         add_beveled_box(mc, "CarriageSpringBracket", (sp_anchor_x - 0.015, 0.0, 0.338), (0.032, 0.26, 0.026), "steel", bevel=0.0)
         for idx, (sy, sm) in enumerate([(-0.09, "spring_red"), (-0.03, "spring_red"), (0.03, "spring_blue"), (0.09, "spring_gold")]):
             add_ellipsoid(mc, f"GearHook_{idx}", (gear_x, sy, 0.336), 0.009, 0.007, 0.012, "brass", u_seg=8, v_seg=6)
-            add_helical_spring_mesh(mc, f"RefSpring_{idx}", (sp_anchor_x, sy, 0.332), (gear_x - 0.006, sy, 0.332), sm, coils=11, max_coil_len=None)
+            add_helical_spring_mesh(mc, f"RefSpring_{idx}", (sp_anchor_x, sy, 0.332), (gear_x - 0.006, sy, 0.332), sm, coils=15, coil_r=0.015, wire_r=0.0038, max_coil_len=None)
 
         for sy_tag, ry in [("L", -0.28), ("R", 0.28)]:
-            add_cylinder_rod(mc, f"RiserPost_{sy_tag}", (-1.13, ry, 0.35), (-1.13, ry, 0.665), 0.013, "steel", segs=12)
-            add_cylinder_rod(mc, f"RiserCollar_{sy_tag}", (-1.13, ry, 0.42), (-1.13, ry, 0.455), 0.017, "brass", segs=12)
+            add_cylinder_rod(mc, f"RiserPost_{sy_tag}", (-1.13, ry, 0.35), (-1.13, ry, 0.665), 0.013, "steel", segs=14)
+            add_cylinder_rod(mc, f"RiserCollar_{sy_tag}", (-1.13, ry, 0.42), (-1.13, ry, 0.455), 0.017, "brass", segs=14)
             add_ellipsoid(mc, f"RiserFinial_{sy_tag}", (-1.13, ry, 0.672), 0.016, 0.016, 0.012, "brass", u_seg=10, v_seg=8)
             add_beveled_box(mc, f"PulleyClevis_{sy_tag}", (-1.112, ry, 0.64), (0.032, 0.018, 0.022), "brass", bevel=0.0)
-            add_torus(mc, f"PulleyWheel_{sy_tag}", (-1.092, ry, 0.64), 0.022, 0.006, "brass", axis="Y", segs=16, tsegs=8)
+            add_torus(mc, f"PulleyWheel_{sy_tag}", (-1.092, ry, 0.64), 0.022, 0.006, "brass", axis="Y", segs=18, tsegs=8)
 
         if rig.get("ropeToFeet"):
             neg_ft, pos_ft = (l_foot, r_foot) if l_foot.y <= r_foot.y else (r_foot, l_foot)
             for side_t, ry, tgt in [("L", -0.275, neg_ft), ("R", 0.275, pos_ft)]:
                 p0 = Vector((-1.092, ry, 0.64))
                 fdir = (tgt - p0).normalized()
-                anchor = tgt - fdir * 0.16
-                add_swept_tube(mc, f"RopeF_{side_t}", [p0, p0.lerp(anchor, 0.5), anchor], 0.0038, "strap", closed=False, radial_segs=8)
-                add_double_loop_strap(mc, f"StrapF_{side_t}", anchor, fdir, Vector((0.0, 1.0, 0.0)))
+                anchor = tgt - fdir * 0.205
+                add_swept_tube(mc, f"RopeF_{side_t}", [p0, p0.lerp(anchor, 0.5), anchor], 0.0040, "strap", closed=False, radial_segs=8)
+                add_double_loop_strap(mc, f"StrapF_{side_t}", anchor, fdir, Vector((0.0, 1.0, 0.0)), mode="foot")
         elif rig.get("ropeToHands"):
             neg_hd, pos_hd = (l_hand, r_hand) if l_hand.y <= r_hand.y else (r_hand, l_hand)
             for side_t, ry, tgt in [("L", -0.275, neg_hd), ("R", 0.275, pos_hd)]:
                 p0 = Vector((-1.092, ry, 0.64))
-                fdir = (tgt - p0).normalized()
-                anchor = tgt - fdir * 0.15
-                add_swept_tube(mc, f"RopeH_{side_t}", [p0, p0.lerp(anchor, 0.5), anchor], 0.0038, "strap", closed=False, radial_segs=8)
-                add_double_loop_strap(mc, f"StrapH_{side_t}", anchor, fdir, Vector((0.0, 1.0, 0.0)))
+                # Route supine ropes cleanly outside the shoulder blocks & torso before entering the palm loop
+                out_y = math.copysign(max(abs(tgt.y), 0.255), ry)
+                p_guide = Vector((max(-0.55, min(tgt.x - 0.24, cx - 0.24)), out_y, max(0.56, (p0.z + tgt.z) * 0.5 + 0.04)))
+                fdir = (tgt - p_guide).normalized()
+                anchor = tgt - fdir * 0.148
+                add_swept_tube(mc, f"RopeH_{side_t}", [p0, p_guide, anchor], 0.0040, "strap", closed=False, radial_segs=8)
+                add_double_loop_strap(mc, f"StrapH_{side_t}", anchor, fdir, Vector((0.0, math.copysign(1.0, ry), 0.0)), mode="hand")
         else:
             for side_t, ry, peg_y in [("L", -0.275, -0.179), ("R", 0.275, 0.179)]:
                 p_pulley = Vector((-1.092, ry, 0.64))
@@ -2153,6 +2372,7 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
                     p_peg,
                     Vector((-0.96, 0.0, -0.16)).normalized(),
                     Vector((0.0, 1.0 if peg_y > 0 else -1.0, 0.18)).normalized(),
+                    mode="docked",
                 )
 
     elif app == "cadillac":
@@ -2301,13 +2521,13 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
                 p_tip = Vector((cx - 0.205, sign * 0.095, hz + 0.024))
                 add_swept_tube(mc, f"CactusHook_{idx_h}_{sy_tag}", [p_root, p_elbow, p_tip], 0.0052, "brass", closed=False, radial_segs=8)
 
-        add_piped_cushion(mc, "ChairSeat", (cx, 0.0, 0.58), (0.64, 0.55, 0.062))
+        add_piped_cushion(mc, "ChairSeat", (cx - 0.03, 0.0, 0.58), (0.58, 0.55, 0.062))
 
         pdeg = rig.get("pedalDeg", 22.0)
         l_deg = rig.get("lPedalDeg", pdeg)
         r_deg = rig.get("rPedalDeg", pdeg)
         hinge_x, hinge_z = cx - 0.10, 0.088
-        add_cylinder_rod(mc, "ChairHingeAxle", (hinge_x, -0.22, hinge_z), (hinge_x, 0.22, hinge_z), 0.009, "steel", segs=12)
+        add_cylinder_rod(mc, "ChairHingeAxle", (hinge_x, -0.22, hinge_z), (hinge_x, 0.22, hinge_z), 0.009, "steel", segs=14)
 
         for side_tag, py, deg_s, sp_mat, hook_z in [
             ("L", -0.105, l_deg, "spring_red", 0.39),
@@ -2317,24 +2537,29 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             rad = math.radians(deg_s)
             arm_dir = Vector((math.cos(rad), 0.0, math.sin(rad)))
             arm_up = Vector((-math.sin(rad), 0.0, math.cos(rad)))
-            p_end = Vector((hinge_x, py, hinge_z)) + arm_dir * 0.52
+            p_pad = Vector((hinge_x, py, hinge_z)) + arm_dir * 0.54
 
-            arm_mid = Vector((hinge_x, py, hinge_z)) + arm_dir * 0.26
+            arm_mid = Vector((hinge_x, py, hinge_z)) + arm_dir * 0.285
             quat_ped = arm_dir.to_track_quat("X", "Z")
-            add_beveled_box(mc, f"ChairPedalArm_{side_tag}", arm_mid, (0.53, 0.046, 0.032), "walnut", bevel=0.005, quat=quat_ped)
-            pad_center = p_end - arm_dir * 0.055 + arm_up * 0.020
+            add_beveled_box(mc, f"ChairPedalArm_{side_tag}", arm_mid, (0.58, 0.046, 0.032), "walnut", bevel=0.005, quat=quat_ped)
+            pad_center = p_pad + arm_up * 0.017
             add_beveled_box(mc, f"ChairPedalDeck_{side_tag}", pad_center, (0.145, 0.175, 0.022), "walnut", bevel=0.004, quat=quat_ped)
-            add_beveled_box(mc, f"ChairPedalTread_{side_tag}", pad_center + arm_up * 0.013, (0.130, 0.160, 0.012), "charcoal", bevel=0.003, quat=quat_ped)
+            add_beveled_box(mc, f"ChairPedalTread_{side_tag}", pad_center + arm_up * 0.013, (0.132, 0.162, 0.012), "charcoal", bevel=0.003, quat=quat_ped)
+            # Ribbed anti-slip tread bars across the charcoal pedal pad
+            if not mc.glb_mode:
+                for rib_off in (-0.042, -0.014, 0.014, 0.042):
+                    rib_c = pad_center + arm_dir * rib_off + arm_up * 0.0195
+                    add_beveled_box(mc, f"ChairPedalRib_{side_tag}_{rib_off:.3f}", rib_c, (0.009, 0.148, 0.003), "charcoal", bevel=0.0, quat=quat_ped)
 
-            sp_attach = Vector((hinge_x, py * 0.78, hinge_z)) + arm_dir * 0.27 + arm_up * 0.020
+            sp_attach = Vector((hinge_x, py * 0.78, hinge_z)) + arm_dir * 0.29 + arm_up * 0.020
             add_beveled_box(mc, f"PedalSpringEye_{side_tag}", sp_attach - arm_up * 0.008, (0.026, 0.022, 0.024), "brass", bevel=0.0, quat=quat_ped)
             cactus_hook_pt = Vector((cx - 0.22, math.copysign(0.078, py), hook_z + 0.010))
-            add_helical_spring_mesh(mc, f"ChairHookedSpring_{side_tag}", cactus_hook_pt, sp_attach, sp_mat, coils=11, max_coil_len=None)
+            add_helical_spring_mesh(mc, f"ChairHookedSpring_{side_tag}", cactus_hook_pt, sp_attach, sp_mat, coils=13, max_coil_len=None)
 
         if abs(l_deg - r_deg) < 1.0:
             rad0 = math.radians(l_deg)
             arm_d0 = Vector((math.cos(rad0), 0.0, math.sin(rad0)))
-            dowel_c = Vector((hinge_x, 0.0, hinge_z)) + arm_d0 * 0.455
+            dowel_c = Vector((hinge_x, 0.0, hinge_z)) + arm_d0 * 0.515
             for sy_s in (-0.042, 0.042):
                 add_cylinder_rod(mc, f"ChairDowelSleeve_{sy_s}", (dowel_c.x, sy_s - 0.016, dowel_c.z), (dowel_c.x, sy_s + 0.016, dowel_c.z), 0.014, "brass", segs=12)
             add_cylinder_rod(mc, "ChairConnectorDowel", (dowel_c.x, -0.095, dowel_c.z), (dowel_c.x, 0.095, dowel_c.z), 0.0095, "brass", segs=12)
@@ -2393,23 +2618,98 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
         for ey in (-0.22, 0.22):
             add_torus(mc, f"MatEyelet_{ey}", (-0.90, ey, 0.047), 0.014, 0.0038, "brass", axis="Z", segs=14, tsegs=6)
 
+    surface_z = 0.418 if app == "reformer" else (0.578 if app == "cadillac" else 0.048)
+    knee_span = (l_knee - r_knee).length
+    knee_mid = l_knee.lerp(r_knee, 0.5)
+    hand_span = (l_hand - r_hand).length
+    hand_mid = l_hand.lerp(r_hand, 0.5)
+
     if "magic-circle" in props:
         if app == "mat" and ex.get("id") != "ex-core-03":
             add_sculpted_magic_circle(mc, Vector((-0.28, 0.59, 0.0)), resting_horizontal=True)
-        else:
-            rc = l_foot.lerp(r_foot, 0.5) + Vector((-0.03, 0.0, 0.03))
+        elif (
+            knee_span >= 0.16
+            and knee_span <= 0.38
+            and abs(l_knee.x - r_knee.x) < 0.12
+            and min(l_knee.z, r_knee.z) >= surface_z + 0.08
+        ):
+            # Placed accurately between the inner knees/thighs (never piercing the footbar!)
+            rc = Vector((knee_mid.x, knee_mid.y, max(knee_mid.z, surface_z + 0.175)))
             add_sculpted_magic_circle(mc, rc, resting_horizontal=False)
+        elif (
+            not rig.get("ropeToHands")
+            and not rig.get("rolldownBar")
+            and 0.18 <= hand_span <= 0.44
+            and hand_mid.z >= surface_z + 0.22
+        ):
+            add_sculpted_magic_circle(mc, hand_mid, resting_horizontal=False)
+        else:
+            add_sculpted_magic_circle(mc, Vector((-0.28, 0.59, 0.0)), resting_horizontal=True)
 
     if "foam-roller" in props:
-        ry = -0.50 if app == "mat" else -0.44
-        add_beveled_eva_foam_roller(mc, ry)
+        if app == "mat" and rig.get("withFoamRollerUnderSpine"):
+            add_beveled_eva_foam_roller(mc, 0.0, center_x=-0.16, cz=0.046 + 0.068)
+        else:
+            ry = -0.52 if app == "mat" else -0.50
+            add_beveled_eva_foam_roller(mc, ry)
 
     if "mini-ball" in props:
-        if app == "mat":
-            add_matte_sage_mini_ball(mc, (0.44, 0.52))
+        if (
+            app != "mat"
+            and 0.11 <= knee_span <= 0.34
+            and abs(l_knee.x - r_knee.x) < 0.14
+            and min(l_knee.z, r_knee.z) >= surface_z + 0.04
+        ):
+            # Nestled anatomically between the inner knees / distal inner thighs (never above kneecaps or near footbar!)
+            ry_ball = max(0.058, min(0.082, (knee_span - 0.068) * 0.50))
+            rx_ball = 0.084
+            rz_ball = 0.084
+            ball_nest = knee_mid.lerp(joints["pelvis"], 0.24)
+            bp = Vector((ball_nest.x, ball_nest.y, max(ball_nest.z, surface_z + rz_ball + 0.004)))
+            add_ellipsoid(
+                mc,
+                "MiniStabilityBall",
+                bp,
+                rx_ball,
+                ry_ball,
+                rz_ball,
+                "ball",
+                u_seg=22 if mc.glb_mode else 36,
+                v_seg=14 if mc.glb_mode else 24,
+            )
+            add_cylinder_rod(
+                mc,
+                "MiniBall_KneeValve",
+                (bp.x, bp.y, bp.z + rz_ball - 0.004),
+                (bp.x, bp.y, bp.z + rz_ball + 0.001),
+                0.007,
+                "suit_accent",
+                segs=10,
+            )
+        elif (
+            app != "mat"
+            and not rig.get("ropeToHands")
+            and not rig.get("rolldownBar")
+            and 0.14 <= hand_span <= 0.34
+            and abs(l_hand.x - r_hand.x) < 0.10
+            and hand_mid.z >= surface_z + 0.16
+        ):
+            r_hb = max(0.072, min(0.092, hand_span * 0.46))
+            add_ellipsoid(
+                mc,
+                "MiniStabilityBall",
+                hand_mid,
+                r_hb,
+                r_hb,
+                r_hb,
+                "ball",
+                u_seg=22 if mc.glb_mode else 36,
+                v_seg=14 if mc.glb_mode else 24,
+            )
         else:
-            bp = l_foot.lerp(r_foot, 0.5) + Vector((0.0, 0.0, 0.06))
-            add_ellipsoid(mc, "MiniStabilityBall", bp, 0.092, 0.092, 0.092, "ball", u_seg=20, v_seg=14)
+            # Grounded cleanly on the studio floor beside the apparatus (never floating or piercing feet!)
+            floor_xy = (0.44, 0.52) if app == "mat" else (0.48, 0.54)
+            add_matte_sage_mini_ball(mc, floor_xy)
 
     if rig.get("withDumbbells") or "dumbbell" in props:
         for idx, hp in enumerate([l_hand, r_hand]):

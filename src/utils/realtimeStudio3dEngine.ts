@@ -721,6 +721,7 @@ interface StrokeLine3D {
   readonly dash?: readonly number[];
   readonly overlay?: boolean;
   readonly depthBias?: number;
+  readonly arrowEnd?: boolean;
 }
 
 interface LabelCallout3D {
@@ -1278,7 +1279,7 @@ function makeOpenCFramePanelQuads(
   alpha: number,
 ): QuadFace[] {
   const xBack = cx - 0.3;
-  const xFront = cx + 0.3;
+  const xFront = cx + 0.255;
   const zBot = 0.042;
   const zTop = 0.55;
   const wSpine = 0.115;
@@ -2860,20 +2861,20 @@ function buildStudio3DScene(options: {
   const shadowAnchors: { pos: Vec3; rx: number; ry: number }[] = [];
 
   const mirrorSign = mirrored ? -1 : 1;
-  const segTorso = svgFastMode ? 14 : 26;
-  const segLimb = svgFastMode ? 12 : 22;
-  const segNeck = svgFastMode ? 10 : 18;
-  const segHead = svgFastMode ? 14 : 26;
-  const ringsHead = svgFastMode ? 9 : 16;
-  const segCyl = svgFastMode ? 8 : 18;
-  const segBolt = svgFastMode ? 6 : 12;
-  const ringsBolt = svgFastMode ? 5 : 7;
-  const segSphere = svgFastMode ? 10 : 22;
-  const ringsSphere = svgFastMode ? 6 : 14;
-  const segTorus = svgFastMode ? 12 : 24;
-  const tubeSegTorus = svgFastMode ? 5 : 9;
-  const segVault = svgFastMode ? 18 : 32;
-  const segStrap = svgFastMode ? 6 : 14;
+  const segTorso = svgFastMode ? 14 : 32;
+  const segLimb = svgFastMode ? 12 : 28;
+  const segNeck = svgFastMode ? 10 : 22;
+  const segHead = svgFastMode ? 14 : 32;
+  const ringsHead = svgFastMode ? 9 : 20;
+  const segCyl = svgFastMode ? 8 : 22;
+  const segBolt = svgFastMode ? 6 : 14;
+  const ringsBolt = svgFastMode ? 5 : 8;
+  const segSphere = svgFastMode ? 10 : 26;
+  const ringsSphere = svgFastMode ? 6 : 16;
+  const segTorus = svgFastMode ? 12 : 28;
+  const tubeSegTorus = svgFastMode ? 5 : 10;
+  const segVault = svgFastMode ? 18 : 36;
+  const segStrap = svgFastMode ? 6 : 16;
 
   const isClay = shader === 'clay-wire';
   const oakRgb: Rgb = isClay
@@ -4079,8 +4080,8 @@ function buildStudio3DScene(options: {
     }
 
     const seat = makePipedCushion(
-      [cx, 0, 0.58],
-      [0.64, 0.55, 0.062],
+      [cx - 0.03, 0, 0.58],
+      [0.58, 0.55, 0.062],
       leatherRgb,
       pipingHex,
       appAlpha,
@@ -4095,17 +4096,17 @@ function buildStudio3DScene(options: {
     const rDeg = rig.rPedalDeg ?? pdeg;
     const lRad = (lDeg * Math.PI) / 180;
     const rRad = (rDeg * Math.PI) / 180;
-    const lPx = cx - 0.1 + Math.cos(lRad) * 0.52;
-    const lPz = 0.08 + Math.sin(lRad) * 0.52;
-    const rPx = cx - 0.1 + Math.cos(rRad) * 0.52;
-    const rPz = 0.08 + Math.sin(rRad) * 0.52;
+    const lPx = cx - 0.1 + Math.cos(lRad) * 0.54;
+    const lPz = 0.088 + Math.sin(lRad) * 0.54;
+    const rPx = cx - 0.1 + Math.cos(rRad) * 0.54;
+    const rPz = 0.088 + Math.sin(rRad) * 0.54;
     for (const [py, pxSide, pzSide] of [
       [-0.105, lPx, lPz],
       [0.105, rPx, rPz],
     ] as const) {
       quads.push(
         ...makeCylinder3D(
-          [cx - 0.1, py, 0.08],
+          [cx - 0.1, py, 0.088],
           [pxSide, py, pzSide],
           0.021,
           walnutRgb,
@@ -4116,8 +4117,8 @@ function buildStudio3DScene(options: {
           'wood',
         ),
         ...makeCylinder3D(
-          [pxSide, py - 0.085, pzSide + 0.012],
-          [pxSide, py + 0.085, pzSide + 0.012],
+          [pxSide, py - 0.085, pzSide + 0.022],
+          [pxSide, py + 0.085, pzSide + 0.022],
           0.022,
           charcoalRgb,
           segCyl,
@@ -4825,14 +4826,25 @@ function buildStudio3DScene(options: {
     rig.activeZones.includes('core') ||
     rig.activeZones.includes('obliques') ||
     rig.activeZones.includes('back');
+  const glutesActive = rig.activeZones.includes('glutes');
+  const shoulderActive = rig.activeZones.includes('shoulders');
+  const activePulse = Math.max(0.28, smoothstep(phaseT));
   const cropTopTone: Rgb =
-    !isClay && coreActive && phaseT > 0.25
+    !isClay && coreActive && (phaseT > 0.18 || showBiomechOverlay)
       ? [
-          lerp(cropTopBaseRgb[0], coralRgb[0], phaseT * 0.4),
-          lerp(cropTopBaseRgb[1], coralRgb[1], phaseT * 0.36),
-          lerp(cropTopBaseRgb[2], coralRgb[2], phaseT * 0.32),
+          lerp(cropTopBaseRgb[0], coralRgb[0], activePulse * 0.44),
+          lerp(cropTopBaseRgb[1], coralRgb[1], activePulse * 0.38),
+          lerp(cropTopBaseRgb[2], coralRgb[2], activePulse * 0.34),
         ]
       : cropTopBaseRgb;
+  const pelvisTone: Rgb =
+    !isClay && (glutesActive || rig.activeZones.includes('core')) && (phaseT > 0.18 || showBiomechOverlay)
+      ? [
+          lerp(leggingRgb[0], coralRgb[0], activePulse * (glutesActive ? 0.38 : 0.2)),
+          lerp(leggingRgb[1], coralRgb[1], activePulse * (glutesActive ? 0.34 : 0.18)),
+          lerp(leggingRgb[2], coralRgb[2], activePulse * (glutesActive ? 0.28 : 0.14)),
+        ]
+      : leggingRgb;
 
   const spineFrame = (uClamped: number): { pt: Vec3; rAx: Vec3; fAx: Vec3; tan: Vec3 } => {
     const uc = Math.max(0, Math.min(1, uClamped));
@@ -4885,11 +4897,11 @@ function buildStudio3DScene(options: {
   quads.push(
     ...makeStationLoftQuads(
       leggingStations,
-      leggingRgb,
+      pelvisTone,
       segTorso,
       bodyAlpha,
       0.04,
-      0,
+      glutesActive && !isClay ? activePulse * 0.28 : 0,
       18,
       0.024,
       0,
@@ -5188,6 +5200,15 @@ function buildStudio3DScene(options: {
     [1.0, 0.023, 0.018], // Wrist joint into palm
   ];
 
+  const armTone: Rgb =
+    !isClay && shoulderActive && (phaseT > 0.18 || showBiomechOverlay)
+      ? [
+          lerp(skinRgb[0], coralRgb[0], activePulse * 0.22),
+          lerp(skinRgb[1], coralRgb[1], activePulse * 0.16),
+          lerp(skinRgb[2], coralRgb[2], activePulse * 0.12),
+        ]
+      : skinRgb;
+
   for (const [side, shPt, elbPt, wrPt, eBend] of [
     ['L', lSh, lElb, lWr, lElbowBend],
     ['R', rSh, rElb, rWr, rElbowBend],
@@ -5206,12 +5227,12 @@ function buildStudio3DScene(options: {
       ...makeTaperedTubeQuads(
         armPts,
         armRadii,
-        skinRgb,
+        armTone,
         segLimb,
         bodyAlpha,
-        0.14,
-        0,
-        20,
+        0.11,
+        shoulderActive && !isClay ? activePulse * 0.16 : 0,
+        18,
         eBend,
         0.018,
         0.006,
@@ -5261,6 +5282,102 @@ function buildStudio3DScene(options: {
       dash: [4, 3],
       overlay: true,
     });
+
+    // Active Muscle Zone Korean Highlights + Spring Assist/Resist Force Vector Arrows
+    const zoneLabelMap: Record<ActiveMuscleZone3D, string> = {
+      core: '코어',
+      glutes: '둔근',
+      quads: '대퇴사두',
+      obliques: '복사근',
+      back: '척추기립근',
+      adductors: '내전근',
+      shoulders: '삼각근·견갑',
+    };
+    const activeMuscleSummary = rig.activeZones
+      .slice(0, 3)
+      .map((z) => zoneLabelMap[z])
+      .join(' · ');
+    if (activeMuscleSummary) {
+      callouts.push({
+        pos: add3(rig.chest, [0, 0.04, 0.22]),
+        text: `활성근: ${activeMuscleSummary}`,
+        bg: 'rgba(182, 68, 46, 0.92)',
+        fg: '#FFFDF8',
+      });
+    }
+
+    if (apparatus === 'reformer' && activeSpringColors.length > 0) {
+      const cxVec = rig.carriageX ?? 0.12;
+      const isAssistReformer =
+        exercise.blockCategory === 'plank' ||
+        exercise.bodyPosition === 'standing' ||
+        exercise.bodyPosition === 'kneeling' ||
+        /1B|1Y/i.test(effectiveSprings);
+      const forceColor = isAssistReformer ? '#1B7A5E' : '#C94A29';
+      const arrowStart: Vec3 = [cxVec + 0.44, -0.18, 0.34];
+      const arrowEnd: Vec3 = [Math.min(0.92, cxVec + 0.74), -0.18, 0.34];
+      lines.push({
+        pts: [arrowStart, arrowEnd],
+        stroke: forceColor,
+        width: 2.8,
+        overlay: true,
+        arrowEnd: true,
+      });
+      callouts.push({
+        pos: [(arrowStart[0] + arrowEnd[0]) * 0.5, -0.22, 0.25],
+        text: isAssistReformer
+          ? `스프링 보조 → (+${springStretchPct}%)`
+          : `스프링 저항 ← (+${springStretchPct}%)`,
+        bg: isAssistReformer ? 'rgba(24, 102, 78, 0.92)' : 'rgba(186, 62, 38, 0.92)',
+        fg: '#FFFDF8',
+      });
+    } else if (apparatus === 'chair') {
+      const pdegVec = rig.pedalDeg ?? 22;
+      const radVec = (pdegVec * Math.PI) / 180;
+      const pxVec = -0.2 + Math.cos(radVec) * 0.54;
+      const pzVec = 0.088 + Math.sin(radVec) * 0.54;
+      const isAssistChair =
+        exercise.bodyPosition === 'standing' ||
+        exercise.blockCategory === 'plank' ||
+        /going|pike|pull/i.test(exercise.id);
+      const forceColor = isAssistChair ? '#1B7A5E' : '#C94A29';
+      const arrowStart: Vec3 = [pxVec + 0.04, 0, pzVec + 0.04];
+      const arrowEnd: Vec3 = [pxVec - 0.06, 0, pzVec + 0.24];
+      lines.push({
+        pts: [arrowStart, arrowEnd],
+        stroke: forceColor,
+        width: 2.8,
+        overlay: true,
+        arrowEnd: true,
+      });
+      callouts.push({
+        pos: [pxVec + 0.08, 0, pzVec + 0.24],
+        text: isAssistChair ? '페달 스프링 보조 ↑' : '페달 스프링 저항 ↑',
+        bg: isAssistChair ? 'rgba(24, 102, 78, 0.92)' : 'rgba(186, 62, 38, 0.92)',
+        fg: '#FFFDF8',
+      });
+    } else if (apparatus === 'cadillac') {
+      const isAssistCad = Boolean(rig.rolldownBar) || Boolean(rig.pushthroughDeg !== undefined);
+      const forceColor = isAssistCad ? '#1B7A5E' : '#C94A29';
+      const fStart: Vec3 = rig.rolldownBar
+        ? [rig.rolldownBar[0], 0, rig.rolldownBar[1]]
+        : [0.22, 0, 1.32];
+      const fEnd: Vec3 = rig.rolldownBar ? [0.96, 0, 1.72] : [-0.42, 0, 1.56];
+      lines.push({
+        pts: [fStart, fEnd],
+        stroke: forceColor,
+        width: 2.6,
+        overlay: true,
+        arrowEnd: true,
+      });
+      callouts.push({
+        pos: vlerp(fStart, fEnd, 0.52),
+        text: isAssistCad ? '타워 스프링 보조 ↗' : '스프링 저항 ↖',
+        bg: isAssistCad ? 'rgba(24, 102, 78, 0.92)' : 'rgba(186, 62, 38, 0.92)',
+        fg: '#FFFDF8',
+      });
+    }
+
     callouts.push(
       {
         pos: add3(rKnee, [0, 0.04, 0.08]),
@@ -5422,34 +5539,34 @@ function evalStudioPbrLitRgb(
   let bF: number;
 
   if (role === 'skin') {
-    const wrap = Math.max(0, (dot3(n, keyDir) + 0.35) / 1.35);
-    const midMask = Math.max(0, 1 - Math.abs(wrap - 0.5) * 1.85);
-    const sssScale = 0.58 + 0.42 * midMask;
-    const skinRim = Math.pow(1 - ndv, 2.8) * 0.12;
-    const specPow = Math.pow(ndh, q.shininess ?? 20) * Math.min(q.spec, 0.16);
+    const wrap = Math.max(0, (dot3(n, keyDir) + 0.4) / 1.4);
+    const midMask = Math.max(0, 1 - Math.abs(wrap - 0.5) * 1.8);
+    const sssScale = 0.62 + 0.38 * midMask;
+    const skinRim = Math.pow(1 - ndv, 3.0) * 0.1;
+    const specPow = Math.pow(ndh, q.shininess ?? 16) * Math.min(q.spec, 0.1);
     const shade =
-      (0.42 + wrap * 0.46 + diffFill * 0.2 + diffBounce * 0.85 + skinRim + emissiveLift) * ao;
-    rF = q.baseRgb[0] * shade + 10 * sssScale + specPow * 238;
-    gF = q.baseRgb[1] * shade + 4 * sssScale + specPow * 228;
-    bF = q.baseRgb[2] * shade + 1 * sssScale + specPow * 218;
+      (0.45 + wrap * 0.44 + diffFill * 0.21 + diffBounce * 0.85 + skinRim + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + 11 * sssScale + specPow * 236;
+    gF = q.baseRgb[1] * shade + 4.5 * sssScale + specPow * 226;
+    bF = q.baseRgb[2] * shade + 1.5 * sssScale + specPow * 216;
   } else if (role === 'wood') {
-    const grain = 1 + 0.035 * Math.sin(pos3[0] * 38 + pos3[1] * 11);
-    const coatRim = Math.pow(1 - ndv, 3.0) * 0.12;
-    const baseSpec = Math.pow(ndh, q.shininess ?? 28) * (q.spec * 0.65);
-    const coatSpec = Math.pow(ndh, 52) * 0.22;
+    const grain = 1 + 0.038 * Math.sin(pos3[0] * 38 + pos3[1] * 11);
+    const coatRim = Math.pow(1 - ndv, 3.0) * 0.11;
+    const baseSpec = Math.pow(ndh, q.shininess ?? 28) * (q.spec * 0.62);
+    const coatSpec = Math.pow(ndh, 48) * 0.18;
     const shade =
-      (0.45 + diffKey * 0.43 + diffFill * 0.22 + diffBounce + coatRim + emissiveLift) * ao * grain;
+      (0.46 + diffKey * 0.43 + diffFill * 0.22 + diffBounce + coatRim + emissiveLift) * ao * grain;
     const specTotal = baseSpec + coatSpec;
     rF = q.baseRgb[0] * shade + specTotal * 238;
     gF = q.baseRgb[1] * shade + specTotal * 232;
     bF = q.baseRgb[2] * shade + specTotal * 220;
   } else if (role === 'fabric') {
-    const velvetSheen = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 3.0) * 0.14;
-    const specPow = Math.pow(ndh, q.shininess ?? 16) * Math.min(q.spec, 0.05);
-    const shade = (0.46 + diffKey * 0.42 + diffFill * 0.23 + diffBounce + emissiveLift) * ao;
-    rF = q.baseRgb[0] * shade + velvetSheen * (q.baseRgb[0] * 0.45 + 142) + specPow * 220;
-    gF = q.baseRgb[1] * shade + velvetSheen * (q.baseRgb[1] * 0.45 + 148) + specPow * 222;
-    bF = q.baseRgb[2] * shade + velvetSheen * (q.baseRgb[2] * 0.45 + 140) + specPow * 216;
+    const velvetSheen = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 2.8) * 0.18;
+    const specPow = Math.pow(ndh, q.shininess ?? 14) * Math.min(q.spec, 0.035);
+    const shade = (0.47 + diffKey * 0.41 + diffFill * 0.23 + diffBounce + emissiveLift) * ao;
+    rF = q.baseRgb[0] * shade + velvetSheen * (q.baseRgb[0] * 0.45 + 136) + specPow * 212;
+    gF = q.baseRgb[1] * shade + velvetSheen * (q.baseRgb[1] * 0.45 + 144) + specPow * 216;
+    bF = q.baseRgb[2] * shade + velvetSheen * (q.baseRgb[2] * 0.45 + 136) + specPow * 210;
   } else if (role === 'chrome' || role === 'brass') {
     const skyT = Math.max(-1, Math.min(1, n[2] * 0.72 + (2 * ndv * n[2] - viewDir[2]) * 0.28));
     let envR: number;
@@ -5600,8 +5717,8 @@ function drawSceneRegion(params: {
     bgGrad.addColorStop(0.64, '#E5E1D9');
     bgGrad.addColorStop(1, '#D8D2C8');
   } else {
-    bgGrad.addColorStop(0, '#F7F4EC');
-    bgGrad.addColorStop(0.6, MOTION_STUDIO_MATERIALS.horizon);
+    bgGrad.addColorStop(0, '#FAF7F0');
+    bgGrad.addColorStop(0.62, '#F6F2E9');
     bgGrad.addColorStop(1, MOTION_STUDIO_MATERIALS.floor);
   }
   ctx.fillStyle = bgGrad;
@@ -5873,27 +5990,48 @@ function drawSceneRegion(params: {
     }
   }
 
-  // Foreground Kinematic Overlays (Trajectory Excursion, Skeleton X-Ray, Plumb Line)
+  // Foreground Kinematic Overlays (Trajectory Excursion, Skeleton X-Ray, Plumb Line, Spring Force Arrows)
   for (const ln of overlayLines) {
     ctx.save();
     ctx.strokeStyle = ln.stroke;
+    ctx.fillStyle = ln.stroke;
     ctx.lineWidth = ln.width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     if (ln.dash) ctx.setLineDash([...ln.dash]);
     ctx.beginPath();
-    let started = false;
+    const projectedPts: { x: number; y: number }[] = [];
     for (const pt of ln.pts) {
       const pr = project(pt);
       if (!pr.valid) continue;
-      if (!started) {
+      if (projectedPts.length === 0) {
         ctx.moveTo(pr.x, pr.y);
-        started = true;
       } else {
         ctx.lineTo(pr.x, pr.y);
       }
+      projectedPts.push({ x: pr.x, y: pr.y });
     }
-    if (started) ctx.stroke();
+    if (projectedPts.length > 0) ctx.stroke();
+    if (ln.arrowEnd && projectedPts.length >= 2) {
+      const tip = projectedPts[projectedPts.length - 1]!;
+      const prev = projectedPts[projectedPts.length - 2]!;
+      const dx = tip.x - prev.x;
+      const dy = tip.y - prev.y;
+      const segLen = Math.hypot(dx, dy);
+      if (segLen > 3) {
+        const ux = dx / segLen;
+        const uy = dy / segLen;
+        const headLen = Math.min(11, Math.max(7, ln.width * 3.4));
+        const headW = headLen * 0.56;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(tip.x, tip.y);
+        ctx.lineTo(tip.x - ux * headLen - uy * headW, tip.y - uy * headLen + ux * headW);
+        ctx.lineTo(tip.x - ux * headLen + uy * headW, tip.y - uy * headLen - ux * headW);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
     ctx.restore();
   }
 

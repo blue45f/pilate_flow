@@ -85,7 +85,7 @@ def build_infinity_cyclorama_bowl(collection, mat) -> bpy.types.Object:
     return obj
 
 
-def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: int = 12, target_scene: bpy.types.Scene | None = None):
+def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: int = 20, target_scene: bpy.types.Scene | None = None):
     scene = target_scene or bpy.context.scene
     for obj in list(scene.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -95,19 +95,27 @@ def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: in
     try:
         prefs.compute_device_type = "METAL"
         prefs.get_devices()
+        has_metal = any(d.type == "METAL" for d in prefs.devices)
         for d in prefs.devices:
-            d.use = True
-        scene.cycles.device = "GPU"
+            d.use = (d.type == "METAL") if has_metal else True
+        scene.cycles.device = "GPU" if has_metal else "CPU"
     except Exception:
         scene.cycles.device = "CPU"
 
     scene.cycles.samples = samples
+    scene.cycles.use_adaptive_sampling = True
+    scene.cycles.adaptive_threshold = 0.032
     scene.cycles.use_denoising = True
     scene.cycles.denoiser = "OPENIMAGEDENOISE"
+    if hasattr(scene.cycles, "denoising_prefilter"):
+        scene.cycles.denoising_prefilter = "FAST"
+    if hasattr(scene.cycles, "denoising_use_gpu"):
+        scene.cycles.denoising_use_gpu = True
     scene.cycles.max_bounces = 3
     scene.cycles.diffuse_bounces = 2
     scene.cycles.glossy_bounces = 2
-    scene.render.use_persistent_data = False
+    scene.cycles.filter_width = 1.15
+    scene.render.use_persistent_data = True
     scene.render.resolution_x = res_x
     scene.render.resolution_y = res_y
     scene.render.resolution_percentage = 100
@@ -115,18 +123,59 @@ def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: in
     scene.render.image_settings.color_mode = "RGB"
     scene.render.image_settings.color_depth = "8"
     scene.view_settings.view_transform = "AgX"
-    scene.view_settings.look = "None"
-    scene.view_settings.exposure = 0.28
+    try:
+        scene.view_settings.look = "AgX - Medium High Contrast"
+    except Exception:
+        scene.view_settings.look = "None"
+    scene.view_settings.exposure = 0.08
 
     mats = build_cycles_studio_materials()
+
+    # Calibrate studio_bg with camera-ray-only warm morning linen (#FAF7F0) cove lift:
+    # preserves 100% sculptural lighting on the practitioner & crisp grounded floor shadows
+    # while eliminating dark grazing-angle gray falloff on the upper infinity cyclorama.
+    nt_bg = mats["studio_bg"].node_tree
+    bsdf_bg = nt_bg.nodes.get("Principled BSDF")
+    out_bg = nt_bg.nodes.get("Material Output")
+    if bsdf_bg and out_bg:
+        lp = nt_bg.nodes.new("ShaderNodeLightPath")
+        geom = nt_bg.nodes.new("ShaderNodeNewGeometry")
+        sep_xyz = nt_bg.nodes.new("ShaderNodeSeparateXYZ")
+        map_z = nt_bg.nodes.new("ShaderNodeMapRange")
+        map_z.clamp = True
+        map_z.interpolation_type = "SMOOTHSTEP"
+        map_z.inputs["From Min"].default_value = 0.04
+        map_z.inputs["From Max"].default_value = 1.65
+        map_z.inputs["To Min"].default_value = 0.36
+        map_z.inputs["To Max"].default_value = 0.92
+
+        mul_cam = nt_bg.nodes.new("ShaderNodeMath")
+        mul_cam.operation = "MULTIPLY"
+
+        linen_emit = nt_bg.nodes.new("ShaderNodeEmission")
+        # AgX-calibrated warm morning linen radiance -> renders cleanly at #FAF7F0 / #F7F3EA
+        linen_emit.inputs["Color"].default_value = (1.0, 0.952, 0.858, 1.0)
+        linen_emit.inputs["Strength"].default_value = 5.6
+
+        mix_bg = nt_bg.nodes.new("ShaderNodeMixShader")
+        nt_bg.links.new(geom.outputs["Position"], sep_xyz.inputs["Vector"])
+        nt_bg.links.new(sep_xyz.outputs["Z"], map_z.inputs["Value"])
+        nt_bg.links.new(lp.outputs["Is Camera Ray"], mul_cam.inputs[0])
+        nt_bg.links.new(map_z.outputs["Result"], mul_cam.inputs[1])
+        nt_bg.links.new(mul_cam.outputs["Value"], mix_bg.inputs["Fac"])
+        nt_bg.links.new(bsdf_bg.outputs["BSDF"], mix_bg.inputs[1])
+        nt_bg.links.new(linen_emit.outputs["Emission"], mix_bg.inputs[2])
+        nt_bg.links.new(mix_bg.outputs["Shader"], out_bg.inputs["Surface"])
+
     build_infinity_cyclorama_bowl(scene.collection, mats["studio_bg"])
 
     world = scene.world or bpy.data.worlds.new("StudioWorld")
     scene.world = world
-    world.use_nodes = True
+    if world.node_tree is None:
+        world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
-    bg.inputs["Color"].default_value = (*srgb_tuple((0.972, 0.960, 0.936)), 1.0)
-    bg.inputs["Strength"].default_value = 0.78
+    bg.inputs["Color"].default_value = (*srgb_tuple((0.992, 0.984, 0.964)), 1.0)
+    bg.inputs["Strength"].default_value = 0.36
 
     def add_area_light(lname: str, loc, rot_deg, energy: float, size: float, color):
         ldata = bpy.data.lights.new(lname, type="AREA")
@@ -139,11 +188,11 @@ def setup_flagship_cycles_studio(res_x: int = 640, res_y: int = 400, samples: in
         scene.collection.objects.link(lobj)
         return lobj
 
-    # Warm Morning Atelier Softboxes + Cyclorama Wash (seamless #f6f3ec studio backdrop)
-    add_area_light("AtelierKeyLight", (-2.3, -2.6, 3.1), (46, -18, -28), 235.0, 2.8, (1.0, 0.972, 0.930))
-    add_area_light("AtelierFillLight", (2.6, -2.4, 2.2), (56, 20, 32), 110.0, 3.4, (0.96, 0.98, 1.0))
-    add_area_light("AtelierRimLight", (0.2, 2.1, 2.9), (-36, 0, 0), 115.0, 2.8, (1.0, 0.985, 0.95))
-    add_area_light("AtelierCycWash", (0.0, 1.2, 4.6), (0, 0, 0), 165.0, 6.2, (0.995, 0.982, 0.956))
+    # Warm Morning Natural Daylight Linen Atelier (#FAF7F0) + Sculptural 3D Modeling & Grounded Shadows
+    add_area_light("AtelierKeyLight", (-2.4, -2.8, 3.5), (46, -18, -28), 335.0, 1.25, (1.0, 0.964, 0.905))
+    add_area_light("AtelierFillLight", (2.8, -2.5, 2.3), (56, 20, 32), 76.0, 3.5, (0.975, 0.985, 1.0))
+    add_area_light("AtelierRimLight", (0.3, 2.4, 3.0), (-36, 0, 0), 148.0, 2.0, (1.0, 0.974, 0.918))
+    add_area_light("AtelierCycWash", (0.0, 2.0, 5.2), (10, 0, 0), 195.0, 7.4, (1.0, 0.988, 0.964))
 
     cam_data = bpy.data.cameras.new("StudioCamera")
     cam_data.lens = 66.0
@@ -214,7 +263,7 @@ def frame_inside_studio(cam, envelope, exercise_id):
     for focal_length in (66, 50, 35, 24):
         cam.data.lens = focal_length
         aim_camera_perspective_exact(cam, envelope, azim_deg=azimuth, elev_deg=elevation,
-                                     margin=1.15, aspect=640.0 / 400.0)
+                                     margin=1.11, aspect=640.0 / 400.0)
         height = max(0, min(cam.location.z, COVE_RADIUS))
         wall_radius = FLOOR_RADIUS + math.sqrt(height * (2 * COVE_RADIUS - height))
         if math.hypot(cam.location.x, cam.location.y) < wall_radius - 0.05:
@@ -230,17 +279,27 @@ def main():
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--end", type=int, default=9999)
     parser.add_argument("--apparatus", type=str, default="")
+    parser.add_argument("--ids", type=str, default="")
+    parser.add_argument("--res-x", type=int, default=720)
+    parser.add_argument("--res-y", type=int, default=450)
+    parser.add_argument("--samples", type=int, default=14)
+    parser.add_argument("--skip-existing", action="store_true")
     args = parser.parse_args(argv)
 
     os.makedirs(args.outdir, exist_ok=True)
     with open(args.poses, "r", encoding="utf-8") as f:
         all_exercises = json.load(f)
 
+    if args.ids:
+        id_set = {x.strip() for x in args.ids.split(",") if x.strip()}
+        all_exercises = [ex for ex in all_exercises if ex["id"] in id_set]
     if args.apparatus:
         allowed = {x.strip() for x in args.apparatus.split(",") if x.strip()}
         all_exercises = [ex for ex in all_exercises if ex["apparatus"] in allowed]
     subset = all_exercises[args.start : args.end]
-    scene, cam, subj_col, mats = setup_flagship_cycles_studio(res_x=640, res_y=400, samples=14)
+    scene, cam, subj_col, mats = setup_flagship_cycles_studio(
+        res_x=args.res_x, res_y=args.res_y, samples=args.samples
+    )
 
     t0 = time.time()
     rendered = 0
@@ -249,11 +308,13 @@ def main():
         frame_inside_studio(cam, env_pts, ex["id"])
         for phase in ("start", "middle", "end"):
             out_png = os.path.join(args.outdir, f"{ex['id']}.{phase}.png")
+            if args.skip_existing and os.path.isfile(out_png) and os.path.getsize(out_png) > 10000:
+                continue
             clear_subject_collection(subj_col)
             mc = MeshCollector(subj_col, mats, glb_mode=False)
             rig = ex["phases"][phase]
             build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=2)
+            build_sculpted_practitioner(mc, rig, subsurf=1)
             scene.render.filepath = out_png
             bpy.ops.render.render(write_still=True)
             rendered += 1
