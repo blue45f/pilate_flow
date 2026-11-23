@@ -8,7 +8,10 @@ import {
   type NaturalVoiceController,
   type NaturalVoiceControllerEnv,
   type NaturalVoiceControllerState,
+  type NaturalVoiceSpeed,
 } from '../utils/naturalVoiceEngine';
+
+const CARD_SPEED_CYCLE: readonly NaturalVoiceSpeed[] = [0.9, 1, 1.1, 1.2];
 import '../styles/sequence-audio-rehearsal.css';
 
 export interface NaturalVoiceSpeakButtonProps {
@@ -128,6 +131,12 @@ export function NaturalVoiceSpeakButton({
     controllerRef.current?.stop();
   };
 
+  const handleCycleSpeed = () => {
+    const idx = CARD_SPEED_CYCLE.indexOf(voiceState.speed);
+    const nextSpeed = CARD_SPEED_CYCLE[(idx + 1) % CARD_SPEED_CYCLE.length] ?? 1;
+    controllerRef.current?.setSpeed(nextSpeed);
+  };
+
   return (
     <div
       className={[
@@ -168,6 +177,18 @@ export function NaturalVoiceSpeakButton({
           >
             <Square size={14} aria-hidden="true" />
             <span>정지</span>
+          </button>
+        )}
+
+        {(variant === 'card' || isActive) && !isUnsupported && (
+          <button
+            type="button"
+            className="pf-voice-btn pf-voice-btn--compact"
+            onClick={handleCycleSpeed}
+            aria-label={`재생 속도 ${voiceState.speed}배속 (눌러서 변경)`}
+            style={{ fontVariantNumeric: 'tabular-nums' }}
+          >
+            <span>{voiceState.speed}×</span>
           </button>
         )}
 

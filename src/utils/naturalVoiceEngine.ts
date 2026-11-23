@@ -1,5 +1,12 @@
 import { api } from '@appdeploy/client';
 import { movementMediaSessionCoordinator } from './koreanVoiceNarration';
+import {
+  STUDIO_NEURAL_VOICE_ENGINE_ID,
+  STUDIO_NEURAL_VOICE_LABEL_KO,
+  fetchStudioNeuralAudioBytes,
+  resolveStudioNeuralClipAudio,
+  resolveStudioNeuralExerciseAudio,
+} from './studioNeuralVoiceResolver';
 import type {
   BreathChimeKind,
   NaturalVoiceSegment,
@@ -43,7 +50,7 @@ export interface NaturalVoiceCloudSynthesizePayload {
 export interface NaturalVoiceCloudSynthesizeResult {
   readonly audioBytes: ArrayBuffer;
   readonly mimeType: 'audio/mpeg' | 'audio/wav';
-  readonly provider: 'openai' | 'elevenlabs' | 'deepgram';
+  readonly provider: 'studio-neural' | 'openai' | 'elevenlabs' | 'deepgram';
   readonly voiceId: string;
   readonly model?: string;
 }
@@ -52,7 +59,7 @@ export interface CachedAudioClip {
   readonly cacheKey: string;
   readonly mimeType: 'audio/mpeg' | 'audio/wav';
   readonly bytes: ArrayBuffer;
-  readonly provider: 'openai' | 'elevenlabs' | 'deepgram';
+  readonly provider: 'studio-neural' | 'openai' | 'elevenlabs' | 'deepgram';
   readonly voiceId: string;
   readonly createdAt: number;
   readonly lastAccessedAt: number;
@@ -111,6 +118,8 @@ export interface NaturalVoiceControllerEnv {
   readonly createAudioElement?: ((objectUrl: string) => HTMLAudioElement) | null;
   readonly mediaSession?: MediaSession | null;
   readonly enableCloud?: boolean;
+  readonly enableStudioPack?: boolean;
+  readonly fetchStudioPack?: ((url: string) => Promise<ArrayBuffer | null>) | null;
 }
 
 export interface CreateNaturalVoiceControllerOptions {
@@ -719,6 +728,17 @@ function getDefaultAudioCache(): NaturalVoiceAudioCache {
   return sharedDefaultAudioCache;
 }
 
+function isStudioPackEnabled(env?: NaturalVoiceControllerEnv): boolean {
+  if (env?.enableStudioPack === false || env?.enableCloud === false) return false;
+  if (env?.enableStudioPack === true || env?.fetchStudioPack) return true;
+  if (env && 'synthesizeCloud' in env) return false;
+  return true;
+}
+
+function hasStudioPackCoverage(segments: readonly NaturalVoiceSegment[]): boolean {
+  return segments.some((seg) => Boolean(resolveStudioNeuralExerciseAudio(seg.exerciseId)));
+}
+
 /**
  * Synchronously computes the initial voice controller state for a segment playlist
  * without starting any audio playback or side effects (React 19 render-safe).
@@ -738,22 +758,29 @@ export function inspectInitialNaturalVoiceState(
     }
   }
   const hasSpeechSupport = Boolean(synth && utteranceCtor && initialVoice);
+  const studioPackAvailable = Boolean(
+    isStudioPackEnabled(env) && (options.preferCloud ?? true) && hasStudioPackCoverage(segments),
+  );
   const cloudEnabled =
     env?.enableCloud === false
       ? false
       : env && 'synthesizeCloud' in env
         ? Boolean(env.synthesizeCloud)
         : true;
-  const canTryCloud = Boolean(cloudEnabled && (options.preferCloud ?? true));
+  const canTryCloud = Boolean((cloudEnabled || studioPackAvailable) && (options.preferCloud ?? true));
 
   return {
     sessionId,
     status: hasSpeechSupport || canTryCloud ? 'idle' : 'unsupported',
     activeTier: canTryCloud ? 'cloud-neural' : hasSpeechSupport ? 'device-enhanced' : 'text-only',
-    voiceQualityLabelKo: canTryCloud
-      ? '스튜디오 자연 음성'
-      : initialVoice?.qualityLabelKo ?? '화면 대본 모드',
-    selectedVoiceName: initialVoice?.voice.name ?? null,
+    voiceQualityLabelKo: studioPackAvailable
+      ? STUDIO_NEURAL_VOICE_LABEL_KO
+      : canTryCloud
+        ? '스튜디오 자연 음성'
+        : initialVoice?.qualityLabelKo ?? '화면 대본 모드',
+    selectedVoiceName: studioPackAvailable
+      ? `studio-neural:${STUDIO_NEURAL_VOICE_ENGINE_ID}`
+      : initialVoice?.voice.name ?? null,
     cacheHitCount: 0,
     activeSegmentIndex: 0,
     totalSegments: segments.length,
@@ -792,6 +819,13 @@ export function createNaturalVoiceController(
   } = options;
 
   const audioCache = env?.audioCache ?? (env?.indexedDB !== undefined ? createNaturalVoiceAudioCache(env.indexedDB) : getDefaultAudioCache());
+  const studioPackEnabled = isStudioPackEnabled(env);
+  const studioPackFetcher =
+    env && 'fetchStudioPack' in env
+      ? env.fetchStudioPack ?? null
+      : studioPackEnabled
+        ? fetchStudioNeuralAudioBytes
+        : null;
   const cloudSynthesizer =
     env?.enableCloud === false
       ? null
@@ -799,7 +833,7 @@ export function createNaturalVoiceController(
         ? env.synthesizeCloud ?? null
         : defaultCloudVoiceSynthesize;
   const breathSynth = createStudioBreathAudioSynth(env?.AudioContextCtor);
-  const canTryCloud = Boolean(cloudSynthesizer && (options.preferCloud ?? true));
+  const canTryCloud = Boolean((cloudSynthesizer || studioPackFetcher) && (options.preferCloud ?? true));
 
   let state: NaturalVoiceControllerState = inspectInitialNaturalVoiceState(options);
 
@@ -808,6 +842,8 @@ export function createNaturalVoiceController(
   let cloudDisabledForSession = false;
   let ownsSpeech = false;
   let activeAudio: HTMLAudioElement | null = null;
+  let activeAudioPaused = false;
+  let activeAudioResumeResolve: ((ok: boolean) => void) | null = null;
   let activeObjectUrl: string | null = null;
   const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
 
@@ -833,10 +869,13 @@ export function createNaturalVoiceController(
   }
 
   function stopAudioElement(): void {
+    activeAudioPaused = false;
+    activeAudioResumeResolve = null;
     if (activeAudio) {
       try {
         activeAudio.onended = null;
         activeAudio.onerror = null;
+        activeAudio.ontimeupdate = null;
         activeAudio.pause();
       } catch {
         // Ignore audio element stop errors
@@ -915,6 +954,7 @@ export function createNaturalVoiceController(
     mimeType: 'audio/mpeg' | 'audio/wav',
     speed: number,
     runId: number,
+    onTimeProgress?: (fraction: number) => void,
   ): Promise<boolean> {
     return new Promise((resolve) => {
       if (destroyed || runId !== playbackRunId) {
@@ -941,7 +981,20 @@ export function createNaturalVoiceController(
           return;
         }
         activeAudio = audio;
+        activeAudioPaused = false;
+        activeAudioResumeResolve = resolve;
         audio.playbackRate = speed;
+
+        if (onTimeProgress) {
+          audio.ontimeupdate = () => {
+            if (destroyed || runId !== playbackRunId || activeAudioPaused) return;
+            const dur = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+            if (dur > 0) {
+              const frac = clamp(audio.currentTime / dur, 0, 1);
+              onTimeProgress(frac);
+            }
+          };
+        }
 
         audio.onended = () => {
           stopAudioElement();
@@ -1164,6 +1217,130 @@ export function createNaturalVoiceController(
     return ok ? 'played' : 'fallback';
   }
 
+  /**
+   * Tier 0: Pre-mastered Studio AI Neural Voice MP3s (`ko-KR-SunHiNeural`, -16 LUFS)
+   * hosted on same-origin CDN + cached offline in IndexedDB (`pf_natural_voice_cache_v1`).
+   */
+  async function tryStudioPackPlayback(
+    index: number,
+    runId: number,
+  ): Promise<{ readonly status: 'played'; readonly nextIndex: number } | { readonly status: 'fallback' }> {
+    if (!state.preferCloud || !studioPackFetcher) {
+      return { status: 'fallback' };
+    }
+    const segment = segments[index];
+    if (!segment || segment.tone === 'quiz-prompt' || segment.tone === 'quiz-answer') {
+      return { status: 'fallback' };
+    }
+
+    // Determine contiguous exercise block or reusable studio coaching clip
+    let audioUrl: string | null = null;
+    let cacheId: string | null = null;
+    let groupEndIndex = index;
+
+    if (segment.exerciseId) {
+      // Only play full pre-mastered exercise narration at the start of the exercise block
+      const isExerciseBlockStart =
+        segment.tone === 'warm-intro' ||
+        index === 0 ||
+        segments[index - 1]?.exerciseId !== segment.exerciseId;
+
+      if (isExerciseBlockStart) {
+        const resolved = resolveStudioNeuralExerciseAudio(segment.exerciseId);
+        if (resolved) {
+          let endIdx = index;
+          while (
+            endIdx + 1 < segments.length &&
+            segments[endIdx + 1]?.exerciseId === segment.exerciseId &&
+            segments[endIdx + 1]?.tone !== 'quiz-prompt' &&
+            segments[endIdx + 1]?.tone !== 'quiz-answer'
+          ) {
+            endIdx += 1;
+          }
+          // Skip studio pack if any segment in this exercise contains sensitive instructor note
+          const hasSensitive = segments
+            .slice(index, endIdx + 1)
+            .some((seg) => containsSensitivePersonalInfo(seg.textKo));
+          // Use studio pack for full multi-segment exercise narration (or single-exercise script)
+          const isFullExerciseBlock =
+            endIdx > index ||
+            segments.every((seg) => seg.exerciseId === segment.exerciseId);
+          if (!hasSensitive && isFullExerciseBlock) {
+            audioUrl = resolved.url;
+            cacheId = `ex:${resolved.resolvedId}`;
+            groupEndIndex = endIdx;
+          }
+        }
+      }
+    } else if (!containsSensitivePersonalInfo(segment.textKo)) {
+      if (segment.id.endsWith('-outro')) {
+        audioUrl = resolveStudioNeuralClipAudio('rehearsal-complete');
+        cacheId = 'clip:rehearsal-complete';
+      } else if (index === 0 && segment.tone === 'warm-intro' && segment.textKo.includes('이어듣기')) {
+        audioUrl = resolveStudioNeuralClipAudio('rehearsal-welcome');
+        cacheId = 'clip:rehearsal-welcome';
+      }
+    }
+
+    if (!audioUrl || !cacheId) {
+      return { status: 'fallback' };
+    }
+
+    const cacheKey = `studio-neural-v1|${cacheId}`;
+    const cached = await audioCache.get(cacheKey);
+    if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
+
+    let audioBytes: ArrayBuffer;
+    let wasCacheHit = false;
+
+    if (cached && cached.bytes.byteLength >= 512) {
+      audioBytes = cached.bytes;
+      wasCacheHit = true;
+    } else {
+      emit({ status: 'loading', announcementKo: '서연 AI 스튜디오 음성을 불러오고 있어요.' });
+      const fetched = await studioPackFetcher(audioUrl);
+      if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
+      if (!fetched || fetched.byteLength < 512) {
+        return { status: 'fallback' };
+      }
+      audioBytes = fetched;
+      await audioCache.put({
+        cacheKey,
+        mimeType: 'audio/mpeg',
+        bytes: fetched,
+        provider: 'studio-neural',
+        voiceId: STUDIO_NEURAL_VOICE_ENGINE_ID,
+      });
+      if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
+    }
+
+    const groupSpan = Math.max(1, groupEndIndex - index + 1);
+    const totalCount = Math.max(1, segments.length);
+
+    emit({
+      status: 'playing',
+      activeTier: 'cloud-neural',
+      voiceQualityLabelKo: STUDIO_NEURAL_VOICE_LABEL_KO,
+      selectedVoiceName: `studio-neural:${STUDIO_NEURAL_VOICE_ENGINE_ID}`,
+      cacheHitCount: wasCacheHit ? state.cacheHitCount + 1 : state.cacheHitCount,
+    });
+
+    const ok = await playAudioBytes(audioBytes, 'audio/mpeg', state.speed, runId, (frac) => {
+      const subOffset = Math.min(groupSpan - 1, Math.floor(frac * groupSpan));
+      const mappedIdx = index + subOffset;
+      const mappedSeg = segments[mappedIdx] ?? segment;
+      const overallProgress = clamp((index + frac * groupSpan) / totalCount, 0, 1);
+      emit({
+        activeSegmentIndex: mappedIdx,
+        currentSegment: mappedSeg,
+        progressRatio: Number(overallProgress.toFixed(3)),
+      });
+    });
+
+    if (!ok) return { status: 'fallback' };
+    return { status: 'played', nextIndex: groupEndIndex + 1 };
+  }
+
   async function playSegmentAt(index: number, runId: number): Promise<void> {
     if (destroyed || runId !== playbackRunId) return;
 
@@ -1209,11 +1386,19 @@ export function createNaturalVoiceController(
       breathSynth.playChime(segment.prosody.breathChime);
     }
 
-    // Tier 1: Cloud Neural + IndexedDB Cache
-    const cloudOutcome = await tryCloudPlayback(segment, runId);
+    // Tier 0: Pre-mastered Studio AI Neural Voice Pack (ko-KR-SunHiNeural + IndexedDB Cache)
+    const studioPackOutcome = await tryStudioPackPlayback(index, runId);
     if (destroyed || runId !== playbackRunId) return;
 
-    let spokenOk = cloudOutcome === 'played';
+    let spokenOk = studioPackOutcome.status === 'played';
+    const nextIndex = studioPackOutcome.status === 'played' ? studioPackOutcome.nextIndex : index + 1;
+
+    // Tier 1: Cloud Neural API + IndexedDB Cache
+    if (!spokenOk) {
+      const cloudOutcome = await tryCloudPlayback(segment, runId);
+      if (destroyed || runId !== playbackRunId) return;
+      spokenOk = cloudOutcome === 'played';
+    }
 
     // Tier 2: Enhanced On-Device Korean Voice + Prosody Rhythm
     if (!spokenOk) {
@@ -1238,7 +1423,6 @@ export function createNaturalVoiceController(
     }
 
     // After finishing the segment, either run quiz countdown or breathe (pauseMs) before next segment
-    const nextIndex = index + 1;
     if (segment.tone === 'quiz-prompt' && (segment.countdownSec ?? 0) > 0) {
       runQuizCountdownThenAdvance(segment.countdownSec ?? 3, nextIndex, runId);
       return;
@@ -1282,6 +1466,22 @@ export function createNaturalVoiceController(
 
     pause(): void {
       if (destroyed || (state.status !== 'playing' && state.status !== 'loading')) return;
+      if (activeAudio && !activeAudioPaused && activeAudioResumeResolve) {
+        try {
+          activeAudio.pause();
+          activeAudioPaused = true;
+          syncMediaSession(state.currentSegment, 'paused');
+          emit({
+            status: 'paused',
+            quizCountdownRemainingSec: null,
+            breathPhase: 'idle',
+            announcementKo: '일시정지했어요. 버튼을 누르면 이어서 들려드려요.',
+          });
+          return;
+        } catch {
+          // Fall through to full resource stop
+        }
+      }
       playbackRunId += 1;
       stopActivePlaybackResources();
       syncMediaSession(state.currentSegment, 'paused');
@@ -1296,6 +1496,28 @@ export function createNaturalVoiceController(
     resume(): boolean {
       if (destroyed || state.status !== 'paused' || segments.length === 0) return false;
       movementMediaSessionCoordinator.notifyMovementActivated(sessionId);
+      if (activeAudio && activeAudioPaused) {
+        try {
+          activeAudioPaused = false;
+          activeAudio.playbackRate = state.speed;
+          const p = activeAudio.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {
+              playbackRunId += 1;
+              stopActivePlaybackResources();
+              void playSegmentAt(state.activeSegmentIndex, playbackRunId);
+            });
+          }
+          syncMediaSession(state.currentSegment, 'playing');
+          emit({
+            status: 'playing',
+            announcementKo: '이어서 들려드리고 있어요.',
+          });
+          return true;
+        } catch {
+          // Fall through to fresh segment start
+        }
+      }
       playbackRunId += 1;
       const runId = playbackRunId;
       stopActivePlaybackResources();
@@ -1371,6 +1593,14 @@ export function createNaturalVoiceController(
         speed: nextSpeed,
         announcementKo: `재생 속도를 ${nextSpeed}배속으로 바꿨어요.`,
       });
+      if (activeAudio && wasActive) {
+        try {
+          activeAudio.playbackRate = nextSpeed;
+          return;
+        } catch {
+          // Fall through
+        }
+      }
       if (wasActive) {
         controller.play(state.activeSegmentIndex);
       }

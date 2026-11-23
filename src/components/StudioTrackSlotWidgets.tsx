@@ -22,8 +22,8 @@ export const StudioVoiceSpeakSlotWidget: React.FC<VoiceSpeakSlotProps> = ({
 }) => (
   <NaturalVoiceSpeakButton
     exercise={exercise}
-    variant={compact ? 'compact' : 'pill'}
-    labelKo={compact ? '음성 듣기' : '사람 음성으로 듣기'}
+    variant={compact ? 'compact' : 'card'}
+    labelKo={compact ? 'AI 음성' : 'AI 스튜디오 음성 듣기'}
     showProgressBar={!compact}
     showQualityBadge={!compact}
   />

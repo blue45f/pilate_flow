@@ -21,6 +21,7 @@ import {
   movementMediaSessionCoordinator,
 } from '../utils/koreanVoiceNarration';
 import { ReferenceLinkPolicyPreview } from '../features/referenceLinkPolicyCandidate';
+import { NaturalVoiceSpeakButton } from './NaturalVoiceSpeakButton';
 import '../features/referenceLinkPolicyCandidate/referenceLinkPolicy.css';
 import '../styles/movement-media-guidance.css';
 
@@ -539,14 +540,22 @@ function MovementMediaGuidanceInner({
         </div>
       )}
 
-      {/* Part 2: 한국어 음성 설명 & 텍스트 대본 */}
+      {/* Part 2: 한국어 AI 스튜디오 음성 설명 & 텍스트 대본 */}
       <div className="mmg-section">
         <div className="mmg-section-header">
           <div className="mmg-section-title-group">
-            <h3 className="mmg-section-title">음성 안내</h3>
+            <h3 className="mmg-section-title">AI 스튜디오 음성 안내</h3>
             <p className="mmg-section-subtitle">약 {voiceScript.estimatedDurationSec}초</p>
           </div>
         </div>
+
+        <NaturalVoiceSpeakButton
+          exercise={exercise}
+          variant="card"
+          labelKo="AI 스튜디오 음성 듣기"
+          showProgressBar
+          showQualityBadge
+        />
 
         {!voiceState.capability.canAttemptSpeech && (
           <p className="mmg-tts-capability-box" data-testid="mobile-tts-capability-badge">

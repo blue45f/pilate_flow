@@ -534,4 +534,97 @@ describe('naturalVoiceEngine', () => {
 
     controller.destroy();
   });
+
+  it('plays Tier-0 pre-mastered Studio AI Neural Voice MP3 with IndexedDB caching, live speed, and pause/resume', async () => {
+    const audioCache = createNaturalVoiceAudioCache(null);
+    const fetchedUrls: string[] = [];
+    const fetchStudioPack = vi.fn(async (url: string) => {
+      fetchedUrls.push(url);
+      return new Uint8Array(2048).fill(0x49).buffer;
+    });
+
+    const created: Array<{
+      url: string;
+      playbackRate: number;
+      currentTime: number;
+      duration: number;
+      onended: (() => void) | null;
+      onerror: (() => void) | null;
+      ontimeupdate: (() => void) | null;
+      play: ReturnType<typeof vi.fn>;
+      pause: ReturnType<typeof vi.fn>;
+    }> = [];
+    const createAudioElement = (url: string) => {
+      const el = {
+        url,
+        playbackRate: 1,
+        currentTime: 0,
+        duration: 20,
+        onended: null as (() => void) | null,
+        onerror: null as (() => void) | null,
+        ontimeupdate: null as (() => void) | null,
+        play: vi.fn(() => Promise.resolve()),
+        pause: vi.fn(),
+      };
+      created.push(el);
+      return el as unknown as HTMLAudioElement;
+    };
+
+    const footwork =
+      INITIAL_EXERCISES.find((ex) => ex.id === 'ex-footwork-01') ?? INITIAL_EXERCISES[0];
+    const script = buildNaturalExerciseScript(footwork);
+
+    const controller = createNaturalVoiceController({
+      sessionId: 'test-studio-neural-pack',
+      segments: script.segments,
+      preferCloud: true,
+      env: {
+        speechSynthesis: null,
+        SpeechSynthesisUtterance: null,
+        AudioContextCtor: null,
+        audioCache,
+        enableStudioPack: true,
+        fetchStudioPack,
+        createAudioElement,
+      },
+    });
+
+    expect(controller.play(0)).toBe(true);
+    await vi.waitFor(() => expect(created).toHaveLength(1));
+    expect(fetchedUrls).toEqual([`/audio/studio-voice/ex/${footwork.id}.mp3`]);
+    expect(controller.getState().activeTier).toBe('cloud-neural');
+    expect(controller.getState().voiceQualityLabelKo).toContain('스튜디오 AI 음성');
+
+    // Live timeupdate advances subtitle segment & progressRatio smoothly
+    created[0].currentTime = 10;
+    created[0].ontimeupdate?.();
+    expect(controller.getState().progressRatio).toBeGreaterThan(0.4);
+    expect(controller.getState().activeSegmentIndex).toBeGreaterThan(0);
+
+    // Live speed update adjusts playbackRate without restarting audio
+    controller.setSpeed(1.2);
+    expect(created[0].playbackRate).toBe(1.2);
+    expect(created).toHaveLength(1);
+
+    // Pause & resume preserves same HTMLAudioElement instance
+    controller.pause();
+    expect(created[0].pause).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe('paused');
+    expect(controller.resume()).toBe(true);
+    expect(created[0].play).toHaveBeenCalledTimes(2);
+    expect(controller.getState().status).toBe('playing');
+
+    // End playback -> completes entire multi-segment exercise script cleanly
+    created[0].onended?.();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(controller.getState().status).toBe('completed');
+
+    // Replay -> hits IndexedDB cache with 0 network fetches
+    expect(controller.play(0)).toBe(true);
+    await vi.waitFor(() => expect(created).toHaveLength(2));
+    expect(fetchStudioPack).toHaveBeenCalledTimes(1);
+    expect(controller.getState().cacheHitCount).toBe(1);
+
+    controller.destroy();
+  });
 });
