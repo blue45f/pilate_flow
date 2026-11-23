@@ -20,6 +20,7 @@ import { SpringVisualPills } from './SpringVisualPills';
 export interface WorldRepertoireExplorerBarProps {
   readonly onOpenDetail?: (exercise: PilatesExercise) => void;
   readonly onAppliedProgram?: (message: string) => void;
+  readonly defaultExpanded?: boolean;
 }
 
 type ExplorerScope = 'repertoire' | 'programs';
@@ -53,8 +54,9 @@ const LEVEL_CHIPS: readonly { readonly id: 'all' | DifficultyLevel; readonly lab
 export const WorldRepertoireExplorerBar: React.FC<WorldRepertoireExplorerBarProps> = ({
   onOpenDetail,
   onAppliedProgram,
+  defaultExpanded = false,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultExpanded);
   const [scope, setScope] = useState<ExplorerScope>('repertoire');
   const [apparatus, setApparatus] = useState<'all' | ApparatusType>('all');
   const [school, setSchool] = useState<SchoolFilter>('all');

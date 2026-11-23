@@ -56,9 +56,10 @@ import type {
   StudioResourceItemId,
   StudioRoleMode,
 } from '../utils/studioPropAllocator';
+import { SmartBusinessAdvisorPanel } from './SmartBusinessAdvisorPanel';
 import '../styles/studio-prop-allocator.css';
 
-export type StudioAllocatorTabId = 'allocator' | 'chores' | 'earnings' | 'handoff';
+export type StudioAllocatorTabId = 'allocator' | 'chores' | 'earnings' | 'handoff' | 'advisor';
 
 export interface StudioAdaptedSequencePayload {
   readonly steps: SequenceStep[];
@@ -142,11 +143,13 @@ function getAvailableTabsForRole(
     return [
       { id: 'allocator', labelKo: '교보재 배분 & 자동 변경' },
       { id: 'chores', labelKo: '귀찮은 업무 1탭 자동화' },
+      { id: 'advisor', labelKo: '경영 비서 · 보강' },
     ];
   }
   return [
     { id: 'allocator', labelKo: '교보재 배분 & 자동 변경' },
     { id: 'chores', labelKo: '귀찮은 업무 1탭 자동화' },
+    { id: 'advisor', labelKo: '경영 비서 · 보강' },
     { id: 'handoff', labelKo: '대강 3분 인수인계' },
   ];
 }
@@ -1321,6 +1324,17 @@ export const StudioPropAllocatorPanel: React.FC<StudioPropAllocatorPanelProps> =
 
             <pre className="spa-message-preview">{handoffBrief.copyTextKo}</pre>
           </div>
+        </div>
+      )}
+
+      {/* TAB 4 (Solo-Owner / Center-Manager): Smart Daily Business Advisor & Absence Makeup */}
+      {activeTab === 'advisor' && roleMode !== 'freelance' && (
+        <div className="spa-body" role="tabpanel" aria-label="스마트 경영 비서 및 결석 보강">
+          <SmartBusinessAdvisorPanel
+            historyLogs={historyLogs}
+            activeApparatus={activeApparatus}
+            roleMode={roleMode}
+          />
         </div>
       )}
     </section>

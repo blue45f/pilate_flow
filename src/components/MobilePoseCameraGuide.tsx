@@ -15,6 +15,7 @@ import type { VisualPhaseId } from '../data/movementVisualRigCatalog';
 import type { BodyPosition, PilatesExercise } from '../types/pilates';
 import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import { BodyPositionFigure } from './BodyPositionFigure';
+import { PoseAsymmetryAnalyzerWidget } from './PoseAsymmetryAnalyzerWidget';
 import '../styles/lesson-mode-studio.css';
 
 export type CameraGuideStatus =
@@ -124,6 +125,7 @@ export function MobilePoseCameraGuide({
   const [recordedClipUrl, setRecordedClipUrl] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const cvOverlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
@@ -461,6 +463,22 @@ export function MobilePoseCameraGuide({
           </div>
         )}
 
+        {/* Real-Time On-Device CV Landmark Canvas Overlay */}
+        <canvas
+          ref={cvOverlayCanvasRef}
+          width={400}
+          height={300}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 4,
+          }}
+        />
+
         {/* ① Shoulder & Pelvis Horizontal / Vertical Alignment Grid */}
         {showGrid && (
           <svg
@@ -745,6 +763,14 @@ export function MobilePoseCameraGuide({
           </p>
         </div>
       )}
+
+      {/* Real-Time On-Device CV Pose Symmetry Analyzer */}
+      <PoseAsymmetryAnalyzerWidget
+        videoRef={videoRef}
+        cameraActive={cameraStatus === 'active'}
+        exerciseNameKo={exerciseNameKo}
+        overlayCanvasRef={cvOverlayCanvasRef}
+      />
 
       {/* Honest On-Device Privacy Notice */}
       <p className="mpg-privacy-footer">

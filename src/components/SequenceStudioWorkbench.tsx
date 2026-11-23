@@ -53,6 +53,7 @@ import {
   usePilatesStore,
 } from '../store/usePilatesStore';
 import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
+import { StudioSmartToolsRail } from './StudioSmartToolsRail';
 import { EQUIPMENT_OPTIONS, getEquipmentFamilies, getEquipmentFamily, getExerciseEquipment } from '../data/equipmentCatalog';
 import type {
   ApparatusType,
@@ -1538,6 +1539,8 @@ export function SequenceStudioWorkbench(props: Props) {
           </div>
         </div>
       )}
+
+      <StudioSmartToolsRail />
 
       <div className="flow-class-brief">
         <label className="flow-field flow-class-title">

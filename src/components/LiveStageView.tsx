@@ -59,6 +59,8 @@ import { getStudioTrackAdapters, type PlanBConstraint } from '../utils/studioTra
 import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
 import { triggerSubtleHapticPulse } from '../hooks/useScreenWakeLock';
 import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
+import { DualScreenNfcPanel } from './DualScreenNfcPanel';
+import { TeachingVoiceCoachPanel } from './TeachingVoiceCoachPanel';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
@@ -592,6 +594,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [tvWidescreenMode, setTvWidescreenMode] = useState(false);
   const [standMode, setStandMode] = useState(false);
   const [poseMirrorOpen, setPoseMirrorOpen] = useState(false);
+  const [dualScreenOpen, setDualScreenOpen] = useState(false);
+  const [voiceCoachOpen, setVoiceCoachOpen] = useState(false);
   const [activePlanB, setActivePlanB] = useState<PlanBConstraint | null>(null);
   const [planBNotice, setPlanBNotice] = useState('');
   const planBSuggestion = useMemo(() => {
@@ -2143,6 +2147,22 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           onClick={() => setPoseMirrorOpen(true)}
         >
           정렬 거울
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-dual-screen-toggle"
+          aria-pressed={dualScreenOpen}
+          onClick={() => setDualScreenOpen(true)}
+        >
+          듀얼 화면 · NFC
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-voice-coach-toggle"
+          aria-pressed={voiceCoachOpen}
+          onClick={() => setVoiceCoachOpen(true)}
+        >
+          티칭 코치
         </button>
         <button
           type="button"
@@ -3841,10 +3861,72 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         <LightDismissDialog
           open={poseMirrorOpen}
           onClose={() => setPoseMirrorOpen(false)}
-          title="수업 중 정렬 거울"
+          title="수업 중 정렬 거울 & AI 균형 분석"
           className="pf-pose-camera-dialog"
         >
           <MobilePoseCameraGuide exercise={exercise ?? null} />
+        </LightDismissDialog>
+      )}
+      {dualScreenOpen && (
+        <LightDismissDialog
+          open={dualScreenOpen}
+          onClose={() => setDualScreenOpen(false)}
+          title="폰 ↔ 큰 화면 듀얼 연동 & 기구 NFC"
+          className="pf-smart-tool-dialog"
+        >
+          <DualScreenNfcPanel
+            activeApparatus={exercise?.apparatus ?? 'reformer'}
+            snapshot={{
+              sequenceTitle: activeTitle || '실시간 필라테스 수업',
+              stepIndex: clock.index,
+              totalSteps: Math.max(1, steps.length),
+              exerciseId: exercise?.id ?? '',
+              exerciseNameKo: currentIsRest ? '휴식 · 호흡 정리' : exercise?.nameKo ?? '현재 동작',
+              apparatus: exercise?.apparatus ?? 'reformer',
+              springs: current?.customSpringOverride?.trim() || exercise?.springs?.trim() || '맨몸',
+              nextExerciseNameKo: nextExercise?.nameKo ?? '수업 마무리',
+              nextSprings:
+                next?.customSpringOverride?.trim() || nextExercise?.springs?.trim() || '맨몸',
+              cueLine: currentIsRest
+                ? '물 한 모금 마시고 다음 기구 세팅을 준비해 주세요.'
+                : exercise?.cues[0] ?? '편안한 호흡으로 척추 정렬을 유지합니다.',
+              timerRemainingSec: Math.max(0, Math.ceil(clock.remainingMs / 1000)),
+              running: clock.running,
+              phaseLabelKo: clock.running ? '진행 중' : '대기 중',
+            }}
+            onRemoteCommand={(cmd) => {
+              if (cmd.type === 'toggle-play') {
+                toggleRunning();
+              } else if (cmd.type === 'prev' && clockRef.current.index > 0) {
+                selectStep(clockRef.current.index - 1);
+              } else if (
+                cmd.type === 'next' &&
+                clockRef.current.index < stepsRef.current.length - 1
+              ) {
+                selectStep(clockRef.current.index + 1);
+              } else if (
+                cmd.type === 'jump-step' &&
+                typeof cmd.stepIndex === 'number' &&
+                cmd.stepIndex >= 0 &&
+                cmd.stepIndex < stepsRef.current.length
+              ) {
+                selectStep(cmd.stepIndex);
+              }
+            }}
+          />
+        </LightDismissDialog>
+      )}
+      {voiceCoachOpen && (
+        <LightDismissDialog
+          open={voiceCoachOpen}
+          onClose={() => setVoiceCoachOpen(false)}
+          title="온디바이스 강사 티칭 습관 AI 코치"
+          className="pf-smart-tool-dialog"
+        >
+          <TeachingVoiceCoachPanel
+            sequenceTitle={activeTitle || '실시간 필라테스 수업'}
+            currentExerciseNameKo={exercise?.nameKo}
+          />
         </LightDismissDialog>
       )}
       {exitDialogs}

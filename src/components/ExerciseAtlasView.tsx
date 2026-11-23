@@ -13,14 +13,17 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   Check,
   ChevronDown,
   Clock3,
   ExternalLink,
   FileText,
+  Globe2,
   Heart,
   Info,
   Layers,
+  Nfc,
   Plus,
   Play,
   Search,
@@ -119,6 +122,8 @@ import {
 import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
 import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
 import { WorldRepertoireExplorerBar } from './WorldRepertoireExplorerBar';
+import { LightDismissDialog } from './LightDismissDialog';
+import { DualScreenNfcPanel } from './DualScreenNfcPanel';
 
 export { ATLAS_DISCOVERY_RECOVERY_KEY };
 
@@ -1488,6 +1493,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   getCardState,
 }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [quickModal, setQuickModal] = useState<null | 'world' | 'fundamentals' | 'nfc'>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const selectedApparatus = CATALOG_APPARATUS_FILTERS.find(
     ({ ids }) => ids.length === equipment.length && ids.every((id) => equipment.includes(id)),
@@ -1723,6 +1729,40 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         ) : null}
       </section>
 
+      <nav
+        className="pf-smart-tools-rail pf-atlas-quick-hub"
+        aria-label="대백과·기초원리·기구 태그 빠른 열기"
+        data-testid="atlas-quick-hub"
+      >
+        <button
+          type="button"
+          className="pf-smart-tool-pill is-accent"
+          data-testid="atlas-open-world-repertoire-btn"
+          onClick={() => setQuickModal('world')}
+        >
+          <Globe2 size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>세계 대백과 1,752종 · 13개 프로그램</span>
+        </button>
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="atlas-open-fundamentals-btn"
+          onClick={() => setQuickModal('fundamentals')}
+        >
+          <BookOpen size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>필라테스 기초 원리</span>
+        </button>
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="atlas-open-nfc-tags-btn"
+          onClick={() => setQuickModal('nfc')}
+        >
+          <Nfc size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>기구 NFC · QR 태그</span>
+        </button>
+      </nav>
+
       <div className="flow-atlas__results-bar">
         <p aria-live="polite">
           <strong>{resultCount}</strong>개 동작 <span>전체 {totalCount}개</span>
@@ -1955,6 +1995,62 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         <WorldRepertoireExplorerBar onOpenDetail={onOpenDetails} />
         <PilatesFundamentalsDrawer />
       </div>
+
+      {quickModal === 'world' && (
+        <LightDismissDialog
+          open
+          onClose={() => setQuickModal(null)}
+          title="전 세계 필라테스 · 퓨전 1,752종 대백과 & 4·8주 프로그램"
+          className="pf-smart-tool-dialog"
+        >
+          <WorldRepertoireExplorerBar
+            defaultExpanded
+            onOpenDetail={(ex) => {
+              setQuickModal(null);
+              onOpenDetails(ex);
+            }}
+          />
+        </LightDismissDialog>
+      )}
+
+      {quickModal === 'fundamentals' && (
+        <LightDismissDialog
+          open
+          onClose={() => setQuickModal(null)}
+          title="필라테스 기초 원리 · 호흡 · 중립 골반 · 스프링 역학"
+          className="pf-smart-tool-dialog"
+        >
+          <PilatesFundamentalsDrawer defaultOpen />
+        </LightDismissDialog>
+      )}
+
+      {quickModal === 'nfc' && (
+        <LightDismissDialog
+          open
+          onClose={() => setQuickModal(null)}
+          title="기구 NFC · QR 태그 즉시 실행 & 듀얼 화면"
+          className="pf-smart-tool-dialog"
+        >
+          <DualScreenNfcPanel
+            activeApparatus={selectedApparatus?.apparatus ?? 'reformer'}
+            snapshot={{
+              sequenceTitle: '기구별 즉시 수업 실행',
+              stepIndex: 0,
+              totalSteps: Math.max(1, selectedCount),
+              exerciseId: exercises[0]?.id ?? '',
+              exerciseNameKo: exercises[0]?.nameKo ?? '리포머 풋워크',
+              apparatus: selectedApparatus?.apparatus ?? 'reformer',
+              springs: exercises[0]?.springs || '2R 1B',
+              nextExerciseNameKo: exercises[1]?.nameKo ?? '다음 동작',
+              nextSprings: exercises[1]?.springs || '1R 1B',
+              cueLine: exercises[0]?.cues[0] ?? '편안한 호흡으로 척추 정렬을 준비합니다.',
+              timerRemainingSec: 240,
+              running: false,
+              phaseLabelKo: '기구 준비',
+            }}
+          />
+        </LightDismissDialog>
+      )}
     </section>
   );
 };

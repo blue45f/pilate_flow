@@ -33,6 +33,8 @@ import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
 import { MemberBookingView } from './components/MemberBookingView';
 import { SequenceQrImportDialog } from './components/SequenceQrShareDialog';
 import { MobileSubPageBar } from './components/MobileSubPageBar';
+import { MemberDualDisplayStage } from './components/DualScreenNfcPanel';
+import { parseApparatusDeepLink } from './utils/apparatusNfcDeepLink';
 import { StudioCommandPalette } from './components/StudioCommandPalette';
 import {
   type DecodedSharedSequence,
@@ -346,6 +348,33 @@ export function App() {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
+  const [memberDisplayRoom, setMemberDisplayRoom] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const parsed = parseApparatusDeepLink(window.location.search);
+    if (parsed?.mode === 'member-display') {
+      return parsed.roomCode || 'STUDIO';
+    }
+    return null;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const parsed = parseApparatusDeepLink(window.location.search);
+    if (!parsed || parsed.mode === 'member-display') return;
+    const store = usePilatesStore.getState();
+    if (parsed.apparatus) {
+      usePilatesStore.setState({ activeApparatus: parsed.apparatus });
+    }
+    if (parsed.sequenceId) {
+      store.loadSequenceIntoWorkbench(parsed.sequenceId);
+    }
+    if (parsed.mode === 'live') {
+      store.setActiveTab('stage');
+    } else if (parsed.mode === 'atlas') {
+      store.setActiveTab('atlas');
+    } else if (parsed.mode === 'workbench') {
+      store.setActiveTab('workbench');
+    }
+  }, []);
   const [portalRole, setPortalRole] = useState<'instructor' | 'member'>(
     initialLaunch.portalRole,
   );
@@ -570,6 +599,19 @@ export function App() {
       setBackupMessage('백업을 만들 수 없습니다. 브라우저 저장 권한을 확인해 주세요.');
     }
   };
+  if (memberDisplayRoom) {
+    return (
+      <MemberDualDisplayStage
+        roomCode={memberDisplayRoom}
+        onExitDisplay={() => {
+          setMemberDisplayRoom(null);
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }}
+      />
+    );
+  }
   return (
     <div
       className={`app-shell vnext-shell flow-app ${state.activeTab === 'stage' ? 'is-teaching' : ''}`}
