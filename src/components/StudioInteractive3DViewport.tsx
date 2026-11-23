@@ -41,11 +41,18 @@ import { downloadBlenderSceneScript } from '../utils/blenderSceneScriptExporter'
 import {
   renderRealtimeStudio3DFrame,
   STUDIO_3D_CAMERA_PRESETS,
+  type Studio3DGpuRenderer,
   type Studio3DHotspot,
   type Studio3DHotspotId,
   type Studio3DPropOverride,
+  type Studio3DRenderBackend,
   type Studio3DShaderPreset,
 } from '../utils/realtimeStudio3dEngine';
+import { Studio3DWebGL2Renderer } from '../utils/studio3dWebgl2Renderer';
+import {
+  acquirePreferredStudio3DBackend,
+  readNavigatorGpu,
+} from '../utils/studio3dWebgpuRenderer';
 import {
   createStudio3dResourceGuard,
   readAmbientDevice3dSignals,
@@ -310,6 +317,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     () => resolveAdaptive3dFrameBudget(readAmbientDevice3dSignals()),
     [],
   );
+  const gpuRendererRef = useRef<Studio3DGpuRenderer | null>(null);
+  const [renderBackend, setRenderBackend] = useState<Studio3DRenderBackend>('canvas2d');
+  const yawRef = useRef<number>(yawDeg);
+  const lastDrawSigRef = useRef<string>('');
+  useEffect(() => {
+    yawRef.current = yawDeg;
+  }, [yawDeg]);
   const resourceGuardRef = useRef<ReturnType<typeof createStudio3dResourceGuard> | null>(null);
   if (resourceGuardRef.current === null) {
     resourceGuardRef.current = createStudio3dResourceGuard();
@@ -324,34 +338,228 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     const canvas = canvasRef.current;
     const guard = resourceGuardRef.current;
     if (!canvas || !guard) return;
+    let cancelled = false;
+
     guard.track('viewport-canvas-backing', 'canvas-backing', {
       dispose: () => {
         canvas.width = 0;
         canvas.height = 0;
       },
     });
+
+    const installGpuRenderer = (
+      backend: Studio3DRenderBackend,
+      renderer: Studio3DGpuRenderer | null,
+    ) => {
+      if (cancelled) {
+        renderer?.dispose();
+        return;
+      }
+      gpuRendererRef.current = renderer;
+      if (renderer) {
+        guard.track('viewport-gpu-renderer', 'render-target', {
+          dispose: () => {
+            if (gpuRendererRef.current === renderer) {
+              gpuRendererRef.current = null;
+            }
+            renderer.dispose();
+          },
+        });
+      }
+      setRenderBackend(backend);
+      lastDrawSigRef.current = '';
+      invalidateViewport();
+    };
+
+    const bootGpuBackend = async () => {
+      const acquired = await acquirePreferredStudio3DBackend({
+        onDeviceLost: () => {
+          if (cancelled) return;
+          guard.notifyContextLost();
+          guard.release('viewport-gpu-renderer');
+          gpuRendererRef.current = null;
+          setRenderBackend('canvas2d');
+          void acquirePreferredStudio3DBackend().then((recovered) => {
+            if (cancelled) {
+              recovered.renderer?.dispose();
+              return;
+            }
+            guard.notifyContextRestored();
+            installGpuRenderer(recovered.backend, recovered.renderer);
+          });
+        },
+      });
+      installGpuRenderer(acquired.backend, acquired.renderer);
+    };
+
+    // Priority 1: WebGPU whenever navigator.gpu is exposed; Priority 2: WebGL2; Priority 3: Canvas 2D
+    if (readNavigatorGpu()) {
+      void bootGpuBackend();
+    } else {
+      const webgl2 = Studio3DWebGL2Renderer.create();
+      if (webgl2) {
+        installGpuRenderer('webgl2', webgl2);
+      }
+    }
+
     const onContextLost = (event: Event) => {
       event.preventDefault();
       guard.notifyContextLost();
     };
     const onContextRestored = () => {
       guard.notifyContextRestored();
+      lastDrawSigRef.current = '';
       invalidateViewport();
     };
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
     return () => {
+      cancelled = true;
       canvas.removeEventListener('contextlost', onContextLost);
       canvas.removeEventListener('contextrestored', onContextRestored);
+      gpuRendererRef.current = null;
       guard.disposeAll();
     };
   }, []);
+
+  const paintFrame = useCallback(
+    (overridePoseT?: number, overrideYawDeg?: number, force = false) => {
+      const canvas = canvasRef.current;
+      if (!canvas || typeof canvas.getContext !== 'function') return;
+      if (
+        typeof navigator !== 'undefined' &&
+        /jsdom/i.test(navigator.userAgent) &&
+        !('mock' in canvas.getContext)
+      ) {
+        return;
+      }
+      let ctx: CanvasRenderingContext2D | null;
+      try {
+        ctx = canvas.getContext('2d');
+      } catch {
+        return;
+      }
+      if (!ctx) return;
+
+      const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      const dpr =
+        frameBudget.tier === 'low-memory'
+          ? frameBudget.effectiveDpr
+          : Math.min(Math.max(rawDpr, 1), 2.5);
+      const cssW = canvas.clientWidth || 640;
+      const cssH = canvas.clientHeight || 416;
+      const targetPoseT = overridePoseT ?? visualPhase.pose;
+      const targetYawDeg = overrideYawDeg ?? yawDeg;
+      const activeGpu =
+        gpuRendererRef.current && gpuRendererRef.current.isAvailable()
+          ? gpuRendererRef.current
+          : null;
+      const drawSig = [
+        exercise.id,
+        targetPoseT.toFixed(5),
+        targetYawDeg.toFixed(2),
+        pitchDeg.toFixed(2),
+        zoom.toFixed(3),
+        panOffset[0].toFixed(3),
+        panOffset[1].toFixed(3),
+        shader,
+        mirrored ? '1' : '0',
+        showBiomechOverlay ? '1' : '0',
+        dualView ? '1' : '0',
+        springOverride,
+        footbarOverride,
+        headrestOverride,
+        propOverride,
+        selectedHotspotId ?? '',
+        cssW,
+        cssH,
+        dpr.toFixed(2),
+        activeGpu?.backend ?? 'canvas2d',
+        viewportVersion,
+      ].join('|');
+
+      if (!force && lastDrawSigRef.current === drawSig) return;
+      lastDrawSigRef.current = drawSig;
+
+      const pxW = Math.round(cssW * dpr);
+      const pxH = Math.round(cssH * dpr);
+      if (canvas.width !== pxW || canvas.height !== pxH) {
+        canvas.width = pxW;
+        canvas.height = pxH;
+      }
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const frameResult = renderRealtimeStudio3DFrame({
+        ctx,
+        width: cssW,
+        height: cssH,
+        dpr,
+        gpuRenderer: activeGpu,
+        exercise,
+        phaseT: targetPoseT,
+        yawDeg: targetYawDeg,
+        pitchDeg,
+        zoom,
+        panX: panOffset[0],
+        panY: panOffset[1],
+        shader,
+        mirrored,
+        showBiomechOverlay,
+        dualView,
+        springOverride,
+        footbarOverride,
+        headrestOverride,
+        propOverride,
+        selectedHotspotId,
+      });
+      hotspotsRef.current = frameResult.hotspots;
+      if (selectedHotspotId) {
+        const current = frameResult.hotspots.find((hotspot) => hotspot.id === selectedHotspotId);
+        if (current) {
+          setSelectedHotspot((previous) =>
+            previous?.id === current.id && previous.metricKo !== current.metricKo
+              ? current
+              : previous,
+          );
+        }
+      }
+      ctx.restore();
+    },
+    [
+      dualView,
+      exercise,
+      footbarOverride,
+      frameBudget.effectiveDpr,
+      frameBudget.tier,
+      headrestOverride,
+      mirrored,
+      panOffset,
+      pitchDeg,
+      propOverride,
+      selectedHotspotId,
+      shader,
+      showBiomechOverlay,
+      springOverride,
+      viewportVersion,
+      visualPhase.pose,
+      yawDeg,
+      zoom,
+    ],
+  );
+
+  const paintFrameRef = useRef(paintFrame);
+  useEffect(() => {
+    paintFrameRef.current = paintFrame;
+  }, [paintFrame]);
 
   useEffect(() => {
     if (!canAnimate || (!playing && !turntable)) return;
     let rafId = 0;
     let lastTs: number | null = null;
     let lastCommitTs: number | null = null;
+    let lastCommittedPct = Math.round(progressRef.current * 100);
+    let lastCommittedPhaseId = sampleStudioMotionCycle(progressRef.current).id;
+    let lastCommittedYaw = Math.round(yawRef.current);
 
     const step = (now: number) => {
       if (document.hidden) return;
@@ -366,13 +574,31 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         progressRef.current =
           (progressRef.current + (elapsedMs * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
         visualProgressRef.current = progressRef.current;
-        setProgress(progressRef.current);
-        setVisualProgress(progressRef.current);
       }
       if (turntable && !dragRef.current.active) {
-        setYawDeg((prev) => {
-          return ((prev + (elapsedMs / 1000) * 28 + 180) % 360) - 180;
-        });
+        yawRef.current = ((yawRef.current + (elapsedMs / 1000) * 28 + 180) % 360) - 180;
+      }
+
+      // Draw directly onto GPU/canvas at locked 60fps without waiting for React tree reconciliation
+      const liveCycle = sampleStudioMotionCycle(progressRef.current);
+      paintFrameRef.current(liveCycle.pose, yawRef.current);
+
+      // Sync React HUD & slider state whenever displayed percentage/phase/degree changes
+      if (playing) {
+        const nextPct = Math.round(progressRef.current * 100);
+        if (nextPct !== lastCommittedPct || liveCycle.id !== lastCommittedPhaseId || elapsedMs >= 64) {
+          lastCommittedPct = nextPct;
+          lastCommittedPhaseId = liveCycle.id;
+          setProgress(progressRef.current);
+          setVisualProgress(progressRef.current);
+        }
+      }
+      if (turntable && !dragRef.current.active) {
+        const nextYawInt = Math.round(yawRef.current);
+        if (nextYawInt !== lastCommittedYaw) {
+          lastCommittedYaw = nextYawInt;
+          setYawDeg(Number(yawRef.current.toFixed(2)));
+        }
       }
       rafId = window.requestAnimationFrame(step);
     };
@@ -383,7 +609,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const resize = () => invalidateViewport();
+    const resize = () => {
+      lastDrawSigRef.current = '';
+      invalidateViewport();
+    };
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
     observer?.observe(canvas);
     window.addEventListener('resize', resize);
@@ -409,85 +638,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || typeof canvas.getContext !== 'function') return;
-    if (
-      typeof navigator !== 'undefined' &&
-      /jsdom/i.test(navigator.userAgent) &&
-      !('mock' in canvas.getContext)
-    ) {
-      return;
-    }
-    let ctx: CanvasRenderingContext2D | null;
-    try {
-      ctx = canvas.getContext('2d');
-    } catch {
-      return;
-    }
-    if (!ctx) return;
-
-    const dpr =
-      typeof window !== 'undefined'
-        ? resolveAdaptive3dFrameBudget(readAmbientDevice3dSignals()).effectiveDpr
-        : 1;
-    const cssW = canvas.clientWidth || 640;
-    const cssH = canvas.clientHeight || 416;
-    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
-      canvas.width = Math.round(cssW * dpr);
-      canvas.height = Math.round(cssH * dpr);
-    }
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    const frameResult = renderRealtimeStudio3DFrame({
-      ctx,
-      width: cssW,
-      height: cssH,
-      exercise,
-      phaseT: visualPhase.pose,
-      yawDeg,
-      pitchDeg,
-      zoom,
-      panX: panOffset[0],
-      panY: panOffset[1],
-      shader,
-      mirrored,
-      showBiomechOverlay,
-      dualView,
-      springOverride,
-      footbarOverride,
-      headrestOverride,
-      propOverride,
-      selectedHotspotId,
-    });
-    hotspotsRef.current = frameResult.hotspots;
-    if (selectedHotspotId) {
-      const current = frameResult.hotspots.find((hotspot) => hotspot.id === selectedHotspotId);
-      if (current)
-        setSelectedHotspot((previous) =>
-          previous?.id === current.id && previous.metricKo !== current.metricKo
-            ? current
-            : previous,
-        );
-    }
-    ctx.restore();
-  }, [
-    exercise,
-    visualPhase.pose,
-    yawDeg,
-    pitchDeg,
-    zoom,
-    panOffset,
-    shader,
-    mirrored,
-    showBiomechOverlay,
-    dualView,
-    springOverride,
-    footbarOverride,
-    headrestOverride,
-    propOverride,
-    selectedHotspotId,
-    viewportVersion,
-  ]);
+    paintFrame();
+  }, [paintFrame]);
 
   const tweenRafRef = useRef<number>(0);
 
@@ -672,6 +824,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-motion-phase={phase.id}
       data-frame-budget-tier={frameBudget.tier}
       data-target-fps={String(frameBudget.targetFps)}
+      data-render-backend={renderBackend}
       data-3d-rig-scope={dedicated3d ? 'dedicated-3d-rig' : 'procedural-3d-synthesis'}
       data-3d-pose-feature={rigMeta.poseFeatureKo}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
@@ -821,8 +974,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               -4,
               Math.min(80, dragRef.current.basePitch + dy * pitchGain),
             );
-            setYawDeg(Math.round(nextYaw));
-            setPitchDeg(Math.round(nextPitch));
+            setYawDeg(Number(nextYaw.toFixed(1)));
+            setPitchDeg(Number(nextPitch.toFixed(1)));
           }}
           onPointerUp={(event) => {
             activePointersRef.current.delete(event.pointerId);
