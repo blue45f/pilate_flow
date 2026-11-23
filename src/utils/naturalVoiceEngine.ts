@@ -4,8 +4,11 @@ import {
   STUDIO_NEURAL_VOICE_ENGINE_ID,
   STUDIO_NEURAL_VOICE_LABEL_KO,
   fetchStudioNeuralAudioBytes,
+  getPreferredStudioVoicePersona,
+  getStudioVoicePersonaMeta,
   resolveStudioNeuralClipAudio,
   resolveStudioNeuralExerciseAudio,
+  type StudioVoicePersonaId,
 } from './studioNeuralVoiceResolver';
 import type {
   BreathChimeKind,
@@ -128,6 +131,7 @@ export interface CreateNaturalVoiceControllerOptions {
   readonly segments: readonly NaturalVoiceSegment[];
   readonly initialSpeed?: NaturalVoiceSpeed;
   readonly voicePreset?: CloudVoicePreset;
+  readonly studioPersona?: StudioVoicePersonaId;
   readonly preferCloud?: boolean;
   readonly breathChimesEnabled?: boolean;
   readonly onStateChange?: (state: NaturalVoiceControllerState) => void;
@@ -144,6 +148,7 @@ export interface NaturalVoiceController {
   previous: () => boolean;
   jumpTo: (segmentIndex: number) => boolean;
   setSpeed: (speed: NaturalVoiceSpeed) => void;
+  setStudioPersona: (persona: StudioVoicePersonaId) => void;
   setBreathChimesEnabled: (enabled: boolean) => void;
   setPreferCloud: (enabled: boolean) => void;
   destroy: () => void;
@@ -758,6 +763,8 @@ export function inspectInitialNaturalVoiceState(
     }
   }
   const hasSpeechSupport = Boolean(synth && utteranceCtor && initialVoice);
+  const persona = options.studioPersona ?? getPreferredStudioVoicePersona();
+  const personaMeta = getStudioVoicePersonaMeta(persona);
   const studioPackAvailable = Boolean(
     isStudioPackEnabled(env) && (options.preferCloud ?? true) && hasStudioPackCoverage(segments),
   );
@@ -774,12 +781,12 @@ export function inspectInitialNaturalVoiceState(
     status: hasSpeechSupport || canTryCloud ? 'idle' : 'unsupported',
     activeTier: canTryCloud ? 'cloud-neural' : hasSpeechSupport ? 'device-enhanced' : 'text-only',
     voiceQualityLabelKo: studioPackAvailable
-      ? STUDIO_NEURAL_VOICE_LABEL_KO
+      ? personaMeta.labelKo
       : canTryCloud
         ? '스튜디오 자연 음성'
         : initialVoice?.qualityLabelKo ?? '화면 대본 모드',
     selectedVoiceName: studioPackAvailable
-      ? `studio-neural:${STUDIO_NEURAL_VOICE_ENGINE_ID}`
+      ? `studio-neural:${personaMeta.modelId}`
       : initialVoice?.voice.name ?? null,
     cacheHitCount: 0,
     activeSegmentIndex: 0,
@@ -836,6 +843,8 @@ export function createNaturalVoiceController(
   const canTryCloud = Boolean((cloudSynthesizer || studioPackFetcher) && (options.preferCloud ?? true));
 
   let state: NaturalVoiceControllerState = inspectInitialNaturalVoiceState(options);
+  let activeStudioPersona: StudioVoicePersonaId =
+    options.studioPersona ?? getPreferredStudioVoicePersona();
 
   let destroyed = false;
   let playbackRunId = 0;
@@ -1236,6 +1245,8 @@ export function createNaturalVoiceController(
     // Determine contiguous exercise block or reusable studio coaching clip
     let audioUrl: string | null = null;
     let cacheId: string | null = null;
+    let resolvedLabelKo: string = STUDIO_NEURAL_VOICE_LABEL_KO;
+    let resolvedModelId: string = STUDIO_NEURAL_VOICE_ENGINE_ID;
     let groupEndIndex = index;
 
     if (segment.exerciseId) {
@@ -1246,7 +1257,7 @@ export function createNaturalVoiceController(
         segments[index - 1]?.exerciseId !== segment.exerciseId;
 
       if (isExerciseBlockStart) {
-        const resolved = resolveStudioNeuralExerciseAudio(segment.exerciseId);
+        const resolved = resolveStudioNeuralExerciseAudio(segment.exerciseId, activeStudioPersona);
         if (resolved) {
           let endIdx = index;
           while (
@@ -1267,18 +1278,42 @@ export function createNaturalVoiceController(
             segments.every((seg) => seg.exerciseId === segment.exerciseId);
           if (!hasSensitive && isFullExerciseBlock) {
             audioUrl = resolved.url;
-            cacheId = `ex:${resolved.resolvedId}`;
+            cacheId = `${resolved.personaUsed}:ex:${resolved.resolvedId}`;
+            resolvedLabelKo = resolved.personaLabelKo;
+            resolvedModelId = resolved.modelId;
             groupEndIndex = endIdx;
           }
         }
       }
     } else if (!containsSensitivePersonalInfo(segment.textKo)) {
-      if (segment.id.endsWith('-outro')) {
-        audioUrl = resolveStudioNeuralClipAudio('rehearsal-complete');
-        cacheId = 'clip:rehearsal-complete';
+      let clipKey:
+        | 'rehearsal-welcome'
+        | 'rehearsal-complete'
+        | 'briefing-welcome'
+        | 'briefing-next-class'
+        | 'briefing-complete'
+        | null = null;
+
+      if (segment.id === 'briefing-welcome') {
+        clipKey = 'briefing-welcome';
+      } else if (segment.id.startsWith('briefing-next-class')) {
+        clipKey = 'briefing-next-class';
+      } else if (segment.id === 'briefing-complete') {
+        clipKey = 'briefing-complete';
+      } else if (segment.id.endsWith('-outro')) {
+        clipKey = 'rehearsal-complete';
       } else if (index === 0 && segment.tone === 'warm-intro' && segment.textKo.includes('이어듣기')) {
-        audioUrl = resolveStudioNeuralClipAudio('rehearsal-welcome');
-        cacheId = 'clip:rehearsal-welcome';
+        clipKey = 'rehearsal-welcome';
+      }
+
+      if (clipKey) {
+        const clip = resolveStudioNeuralClipAudio(clipKey, activeStudioPersona);
+        if (clip) {
+          audioUrl = clip.url;
+          cacheId = `${clip.personaUsed}:clip:${clipKey}`;
+          resolvedLabelKo = clip.personaLabelKo;
+          resolvedModelId = clip.modelId;
+        }
       }
     }
 
@@ -1286,7 +1321,7 @@ export function createNaturalVoiceController(
       return { status: 'fallback' };
     }
 
-    const cacheKey = `studio-neural-v1|${cacheId}`;
+    const cacheKey = `studio-neural-v2|${cacheId}`;
     const cached = await audioCache.get(cacheKey);
     if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
 
@@ -1297,7 +1332,7 @@ export function createNaturalVoiceController(
       audioBytes = cached.bytes;
       wasCacheHit = true;
     } else {
-      emit({ status: 'loading', announcementKo: '서연 AI 스튜디오 음성을 불러오고 있어요.' });
+      emit({ status: 'loading', announcementKo: `${resolvedLabelKo}을 불러오고 있어요.` });
       const fetched = await studioPackFetcher(audioUrl);
       if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
       if (!fetched || fetched.byteLength < 512) {
@@ -1309,7 +1344,7 @@ export function createNaturalVoiceController(
         mimeType: 'audio/mpeg',
         bytes: fetched,
         provider: 'studio-neural',
-        voiceId: STUDIO_NEURAL_VOICE_ENGINE_ID,
+        voiceId: resolvedModelId,
       });
       if (destroyed || runId !== playbackRunId) return { status: 'fallback' };
     }
@@ -1320,8 +1355,8 @@ export function createNaturalVoiceController(
     emit({
       status: 'playing',
       activeTier: 'cloud-neural',
-      voiceQualityLabelKo: STUDIO_NEURAL_VOICE_LABEL_KO,
-      selectedVoiceName: `studio-neural:${STUDIO_NEURAL_VOICE_ENGINE_ID}`,
+      voiceQualityLabelKo: resolvedLabelKo,
+      selectedVoiceName: `studio-neural:${resolvedModelId}`,
       cacheHitCount: wasCacheHit ? state.cacheHitCount + 1 : state.cacheHitCount,
     });
 
@@ -1601,6 +1636,21 @@ export function createNaturalVoiceController(
           // Fall through
         }
       }
+      if (wasActive) {
+        controller.play(state.activeSegmentIndex);
+      }
+    },
+
+    setStudioPersona(persona: StudioVoicePersonaId): void {
+      if (destroyed) return;
+      activeStudioPersona = persona;
+      const meta = getStudioVoicePersonaMeta(persona);
+      const wasActive = state.status === 'playing' || state.status === 'loading';
+      emit({
+        voiceQualityLabelKo: meta.labelKo,
+        selectedVoiceName: `studio-neural:${meta.modelId}`,
+        announcementKo: `AI 강사 음성을 ${meta.nameKo} 목소리로 바꿨어요.`,
+      });
       if (wasActive) {
         controller.play(state.activeSegmentIndex);
       }

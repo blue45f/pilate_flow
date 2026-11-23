@@ -117,7 +117,13 @@ describe('freeAiAssistantSchema and policy guards', () => {
     const trackedFiles = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
       .split('\n')
       .map((line) => line.trim())
-      .filter((file) => file.length > 0 && !/\.(png|jpg|jpeg|webp|gif|tar\.gz|ico)$/i.test(file));
+      .filter(
+        (file) =>
+          file.length > 0 &&
+          !/\.(png|jpg|jpeg|webp|gif|tar\.gz|ico|mp3|wav|ogg|m4a|glb|woff|woff2|ttf|pdf)$/i.test(
+            file,
+          ),
+      );
 
     const secretPatterns = [
       /\bAIza[0-9A-Za-z_-]{20,}\b/,

@@ -10,8 +10,16 @@ import {
   type NaturalVoiceControllerState,
   type NaturalVoiceSpeed,
 } from '../utils/naturalVoiceEngine';
+import {
+  STUDIO_VOICE_PERSONAS,
+  getPreferredStudioVoicePersona,
+  setPreferredStudioVoicePersona,
+  subscribeStudioVoicePersona,
+  type StudioVoicePersonaId,
+} from '../utils/studioNeuralVoiceResolver';
 
 const CARD_SPEED_CYCLE: readonly NaturalVoiceSpeed[] = [0.9, 1, 1.1, 1.2];
+const VOICE_PERSONA_ORDER: readonly StudioVoicePersonaId[] = ['seoyeon', 'hyunsu'];
 import '../styles/sequence-audio-rehearsal.css';
 
 export interface NaturalVoiceSpeakButtonProps {
@@ -44,6 +52,10 @@ export function NaturalVoiceSpeakButton({
     [exercise, step],
   );
 
+  const [studioPersona, setStudioPersona] = useState<StudioVoicePersonaId>(() =>
+    getPreferredStudioVoicePersona(),
+  );
+
   const sessionKey = `${exercise.id}:${preferCloud ? 'cloud' : 'local'}:${breathChimesEnabled ? 'chime' : 'mute'}:${script.segments.length}`;
 
   const initialVoiceState = useMemo(
@@ -52,11 +64,12 @@ export function NaturalVoiceSpeakButton({
         sessionId: `exercise-natural-${exercise.id}`,
         titleKo: script.titleKo,
         segments: script.segments,
+        studioPersona,
         preferCloud,
         breathChimesEnabled,
         env: engineOptions,
       }),
-    [exercise.id, script, preferCloud, breathChimesEnabled, engineOptions],
+    [exercise.id, script, studioPersona, preferCloud, breathChimesEnabled, engineOptions],
   );
 
   const controllerRef = useRef<NaturalVoiceController | null>(null);
@@ -76,6 +89,7 @@ export function NaturalVoiceSpeakButton({
       sessionId: `exercise-natural-${exercise.id}`,
       titleKo: script.titleKo,
       segments: script.segments,
+      studioPersona: getPreferredStudioVoicePersona(),
       preferCloud,
       breathChimesEnabled,
       env: engineOptions,
@@ -92,6 +106,13 @@ export function NaturalVoiceSpeakButton({
       }
     };
   }, [exercise.id, script, preferCloud, breathChimesEnabled, engineOptions, sessionKey]);
+
+  useEffect(() => {
+    return subscribeStudioVoicePersona((nextPersona) => {
+      setStudioPersona(nextPersona);
+      controllerRef.current?.setStudioPersona(nextPersona);
+    });
+  }, []);
 
   const isPlaying = voiceState.status === 'playing' || voiceState.status === 'loading';
   const isPaused = voiceState.status === 'paused';
@@ -135,6 +156,12 @@ export function NaturalVoiceSpeakButton({
     const idx = CARD_SPEED_CYCLE.indexOf(voiceState.speed);
     const nextSpeed = CARD_SPEED_CYCLE[(idx + 1) % CARD_SPEED_CYCLE.length] ?? 1;
     controllerRef.current?.setSpeed(nextSpeed);
+  };
+
+  const handleTogglePersona = () => {
+    const idx = VOICE_PERSONA_ORDER.indexOf(studioPersona);
+    const nextPersona = VOICE_PERSONA_ORDER[(idx + 1) % VOICE_PERSONA_ORDER.length] ?? 'seoyeon';
+    setPreferredStudioVoicePersona(nextPersona);
   };
 
   return (
@@ -189,6 +216,18 @@ export function NaturalVoiceSpeakButton({
             style={{ fontVariantNumeric: 'tabular-nums' }}
           >
             <span>{voiceState.speed}×</span>
+          </button>
+        )}
+
+        {variant === 'card' && preferCloud && !isUnsupported && (
+          <button
+            type="button"
+            className="pf-voice-btn pf-voice-btn--compact"
+            data-testid="voice-persona-toggle-btn"
+            onClick={handleTogglePersona}
+            aria-label={`AI 강사 성우 전환 · 현재 ${STUDIO_VOICE_PERSONAS[studioPersona].nameKo}`}
+          >
+            <span>{STUDIO_VOICE_PERSONAS[studioPersona].nameKo} AI</span>
           </button>
         )}
 

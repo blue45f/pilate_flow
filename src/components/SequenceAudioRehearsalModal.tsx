@@ -34,6 +34,13 @@ import {
   type NaturalVoiceControllerState,
   type NaturalVoiceSpeed,
 } from '../utils/naturalVoiceEngine';
+import {
+  STUDIO_VOICE_PERSONAS,
+  getPreferredStudioVoicePersona,
+  setPreferredStudioVoicePersona,
+  subscribeStudioVoicePersona,
+  type StudioVoicePersonaId,
+} from '../utils/studioNeuralVoiceResolver';
 import { LightDismissDialog } from './LightDismissDialog';
 import '../styles/sequence-audio-rehearsal.css';
 
@@ -87,6 +94,9 @@ export function SequenceAudioRehearsalModal({
   const [mode, setMode] = useState<SequenceAudioRehearsalMode>(initialMode);
   const [blindStage, setBlindStage] = useState<MemorizationBlindStage>(initialBlindStage);
   const [speed, setSpeed] = useState<NaturalVoiceSpeed>(1);
+  const [studioPersona, setStudioPersona] = useState<StudioVoicePersonaId>(() =>
+    getPreferredStudioVoicePersona(),
+  );
   const [breathChimesEnabled, setBreathChimesEnabled] = useState(true);
   const [showFullScript, setShowFullScript] = useState(false);
   const [onlyConfusedFilter, setOnlyConfusedFilter] = useState(false);
@@ -163,6 +173,7 @@ export function SequenceAudioRehearsalModal({
       titleKo: `${script.sequenceTitle} · ${REHEARSAL_MODE_META_KO[mode].shortLabelKo}`,
       segments: script.segments,
       initialSpeed: speed,
+      studioPersona: getPreferredStudioVoicePersona(),
       preferCloud,
       breathChimesEnabled,
       env: engineOptions,
@@ -193,6 +204,13 @@ export function SequenceAudioRehearsalModal({
     // speed and breathChimesEnabled are updated live on the active controller without rebuilding it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, controllerKey, script, preferCloud, engineOptions]);
+
+  useEffect(() => {
+    return subscribeStudioVoicePersona((nextPersona) => {
+      setStudioPersona(nextPersona);
+      controllerRef.current?.setStudioPersona(nextPersona);
+    });
+  }, []);
 
   const handleClose = () => {
     controllerRef.current?.stop('리허설 창을 닫아 음성을 멈췄어요.');
@@ -693,8 +711,29 @@ export function SequenceAudioRehearsalModal({
               </p>
             )}
 
-            {/* Speed & Breath Chime Controls */}
+            {/* Speed, AI Voice Persona & Breath Chime Controls */}
             <div className="pf-rehearsal-options-bar">
+              {preferCloud && (
+                <div className="pf-rehearsal-speed-group" role="group" aria-label="AI 강사 목소리 선택">
+                  {(['seoyeon', 'hyunsu'] as const).map((pid) => (
+                    <button
+                      key={pid}
+                      type="button"
+                      className={[
+                        'pf-rehearsal-speed-btn',
+                        studioPersona === pid ? 'pf-rehearsal-speed-btn--active' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => setPreferredStudioVoicePersona(pid)}
+                      aria-pressed={studioPersona === pid}
+                    >
+                      {STUDIO_VOICE_PERSONAS[pid].nameKo} AI
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="pf-rehearsal-speed-group" role="group" aria-label="재생 속도">
                 {NATURAL_VOICE_SPEED_OPTIONS.map((opt) => (
                   <button
