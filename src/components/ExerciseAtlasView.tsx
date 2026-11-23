@@ -20,6 +20,7 @@ import {
   ExternalLink,
   FileText,
   Globe2,
+  GraduationCap,
   Heart,
   Info,
   Layers,
@@ -124,6 +125,7 @@ import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
 import { WorldRepertoireExplorerBar } from './WorldRepertoireExplorerBar';
 import { LightDismissDialog } from './LightDismissDialog';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
+import { MovementMasteryStudioPanel } from './MovementMasteryStudioPanel';
 
 export { ATLAS_DISCOVERY_RECOVERY_KEY };
 
@@ -1493,7 +1495,9 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   getCardState,
 }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [quickModal, setQuickModal] = useState<null | 'world' | 'fundamentals' | 'nfc'>(null);
+  const [quickModal, setQuickModal] = useState<null | 'world' | 'mastery' | 'fundamentals' | 'nfc'>(
+    null,
+  );
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const selectedApparatus = CATALOG_APPARATUS_FILTERS.find(
     ({ ids }) => ids.length === equipment.length && ids.every((id) => equipment.includes(id)),
@@ -1742,6 +1746,15 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         >
           <Globe2 size={15} strokeWidth={1.6} aria-hidden="true" />
           <span>세계 대백과 1,752종 · 13개 프로그램</span>
+        </button>
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="atlas-open-mastery-btn"
+          onClick={() => setQuickModal('mastery')}
+        >
+          <GraduationCap size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>동작 숙지 훈련</span>
         </button>
         <button
           type="button"
@@ -2009,6 +2022,20 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
               setQuickModal(null);
               onOpenDetails(ex);
             }}
+          />
+        </LightDismissDialog>
+      )}
+
+      {quickModal === 'mastery' && (
+        <LightDismissDialog
+          open
+          onClose={() => setQuickModal(null)}
+          title="강사 동작 숙지 · 마스터 훈련소"
+          className="pf-smart-tool-dialog"
+        >
+          <MovementMasteryStudioPanel
+            exercises={exercises}
+            initialExerciseId={exercises[0]?.id}
           />
         </LightDismissDialog>
       )}

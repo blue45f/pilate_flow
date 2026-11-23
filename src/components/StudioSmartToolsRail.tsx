@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Briefcase,
   Camera,
+  GraduationCap,
   Headphones,
   Mic,
   MonitorSmartphone,
@@ -16,6 +17,7 @@ import { DualScreenNfcPanel } from './DualScreenNfcPanel';
 import { LessonModeSwitchPanel } from './LessonModeSwitchPanel';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
+import { MovementMasteryStudioPanel } from './MovementMasteryStudioPanel';
 import { SequenceAudioRehearsalModal } from './SequenceAudioRehearsalModal';
 import { SequenceAutoPilotDrawer } from './SequenceAutoPilotDrawer';
 import { StudioPropAllocatorPanel } from './StudioPropAllocatorPanel';
@@ -24,6 +26,7 @@ import { TeachingVoiceCoachPanel } from './TeachingVoiceCoachPanel';
 type ActiveToolModalId =
   | null
   | 'autopilot'
+  | 'mastery'
   | 'rehearsal'
   | 'role-ops'
   | 'lesson-mode'
@@ -157,17 +160,15 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
           <span>중복 없는 자동 편성</span>
         </button>
 
-        {onOpenMasteryModal && (
-          <button
-            type="button"
-            className="pf-smart-tool-pill"
-            data-testid="rail-btn-mastery"
-            onClick={onOpenMasteryModal}
-          >
-            <Sparkles size={15} strokeWidth={1.6} aria-hidden="true" />
-            <span>{masteryButtonLabelKo ?? '동작 숙지 훈련'}</span>
-          </button>
-        )}
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="rail-btn-mastery"
+          onClick={() => (onOpenMasteryModal ? onOpenMasteryModal() : setOpenModal('mastery'))}
+        >
+          <GraduationCap size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>{masteryButtonLabelKo ?? '동작 숙지 훈련'}</span>
+        </button>
 
         <button
           type="button"
@@ -257,6 +258,22 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
             });
           }}
         />
+      )}
+
+      {openModal === 'mastery' && (
+        <LightDismissDialog
+          open
+          onClose={() => setOpenModal(null)}
+          title="강사 동작 숙지 · 마스터 훈련소"
+          className="pf-smart-tool-dialog"
+        >
+          <MovementMasteryStudioPanel
+            exercises={combinedExercises}
+            sequenceSteps={activeSteps}
+            sequenceTitle={activeTitle || '오늘의 필라테스 수업'}
+            initialExerciseId={focusExercise?.id}
+          />
+        </LightDismissDialog>
       )}
 
       {openModal === 'rehearsal' && (
