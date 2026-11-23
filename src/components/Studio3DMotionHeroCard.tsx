@@ -13,6 +13,7 @@ import type { BoxState, FootbarState, HeadrestState, PilatesExercise } from '../
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import { formatDifficultyMeta } from '../utils/instructorUxHelpers';
 import '../styles/studio-motion-study.css';
 
 export type Studio3DViewMode = 'motion' | 'compare' | VisualPhaseId;
@@ -464,7 +465,13 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               POSITION_LABELS[exercise.bodyPosition]?.ko ??
               exercise.bodyPosition}
           </span>
-          <span className="pf-studio3d-honest-pill">
+          <span
+            className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
+            aria-label={formatDifficultyMeta(exercise.level).ariaLabel}
+          >
+            {formatDifficultyMeta(exercise.level).fullLabel}
+          </span>
+          <span className="pf-studio3d-honest-pill pf-shift-left-audit-only">
             {rigDescription} · {dedicated3d ? '실제 자세와 범위는 강사가 확인하세요.' : '동작 설명과 함께 확인하세요.'}
           </span>
           {binding?.sourceUrl && (
@@ -639,7 +646,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                 <strong>{muscleLabel}</strong>
                 <small>
                   기본 {exercise.defaultDurationMin}분{exercise.isUnilateral ? ' (양쪽 포함)' : ''}{' '}
-                  · Lv {exercise.level}
+                  · {formatDifficultyMeta(exercise.level).fullLabel}
                 </small>
               </div>
             </div>

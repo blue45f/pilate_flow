@@ -112,6 +112,12 @@ import {
   INITIAL_ATLAS_FILTERS as INITIAL_FILTERS,
   useAtlasFilterEngine,
 } from '../hooks/useAtlasFilterEngine';
+import {
+  DIFFICULTY_FILTER_OPTIONS,
+  formatDifficultyMeta,
+} from '../utils/instructorUxHelpers';
+import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
+import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
 
 export { ATLAS_DISCOVERY_RECOVERY_KEY };
 
@@ -125,7 +131,7 @@ interface ExerciseAtlasViewProps {
   initialView?: 'catalog' | 'tools';
 }
 
-const LEVEL_NAMES = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
+const LEVEL_NAMES = { '1.0': '입문 ★☆☆', '1.5': '중급 ★★☆', '2.0': '심화 ★★★' };
 const APPARATUS_CRITERIA_LABELS: Record<ApparatusType | 'mixed', string> = {
   mat: '매트',
   reformer: '리포머',
@@ -1596,6 +1602,31 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
               즐겨찾기
             </button>
           </div>
+          <div
+            className="pf-difficulty-filter-row pf-atlas-difficulty-row"
+            role="group"
+            aria-label="난이도 빠른 선택"
+            data-testid="atlas-difficulty-filter-row"
+          >
+            {DIFFICULTY_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`pf-difficulty-filter-chip ${level === opt.id ? 'is-active' : ''}`}
+                aria-pressed={level === opt.id}
+                onClick={() => onSelectLevel(opt.id)}
+              >
+                {opt.labelKo}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="pf-atlas-editorial-banner-wrap">
+          <ApparatusEditorialHeroBanner
+            apparatus={selectedApparatus?.apparatus ?? 'mixed'}
+            countLabel={`${resultCount}개 동작`}
+            compact
+          />
         </div>
         <div
           id="flow-atlas-filters"
@@ -1769,7 +1800,12 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                     <div className="flow-atlas__card-meta-row">
                       <p className="flow-atlas__card-meta">
                         <span>{APPARATUS_LABELS[exercise.apparatus].ko}</span>
-                        <span>{LEVEL_NAMES[exercise.level]}</span>
+                        <span
+                          className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
+                          aria-label={formatDifficultyMeta(exercise.level).ariaLabel}
+                        >
+                          {formatDifficultyMeta(exercise.level).fullLabel}
+                        </span>
                         <span>{exercise.defaultDurationMin}분</span>
                       </p>
                       <span className="flow-atlas__preview-affordance" aria-hidden="true">
@@ -1913,6 +1949,10 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           </button>
         </div>
       ) : null}
+
+      <div className="pf-atlas-fundamentals-wrap">
+        <PilatesFundamentalsDrawer />
+      </div>
     </section>
   );
 };
@@ -3687,7 +3727,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             </div>
           </div>
           <section className="library-reference-tools" aria-label="동작 도해와 참고 자료">
-            <details className="library-asset-status">
+            <details className="library-asset-status pf-shift-left-audit-only">
               <summary>
                 <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
                 <span className="library-asset-status-warning">전문가 검토 전</span>
@@ -3708,7 +3748,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 </p>
               </div>
             </details>
-            <p className="library-asset-status-note">
+            <p className="library-asset-status-note pf-shift-left-audit-only">
               관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.
             </p>
             <details
@@ -3962,7 +4002,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               보증하지 않습니다.
             </p>
           </details>
-          <details className="ml-review-details">
+          <details className="ml-review-details pf-shift-left-audit-only">
             <summary>검토와 수업 사용 기준</summary>
             <p>
               기본 동작은 개인 검토 기록 전에도 직접 수업안에 담을 수 있으며, 자동 추천·AI 초안

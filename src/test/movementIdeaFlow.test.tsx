@@ -88,33 +88,17 @@ afterEach(() => {
 });
 
 describe('1-line movement idea creation, progressive try-out notes, and class integration', { timeout: 15000 }, () => {
-  it('explains review as optional without presenting an approval gate for composition or teaching', async () => {
+  it('keeps the instructor atlas free of review banners while permitting composition and teaching without approval gates', async () => {
     render(<App />);
     fireEvent.click(within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
       name: /동작 라이브러리/,
     }));
-    const notice = await screen.findByLabelText('강사 검토 안내');
-    const before = usePilatesStore.getState();
-    const summary = within(notice).getByText('자료·모션의 검토 상태 안내', { selector: 'summary' });
-    expect(summary.closest('details')).not.toHaveAttribute('open');
-    expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).not.toBeVisible();
-    fireEvent.click(summary);
-    const guidance = within(notice).getByText(
-      /검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다/,
-    );
-    expect(guidance).toBeVisible();
-    expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).toBeVisible();
-    expect(guidance).toHaveTextContent(
-      /진행 전 대상자 컨디션과 기구·스프링 장력을 직접 확인하세요/,
-    );
-    expect(guidance).toHaveTextContent(
-      /검토 여부나 AI 제안은 의학적 판단·운동 적합성 보장이 아닙니다/,
-    );
-    expect(notice).not.toHaveTextContent(/미승인.*(?:자동추천|자동 추천|수업 금지)|승인.*필수/);
-    expect(usePilatesStore.getState()).toBe(before);
+    await screen.findByRole('heading', { name: '동작 라이브러리', level: 1 }, { timeout: 6000 });
+    expect(screen.queryByLabelText('강사 검토 안내')).not.toBeInTheDocument();
+    expect(screen.queryByText('자료·모션의 검토 상태 안내')).not.toBeInTheDocument();
 
     // The mobile quick palette returns an empty class to preparation, then permits
-    // teaching an added, unreviewed movement without an approval gate.
+    // teaching an added movement without any review or approval gate.
     fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
     let palette = screen.getByTestId('studio-command-palette');
     fireEvent.click(within(palette).getByRole('button', { name: /수업 준비하기/ }));

@@ -4,6 +4,7 @@ import { useManagedRaf } from '../hooks/useManagedRaf';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
+import { IntuitiveAnatomyGuideCard } from './IntuitiveAnatomyGuideCard';
 import { SpringVisualPills } from './SpringVisualPills';
 import React, { useRef, useState } from 'react';
 import {
@@ -1001,8 +1002,9 @@ const MovementDetails: React.FC<{
         </div>
       )}
       {previewStep === 1 && (
-        <div ref={step1Ref} data-detail-step1-section>
+        <div ref={step1Ref} data-detail-step1-section className="pf-detail-step1-stack">
           <Studio3DMotionHeroCard exercise={exercise} />
+          <IntuitiveAnatomyGuideCard exercise={exercise} />
         </div>
       )}
       <ExerciseVideoGallery
@@ -1040,7 +1042,7 @@ const MovementDetails: React.FC<{
         </div>
       )}
       <div className="pf-preview-secondary-group" aria-label="보조 학습 및 출처 자료">
-        <p className="pf-preview-secondary-group__heading">
+        <p className="pf-preview-secondary-group__heading pf-shift-left-audit-only">
           상세 가이드 · 내 검토 기록 (필요할 때 펼쳐보기)
         </p>
         <details
@@ -1113,7 +1115,7 @@ const MovementDetails: React.FC<{
         </details>
         <details
           ref={step2Ref}
-          className="optional-review-details pf-detail-progressive-drawer"
+          className="optional-review-details pf-detail-progressive-drawer pf-shift-left-audit-only"
           open={previewStep === 2 || restoredDraft !== null ? true : undefined}
         >
           <summary>내 검토 기록 (선택)</summary>
@@ -1141,7 +1143,7 @@ const MovementDetails: React.FC<{
           />
         </details>
         <details
-          className="pending-instruction-notes pf-detail-progressive-drawer"
+          className="pending-instruction-notes pf-detail-progressive-drawer pf-shift-left-audit-only"
           onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
         >
           <summary>
@@ -1153,7 +1155,7 @@ const MovementDetails: React.FC<{
           </summary>
           <MotionReferencePlayer mode="prototype-lab" active={motionLabOpen} />
         </details>
-        <details className="optional-source-details pf-detail-progressive-drawer">
+        <details className="optional-source-details pf-detail-progressive-drawer pf-shift-left-audit-only">
           <summary>출처·검토 상태 자세히 보기</summary>
           <ExerciseEvidencePanel exercise={exercise} />
           <section className="movement-source-panel">
@@ -1266,9 +1268,7 @@ const MovementDetails: React.FC<{
       <p className="pf-p07-honest-footnote">
         <Info size={14} aria-hidden="true" />
         <span>
-          {approved
-            ? '내가 검토한 수업 계획 메모입니다. 수업 전 기구 세팅과 회원 컨디션을 한 번 더 확인해 주세요.'
-            : '수업안에 바로 추가할 수 있는 참고 자료입니다. 실제 진행 전 스프링과 회원 컨디션을 확인해 주세요.'}
+          수업 전 스프링과 회원 컨디션에 맞춰 가볍게 조절해 진행해 주세요.
         </span>
       </p>
       {onAddToSequence && (

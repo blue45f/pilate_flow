@@ -49,8 +49,13 @@ import {
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
-import { getExerciseEvidence } from '../utils/exerciseEvidence';
 import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
+import {
+  findLivePlanBAlternatives,
+  formatDifficultyMeta,
+  LIVE_PLAN_B_OPTIONS,
+} from '../utils/instructorUxHelpers';
+import { getStudioTrackAdapters, type PlanBConstraint } from '../utils/studioTrackSlots';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
@@ -579,13 +584,46 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const current = steps[clock.index];
   const currentIsRest = !!current && isRestStep(current);
   const exercise = current ? exerciseMap.get(current.exerciseId) : undefined;
-  const currentEvidence = useMemo(
-    () => (exercise && !currentIsRest ? getExerciseEvidence(exercise) : null),
-    [exercise, currentIsRest],
-  );
   const next = steps[clock.index + 1];
   const nextExercise = next ? exerciseMap.get(next.exerciseId) : undefined;
   const [tvWidescreenMode, setTvWidescreenMode] = useState(false);
+  const [standMode, setStandMode] = useState(false);
+  const [activePlanB, setActivePlanB] = useState<PlanBConstraint | null>(null);
+  const [planBNotice, setPlanBNotice] = useState('');
+  const planBSuggestion = useMemo(() => {
+    if (!activePlanB || !exercise || currentIsRest) return null;
+    const usedIds = new Set(steps.map((item) => item.exerciseId));
+    return findLivePlanBAlternatives(exercise, activePlanB, exercises, usedIds);
+  }, [activePlanB, exercise, currentIsRest, steps, exercises]);
+  const applyPlanBAlternative = (alternative: PilatesExercise) => {
+    const idx = clockRef.current.index;
+    applySteps((prev) =>
+      prev.map((item, i) =>
+        i === idx
+          ? {
+              ...item,
+              exerciseId: alternative.id,
+              blockCategory: alternative.blockCategory,
+              customSpringOverride: undefined,
+            }
+          : item,
+      ),
+    );
+    setActivePlanB(null);
+    setPlanBNotice(`‘${alternative.nameKo}’ 동작으로 바로 바꿨어요. (원본 시퀀스는 그대로 유지)`);
+  };
+  const applyPlanBLayerShift = (layer: 'easy' | 'hard') => {
+    const idx = clockRef.current.index;
+    applySteps((prev) =>
+      prev.map((item, i) => (i === idx ? { ...item, selectedLayer: layer } : item)),
+    );
+    setActivePlanB(null);
+    setPlanBNotice(
+      layer === 'easy'
+        ? '현재 동작을 완화 레이어로 낮춰 안내합니다.'
+        : '현재 동작을 심화 레이어로 높여 안내합니다.',
+    );
+  };
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [manualCheckedStepIds, setManualCheckedStepIds] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -1849,9 +1887,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`teaching-stage live-stage live-stage-shell ${tvWidescreenMode ? 'is-tv-widescreen' : ''} ${highContrast ? 'teaching-high-contrast' : ''} ${clock.running ? 'is-stage-running' : ''}`.trim()}
+      className={`teaching-stage live-stage live-stage-shell ${tvWidescreenMode ? 'is-tv-widescreen' : ''} ${standMode ? 'is-stand-mode' : ''} ${highContrast ? 'teaching-high-contrast' : ''} ${clock.running ? 'is-stage-running' : ''}`.trim()}
       data-presentation={presentationMode}
       data-tv-widescreen={tvWidescreenMode ? 'true' : undefined}
+      data-stand-mode={standMode ? 'true' : undefined}
       data-stage-running={clock.running ? 'true' : undefined}
     >
       {pendingRecovery && sameRecoveryOwner && (
@@ -2079,6 +2118,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           onClick={() => applyPresentationMode('reference')}
         >
           자료 함께 보기
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-stand-mode-toggle"
+          aria-pressed={standMode}
+          onClick={() => setStandMode((prev) => !prev)}
+        >
+          거치대 뷰
         </button>
         <button
           type="button"
@@ -2321,9 +2368,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     : '일시정지'}
               <span> · {phase}</span>
             </span>
-            <h2 className="teaching-current-name pf-p09-hero-title">
-              {currentIsRest ? '휴식' : exercise?.nameKo}
-            </h2>
+            <div className="pf-live-stage-heading-row">
+              <h2 className="teaching-current-name pf-p09-hero-title">
+                {currentIsRest ? '휴식' : exercise?.nameKo}
+              </h2>
+              {!currentIsRest && exercise && (
+                <span
+                  className={`pf-difficulty-badge pf-live-stage-diff is-${formatDifficultyMeta(exercise.level).tone}`}
+                  aria-label={formatDifficultyMeta(exercise.level).ariaLabel}
+                >
+                  {formatDifficultyMeta(exercise.level).fullLabel}
+                </span>
+              )}
+            </div>
             <div
               className="teaching-timer-digits"
               role="timer"
@@ -2584,6 +2641,79 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <small>양쪽 균형 수행 확인</small>
             </div>
           )}
+          {standMode && (
+            <section
+              className="pf-live-stand-card"
+              data-testid="live-stage-stand-card"
+              aria-label="거치대 수업 집중 뷰"
+            >
+              <div className="pf-live-stand-card__head">
+                <div className="pf-live-stand-card__title">
+                  <span className="pf-live-stand-card__step">
+                    {String(clock.index + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
+                  </span>
+                  <strong>{currentIsRest ? '중간 휴식' : exercise?.nameKo}</strong>
+                  {!currentIsRest && exercise && (
+                    <span
+                      className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
+                    >
+                      {formatDifficultyMeta(exercise.level).fullLabel}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn-secondary pf-live-stand-card__exit"
+                  onClick={() => setStandMode(false)}
+                >
+                  일반 뷰로
+                </button>
+              </div>
+              {!currentIsRest && exercise && (
+                <div className="pf-live-stand-card__visual">
+                  <ExerciseMotionArtwork
+                    exercise={exercise}
+                    phase={progress < 34 ? 'start' : progress < 68 ? 'middle' : 'end'}
+                    decorative={false}
+                  />
+                </div>
+              )}
+              <div className="pf-live-stand-card__cue-row">
+                <span className="pf-live-stand-card__cue-kicker">핵심 큐 1줄</span>
+                <p className="pf-live-stand-card__cue-text">
+                  {currentIsRest
+                    ? '호흡을 고르고 다음 동작 기구 세팅을 가볍게 확인해 주세요.'
+                    : current?.instructorNote?.trim() ||
+                      exercise?.cues[0] ||
+                      '정렬과 호흡 리듬을 편안하게 유지하세요.'}
+                </p>
+              </div>
+              <div className="pf-live-stand-card__springs">
+                <div className="pf-live-stand-card__spring-box">
+                  <span>현재 스프링</span>
+                  {currentSpringRaw && currentSpringRaw !== 'Bodyweight' ? (
+                    <SpringVisualPills springs={currentSpringRaw} />
+                  ) : (
+                    <strong>{currentIsRest ? '휴식' : '맨몸'}</strong>
+                  )}
+                </div>
+                <div className="pf-live-stand-card__spring-box is-next">
+                  <span>다음 동작 · 스프링</span>
+                  <strong>
+                    {next
+                      ? isRestStep(next)
+                        ? '중간 휴식'
+                        : `${nextExercise?.nameKo ?? '다음 동작'}${
+                            nextExercise?.springs && nextExercise.springs !== 'Bodyweight'
+                              ? ` · ${next.customSpringOverride || nextExercise.springs}`
+                              : ''
+                          }`
+                      : '마지막 동작'}
+                  </strong>
+                </div>
+              </div>
+            </section>
+          )}
           <div className="pf-p09-cue-summary-card">
             <div className="pf-p09-cue-summary-card__head">
               <strong>핵심 티칭 큐 · 다음 순서 요약</strong>
@@ -2591,6 +2721,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 <div
                   style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}
                 >
+                  {getStudioTrackAdapters().renderNaturalVoiceSpeakButton?.({
+                    exercise,
+                    compact: true,
+                  })}
                   <ApparatusIconBadge
                     apparatus={exercise.apparatus}
                     bodyPosition={exercise.bodyPosition}
@@ -2739,13 +2873,98 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </div>
               );
             })()}
-          {currentEvidence && currentEvidence.planning.status !== 'personal-reviewed' && (
-            <p
-              className="muted teaching-review-advisory"
-              style={{ margin: '4px 0 0', fontSize: '0.78rem' }}
+          {!currentIsRest && exercise && (
+            <section
+              className="pf-live-plan-b-bar"
+              data-testid="live-stage-plan-b-bar"
+              aria-label="수업 중 즉석 플랜 B"
             >
-              {currentEvidence.planning.label} · {currentEvidence.source.label}
-            </p>
+              <div className="pf-live-plan-b-bar__head">
+                <strong>수업 중 즉석 플랜 B</strong>
+                <span>회원 컨디션에 맞춰 1탭 대체 제안</span>
+              </div>
+              <div className="pf-live-plan-b-chips" role="group" aria-label="즉석 플랜 B 선택">
+                {LIVE_PLAN_B_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`pf-live-plan-b-chip ${activePlanB === opt.id ? 'is-active' : ''}`}
+                    data-testid={`live-plan-b-btn-${opt.id}`}
+                    aria-pressed={activePlanB === opt.id}
+                    onClick={() => {
+                      setPlanBNotice('');
+                      setActivePlanB((prev) => (prev === opt.id ? null : opt.id));
+                    }}
+                  >
+                    {opt.labelKo}
+                  </button>
+                ))}
+              </div>
+              {planBNotice && (
+                <p className="pf-live-plan-b-notice" role="status">
+                  {planBNotice}
+                </p>
+              )}
+              {planBSuggestion && (
+                <div
+                  className="pf-live-plan-b-panel"
+                  data-testid="live-stage-plan-b-suggestions"
+                  role="region"
+                  aria-label={`${planBSuggestion.labelKo} 즉석 대체 제안`}
+                >
+                  <p className="pf-live-plan-b-tip">{planBSuggestion.instantTipKo}</p>
+                  {planBSuggestion.recommendedLayer && (
+                    <div className="pf-live-plan-b-layer-row">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        data-testid={`live-plan-b-layer-${planBSuggestion.recommendedLayer}`}
+                        onClick={() =>
+                          applyPlanBLayerShift(planBSuggestion.recommendedLayer as 'easy' | 'hard')
+                        }
+                      >
+                        {planBSuggestion.recommendedLayer === 'easy'
+                          ? '이 동작 그대로 완화 레이어 적용'
+                          : '이 동작 그대로 심화 레이어 적용'}
+                      </button>
+                    </div>
+                  )}
+                  {planBSuggestion.alternatives.length > 0 && (
+                    <div className="pf-live-plan-b-alts">
+                      {planBSuggestion.alternatives.map((alt) => {
+                        const altDiff = formatDifficultyMeta(alt.level);
+                        return (
+                          <div key={alt.id} className="pf-live-plan-b-alt-card">
+                            <div className="pf-live-plan-b-alt-card__info">
+                              <strong>{alt.nameKo}</strong>
+                              <span className="pf-live-plan-b-alt-card__meta">
+                                <span className={`pf-difficulty-badge is-${altDiff.tone}`}>
+                                  {altDiff.fullLabel}
+                                </span>
+                                <span>
+                                  {APPARATUS_LABELS[alt.apparatus].short}
+                                  {alt.springs && alt.springs !== 'Bodyweight'
+                                    ? ` · ${alt.springs}`
+                                    : ''}
+                                </span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn-primary pf-live-plan-b-swap-btn"
+                              data-testid={`live-plan-b-swap-${alt.id}`}
+                              onClick={() => applyPlanBAlternative(alt)}
+                            >
+                              바로 바꾸기
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
           )}
           {!currentIsRest && exercise && (
             <details
@@ -3058,8 +3277,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             )}
           </p>
           <p className="teaching-safety">
-            실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
-            적합성 보장이 아닙니다.
+            수업 전 회원 컨디션과 기구·스프링 설정을 확인하세요.
           </p>
           <section
             className="teaching-cue-section teaching-voice-section"

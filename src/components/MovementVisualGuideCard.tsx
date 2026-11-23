@@ -1104,6 +1104,7 @@ function MovementVisualGuideCardContent({
             </p>
           </div>
           <span
+            className="pf-shift-left-audit-only"
             style={{
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
               color: 'var(--pf-color-text-muted, #526358)',
@@ -1116,6 +1117,7 @@ function MovementVisualGuideCardContent({
 
         {/* Extended Source Verification Metadata Strip */}
         <div
+          className="pf-shift-left-audit-only"
           data-testid="visual-guide-extended-audit-strip"
           data-factual-record-sha256={
             sourceAudit.extendedAuditSummary.factualRecordSha256

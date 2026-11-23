@@ -465,14 +465,14 @@ function StepBlockInspectorBody({
           {equipment || '기구 확인 필요'}
         </p>
         <div className="step-inspector-badges" style={{ wordBreak: 'keep-all' }}>
-          <span>
+          <span className="pf-shift-left-audit-only">
             {bindingStatus === 'matched'
               ? '도해 연결 · 교차 검증 완료'
               : bindingStatus === 'unbound'
                 ? '모션 미연결'
                 : '모션 연결 확인 필요'}
           </span>
-          <span>
+          <span className="pf-shift-left-audit-only">
             {review === 'approved'
               ? '내 검토 기록 · 교차 검증 완료'
               : review === 'stale'

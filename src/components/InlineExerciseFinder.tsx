@@ -899,7 +899,7 @@ export function InlineExerciseFinder({
               ))}
             </select>
           </label>
-          <p>직접 입력된 태그 기준입니다. 미검토 분류도 포함합니다.</p>
+          <p>등록한 부위 태그 기준으로 빠르게 찾아요.</p>
         </div>
         <div
           className="ief-filter-panel"
@@ -965,7 +965,7 @@ export function InlineExerciseFinder({
           }}
         >
           <div className="ief-preview-heading">
-            <p>관련 패턴 참고 · 전문가 미검수</p>
+            <p className="pf-shift-left-audit-only">관련 패턴 참고 · 전문가 미검수</p>
             <button
               ref={previewCloseBtnRef}
               type="button"
@@ -986,7 +986,9 @@ export function InlineExerciseFinder({
                   <strong>{previewExercise.nameKo}</strong>
                   <span>{previewExercise.nameEn}</span>
                 </div>
-                <span className={previewApproved ? 'is-reviewed' : 'is-pending'}>
+                <span
+                  className={`${previewApproved ? 'is-reviewed' : 'is-pending'} pf-shift-left-audit-only`}
+                >
                   {previewApproved
                     ? '내 검토 기록 · 전문가 검토 아님'
                     : previewStale
@@ -996,8 +998,7 @@ export function InlineExerciseFinder({
               </div>
               <p className="ief-preview-exercise-meta">
                 부위: {previewExercise.targetMuscles.join(', ') || '미지정'} · 계획 기본{' '}
-                {previewExercise.defaultDurationMin}분 · 위 도식 초안은 정확 모션(0/98)이나 전문가
-                검토(0건)가 아닙니다.
+                {previewExercise.defaultDurationMin}분
               </p>
               <dl className="ief-preview-exercise-notes">
                 <div>
@@ -1180,7 +1181,7 @@ export function InlineExerciseFinder({
                             ? 'instructor-reviewed'
                             : 'review-pending'
                       }
-                      className={approved ? 'is-reviewed' : 'is-pending'}
+                      className={`${approved ? 'is-reviewed' : 'is-pending'} pf-shift-left-audit-only`}
                     >
                       {isIdea
                         ? ideaMeta?.triedByInstructor

@@ -26,7 +26,6 @@ import type { LiveStageNavigationHandle } from './components/LiveStageView';
 import { SequenceStudioWorkbench } from './components/SequenceStudioWorkbench';
 import { LightDismissDialog } from './components/LightDismissDialog';
 import { PwaInstallPanel } from './components/PwaInstallPanel';
-import { StudioOffline3dReadinessCard } from './components/StudioOffline3dReadinessCard';
 import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
@@ -61,6 +60,7 @@ import './styles/atelier-unslop-system.css';
 import './styles/pf-motion-studio.css';
 import './styles/rea-studio-advancement.css';
 import './styles/mobile-readability-unslop-v17.css';
+import './styles/mobile-atelier-unslop-flagship.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 import { cycleWorkspaceLandmark } from './utils/workspaceLandmarkNavigation';
@@ -1123,31 +1123,6 @@ export function App() {
                 )}
                 <WorkspaceHeadingFocus tab={state.activeTab} request={workspaceFocusRequest} />
               </Suspense>
-              {state.activeTab === 'atlas' && (
-                <aside
-                  className="instructor-review-notice v2-review-notice"
-                  aria-label="강사 검토 안내"
-                >
-                  <details>
-                    <summary>자료·모션의 검토 상태 안내</summary>
-                    <p>
-                      검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다. 진행 전 대상자
-                      컨디션과 기구·스프링 장력을 직접 확인하세요. 검토 여부나 AI 제안은 의학적
-                      판단·운동 적합성 보장이 아닙니다.
-                    </p>
-                    <button
-                      type="button"
-                      className="text-button"
-                      onClick={() => {
-                        changeTab('atlas');
-                        setWorkspaceFocusRequest((n) => n + 1);
-                      }}
-                    >
-                      동작 자료·기록 보기
-                    </button>
-                  </details>
-                </aside>
-              )}
             </>
           )}
         </main>
@@ -1363,7 +1338,6 @@ export function App() {
         maxWidth="560px"
       >
         <PwaInstallPanel />
-        {installOpen && <StudioOffline3dReadinessCard />}
       </LightDismissDialog>
       <LightDismissDialog
         open={settingsOpen}
@@ -1420,7 +1394,7 @@ export function App() {
         </section>
         {settingsOpen && (
           <details className="settings-section">
-            <summary>계정 연결 · 오프라인 3D 동작 미리 저장</summary>
+            <summary>계정 연결 · 클라우드 동기화</summary>
             <DeferredPanelBoundary>
               <Suspense
                 fallback={
@@ -1432,7 +1406,6 @@ export function App() {
                 <CloudSyncPanel />
               </Suspense>
             </DeferredPanelBoundary>
-            <StudioOffline3dReadinessCard />
           </details>
         )}
         <details className="settings-section safety-notes">

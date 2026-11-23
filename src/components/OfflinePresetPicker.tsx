@@ -27,6 +27,7 @@ import {
   useStudioRoutineTags,
 } from '../utils/studioRoutineTags';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { EditorialApparatusImage } from './EditorialApparatusCard';
 import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
 import '../styles/offline-presets.css';
 import './OfflinePresetPicker.css';
@@ -997,29 +998,38 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   return (
                     <button
                       type="button"
-                      className="offline-preset-card"
+                      className="offline-preset-card pf-preset-card-with-hero"
                       key={item.id}
                       data-preset-card-id={item.id}
                       aria-pressed={selection?.id === item.id}
                       onClick={() => choose(item.id)}
                     >
-                      <strong>{item.title}</strong>
-                      <small className="offline-preset-card-summary">
-                        {item.presetKind === 'class-sequence' ? item.userSummaryKo : item.description}
-                      </small>
-                      <span>
-                        {apparatusLabelKo(item.apparatus)} ·{' '}
-                        {item.presetKind === 'class-sequence'
-                          ? item.durationMinutes
-                          : item.durationMin}
-                        분 ·{' '}
-                        {item.presetKind === 'class-sequence'
-                          ? item.steps.length
-                          : item.items.length}
-                        개 동작
-                        {assignedTags.length > 0
-                          ? ` · ${assignedTags.map((t) => `#${t}`).join(' ')}`
-                          : ''}
+                      <span className="pf-preset-card-hero-thumb" aria-hidden="true">
+                        <EditorialApparatusImage
+                          apparatus={item.apparatus}
+                          className="pf-preset-card-hero-thumb__img"
+                          alt=""
+                        />
+                      </span>
+                      <span className="pf-preset-card-body">
+                        <strong>{item.title}</strong>
+                        <small className="offline-preset-card-summary">
+                          {item.presetKind === 'class-sequence' ? item.userSummaryKo : item.description}
+                        </small>
+                        <span>
+                          {apparatusLabelKo(item.apparatus)} ·{' '}
+                          {item.presetKind === 'class-sequence'
+                            ? item.durationMinutes
+                            : item.durationMin}
+                          분 ·{' '}
+                          {item.presetKind === 'class-sequence'
+                            ? item.steps.length
+                            : item.items.length}
+                          개 동작
+                          {assignedTags.length > 0
+                            ? ` · ${assignedTags.map((t) => `#${t}`).join(' ')}`
+                            : ''}
+                        </span>
                       </span>
                     </button>
                   );

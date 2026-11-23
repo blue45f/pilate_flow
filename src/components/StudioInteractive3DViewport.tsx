@@ -887,6 +887,19 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             }
           }}
         />
+      </div>
+
+      {/* Unobstructed Visual Stage: HUD & hotspot info live cleanly outside the 3D canvas */}
+      <div className="pf-orbit3d-stage-bar">
+        <div className="pf-orbit3d-hud-top">
+          <span className="pf-orbit3d-badge is-emerald">
+            <Orbit size={12} aria-hidden="true" />
+            <span className="pf-orbit3d-badge__hint">드래그·핀치 · </span>
+            {Math.round(yawDeg)}° / {Math.round(pitchDeg)}°
+            {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
+            {mirrored ? ' · 반전' : ''}
+          </span>
+        </div>
         {selectedHotspot && (
           <div
             className="pf-orbit3d-hotspot-card"
@@ -909,15 +922,6 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             <p className="pf-orbit3d-hotspot-card__cue">{selectedHotspot.cueKo}</p>
           </div>
         )}
-        <div className="pf-orbit3d-hud-top">
-          <span className="pf-orbit3d-badge is-emerald">
-            <Orbit size={12} aria-hidden="true" />
-            <span className="pf-orbit3d-badge__hint">드래그·핀치 · </span>
-            {Math.round(yawDeg)}° / {Math.round(pitchDeg)}°
-            {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
-            {mirrored ? ' · 반전' : ''}
-          </span>
-        </div>
       </div>
 
       <div className="pf-orbit3d-toolbar">

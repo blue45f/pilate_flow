@@ -34,6 +34,7 @@ import {
   RefreshCw,
   Search,
   Settings2,
+  Shuffle,
   Sparkles,
   Trash2,
   Undo2,
@@ -107,12 +108,22 @@ import { CountUp } from '../motion';
 import { SpringVisualPills } from './SpringVisualPills';
 import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
 import { ExerciseKinesiologyCard } from './ExerciseKinesiologyCard';
+import { IntuitiveAnatomyGuideCard } from './IntuitiveAnatomyGuideCard';
+import { ZeroTransitionNextStrip } from './ZeroTransitionNextStrip';
+import { QuickRemixSheet } from './QuickRemixSheet';
+import { MobileSimpleSequenceBar } from './MobileSimpleSequenceBar';
+import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
 import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
 import {
   ACTIVE_DRAFT_TAG_TARGET_ID,
   copyDraftRoutineTagsToSavedSequence,
 } from '../utils/studioRoutineTags';
 import { summarizeSequenceSpinalAndFlowBalance } from '../utils/pilatesKinesiologyIntelligence';
+import {
+  DIFFICULTY_FILTER_OPTIONS,
+  formatDifficultyMeta,
+} from '../utils/instructorUxHelpers';
+import { getStudioTrackAdapters } from '../utils/studioTrackSlots';
 import '../styles/sequence-studio.css';
 
 const AdvancedWorkbench = lazy(() =>
@@ -145,7 +156,7 @@ interface Props {
   ) => void;
 }
 
-const LEVELS = { '1.0': '기초', '1.5': '중급', '2.0': '심화' } as const;
+const LEVELS = { '1.0': '입문 ★☆☆', '1.5': '중급 ★★☆', '2.0': '심화 ★★★' } as const;
 const SECTIONS: { id: ClassSectionRole; label: string }[] = [
   { id: 'preparation', label: '준비' },
   { id: 'main', label: '메인' },
@@ -654,8 +665,22 @@ function StepEditor({
             </label>
             {exercise && (
               <details className="flow-step-3d-disclosure">
-                <summary>근육 쓰임 · 보상 동작 코칭 큐 참고 (메모에 바로 추가)</summary>
+                <summary>해부학 · 근육 지도 · 단골 실수 교정 큐 (메모에 바로 추가)</summary>
                 <div className="flow-step-3d-disclosure__body">
+                  <IntuitiveAnatomyGuideCard
+                    exercise={exercise}
+                    compact
+                    showFundamentalsDrawer={false}
+                    onInsertCue={(cueText) => {
+                      setNote((prev) =>
+                        prev.includes(cueText)
+                          ? prev
+                          : prev.trim()
+                            ? `${prev.trim()}\n${cueText}`
+                            : cueText,
+                      );
+                    }}
+                  />
                   <ExerciseKinesiologyCard
                     exercise={exercise}
                     compact
@@ -737,7 +762,9 @@ export function SequenceStudioWorkbench(props: Props) {
   const s = usePilatesStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | '1.0' | '1.5' | '2.0'>('all');
   const [eligibleOnly, setEligibleOnly] = useState(true);
+  const [remixTarget, setRemixTarget] = useState<PilatesExercise | null>(null);
   const [mobilePane, setMobilePane] = useState<'library' | 'plan'>('plan');
   const [notice, setNotice] = useState('');
   const [insertion, setInsertion] = useState<{
@@ -850,6 +877,7 @@ export function SequenceStudioWorkbench(props: Props) {
   const results = s.exercises.filter(
     (exercise) =>
       (criteria.apparatus === 'mixed' || exercise.apparatus === criteria.apparatus) &&
+      (difficultyFilter === 'all' || exercise.level === difficultyFilter) &&
       (category === 'all' ||
         (category === 'favorites' && exercise.favoriteTag !== 'none') ||
         exercise.blockCategory === category ||
@@ -866,6 +894,16 @@ export function SequenceStudioWorkbench(props: Props) {
         query,
       ),
   );
+  const lastExerciseInPlan = useMemo(() => {
+    for (let idx = s.activeSteps.length - 1; idx >= 0; idx -= 1) {
+      const candidateStep = s.activeSteps[idx];
+      if (!candidateStep || isRestStep(candidateStep)) continue;
+      const found = byId.get(candidateStep.exerciseId);
+      if (found) return found;
+    }
+    return undefined;
+  }, [s.activeSteps, byId]);
+  const studioTrackAdapters = getStudioTrackAdapters();
   const editingStep = s.activeSteps.find((step) => step.stepId === editingId);
   const total = simulation.totals.totalSec;
   const target = s.activeTargetMinutes * 60;
@@ -987,6 +1025,45 @@ export function SequenceStudioWorkbench(props: Props) {
     });
     setGapFillOpen(false);
     setNotice(message);
+  };
+
+  /** Appends a curated golden 10-min combo in one undoable edit without overwriting existing steps. */
+  const insertGoldenCombo = (comboTitle: string, comboExercises: readonly PilatesExercise[]) => {
+    const current = usePilatesStore.getState();
+    const existingIds = new Set(current.activeSteps.map((step) => step.exerciseId));
+    const freshExercises = comboExercises.filter((ex) => !existingIds.has(ex.id));
+    const toInsert = freshExercises.length > 0 ? freshExercises : comboExercises;
+    if (toInsert.length === 0) return;
+
+    const appendedSteps: SequenceStep[] = toInsert.map((candidate, index) => ({
+      stepId: `golden-combo-${Date.now()}-${index}`,
+      order: current.activeSteps.length + index + 1,
+      exerciseId: candidate.id,
+      blockCategory: candidate.blockCategory,
+      durationMin: candidate.defaultDurationMin || 3,
+      selectedLayer: 'standard',
+      instructorNote: '',
+    }));
+    const message = `‘${comboTitle}’ ${toInsert.length}개 동작을 수업표 뒤에 추가했어요. 되돌리기로 복구할 수 있습니다.`;
+    usePilatesStore.setState({
+      undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
+      redoStack: [],
+      activeSteps: [...current.activeSteps, ...appendedSteps],
+      generationError: null,
+      saveFeedback: message,
+    });
+    setMobilePane('plan');
+    setNotice(message);
+  };
+
+  const handleCreateAndAddRemix = (remixedExercise: PilatesExercise) => {
+    const store = usePilatesStore.getState();
+    store.addCustomExercise(remixedExercise);
+    const inserted = addExercise(remixedExercise, { kind: 'end' }, true);
+    if (inserted.success) {
+      setMobilePane('plan');
+      setNotice(`‘${remixedExercise.nameKo}’ 변형 동작을 만들어 시퀀스에 담았어요.`);
+    }
   };
 
   useEffect(() => {
@@ -1610,6 +1687,13 @@ export function SequenceStudioWorkbench(props: Props) {
             </div>
             <span className="flow-count">{results.length}개</span>
           </div>
+          <div className="pf-picker-editorial-wrap">
+            <ApparatusEditorialHeroBanner
+              apparatus={criteria.apparatus}
+              countLabel={`${results.length}개 동작`}
+              compact
+            />
+          </div>
           <label className="flow-search">
             <Search size={16} strokeWidth={1.5} aria-hidden="true" />
             <input
@@ -1644,6 +1728,24 @@ export function SequenceStudioWorkbench(props: Props) {
                   <Heart size={14} strokeWidth={1.5} aria-hidden="true" />
                 )}
                 {item.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className="pf-difficulty-filter-row"
+            role="group"
+            aria-label="난이도 빠른 선택"
+            data-testid="workbench-difficulty-filter-row"
+          >
+            {DIFFICULTY_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`pf-difficulty-filter-chip ${difficultyFilter === opt.id ? 'is-active' : ''}`}
+                aria-pressed={difficultyFilter === opt.id}
+                onClick={() => setDifficultyFilter(opt.id)}
+              >
+                {opt.labelKo}
               </button>
             ))}
           </div>
@@ -1729,8 +1831,14 @@ export function SequenceStudioWorkbench(props: Props) {
                     >
                       {exercise.nameKo}
                     </button>
-                    <span>
-                      {LEVELS[exercise.level]} · {exercise.defaultDurationMin}분
+                    <span className="pf-pick-card-meta-line">
+                      <em
+                        className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
+                      >
+                        {formatDifficultyMeta(exercise.level).fullLabel}
+                      </em>
+                      {' · '}
+                      {exercise.defaultDurationMin}분
                       {exercise.isUnilateral ? ' · 양쪽' : ''}
                       {exercise.springs && !exercise.springs.includes('기구별 설정')
                         ? ` · ${exercise.springs === 'Bodyweight' ? '맨몸' : exercise.springs}`
@@ -1801,6 +1909,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   onClick={() => {
                     setQuery('');
                     setCategory('all');
+                    setDifficultyFilter('all');
                     setEligibleOnly(false);
                   }}
                 >
@@ -1999,7 +2108,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       덮어쓰지 않아요)
                     </strong>
                     <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
-                      검토 후 원하는 구성만 반영
+                      원하는 동작만 바로 담기
                     </span>
                   </div>
                   <div
@@ -2192,6 +2301,13 @@ export function SequenceStudioWorkbench(props: Props) {
                             {title}
                           </button>
                           <div className="flow-row-meta">
+                            {exercise && (
+                              <span
+                                className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
+                              >
+                                {formatDifficultyMeta(exercise.level).fullLabel}
+                              </span>
+                            )}
                             {exercise && <span>{APPARATUS_LABELS[exercise.apparatus].short}</span>}
                             {resolvedSetup && (
                               <span
@@ -2339,6 +2455,17 @@ export function SequenceStudioWorkbench(props: Props) {
                           </button>
                         </div>
                         <div className="flow-row-actions">
+                          {exercise && !isRestStep(step) && (
+                            <button
+                              type="button"
+                              className="flow-icon-button pf-row-remix-btn"
+                              aria-label={`${title} 10초 변형 만들기`}
+                              title="10초 변형 만들기"
+                              onClick={() => setRemixTarget(exercise)}
+                            >
+                              <Shuffle size={15} strokeWidth={1.5} />
+                            </button>
+                          )}
                           <button
                             className="flow-icon-button"
                             aria-label={`${index + 1}번 ${title} 위로`}
@@ -2439,8 +2566,28 @@ export function SequenceStudioWorkbench(props: Props) {
                 >
                   <Clock3 size={15} strokeWidth={1.5} /> 휴식 1분 추가
                 </button>
+                {studioTrackAdapters.renderSequenceAudioRehearsalTrigger?.({
+                  title: s.activeTitle || '수업 시퀀스',
+                  steps: s.activeSteps,
+                  exercises: s.exercises,
+                })}
               </div>
             )}
+            <ZeroTransitionNextStrip
+              lastExercise={lastExerciseInPlan}
+              exercises={s.exercises}
+              includedExerciseIds={included}
+              targetApparatus={criteria.apparatus}
+              onAddExercise={(exercise) => {
+                addExercise(exercise, { kind: 'end' });
+              }}
+              onInsertCombo={insertGoldenCombo}
+              onOpenRemix={(baseEx) => setRemixTarget(baseEx)}
+            />
+            {studioTrackAdapters.renderLessonModeSlot?.({
+              steps: s.activeSteps,
+              exercises: s.exercises,
+            })}
             {s.activeSteps.length > 0 && spinalBalanceSummary.totalExerciseCount > 0 && (
               <section
                 className="pf-class-balance-mini-strip"
@@ -3159,7 +3306,8 @@ export function SequenceStudioWorkbench(props: Props) {
                       <div key={candidate.id}>
                         <span>
                           <strong>{candidate.nameKo}</strong> ·{' '}
-                          {APPARATUS_LABELS[candidate.apparatus].short} · Lv {candidate.level}
+                          {APPARATUS_LABELS[candidate.apparatus].short} ·{' '}
+                          {formatDifficultyMeta(candidate.level).fullLabel}
                         </span>
                         <button
                           type="button"
@@ -3224,6 +3372,32 @@ export function SequenceStudioWorkbench(props: Props) {
         targetRoutineTitle={tagSheetTarget?.title ?? ''}
         onClose={() => setTagSheetTarget(null)}
         onFeedback={(msg) => setNotice(msg)}
+      />
+      <QuickRemixSheet
+        key={remixTarget?.id ?? 'remix-closed'}
+        open={Boolean(remixTarget)}
+        baseExercise={remixTarget}
+        onClose={() => setRemixTarget(null)}
+        onCreateAndAdd={handleCreateAndAddRemix}
+      />
+      <MobileSimpleSequenceBar
+        exerciseCount={exerciseCount}
+        totalMinutesLabel={minutes(total)}
+        targetMinutes={s.activeTargetMinutes}
+        canStartClass={simulation.gate.canRehearse}
+        isSaving={isSaving}
+        activeMobilePane={mobilePane}
+        onSwitchPane={(pane) => {
+          if (pane === 'library') showLibrary();
+          else setMobilePane('plan');
+        }}
+        onSave={() => {
+          void save();
+        }}
+        onStartClass={start}
+        sequenceTitle={s.activeTitle || '수업 시퀀스'}
+        steps={s.activeSteps}
+        exercises={s.exercises}
       />
     </section>
   );

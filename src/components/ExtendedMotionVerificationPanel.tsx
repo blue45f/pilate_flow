@@ -71,7 +71,7 @@ export function ExtendedMotionVerificationPanel({
 
   return (
     <section
-      className="pf-motion-ledger"
+      className="pf-motion-ledger pf-shift-left-audit-only"
       data-testid="extended-motion-verification-panel"
       aria-label={`${exercise.nameKo} 확장 모션 도해 및 출처 대조 원장`}
       style={{
