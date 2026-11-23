@@ -127,7 +127,7 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
         scene.view_settings.look = "AgX - Medium High Contrast"
     except Exception:
         scene.view_settings.look = "None"
-    scene.view_settings.exposure = 0.08
+    scene.view_settings.exposure = -0.10
 
     mats = build_cycles_studio_materials()
 
@@ -177,22 +177,29 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
     bg.inputs["Color"].default_value = (*srgb_tuple((0.992, 0.984, 0.964)), 1.0)
     bg.inputs["Strength"].default_value = 0.36
 
-    def add_area_light(lname: str, loc, rot_deg, energy: float, size: float, color):
+    def add_area_light(lname: str, loc, target_pt, energy: float, size: float, color, size_y: float | None = None):
         ldata = bpy.data.lights.new(lname, type="AREA")
         ldata.energy = energy
         ldata.size = size
+        if size_y is not None:
+            ldata.shape = "RECTANGLE"
+            ldata.size_y = size_y
         ldata.color = color
         lobj = bpy.data.objects.new(lname, ldata)
-        lobj.location = loc
-        lobj.rotation_euler = tuple(math.radians(a) for a in rot_deg)
+        lobj.location = Vector(loc)
+        direction = (Vector(target_pt) - Vector(loc)).normalized()
+        lobj.rotation_mode = "QUATERNION"
+        lobj.rotation_quaternion = direction.to_track_quat("-Z", "Y")
         scene.collection.objects.link(lobj)
         return lobj
 
-    # Warm Morning Natural Daylight Linen Atelier (#FAF7F0) + Sculptural 3D Modeling & Grounded Shadows
-    add_area_light("AtelierKeyLight", (-2.4, -2.8, 3.5), (46, -18, -28), 335.0, 1.25, (1.0, 0.964, 0.905))
-    add_area_light("AtelierFillLight", (2.8, -2.5, 2.3), (56, 20, 32), 76.0, 3.5, (0.975, 0.985, 1.0))
-    add_area_light("AtelierRimLight", (0.3, 2.4, 3.0), (-36, 0, 0), 148.0, 2.0, (1.0, 0.974, 0.918))
-    add_area_light("AtelierCycWash", (0.0, 2.0, 5.2), (10, 0, 0), 195.0, 7.4, (1.0, 0.988, 0.964))
+    # Editorial 3-Point + Dual Silhouette Rim Atelier Lighting (Warm Morning Sunlight + Cream Fill + Crisp Rim Halo)
+    add_area_light("AtelierKeyLight", (-2.35, -2.65, 3.25), (0.0, 0.0, 0.72), 265.0, 1.45, (1.0, 0.958, 0.896))
+    add_area_light("AtelierFillLight", (2.85, -2.30, 2.15), (0.0, 0.0, 0.70), 68.0, 3.40, (0.992, 0.978, 0.962))
+    # Crisp Back-Right & Back-Left Rim Lights carving glowing edges on silk hair, shoulders, spine & slim legs
+    add_area_light("AtelierRimLight", (0.55, 2.55, 2.60), (0.0, 0.0, 0.80), 275.0, 1.05, (1.0, 0.968, 0.914), size_y=1.65)
+    add_area_light("AtelierKickerLight", (-2.15, 2.20, 1.90), (0.0, 0.0, 0.68), 115.0, 1.25, (1.0, 0.980, 0.945))
+    add_area_light("AtelierCycWash", (0.0, 1.80, 5.40), (0.0, 0.40, 0.0), 175.0, 7.20, (1.0, 0.988, 0.966))
 
     cam_data = bpy.data.cameras.new("StudioCamera")
     cam_data.lens = 66.0
@@ -314,7 +321,7 @@ def main():
             mc = MeshCollector(subj_col, mats, glb_mode=False)
             rig = ex["phases"][phase]
             build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=1)
+            build_sculpted_practitioner(mc, rig, subsurf=2)
             scene.render.filepath = out_png
             bpy.ops.render.render(write_still=True)
             rendered += 1

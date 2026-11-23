@@ -89,7 +89,8 @@ def bake_modifiers_and_join(scene: bpy.types.Scene, group_name: str, objs: list[
     deps = bpy.context.evaluated_depsgraph_get()
     baked_objs = []
     for o in objs:
-        part_band = extract_object_band(o)
+        slot_bands = list(o["slot_bands"]) if "slot_bands" in o else None
+        part_band = extract_object_band(o) if slot_bands is None else int(slot_bands[0])
         eval_obj = o.evaluated_get(deps)
         new_mesh = bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=deps)
 
@@ -107,10 +108,21 @@ def bake_modifiers_and_join(scene: bpy.types.Scene, group_name: str, objs: list[
             bmesh.ops.delete(bm_part, geom=loose_v, context="VERTS")
         bmesh.ops.recalc_face_normals(bm_part, faces=bm_part.faces)
         band_layer = bm_part.faces.layers.int.get("mat_band") or bm_part.faces.layers.int.new("mat_band")
-        for f in bm_part.faces:
-            f[band_layer] = part_band
+        if slot_bands is not None:
+            max_slot = len(slot_bands) - 1
+            for f in bm_part.faces:
+                f[band_layer] = int(slot_bands[min(max_slot, max(0, f.material_index))])
+                f.material_index = 0
+        else:
+            for f in bm_part.faces:
+                f[band_layer] = part_band
+                f.material_index = 0
         bm_part.to_mesh(new_mesh)
         bm_part.free()
+        if len(new_mesh.materials) > 1:
+            base_mat = new_mesh.materials[0]
+            new_mesh.materials.clear()
+            new_mesh.materials.append(base_mat)
 
         new_obj = bpy.data.objects.new(o.name + "_baked", new_mesh)
         new_obj.matrix_world = o.matrix_world.copy()
