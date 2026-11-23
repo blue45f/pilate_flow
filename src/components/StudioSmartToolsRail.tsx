@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Briefcase,
   Camera,
+  Compass,
   GraduationCap,
   Headphones,
   Mic,
@@ -20,11 +21,14 @@ import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
 import { MovementMasteryStudioPanel } from './MovementMasteryStudioPanel';
 import { SequenceAudioRehearsalModal } from './SequenceAudioRehearsalModal';
 import { SequenceAutoPilotDrawer } from './SequenceAutoPilotDrawer';
+import { SmartClassPrepCoachPanel } from './SmartClassPrepCoachPanel';
 import { StudioPropAllocatorPanel } from './StudioPropAllocatorPanel';
 import { TeachingVoiceCoachPanel } from './TeachingVoiceCoachPanel';
+import '../styles/studio-smart-tools-rail.css';
 
 type ActiveToolModalId =
   | null
+  | 'smart-coach'
   | 'autopilot'
   | 'mastery'
   | 'rehearsal'
@@ -54,6 +58,8 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
   const historyLogs = usePilatesStore((s) => s.historyLogs);
   const activeTargetGroupId = usePilatesStore((s) => s.activeTargetGroupId);
   const activeSequenceId = usePilatesStore((s) => s.activeSequenceId);
+  const ownedEquipment = usePilatesStore((s) => s.ownedEquipment);
+  const ownedProps = usePilatesStore((s) => s.ownedProps);
 
   const [openModal, setOpenModal] = useState<ActiveToolModalId>(null);
 
@@ -156,6 +162,16 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
         <button
           type="button"
           className="pf-smart-tool-pill is-accent"
+          data-testid="rail-btn-smart-coach"
+          onClick={() => setOpenModal('smart-coach')}
+        >
+          <Compass size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>스마트 추천 코치</span>
+        </button>
+
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
           data-testid="rail-btn-autopilot"
           onClick={() => setOpenModal('autopilot')}
         >
@@ -234,6 +250,26 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
           <span>AI 정렬 거울</span>
         </button>
       </nav>
+
+      {openModal === 'smart-coach' && (
+        <LightDismissDialog
+          open
+          onClose={() => setOpenModal(null)}
+          title="수업 분석 × 스마트 다음 동작 추천 코치"
+          className="pf-smart-tool-dialog"
+        >
+          <SmartClassPrepCoachPanel
+            activeSteps={activeSteps}
+            historyLogs={historyLogs}
+            exercises={combinedExercises}
+            activeApparatus={activeApparatus}
+            activeLevel={activeLevel}
+            targetGroupId={activeTargetGroupId}
+            ownedEquipment={ownedEquipment}
+            ownedProps={ownedProps}
+          />
+        </LightDismissDialog>
+      )}
 
       {openModal === 'autopilot' && (
         <SequenceAutoPilotDrawer

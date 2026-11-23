@@ -41,6 +41,7 @@ import {
   PF_SEQUENCE_SHARE_HASH_PREFIX,
   parseSequenceShareFromHashOrToken,
 } from './utils/localQrSequenceShare';
+import { WORLD_REPERTOIRE_STATS } from './data/worldPilatesRepertoire1000';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
 import type { PilatesExercise, PropType } from './types/pilates';
 import type { MotionDraftId } from './models/types';
@@ -790,7 +791,12 @@ export function App() {
                         <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
                         <span className="pf-nav-item-label">{detail}</span>
                         {id === 'atlas' ? (
-                          <small>{state.exercises.length}</small>
+                          <small>
+                            {(state.exercises.length >= 100
+                              ? Math.max(state.exercises.length, WORLD_REPERTOIRE_STATS.totalCount)
+                              : state.exercises.length
+                            ).toLocaleString('ko-KR')}
+                          </small>
                         ) : quietBadge !== null ? (
                           <small aria-hidden="true">{quietBadge}</small>
                         ) : null}

@@ -71,7 +71,7 @@ const NFC_LAUNCH_MODES: ReadonlyArray<{
 }> = [
   { id: 'live', labelKo: '바로 수업 시작', descKo: '선택한 기구의 라이브 수업 진행 화면을 바로 엽니다.' },
   { id: 'workbench', labelKo: '시퀀스 작성', descKo: '해당 기구 필터가 적용된 수업 만들기 작업실로 이동합니다.' },
-  { id: 'atlas', labelKo: '동작 도감', descKo: '해당 기구 동작 도감과 3D 자세 가이드를 바로 엽니다.' },
+  { id: 'atlas', labelKo: '동작 라이브러리', descKo: '해당 기구 동작 라이브러리와 3D 자세 가이드를 바로 엽니다.' },
 ];
 
 function resolveStudioOrigin(baseOrigin?: string): string {

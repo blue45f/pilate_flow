@@ -14,12 +14,12 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
+  CalendarDays,
   Check,
   ChevronDown,
   Clock3,
   ExternalLink,
   FileText,
-  Globe2,
   GraduationCap,
   Heart,
   Info,
@@ -103,6 +103,7 @@ import '../styles/library-learning.css';
 import '../styles/motion-library.css';
 import '../styles/library-asset-status.css';
 import '../styles/library-concept-layout.css';
+import '../styles/studio-smart-tools-rail.css';
 import './ExerciseAtlasView.usability.css';
 import { LibraryMovementInspector } from './LibraryMovementInspector';
 import { GlobalRepertoirePackExplorer } from './GlobalRepertoirePackExplorer';
@@ -110,6 +111,16 @@ import {
   CRAWLED_YOUTUBE_DISCOVERY_POOL,
   GLOBAL_CRAWLED_REPERTOIRE_EXERCISES,
 } from '../data/globalCrawledRepertoirePack';
+import {
+  WORLD_PILATES_BY_ID,
+  WORLD_PILATES_EXERCISES,
+  type WorldPilatesExercise,
+} from '../data/worldPilatesRepertoire1000';
+import {
+  CURATED_MULTI_WEEK_PROGRAMS,
+  type MultiWeekProgram,
+} from '../utils/composableHierarchyEngine';
+import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
   ATLAS_DISCOVERY_RECOVERY_KEY,
@@ -122,7 +133,6 @@ import {
 } from '../utils/instructorUxHelpers';
 import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
 import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
-import { WorldRepertoireExplorerBar } from './WorldRepertoireExplorerBar';
 import { LightDismissDialog } from './LightDismissDialog';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
 import { MovementMasteryStudioPanel } from './MovementMasteryStudioPanel';
@@ -912,6 +922,31 @@ const CATALOG_APPARATUS_FILTERS = CATALOG_APPARATUS_ORDER.map((apparatus) => ({
   ),
 }));
 
+type UnifiedAtlasScope = 'all' | '3d-precision' | 'atomic' | 'fusion' | 'programs';
+
+const WORLD_EXERCISE_ID_SET = new Set(WORLD_PILATES_EXERCISES.map((item) => item.id));
+
+function isPrecision3dExercise(exercise: PilatesExercise): boolean {
+  return Boolean(getExerciseArtworkFrame(exercise));
+}
+
+function isAtomicExercise(exercise: PilatesExercise): boolean {
+  const world = WORLD_PILATES_BY_ID.get(exercise.id);
+  return world ? world.tier === 'atomic' : true;
+}
+
+function isFusionExercise(exercise: PilatesExercise): boolean {
+  return Boolean(WORLD_PILATES_BY_ID.get(exercise.id)?.schoolTag.startsWith('fusion-'));
+}
+
+function getExerciseOriginTag(
+  exercise: PilatesExercise,
+): { readonly label: string; readonly kind: 'fusion' | '3d' } | null {
+  if (isFusionExercise(exercise)) return { label: '퓨전', kind: 'fusion' };
+  if (isPrecision3dExercise(exercise)) return { label: '3D 정밀', kind: '3d' };
+  return null;
+}
+
 interface AtlasCatalogCardState {
   inSequence: boolean;
   orderNumber?: number;
@@ -920,6 +955,13 @@ interface AtlasCatalogCardState {
 
 interface AtlasEverydayCatalogProps {
   exercises: readonly PilatesExercise[];
+  allUnifiedExercises: readonly PilatesExercise[];
+  isUnifiedCatalogMode: boolean;
+  unifiedScope: UnifiedAtlasScope;
+  precision3dCount: number;
+  atomicCount: number;
+  fusionCount: number;
+  programCount: number;
   resultCount: number;
   totalCount: number;
   search: string;
@@ -938,6 +980,8 @@ interface AtlasEverydayCatalogProps {
   searchRef: React.RefObject<HTMLInputElement | null>;
   gridRef: React.RefObject<HTMLDivElement | null>;
   onSearch: (value: string) => void;
+  onSelectUnifiedScope: (scope: UnifiedAtlasScope) => void;
+  onApplyProgramWeek1: (program: MultiWeekProgram) => void;
   onSelectEquipment: (ids: string[]) => void;
   onSelectLevel: (level: string) => void;
   onSelectDuration: (duration: string) => void;
@@ -962,7 +1006,8 @@ const ATLAS_UNSLOP_CSS = `
   --atlas-secondary: #4e473e;
   --atlas-muted: #585046;
   --atlas-line: rgba(31, 27, 22, 0.10);
-  --atlas-green: #1f4435;
+  --atlas-green: #355441;
+  --atlas-green-dark: #2b4736;
   --atlas-soft: #f3f1ea;
   display: flex;
   flex-direction: column;
@@ -979,7 +1024,7 @@ const ATLAS_UNSLOP_CSS = `
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px 16px;
-  min-height: 36px;
+  min-height: 44px;
 }
 .flow-atlas--unslop .flow-atlas__intro {
   display: flex;
@@ -1000,13 +1045,14 @@ const ATLAS_UNSLOP_CSS = `
   color: var(--atlas-muted);
   font-size: 13px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: keep-all;
+  font-variant-numeric: tabular-nums;
 }
 .flow-atlas--unslop .flow-atlas__button,
 .flow-atlas__tools-return {
-  min-height: 36px;
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid var(--atlas-line);
   background: #ffffff;
@@ -1014,6 +1060,8 @@ const ATLAS_UNSLOP_CSS = `
   font-size: 13px;
   font-weight: 500;
   line-height: 1.3;
+  word-break: keep-all;
+  font-variant-numeric: tabular-nums;
   transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .flow-atlas--unslop .flow-atlas__button:enabled:active {
@@ -1021,7 +1069,7 @@ const ATLAS_UNSLOP_CSS = `
 }
 .flow-atlas--unslop .flow-atlas__button--quiet:hover {
   background: #f5f4ee;
-  border-color: rgba(31, 68, 53, 0.18);
+  border-color: rgba(53, 84, 65, 0.22);
 }
 .flow-atlas--unslop .flow-atlas__button--add {
   background: var(--atlas-green);
@@ -1047,23 +1095,32 @@ const ATLAS_UNSLOP_CSS = `
   color: #ffffff;
 }
 .flow-atlas--unslop .flow-atlas__button--add:hover {
-  background: #173529;
-  border-color: #173529;
+  background: var(--atlas-green-dark);
+  border-color: var(--atlas-green-dark);
 }
 .flow-atlas--unslop .flow-atlas__button--add.is-added,
 .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add.is-added {
   background: #eef3ed;
-  border-color: rgba(31, 68, 53, 0.22);
+  border-color: rgba(53, 84, 65, 0.24);
   color: var(--atlas-green);
 }
 .flow-atlas--unslop .flow-atlas__search-panel {
-  padding: 8px 10px;
+  padding: 12px;
   border: 1px solid var(--atlas-line);
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .flow-atlas--unslop .flow-atlas__toolbar-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__toolbar-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1083,24 +1140,24 @@ const ATLAS_UNSLOP_CSS = `
   gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 12px;
-  border: 1px solid rgba(31, 68, 53, 0.12);
+  border: 1px solid rgba(53, 84, 65, 0.14);
   border-radius: 10px;
   background: #faf9f5;
   color: var(--atlas-muted);
 }
 .flow-atlas--unslop .flow-atlas__search input {
-  height: 36px;
+  height: 42px;
   font-size: 14px;
   color: var(--atlas-ink);
 }
 .flow-atlas--unslop .flow-atlas__icon-button {
-  width: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  margin-right: -6px;
-  border-radius: 8px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  margin-right: -8px;
+  border-radius: 10px;
 }
 .flow-atlas--unslop .flow-atlas__browse-row {
   display: flex;
@@ -1112,61 +1169,126 @@ const ATLAS_UNSLOP_CSS = `
 }
 .flow-atlas--unslop .flow-atlas__chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  gap: 6px;
   min-width: 0;
+  padding-bottom: 2px;
+}
+.flow-atlas--unslop .flow-atlas__chips::-webkit-scrollbar,
+.flow-atlas--unslop .flow-atlas__scope-row::-webkit-scrollbar {
+  display: none;
 }
 .flow-atlas--unslop .flow-atlas__chips button,
 .flow-atlas--unslop .flow-atlas__favorites {
-  min-height: 36px;
-  padding: 6px 11px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-height: 44px;
+  padding: 8px 12px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
   color: var(--atlas-secondary);
-  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+  word-break: keep-all;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__chips button:active,
+.flow-atlas--unslop .flow-atlas__favorites:active,
+.flow-atlas--unslop .flow-atlas__scope-chip:active {
+  transform: scale(0.98);
 }
 .flow-atlas--unslop .flow-atlas__chips button[aria-pressed='true'] {
   background: var(--atlas-green);
   color: #ffffff;
 }
+.flow-atlas--unslop .flow-atlas__scope-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 2px 0;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__scope-chip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 27, 22, 0.12);
+  background: #faf8f4;
+  color: var(--atlas-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  word-break: keep-all;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__scope-chip:hover {
+  border-color: var(--atlas-green);
+  color: var(--atlas-ink);
+  background: #f3f5ee;
+}
+.flow-atlas--unslop .flow-atlas__scope-chip[aria-pressed='true'] {
+  background: var(--atlas-green);
+  border-color: var(--atlas-green);
+  color: #ffffff;
+}
 .flow-atlas--unslop .flow-atlas__count {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
   border-radius: 6px;
   background: var(--atlas-soft);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .flow-atlas--unslop .flow-atlas__inline-filters {
-  margin-top: 10px;
+  margin-top: 2px;
   padding-top: 10px;
 }
 .flow-atlas--unslop .flow-atlas__active-filters {
-  margin-top: 8px;
+  margin-top: 0;
   gap: 6px;
 }
 .flow-atlas--unslop .flow-atlas__active-filters button {
-  min-height: 32px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 12px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 400;
 }
 .flow-atlas--unslop .flow-atlas__results-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 0;
-  min-height: 32px;
+  min-height: 44px;
   font-variant-numeric: tabular-nums;
 }
 .flow-atlas--unslop .flow-atlas__results-bar > p {
   font-size: 13px;
+  line-height: 1.45;
   color: var(--atlas-secondary);
+  word-break: keep-all;
 }
 .flow-atlas--unslop .flow-atlas__results-bar strong {
   font-size: 15px;
@@ -1174,18 +1296,19 @@ const ATLAS_UNSLOP_CSS = `
   color: var(--atlas-ink);
 }
 .flow-atlas--unslop .flow-atlas__results-bar p > span {
+  display: inline;
   margin-left: 8px;
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-atlas--unslop .flow-atlas__class-link {
-  min-height: 34px;
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 8px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(31, 68, 53, 0.14);
+  border: 1px solid rgba(53, 84, 65, 0.16);
   background: #f2f5f0;
   color: var(--atlas-green);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -1208,17 +1331,17 @@ const ATLAS_UNSLOP_CSS = `
   transition: border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .flow-atlas--unslop .flow-atlas__card:hover {
-  border-color: rgba(31, 68, 53, 0.22);
+  border-color: rgba(53, 84, 65, 0.28);
 }
 .flow-atlas--unslop .flow-atlas__card.is-in-sequence {
-  border-color: rgba(31, 68, 53, 0.36);
+  border-color: rgba(53, 84, 65, 0.42);
 }
 .flow-atlas--unslop .flow-atlas__art-wrap {
   position: relative;
   min-width: 0;
   aspect-ratio: 16 / 9.5;
   background: #f4f2ea;
-  border-bottom: 1px solid rgba(31, 68, 53, 0.08);
+  border-bottom: 1px solid rgba(53, 84, 65, 0.08);
 }
 .flow-atlas--unslop .flow-atlas__art {
   display: block;
@@ -1241,11 +1364,11 @@ const ATLAS_UNSLOP_CSS = `
 .flow-atlas--unslop .flow-atlas__favorite-button {
   top: 8px;
   right: 8px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
-  border: 1px solid rgba(31, 68, 53, 0.10);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(53, 84, 65, 0.12);
+  background: rgba(255, 255, 255, 0.94);
   color: var(--atlas-muted);
 }
 .flow-atlas--unslop .flow-atlas__favorite-button[aria-pressed='true'] {
@@ -1259,17 +1382,17 @@ const ATLAS_UNSLOP_CSS = `
   padding: 3px 8px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(31, 68, 53, 0.14);
+  border: 1px solid rgba(53, 84, 65, 0.16);
   color: var(--atlas-green);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 .flow-atlas--unslop .flow-atlas__card-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
-  padding: 10px 12px 8px;
+  padding: 12px 12px 8px;
 }
 .flow-atlas--unslop .flow-atlas__card-meta-row {
   display: flex;
@@ -1281,15 +1404,13 @@ const ATLAS_UNSLOP_CSS = `
 .flow-atlas--unslop .flow-atlas__card-meta {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 4px 6px;
   min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 .flow-atlas--unslop .flow-atlas__card-meta > span + span::before {
@@ -1297,12 +1418,35 @@ const ATLAS_UNSLOP_CSS = `
   margin-right: 5px;
   color: #b0b8b2;
 }
+.flow-atlas--unslop .flow-atlas__origin-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.flow-atlas--unslop .flow-atlas__origin-tag::before {
+  content: none !important;
+  margin-right: 0 !important;
+}
+.flow-atlas--unslop .flow-atlas__origin-tag.is-3d {
+  background: #edf4ef;
+  color: #244835;
+}
+.flow-atlas--unslop .flow-atlas__origin-tag.is-fusion {
+  background: #f3ede4;
+  color: #634922;
+}
 .flow-atlas--unslop .flow-atlas__preview-affordance {
   flex: 0 0 auto;
   color: var(--atlas-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 1.35;
+  white-space: nowrap;
   transition: color 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .flow-atlas--unslop .flow-atlas__preview:hover .flow-atlas__preview-affordance {
@@ -1312,24 +1456,25 @@ const ATLAS_UNSLOP_CSS = `
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 1.35;
   letter-spacing: -0.01em;
   color: var(--atlas-ink);
 }
 .flow-atlas--unslop .flow-atlas__card h2 button {
-  min-height: 20px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   padding: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: keep-all;
 }
 .flow-atlas--unslop .flow-atlas__quiet-caption {
   margin: 0;
-  height: 16px;
+  min-height: 18px;
   color: var(--atlas-muted);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1344,15 +1489,91 @@ const ATLAS_UNSLOP_CSS = `
 }
 .flow-atlas--unslop .flow-atlas__card-actions button {
   width: 100%;
-  min-height: 36px;
+  min-height: 44px;
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
 }
+.flow-atlas--unslop .flow-atlas__program-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+.flow-atlas--unslop .flow-atlas__program-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--atlas-line);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  min-width: 0;
+  transition: border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__program-card:hover {
+  border-color: rgba(53, 84, 65, 0.3);
+}
+.flow-atlas--unslop .flow-atlas__program-card h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--atlas-ink);
+  word-break: keep-all;
+}
+.flow-atlas--unslop .flow-atlas__program-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--atlas-secondary);
+  word-break: keep-all;
+}
+.flow-atlas--unslop .flow-atlas__program-weeks {
+  margin: 0;
+  padding: 10px 12px 10px 26px;
+  border-radius: 10px;
+  background: #faf8f4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--atlas-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.flow-atlas--unslop .flow-atlas__program-weeks strong {
+  font-weight: 600;
+  color: var(--atlas-ink);
+}
+.flow-atlas--unslop .flow-atlas__program-cta {
+  width: 100%;
+  margin-top: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--atlas-green);
+  background: var(--atlas-green);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flow-atlas--unslop .flow-atlas__program-cta:hover {
+  background: var(--atlas-green-dark);
+}
+.flow-atlas--unslop .flow-atlas__program-cta:active {
+  transform: scale(0.98);
+}
 
 @media (max-width: 1119px) {
-  .flow-atlas--unslop .flow-atlas__toolbar-main {
+  .flow-atlas--unslop .flow-atlas__toolbar-top {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
@@ -1362,10 +1583,13 @@ const ATLAS_UNSLOP_CSS = `
   }
   .flow-atlas--unslop .flow-atlas__browse-row {
     justify-content: space-between;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
   .flow-atlas--unslop .flow-atlas__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .flow-atlas--unslop .flow-atlas__program-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1377,32 +1601,8 @@ const ATLAS_UNSLOP_CSS = `
 }
 
 @media (pointer: coarse), (max-width: 1023px) {
-  .flow-atlas--unslop .flow-atlas__active-filters button,
-  .flow-atlas--unslop .flow-atlas__card h2 button,
-  .flow-atlas--unslop .flow-atlas__text-button,
-  .flow-atlas--unslop .flow-atlas__owned-filter,
-  .flow-atlas--unslop .flow-atlas__button,
-  .flow-atlas--unslop .flow-atlas__chips button,
-  .flow-atlas--unslop .flow-atlas__favorites,
-  .flow-atlas--unslop .flow-atlas__class-link,
-  .flow-atlas--unslop .flow-atlas__card-actions button {
-    min-height: 44px;
-  }
-  .flow-atlas--unslop .flow-atlas__search {
-    min-height: 44px;
-  }
   .flow-atlas--unslop .flow-atlas__search input {
-    height: 42px;
     font-size: 16px;
-  }
-  .flow-atlas--unslop .flow-atlas__icon-button {
-    width: 44px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .flow-atlas--unslop .flow-atlas__favorite-button {
-    width: 44px;
-    height: 44px;
   }
 }
 
@@ -1438,27 +1638,34 @@ const ATLAS_UNSLOP_CSS = `
   .flow-atlas--unslop .flow-atlas__browse-row {
     gap: 6px;
   }
-  .flow-atlas--unslop .flow-atlas__chips {
-    flex: 1 1 100%;
-    gap: 4px;
-  }
-  .flow-atlas--unslop .flow-atlas__chips button {
-    flex: 1 1 auto;
-    padding-inline: 8px;
-    font-size: 12.5px;
-  }
-  .flow-atlas--unslop .flow-atlas__grid {
+  .flow-atlas--unslop .flow-atlas__grid,
+  .flow-atlas--unslop .flow-atlas__program-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
-  .flow-atlas--unslop .flow-atlas__card h2 button {
-    white-space: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-atlas--unslop .flow-atlas__button,
+  .flow-atlas--unslop .flow-atlas__chips button,
+  .flow-atlas--unslop .flow-atlas__favorites,
+  .flow-atlas--unslop .flow-atlas__scope-chip,
+  .flow-atlas--unslop .flow-atlas__program-cta {
+    transition: none !important;
+    transform: none !important;
   }
 }
 `;
 
 const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   exercises,
+  allUnifiedExercises,
+  isUnifiedCatalogMode,
+  unifiedScope,
+  precision3dCount,
+  atomicCount,
+  fusionCount,
+  programCount,
   resultCount,
   totalCount,
   search,
@@ -1477,6 +1684,8 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   searchRef,
   gridRef,
   onSearch,
+  onSelectUnifiedScope,
+  onApplyProgramWeek1,
   onSelectEquipment,
   onSelectLevel,
   onSelectDuration,
@@ -1495,9 +1704,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   getCardState,
 }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [quickModal, setQuickModal] = useState<null | 'world' | 'mastery' | 'fundamentals' | 'nfc'>(
-    null,
-  );
+  const [quickModal, setQuickModal] = useState<null | 'mastery' | 'fundamentals' | 'nfc'>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const selectedApparatus = CATALOG_APPARATUS_FILTERS.find(
     ({ ids }) => ids.length === equipment.length && ids.every((id) => equipment.includes(id)),
@@ -1513,6 +1720,65 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
     filterButtonRef.current?.focus();
   };
 
+  const filteredPrograms = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return CURATED_MULTI_WEEK_PROGRAMS.filter((program) => {
+      if (selectedApparatus && !program.apparatus.includes(selectedApparatus.apparatus)) {
+        return false;
+      }
+      if (level !== 'all' && program.level !== level) {
+        return false;
+      }
+      if (!q) return true;
+      const hay = [
+        program.titleKo,
+        program.subtitleKo,
+        ...program.apparatus.map((app) => APPARATUS_LABELS[app].ko),
+        ...program.weeks.map((week) => week.themeKo),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [search, selectedApparatus, level]);
+
+  const scopeOptions: readonly {
+    readonly id: UnifiedAtlasScope;
+    readonly testId: string;
+    readonly label: string;
+  }[] = [
+    {
+      id: 'all',
+      testId: 'atlas-scope-all',
+      label: `전체 ${totalCount.toLocaleString('ko-KR')}`,
+    },
+    {
+      id: '3d-precision',
+      testId: 'atlas-scope-3d',
+      label: `3D 정밀 도해 ${precision3dCount.toLocaleString('ko-KR')}`,
+    },
+    {
+      id: 'atomic',
+      testId: 'atlas-scope-atomic',
+      label: `대표 동작 ${atomicCount.toLocaleString('ko-KR')}`,
+    },
+    {
+      id: 'fusion',
+      testId: 'atlas-scope-fusion',
+      label: fusionCount > 0 ? '퓨전 (바레·기능성)' : '퓨전 (바레·기능성)',
+    },
+    {
+      id: 'programs',
+      testId: 'atlas-scope-programs',
+      label: `4·8주 프로그램 ${programCount}`,
+    },
+  ];
+
+  const heroCountLabel =
+    unifiedScope === 'programs'
+      ? `${filteredPrograms.length}개 프로그램`
+      : `${resultCount.toLocaleString('ko-KR')}개 동작`;
+
   return (
     <section className="flow-atlas flow-atlas--unslop" aria-labelledby="workspace-main-heading">
       <style>{ATLAS_UNSLOP_CSS}</style>
@@ -1521,7 +1787,11 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           <h1 id="workspace-main-heading" tabIndex={-1}>
             동작 라이브러리
           </h1>
-          <span className="flow-atlas__subcopy">기구와 부위로 동작을 찾아 수업에 담으세요</span>
+          <span className="flow-atlas__subcopy">
+            {isUnifiedCatalogMode
+              ? `통합 ${totalCount.toLocaleString('ko-KR')}종 동작과 4·8주 프로그램을 한곳에서 찾아 수업에 담으세요`
+              : '기구와 부위로 동작을 찾아 수업에 담으세요'}
+          </span>
         </div>
         <button
           className="flow-atlas__button flow-atlas__button--quiet"
@@ -1534,85 +1804,108 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
 
       <section className="flow-atlas__search-panel" aria-label="동작 검색과 필터">
         <div className="flow-atlas__toolbar-main">
-          <div className="flow-atlas__search-row">
-            <div className="flow-atlas__search" role="search" aria-label="동작 검색창">
-              <Search size={16} strokeWidth={1.5} aria-hidden="true" />
-              <label className="sr-only" htmlFor="flow-atlas-search">
-                동작 검색
-              </label>
-              <input
-                id="flow-atlas-search"
-                ref={searchRef}
-                type="search"
-                autoComplete="off"
-                value={search}
-                onChange={(event) => onSearch(event.target.value)}
-                placeholder="동작 이름·부위 검색"
-              />
-              {search ? (
+          <div className="flow-atlas__toolbar-top">
+            <div className="flow-atlas__search-row">
+              <div className="flow-atlas__search" role="search" aria-label="동작 검색창">
+                <Search size={16} strokeWidth={1.5} aria-hidden="true" />
+                <label className="sr-only" htmlFor="flow-atlas-search">
+                  동작 검색
+                </label>
+                <input
+                  id="flow-atlas-search"
+                  ref={searchRef}
+                  type="search"
+                  autoComplete="off"
+                  value={search}
+                  onChange={(event) => onSearch(event.target.value)}
+                  placeholder="동작 이름·부위·바레·소도구 검색"
+                />
+                {search ? (
+                  <button
+                    type="button"
+                    className="flow-atlas__icon-button"
+                    onClick={onClearSearch}
+                    aria-label="검색어 지우기"
+                  >
+                    <X size={16} strokeWidth={1.5} aria-hidden="true" />
+                  </button>
+                ) : null}
+              </div>
+              <button
+                className="flow-atlas__button flow-atlas__button--quiet flow-atlas__filter-toggle"
+                type="button"
+                ref={filterButtonRef}
+                aria-expanded={filtersOpen}
+                aria-controls="flow-atlas-filters"
+                onClick={() => setFiltersOpen((open) => !open)}
+              >
+                <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 필터
+                {filterCount > 0 || ownedOnly ? (
+                  <span className="flow-atlas__count">{filterCount + Number(ownedOnly)}</span>
+                ) : null}
+                <ChevronDown size={15} strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="flow-atlas__browse-row">
+              <div className="flow-atlas__chips" role="group" aria-label="기구 선택">
                 <button
                   type="button"
-                  className="flow-atlas__icon-button"
-                  onClick={onClearSearch}
-                  aria-label="검색어 지우기"
+                  aria-pressed={equipment.length === 0}
+                  onClick={() => onSelectEquipment([])}
                 >
-                  <X size={16} strokeWidth={1.5} aria-hidden="true" />
+                  전체
                 </button>
-              ) : null}
-            </div>
-            <button
-              className="flow-atlas__button flow-atlas__button--quiet flow-atlas__filter-toggle"
-              type="button"
-              ref={filterButtonRef}
-              aria-expanded={filtersOpen}
-              aria-controls="flow-atlas-filters"
-              onClick={() => setFiltersOpen((open) => !open)}
-            >
-              <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 필터
-              {filterCount > 0 || ownedOnly ? (
-                <span className="flow-atlas__count">{filterCount + Number(ownedOnly)}</span>
-              ) : null}
-              <ChevronDown size={15} strokeWidth={1.5} aria-hidden="true" />
-            </button>
-          </div>
-          <div className="flow-atlas__browse-row">
-            <div className="flow-atlas__chips" role="group" aria-label="기구 선택">
+                {CATALOG_APPARATUS_FILTERS.map(({ apparatus, ids }) => {
+                  const selected = selectedApparatus?.apparatus === apparatus;
+                  return (
+                    <button
+                      key={apparatus}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => onSelectEquipment(selected ? [] : ids)}
+                    >
+                      {APPARATUS_LABELS[apparatus].ko}
+                    </button>
+                  );
+                })}
+              </div>
               <button
+                className="flow-atlas__favorites"
                 type="button"
-                aria-pressed={equipment.length === 0}
-                onClick={() => onSelectEquipment([])}
+                aria-pressed={favoritesOnly}
+                onClick={onToggleFavorites}
               >
-                전체
+                <Heart
+                  size={15}
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                  fill={favoritesOnly ? 'currentColor' : 'none'}
+                />{' '}
+                즐겨찾기
               </button>
-              {CATALOG_APPARATUS_FILTERS.map(({ apparatus, ids }) => {
-                const selected = selectedApparatus?.apparatus === apparatus;
-                return (
-                  <button
-                    key={apparatus}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => onSelectEquipment(selected ? [] : ids)}
-                  >
-                    {APPARATUS_LABELS[apparatus].ko}
-                  </button>
-                );
-              })}
             </div>
-            <button
-              className="flow-atlas__favorites"
-              type="button"
-              aria-pressed={favoritesOnly}
-              onClick={onToggleFavorites}
-            >
-              <Heart
-                size={15}
-                strokeWidth={1.5}
-                aria-hidden="true"
-                fill={favoritesOnly ? 'currentColor' : 'none'}
-              />{' '}
-              즐겨찾기
-            </button>
           </div>
+
+          <div
+            className="flow-atlas__scope-row"
+            role="group"
+            aria-label="동작 범위 선택"
+            data-testid="atlas-unified-scope-row"
+          >
+            {scopeOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="flow-atlas__scope-chip"
+                data-testid={option.testId}
+                aria-pressed={unifiedScope === option.id}
+                onClick={() => onSelectUnifiedScope(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
           <div
             className="pf-difficulty-filter-row pf-atlas-difficulty-row"
             role="group"
@@ -1635,7 +1928,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         <div className="pf-atlas-editorial-banner-wrap">
           <ApparatusEditorialHeroBanner
             apparatus={selectedApparatus?.apparatus ?? 'mixed'}
-            countLabel={`${resultCount}개 동작`}
+            countLabel={heroCountLabel}
             compact
           />
         </div>
@@ -1735,17 +2028,18 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
 
       <nav
         className="pf-smart-tools-rail pf-atlas-quick-hub"
-        aria-label="대백과·기초원리·기구 태그 빠른 열기"
+        aria-label="프로그램·숙지 훈련·기초 원리·기구 태그 빠른 열기"
         data-testid="atlas-quick-hub"
       >
         <button
           type="button"
-          className="pf-smart-tool-pill is-accent"
-          data-testid="atlas-open-world-repertoire-btn"
-          onClick={() => setQuickModal('world')}
+          className={`pf-smart-tool-pill ${unifiedScope === 'programs' ? 'is-accent' : ''}`}
+          data-testid="atlas-open-programs-btn"
+          aria-pressed={unifiedScope === 'programs'}
+          onClick={() => onSelectUnifiedScope(unifiedScope === 'programs' ? 'all' : 'programs')}
         >
-          <Globe2 size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>세계 대백과 1,752종 · 13개 프로그램</span>
+          <CalendarDays size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>4·8주 프로그램 {programCount}종</span>
         </button>
         <button
           type="button"
@@ -1772,13 +2066,34 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           onClick={() => setQuickModal('nfc')}
         >
           <Nfc size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>기구 NFC · QR 태그</span>
+          <span>기구 NFC · QR</span>
         </button>
       </nav>
 
-      <div className="flow-atlas__results-bar">
+      <div className="flow-atlas__results-bar" data-testid="atlas-results-summary">
         <p aria-live="polite">
-          <strong>{resultCount}</strong>개 동작 <span>전체 {totalCount}개</span>
+          {unifiedScope === 'programs' ? (
+            <>
+              <strong>{filteredPrograms.length}</strong>개 프로그램{' '}
+              <span>
+                4·8주 커리큘럼 {programCount}종 · 통합 동작 {totalCount.toLocaleString('ko-KR')}종
+              </span>
+            </>
+          ) : isUnifiedCatalogMode ? (
+            <>
+              <strong>{resultCount.toLocaleString('ko-KR')}</strong>개 동작{' '}
+              <span>
+                {resultCount !== totalCount
+                  ? `전체 ${totalCount.toLocaleString('ko-KR')} · `
+                  : '· '}
+                3D 정밀 {precision3dCount.toLocaleString('ko-KR')} · 4·8주 프로그램 {programCount}
+              </span>
+            </>
+          ) : (
+            <>
+              <strong>{resultCount}</strong>개 동작 <span>전체 {totalCount}개</span>
+            </>
+          )}
         </p>
         <button type="button" className="flow-atlas__class-link" onClick={onReturnToClass}>
           {selectedCount > 0 ? `수업안 ${selectedCount}개 · ${plannedMinutes}분` : '수업 만들기'}
@@ -1803,7 +2118,70 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         ) : null}
       </div>
 
-      {exercises.length > 0 ? (
+      {unifiedScope === 'programs' ? (
+        filteredPrograms.length > 0 ? (
+          <div
+            className="flow-atlas__program-grid"
+            data-testid="atlas-unified-programs-grid"
+          >
+            {filteredPrograms.map((program) => {
+              const diff = formatDifficultyMeta(program.level);
+              const apparatusText =
+                program.apparatus.length > 1
+                  ? program.apparatus.map((app) => APPARATUS_LABELS[app].short).join(' + ')
+                  : APPARATUS_LABELS[program.apparatus[0]].short;
+              return (
+                <article
+                  key={program.id}
+                  className="flow-atlas__program-card"
+                  aria-label={`${program.titleKo} 프로그램`}
+                  data-testid={`atlas-program-card-${program.id}`}
+                >
+                  <div className="flow-atlas__card-meta">
+                    <span>
+                      {apparatusText} · {program.durationWeeks}주 ({program.targetMinutesPerClass}분)
+                    </span>
+                    <span className={`pf-difficulty-badge is-${diff.tone}`}>{diff.fullLabel}</span>
+                  </div>
+                  <h2>{program.titleKo}</h2>
+                  <p className="flow-atlas__program-sub">{program.subtitleKo}</p>
+                  <ul className="flow-atlas__program-weeks">
+                    {program.weeks.slice(0, 4).map((week) => (
+                      <li key={week.weekNumber}>
+                        <strong>{week.weekNumber}주차</strong> {week.themeKo}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className="flow-atlas__program-cta"
+                    data-testid={`atlas-apply-program-${program.id}`}
+                    onClick={() => onApplyProgramWeek1(program)}
+                  >
+                    1주차 수업 만들기에 적용
+                    <ArrowRight size={15} strokeWidth={1.6} aria-hidden="true" />
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flow-atlas__empty" role="status">
+            <Search size={28} strokeWidth={1.5} aria-hidden="true" />
+            <h2>조건에 맞는 프로그램이 없어요.</h2>
+            <p>선택한 기구·난이도 또는 검색어를 초기화하면 13개 커리큘럼을 모두 볼 수 있어요.</p>
+            <div>
+              <button
+                className="flow-atlas__button flow-atlas__button--add"
+                type="button"
+                onClick={onReset}
+              >
+                조건 초기화
+              </button>
+            </div>
+          </div>
+        )
+      ) : exercises.length > 0 ? (
         <div className="flow-atlas__grid" ref={gridRef}>
           {exercises.map((exercise) => {
             const state = getCardState(exercise);
@@ -1819,6 +2197,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                 ? '계획용 동작 도해'
                 : '3D 동작 설명';
             const previewHintId = `flow-atlas-preview-${exercise.id}`;
+            const originTag = idea ? null : getExerciseOriginTag(exercise);
             const quietSummary = idea
               ? previewLabel
               : exercise.targetMuscles.slice(0, 2).join(' · ') ||
@@ -1861,6 +2240,11 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                           {formatDifficultyMeta(exercise.level).fullLabel}
                         </span>
                         <span>{exercise.defaultDurationMin}분</span>
+                        {originTag ? (
+                          <span className={`flow-atlas__origin-tag is-${originTag.kind}`}>
+                            {originTag.label}
+                          </span>
+                        ) : null}
                       </p>
                       <span className="flow-atlas__preview-affordance" aria-hidden="true">
                         미리보기
@@ -1966,10 +2350,10 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         </div>
       )}
 
-      {resultCount > exercises.length ? (
+      {unifiedScope !== 'programs' && resultCount > exercises.length ? (
         <div className="flow-atlas__more">
           <p style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {exercises.length} / {resultCount}개
+            {exercises.length.toLocaleString('ko-KR')} / {resultCount.toLocaleString('ko-KR')}개
           </p>
           <button
             type="button"
@@ -2005,26 +2389,8 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
       ) : null}
 
       <div className="pf-atlas-fundamentals-wrap">
-        <WorldRepertoireExplorerBar onOpenDetail={onOpenDetails} />
         <PilatesFundamentalsDrawer />
       </div>
-
-      {quickModal === 'world' && (
-        <LightDismissDialog
-          open
-          onClose={() => setQuickModal(null)}
-          title="전 세계 필라테스 · 퓨전 1,752종 대백과 & 4·8주 프로그램"
-          className="pf-smart-tool-dialog"
-        >
-          <WorldRepertoireExplorerBar
-            defaultExpanded
-            onOpenDetail={(ex) => {
-              setQuickModal(null);
-              onOpenDetails(ex);
-            }}
-          />
-        </LightDismissDialog>
-      )}
 
       {quickModal === 'mastery' && (
         <LightDismissDialog
@@ -2034,8 +2400,8 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           className="pf-smart-tool-dialog"
         >
           <MovementMasteryStudioPanel
-            exercises={exercises}
-            initialExerciseId={exercises[0]?.id}
+            exercises={allUnifiedExercises}
+            initialExerciseId={exercises[0]?.id ?? allUnifiedExercises[0]?.id}
           />
         </LightDismissDialog>
       )}
@@ -2115,20 +2481,63 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   } = usePilatesStore();
   const { scheduleRaf } = useManagedRaf();
   const [showAdvancedTools, setShowAdvancedTools] = useState(initialView === 'tools');
+  const [unifiedScope, setUnifiedScope] = useState<UnifiedAtlasScope>('all');
   const [collection, setCollection] = useState<
     'notes' | 'repertoire' | 'videos' | 'references' | 'courses'
   >('notes');
   const [sourceToPlan, setSourceToPlan] = useState<VerifiedPublicReference | null>(null);
   const [ownNoteOpen, setOwnNoteOpen] = useState(false);
+
+  // Merge store.exercises + WORLD_PILATES_EXERCISES (1,752) only when operating on
+  // the real catalog (>= 100 exercises). Small unit-test fixtures (< 100) stay untouched.
+  // Preserves stable ordering so hydrating a world exercise into the store never shifts card positions.
+  const isUnifiedCatalogMode = exercises.length >= 100;
+  const unifiedExercises = useMemo<PilatesExercise[]>(() => {
+    if (!isUnifiedCatalogMode) return exercises;
+    const storeById = new Map(exercises.map((item) => [item.id, item]));
+    const customOrExtra = exercises.filter((item) => !WORLD_EXERCISE_ID_SET.has(item.id));
+    return [
+      ...customOrExtra,
+      ...WORLD_PILATES_EXERCISES.map((worldEx) => storeById.get(worldEx.id) ?? worldEx),
+    ];
+  }, [exercises, isUnifiedCatalogMode]);
+
+  const unifiedCatalogMetrics = useMemo(() => {
+    let precision3dCount = 0;
+    let atomicCount = 0;
+    let fusionCount = 0;
+    for (const item of unifiedExercises) {
+      if (isPrecision3dExercise(item)) precision3dCount += 1;
+      if (isAtomicExercise(item)) atomicCount += 1;
+      if (isFusionExercise(item)) fusionCount += 1;
+    }
+    return {
+      totalCount: unifiedExercises.length,
+      precision3dCount,
+      atomicCount,
+      fusionCount,
+      programCount: CURATED_MULTI_WEEK_PROGRAMS.length,
+    };
+  }, [unifiedExercises]);
+
+  const filterSourceExercises = !showAdvancedTools ? unifiedExercises : exercises;
   const { filters, setFilters, update, recent, filtered, activeFilterCount, activeFilterChips } =
     useAtlasFilterEngine({
-      exercises,
+      exercises: filterSourceExercises,
       historyLogs,
       activeTargetGroupId,
       exerciseBrowseScope,
       ownedEquipment,
       ownedProps,
     });
+
+  const scopedFiltered = useMemo(() => {
+    if (showAdvancedTools || unifiedScope === 'all') return filtered;
+    if (unifiedScope === '3d-precision') return filtered.filter(isPrecision3dExercise);
+    if (unifiedScope === 'atomic') return filtered.filter(isAtomicExercise);
+    if (unifiedScope === 'fusion') return filtered.filter(isFusionExercise);
+    return [];
+  }, [filtered, showAdvancedTools, unifiedScope]);
   const [notesVisible, setNotesVisible] = useState({
     signature: '',
     limit: 12,
@@ -2199,6 +2608,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const focusSearch = () => scheduleRaf(() => searchInput.current?.focus());
   const resetFilters = () => {
     setFilters({ ...INITIAL_FILTERS });
+    setUnifiedScope('all');
     focusSearch();
   };
   const clearSearch = () => {
@@ -2226,7 +2636,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         .map((step, index) => ({
           step,
           orderNumber: index + 1,
-          exercise: exercises.find((item) => item.id === step.exerciseId) ?? null,
+          exercise:
+            exercises.find((item) => item.id === step.exerciseId) ??
+            WORLD_PILATES_BY_ID.get(step.exerciseId) ??
+            null,
         })),
     [activeSteps, exercises],
   );
@@ -2389,11 +2802,55 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   );
   const notesSignature = JSON.stringify({
     filters,
+    unifiedScope,
     exerciseBrowseScope,
     ownedEquipment,
     ownedProps,
   });
   const notesVisibleCount = notesVisible.signature === notesSignature ? notesVisible.limit : 12;
+
+  const ensureExercisePersisted = (exercise: PilatesExercise) => {
+    const storeExercises = usePilatesStore.getState().exercises;
+    if (!storeExercises.some((item) => item.id === exercise.id)) {
+      ensureWorldExercisesInStore([exercise]);
+    }
+  };
+
+  const handleApplyProgramWeek1 = (program: MultiWeekProgram) => {
+    const week1 = program.weeks[0];
+    if (!week1) return;
+    const resolved: WorldPilatesExercise[] = [];
+    for (const id of week1.exerciseIds) {
+      const worldEx = WORLD_PILATES_BY_ID.get(id);
+      if (worldEx) resolved.push(worldEx);
+    }
+    if (resolved.length === 0) return;
+
+    ensureWorldExercisesInStore(resolved);
+    const steps: SequenceStep[] = resolved.map((ex, index) => ({
+      stepId: `prog-${program.id}-w1-${index + 1}-${Date.now().toString(36)}`,
+      order: index + 1,
+      blockCategory: ex.blockCategory,
+      exerciseId: ex.id,
+      durationMin: ex.defaultDurationMin || 5,
+      selectedLayer:
+        program.level === '1.0' ? 'easy' : program.level === '2.0' ? 'hard' : 'standard',
+      instructorNote: `${program.titleKo} · 1주차 (${week1.themeKo})`,
+    }));
+    const resolvedApparatus: ApparatusType | 'mixed' =
+      program.apparatus.length === 1 ? program.apparatus[0] : 'mixed';
+
+    usePilatesStore.setState({
+      activeTitle: `${program.titleKo} · 1주차`,
+      activeSubtitle: week1.themeKo,
+      activeApparatus: resolvedApparatus,
+      activeLevel: program.level,
+      activeTargetMinutes: program.targetMinutesPerClass,
+      activeSteps: steps,
+      activeTab: 'workbench',
+    });
+  };
+
   const addExercise = (exercise: PilatesExercise) => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
@@ -2412,6 +2869,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       }, 2600);
       return;
     }
+    ensureExercisePersisted(exercise);
     const before = usePilatesStore.getState().activeSteps.length;
     appendExerciseToSequence(exercise.id, exercise.blockCategory);
     const after = usePilatesStore.getState();
@@ -2439,9 +2897,16 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   if (!showAdvancedTools) {
     return (
       <AtlasEverydayCatalog
-        exercises={filtered.slice(0, notesVisibleCount)}
-        resultCount={filtered.length}
-        totalCount={exercises.length}
+        exercises={scopedFiltered.slice(0, notesVisibleCount)}
+        allUnifiedExercises={unifiedExercises}
+        isUnifiedCatalogMode={isUnifiedCatalogMode}
+        unifiedScope={unifiedScope}
+        precision3dCount={unifiedCatalogMetrics.precision3dCount}
+        atomicCount={unifiedCatalogMetrics.atomicCount}
+        fusionCount={unifiedCatalogMetrics.fusionCount}
+        programCount={unifiedCatalogMetrics.programCount}
+        resultCount={scopedFiltered.length}
+        totalCount={unifiedCatalogMetrics.totalCount}
         search={filters.search}
         equipment={filters.equipment}
         level={filters.level}
@@ -2464,6 +2929,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         searchRef={searchInput}
         gridRef={cardGridRef}
         onSearch={(value) => update('search', value)}
+        onSelectUnifiedScope={(nextScope) => setUnifiedScope(nextScope)}
+        onApplyProgramWeek1={handleApplyProgramWeek1}
         onSelectEquipment={(ids) => update('equipment', ids)}
         onSelectLevel={(value) => update('level', value)}
         onSelectDuration={(value) => update('duration', value)}
@@ -2487,16 +2954,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         }}
         onReturnToClass={() => setActiveTab('workbench')}
         onOpenDetails={(exercise) => {
+          ensureExercisePersisted(exercise);
           if (isMovementIdeaExercise(exercise) && onOpenIdeaSheet) onOpenIdeaSheet(exercise);
           else onOpenYouTubePreview(exercise);
         }}
         onAdd={addExercise}
-        onToggleFavorite={(exercise) =>
+        onToggleFavorite={(exercise) => {
+          ensureExercisePersisted(exercise);
           setExerciseFavoriteTag(
             exercise.id,
             exercise.favoriteTag === 'none' ? 'signature' : 'none',
-          )
-        }
+          );
+        }}
         onPhotoError={(exerciseId) =>
           setBrokenPhotoIds((previous) => ({ ...previous, [exerciseId]: true }))
         }

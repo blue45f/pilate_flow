@@ -150,16 +150,16 @@ export const WorldRepertoireExplorerBar: React.FC<WorldRepertoireExplorerBarProp
     <section
       className="pf-world-repertoire-panel"
       data-testid="world-repertoire-explorer"
-      aria-label="글로벌 필라테스 대백과 및 다주차 프로그램"
+      aria-label="통합 동작 카탈로그 및 4·8주 프로그램"
     >
       <div className="pf-world-repertoire-panel__head">
         <div>
           <span className="pf-world-repertoire-panel__kicker">
-            <Globe2 size={14} strokeWidth={1.6} aria-hidden="true" /> 전 세계 통합 대백과 ·{' '}
+            <Globe2 size={14} strokeWidth={1.6} aria-hidden="true" /> 통합 동작 카탈로그 ·{' '}
             {WORLD_REPERTOIRE_STATS.totalCount.toLocaleString('ko-KR')}종 · 퓨전{' '}
             {fusionCount}종 · 프로그램 {CURATED_MULTI_WEEK_PROGRAMS.length}개
           </span>
-          <h3>중·상급 심화 · 바레/기능성 퓨전 &amp; 4주·8주 프로그램</h3>
+          <h3>중·상급 심화 · 바레/기능성 퓨전 &amp; 4·8주 프로그램</h3>
         </div>
         <button
           type="button"
@@ -168,7 +168,7 @@ export const WorldRepertoireExplorerBar: React.FC<WorldRepertoireExplorerBarProp
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
         >
-          {open ? '접기' : '대백과 · 프로그램 펼치기'}
+          {open ? '접기' : '프로그램 · 통합 동작 펼치기'}
         </button>
       </div>
 
@@ -180,26 +180,24 @@ export const WorldRepertoireExplorerBar: React.FC<WorldRepertoireExplorerBarProp
 
       {open && (
         <div className="pf-world-repertoire-panel__body">
-          <div className="pf-world-scope-tabs" role="tablist" aria-label="대백과 탐색 구분">
+          <div className="pf-world-scope-tabs" role="group" aria-label="통합 탐색 구분">
             <button
               type="button"
-              role="tab"
-              aria-selected={scope === 'repertoire'}
+              aria-pressed={scope === 'repertoire'}
               className={scope === 'repertoire' ? 'is-active' : ''}
               onClick={() => setScope('repertoire')}
             >
               <Sparkles size={14} strokeWidth={1.6} aria-hidden="true" />
-              동작 대백과 ({WORLD_REPERTOIRE_STATS.totalCount.toLocaleString('ko-KR')})
+              통합 동작 ({WORLD_REPERTOIRE_STATS.totalCount.toLocaleString('ko-KR')})
             </button>
             <button
               type="button"
-              role="tab"
-              aria-selected={scope === 'programs'}
+              aria-pressed={scope === 'programs'}
               className={scope === 'programs' ? 'is-active' : ''}
               onClick={() => setScope('programs')}
             >
               <CalendarDays size={14} strokeWidth={1.6} aria-hidden="true" />
-              4주·8주 프로그램 ({CURATED_MULTI_WEEK_PROGRAMS.length})
+              4·8주 프로그램 ({CURATED_MULTI_WEEK_PROGRAMS.length})
             </button>
           </div>
 
