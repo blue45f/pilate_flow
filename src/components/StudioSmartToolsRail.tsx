@@ -5,8 +5,11 @@ import {
   Compass,
   GraduationCap,
   Headphones,
+  ImageDown,
   Mic,
   MonitorSmartphone,
+  Radio,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
 } from 'lucide-react';
@@ -14,9 +17,12 @@ import { WORLD_PILATES_BY_ID } from '../data/worldPilatesRepertoire1000';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { ApparatusType, PilatesExercise, SequenceStep } from '../types/pilates';
 import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
+import { ClientGoalSequenceTunerPanel } from './ClientGoalSequenceTunerPanel';
+import { DailyCommuteBriefingPanel } from './DailyCommuteBriefingPanel';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
 import { LessonModeSwitchPanel } from './LessonModeSwitchPanel';
 import { LightDismissDialog } from './LightDismissDialog';
+import { MemberFeedbackCardModal } from './MemberFeedbackCardModal';
 import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
 import { MovementMasteryStudioPanel } from './MovementMasteryStudioPanel';
 import { SequenceAudioRehearsalModal } from './SequenceAudioRehearsalModal';
@@ -29,6 +35,9 @@ import '../styles/studio-smart-tools-rail.css';
 type ActiveToolModalId =
   | null
   | 'smart-coach'
+  | 'client-tuner'
+  | 'daily-briefing'
+  | 'feedback-card'
   | 'autopilot'
   | 'mastery'
   | 'rehearsal'
@@ -64,39 +73,43 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
   const [openModal, setOpenModal] = useState<ActiveToolModalId>(null);
 
   const combinedExercises = useMemo(() => {
+    if (!openModal) return exercises;
     const seen = new Set(exercises.map((e) => e.id));
     const extras: PilatesExercise[] = [];
     for (const ex of WORLD_PILATES_BY_ID.values()) {
       if (!seen.has(ex.id)) extras.push(ex);
     }
     return [...exercises, ...extras];
-  }, [exercises]);
+  }, [exercises, openModal]);
 
   const exercisesById = useMemo(() => {
     const map = new Map<string, PilatesExercise>();
+    if (!openModal) return map;
     for (const ex of WORLD_PILATES_BY_ID.values()) map.set(ex.id, ex);
     for (const ex of exercises) map.set(ex.id, ex);
     return map;
-  }, [exercises]);
+  }, [exercises, openModal]);
 
   const firstActiveStep = useMemo(
     () => activeSteps.find((step) => step.kind !== 'rest' && Boolean(step.exerciseId)),
     [activeSteps],
   );
   const secondActiveStep = useMemo(() => {
+    if (!openModal) return undefined;
     const nonRest = activeSteps.filter((step) => step.kind !== 'rest' && Boolean(step.exerciseId));
     return nonRest[1];
-  }, [activeSteps]);
+  }, [activeSteps, openModal]);
 
   const focusExercise = useMemo(() => {
+    if (!openModal) return null;
     if (!firstActiveStep) return exercises[0] ?? null;
     return exercisesById.get(firstActiveStep.exerciseId) ?? exercises[0] ?? null;
-  }, [firstActiveStep, exercises, exercisesById]);
+  }, [firstActiveStep, exercises, exercisesById, openModal]);
 
   const nextExercise = useMemo(() => {
-    if (!secondActiveStep) return null;
+    if (!openModal || !secondActiveStep) return null;
     return exercisesById.get(secondActiveStep.exerciseId) ?? null;
-  }, [secondActiveStep, exercisesById]);
+  }, [secondActiveStep, exercisesById, openModal]);
 
   const activeNonRestCount = useMemo(
     () => activeSteps.filter((step) => step.kind !== 'rest' && Boolean(step.exerciseId)).length,
@@ -167,6 +180,36 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
         >
           <Compass size={15} strokeWidth={1.6} aria-hidden="true" />
           <span>스마트 추천 코치</span>
+        </button>
+
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="rail-btn-client-tuner"
+          onClick={() => setOpenModal('client-tuner')}
+        >
+          <ShieldCheck size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>회원 맞춤 튜너</span>
+        </button>
+
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="rail-btn-daily-briefing"
+          onClick={() => setOpenModal('daily-briefing')}
+        >
+          <Radio size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>출근길 수업 브리핑</span>
+        </button>
+
+        <button
+          type="button"
+          className="pf-smart-tool-pill"
+          data-testid="rail-btn-feedback-card"
+          onClick={() => setOpenModal('feedback-card')}
+        >
+          <ImageDown size={15} strokeWidth={1.6} aria-hidden="true" />
+          <span>회원 피드백 카드</span>
         </button>
 
         <button
@@ -269,6 +312,43 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
             ownedProps={ownedProps}
           />
         </LightDismissDialog>
+      )}
+
+      {openModal === 'client-tuner' && (
+        <LightDismissDialog
+          open
+          onClose={() => setOpenModal(null)}
+          title="회원 체형·컨디션 원탭 시퀀스 튜너"
+          className="pf-smart-tool-dialog"
+        >
+          <ClientGoalSequenceTunerPanel
+            steps={activeSteps}
+            exercises={combinedExercises}
+          />
+        </LightDismissDialog>
+      )}
+
+      {openModal === 'daily-briefing' && (
+        <LightDismissDialog
+          open
+          onClose={() => setOpenModal(null)}
+          title="출근길 당일 수업 1분 연속 오디오 브리핑"
+          className="pf-smart-tool-dialog"
+        >
+          <DailyCommuteBriefingPanel />
+        </LightDismissDialog>
+      )}
+
+      {openModal === 'feedback-card' && (
+        <MemberFeedbackCardModal
+          open
+          onClose={() => setOpenModal(null)}
+          sequenceTitle={activeTitle || '오늘의 필라테스 수업'}
+          steps={activeSteps}
+          exercises={combinedExercises}
+          exercisesById={exercisesById}
+          apparatus={activeApparatus}
+        />
       )}
 
       {openModal === 'autopilot' && (

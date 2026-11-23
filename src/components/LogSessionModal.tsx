@@ -18,6 +18,7 @@ import {
   findDuplicateCompletedHistoryLog,
 } from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
+import { MemberFeedbackCardModal } from './MemberFeedbackCardModal';
 import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -240,6 +241,7 @@ const SessionLogForm: React.FC<
       (sequenceId === activeSequenceId ? activeTitle : saved?.title) ??
       activeTitle,
   );
+  const [feedbackCardOpen, setFeedbackCardOpen] = useState(false);
   const logVisualMeta = resolveClassCardVisualMeta({
     sequence: {
       title,
@@ -1210,6 +1212,14 @@ const SessionLogForm: React.FC<
             >
               {applyToNextDraft ? '✓ ' : '+ '}이번 진행 시간·메모를 다음 수업 초안에 반영 (저장된 원본은 그대로 유지)
             </button>
+            <button
+              type="button"
+              className="log-quick-note-chip"
+              data-testid="log-open-feedback-card-btn"
+              onClick={() => setFeedbackCardOpen(true)}
+            >
+              회원 피드백 카드 10초 만들기
+            </button>
           </div>
         </div>
         <footer className="class-log-footer">
@@ -1256,6 +1266,17 @@ const SessionLogForm: React.FC<
           </p>
         </footer>
       </form>
+      {feedbackCardOpen && (
+        <MemberFeedbackCardModal
+          open={feedbackCardOpen}
+          onClose={() => setFeedbackCardOpen(false)}
+          sequenceTitle={title || '오늘의 필라테스 수업'}
+          steps={snapshot}
+          exercises={exercisesAtOpen}
+          apparatus={saved?.apparatus ?? activeApparatus}
+          dateLabel={taughtDate}
+        />
+      )}
     </LightDismissDialog>
   );
 };

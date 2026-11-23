@@ -60,6 +60,7 @@ import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters'
 import { triggerSubtleHapticPulse } from '../hooks/useScreenWakeLock';
 import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
+import { MemberFeedbackCardModal } from './MemberFeedbackCardModal';
 import { TeachingVoiceCoachPanel } from './TeachingVoiceCoachPanel';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
@@ -596,6 +597,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [poseMirrorOpen, setPoseMirrorOpen] = useState(false);
   const [dualScreenOpen, setDualScreenOpen] = useState(false);
   const [voiceCoachOpen, setVoiceCoachOpen] = useState(false);
+  const [feedbackCardOpen, setFeedbackCardOpen] = useState(false);
   const [activePlanB, setActivePlanB] = useState<PlanBConstraint | null>(null);
   const [planBNotice, setPlanBNotice] = useState('');
   const planBSuggestion = useMemo(() => {
@@ -2163,6 +2165,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           onClick={() => setVoiceCoachOpen(true)}
         >
           티칭 코치
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-feedback-card-toggle"
+          aria-pressed={feedbackCardOpen}
+          onClick={() => setFeedbackCardOpen(true)}
+        >
+          피드백 카드
         </button>
         <button
           type="button"
@@ -3934,6 +3944,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             currentExerciseNameKo={exercise?.nameKo}
           />
         </LightDismissDialog>
+      )}
+      {feedbackCardOpen && (
+        <MemberFeedbackCardModal
+          open={feedbackCardOpen}
+          onClose={() => setFeedbackCardOpen(false)}
+          sequenceTitle={activeTitle || '오늘의 필라테스 수업'}
+          steps={steps}
+          exercises={exercises}
+          apparatus={exercise?.apparatus ?? 'reformer'}
+        />
       )}
       {exitDialogs}
     </div>
