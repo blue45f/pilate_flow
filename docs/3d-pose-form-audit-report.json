@@ -1,5 +1,5 @@
 {
-  "generatedAtUtc": "2026-11-23T11:12:14.392654+00:00",
+  "generatedAtUtc": "2026-11-23T12:39:21.294300+00:00",
   "totalExercises": 218,
   "totalPosesAudited": 654,
   "totalDefects": 0,
@@ -33,7 +33,10 @@
   },
   "defectCountsByCategory": {
     "floor_penetration": 0,
+    "mat_supine_foot_float": 0,
+    "mat_seated_pelvis_float": 0,
     "reformer_supine_elbow": 0,
+    "reformer_shblock_arm_clip": 0,
     "reformer_strap_body_clip": 0,
     "chair_foot_in_seat": 0,
     "chair_shin_clips_seat": 0,

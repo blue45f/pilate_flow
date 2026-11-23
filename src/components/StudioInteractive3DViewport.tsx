@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import '../styles/studio-interactive-3d.css';
 import { isImeComposing } from '../utils/imeGuard';
 import {
   Camera,
@@ -135,6 +136,23 @@ const PROP_EXPERIMENT_OPTIONS: readonly {
   { value: 'mini-ball', labelKo: '미니볼' },
 ];
 
+const POSE_SNAP_STAGES: readonly {
+  readonly id: 'start' | 'peak' | 'finish';
+  readonly stepKo: string;
+  readonly labelKo: string;
+  readonly progress: number;
+}[] = [
+  { id: 'start', stepKo: '01', labelKo: '시작 자세', progress: 0 },
+  { id: 'peak', stepKo: '02', labelKo: '정점 유지', progress: 0.5 },
+  { id: 'finish', stepKo: '03', labelKo: '마무리', progress: 0.85 },
+];
+
+function resolveActivePoseSnapId(progress: number): 'start' | 'peak' | 'finish' {
+  if (progress < 0.25) return 'start';
+  if (progress < 0.72) return 'peak';
+  return 'finish';
+}
+
 const PHASE_JUMP_PRESETS: readonly {
   readonly id: string;
   readonly labelKo: string;
@@ -226,6 +244,11 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     pointerType: string;
     startX: number;
     startY: number;
+    lastX: number;
+    lastY: number;
+    lastTs: number;
+    velYaw: number;
+    velPitch: number;
     baseYaw: number;
     basePitch: number;
   }>({
@@ -234,9 +257,16 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     pointerType: 'mouse',
     startX: 0,
     startY: 0,
+    lastX: 0,
+    lastY: 0,
+    lastTs: 0,
+    velYaw: 0,
+    velPitch: 0,
     baseYaw: -34,
     basePitch: 21,
   });
+  const inertiaRafRef = useRef<number>(0);
+  const inertiaVelRef = useRef<{ yaw: number; pitch: number }>({ yaw: 0, pitch: 0 });
   const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchRef = useRef<{
     active: boolean;
@@ -304,10 +334,19 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   });
   const [exportNotice, setExportNotice] = useState<string>('');
 
+  const stopInertia = useCallback(() => {
+    if (inertiaRafRef.current) {
+      window.cancelAnimationFrame(inertiaRafRef.current);
+      inertiaRafRef.current = 0;
+    }
+    inertiaVelRef.current = { yaw: 0, pitch: 0 };
+  }, []);
+
   const suspend = useCallback(() => {
+    stopInertia();
     setPlaying(false);
     setTurntable(false);
-  }, []);
+  }, [stopInertia]);
   const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(viewportRef, suspend);
   const [visualProgress, setVisualProgress] = useState<number>(0);
   const visualProgressRef = useRef<number>(0);
@@ -320,10 +359,14 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const gpuRendererRef = useRef<Studio3DGpuRenderer | null>(null);
   const [renderBackend, setRenderBackend] = useState<Studio3DRenderBackend>('canvas2d');
   const yawRef = useRef<number>(yawDeg);
+  const pitchRef = useRef<number>(pitchDeg);
   const lastDrawSigRef = useRef<string>('');
   useEffect(() => {
     yawRef.current = yawDeg;
   }, [yawDeg]);
+  useEffect(() => {
+    pitchRef.current = pitchDeg;
+  }, [pitchDeg]);
   const resourceGuardRef = useRef<ReturnType<typeof createStudio3dResourceGuard> | null>(null);
   if (resourceGuardRef.current === null) {
     resourceGuardRef.current = createStudio3dResourceGuard();
@@ -423,7 +466,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   }, []);
 
   const paintFrame = useCallback(
-    (overridePoseT?: number, overrideYawDeg?: number, force = false) => {
+    (overridePoseT?: number, overrideYawDeg?: number, force = false, overridePitchDeg?: number) => {
       const canvas = canvasRef.current;
       if (!canvas || typeof canvas.getContext !== 'function') return;
       if (
@@ -450,6 +493,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       const cssH = canvas.clientHeight || 416;
       const targetPoseT = overridePoseT ?? visualPhase.pose;
       const targetYawDeg = overrideYawDeg ?? yawDeg;
+      const targetPitchDeg = overridePitchDeg ?? pitchDeg;
       const activeGpu =
         gpuRendererRef.current && gpuRendererRef.current.isAvailable()
           ? gpuRendererRef.current
@@ -458,7 +502,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         exercise.id,
         targetPoseT.toFixed(5),
         targetYawDeg.toFixed(2),
-        pitchDeg.toFixed(2),
+        targetPitchDeg.toFixed(2),
         zoom.toFixed(3),
         panOffset[0].toFixed(3),
         panOffset[1].toFixed(3),
@@ -498,7 +542,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         exercise,
         phaseT: targetPoseT,
         yawDeg: targetYawDeg,
-        pitchDeg,
+        pitchDeg: targetPitchDeg,
         zoom,
         panX: panOffset[0],
         panY: panOffset[1],
@@ -646,10 +690,56 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   useEffect(() => {
     return () => {
       if (tweenRafRef.current) window.cancelAnimationFrame(tweenRafRef.current);
+      stopInertia();
     };
-  }, []);
+  }, [stopInertia]);
 
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent);
+
+  const startOrbitInertia = useCallback(
+    (initialVelYaw: number, initialVelPitch: number) => {
+      stopInertia();
+      if (!canAnimate || reducedMotion || isJsdom || typeof window === 'undefined') return;
+      const clampedYaw = Math.max(-10, Math.min(10, initialVelYaw));
+      const clampedPitch = Math.max(-5.5, Math.min(5.5, initialVelPitch));
+      if (Math.hypot(clampedYaw, clampedPitch) < 0.28) return;
+      inertiaVelRef.current = { yaw: clampedYaw, pitch: clampedPitch };
+      let prevTs: number | null = null;
+      const step = (now: number) => {
+        if (document.hidden || dragRef.current.active || pinchRef.current.active) {
+          stopInertia();
+          return;
+        }
+        const dtFactor =
+          prevTs === null ? 1 : Math.min(2.5, Math.max(0.25, (now - prevTs) / 16.67));
+        prevTs = now;
+        const vel = inertiaVelRef.current;
+        let nextYaw = yawRef.current + vel.yaw * dtFactor;
+        if (nextYaw > 180) nextYaw -= 360;
+        if (nextYaw < -180) nextYaw += 360;
+        const nextPitch = Math.max(-4, Math.min(80, pitchRef.current + vel.pitch * dtFactor));
+        yawRef.current = nextYaw;
+        pitchRef.current = nextPitch;
+        paintFrameRef.current(undefined, nextYaw, false, nextPitch);
+        setYawDeg(Number(nextYaw.toFixed(1)));
+        setPitchDeg(Number(nextPitch.toFixed(1)));
+
+        const decay = Math.pow(0.91, dtFactor);
+        vel.yaw *= decay;
+        vel.pitch *= decay;
+        if (nextPitch <= -4 || nextPitch >= 80) {
+          vel.pitch = 0;
+        }
+        if (Math.hypot(vel.yaw, vel.pitch) < 0.06) {
+          stopInertia();
+          return;
+        }
+        inertiaRafRef.current = window.requestAnimationFrame(step);
+      };
+      inertiaRafRef.current = window.requestAnimationFrame(step);
+    },
+    [canAnimate, isJsdom, reducedMotion, stopInertia],
+  );
 
   const jumpToProgress = (nextProgress: number) => {
     const clamped = Math.max(0, Math.min(1, Number(nextProgress.toFixed(2))));
@@ -713,6 +803,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const applyCameraPreset = (presetId: string) => {
     const found = STUDIO_3D_CAMERA_PRESETS.find((p) => p.id === presetId);
     if (!found) return;
+    stopInertia();
     setActivePresetId(found.id);
     const enableTurn = Boolean(found.autoTurntable) && canAnimate;
     setTurntable(enableTurn);
@@ -840,6 +931,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             if (canAnimate) setPlaying((p) => !p);
           } else if (event.shiftKey && event.key === 'ArrowRight') {
             event.preventDefault();
+            stopInertia();
             setTurntable(false);
             setActivePresetId('custom');
             setYawDeg((y) => {
@@ -848,6 +940,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             });
           } else if (event.shiftKey && event.key === 'ArrowLeft') {
             event.preventDefault();
+            stopInertia();
             setTurntable(false);
             setActivePresetId('custom');
             setYawDeg((y) => {
@@ -856,11 +949,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             });
           } else if (event.shiftKey && event.key === 'ArrowUp') {
             event.preventDefault();
+            stopInertia();
             setTurntable(false);
             setActivePresetId('custom');
             setPitchDeg((p) => Math.min(80, p + 8));
           } else if (event.shiftKey && event.key === 'ArrowDown') {
             event.preventDefault();
+            stopInertia();
             setTurntable(false);
             setActivePresetId('custom');
             setPitchDeg((p) => Math.max(-4, p - 8));
@@ -889,6 +984,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
           ref={canvasRef}
           className="pf-orbit3d-canvas"
           onPointerDown={(event) => {
+            stopInertia();
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
             activePointersRef.current.set(event.pointerId, {
               x: event.clientX,
               y: event.clientY,
@@ -909,6 +1006,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               };
               dragRef.current.active = false;
               dragRef.current.moved = true;
+              dragRef.current.velYaw = 0;
+              dragRef.current.velPitch = 0;
               setTurntable(false);
               setActivePresetId('custom');
               return;
@@ -920,8 +1019,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               pointerType: event.pointerType || 'mouse',
               startX: event.clientX,
               startY: event.clientY,
-              baseYaw: yawDeg,
-              basePitch: pitchDeg,
+              lastX: event.clientX,
+              lastY: event.clientY,
+              lastTs: now,
+              velYaw: 0,
+              velPitch: 0,
+              baseYaw: yawRef.current,
+              basePitch: pitchRef.current,
             };
           }}
           onPointerMove={(event) => {
@@ -956,6 +1060,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               return;
             }
             if (!dragRef.current.active) return;
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
             const dx = event.clientX - dragRef.current.startX;
             const dy = event.clientY - dragRef.current.startY;
             if (Math.hypot(dx, dy) >= 5) {
@@ -967,6 +1072,17 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             const isTouch = dragRef.current.pointerType === 'touch';
             const yawGain = isTouch ? 0.68 : 0.55;
             const pitchGain = isTouch ? 0.48 : 0.42;
+            const stepDx = event.clientX - dragRef.current.lastX;
+            const stepDy = event.clientY - dragRef.current.lastY;
+            const dtMs = Math.max(8, Math.min(120, now - dragRef.current.lastTs));
+            const frameScale = 16.67 / dtMs;
+            dragRef.current.velYaw = dragRef.current.velYaw * 0.42 + stepDx * yawGain * frameScale * 0.58;
+            dragRef.current.velPitch =
+              dragRef.current.velPitch * 0.42 + stepDy * pitchGain * frameScale * 0.58;
+            dragRef.current.lastX = event.clientX;
+            dragRef.current.lastY = event.clientY;
+            dragRef.current.lastTs = now;
+
             let nextYaw = dragRef.current.baseYaw + dx * yawGain;
             if (nextYaw > 180) nextYaw -= 360;
             if (nextYaw < -180) nextYaw += 360;
@@ -974,10 +1090,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               -4,
               Math.min(80, dragRef.current.basePitch + dy * pitchGain),
             );
+            yawRef.current = nextYaw;
+            pitchRef.current = nextPitch;
             setYawDeg(Number(nextYaw.toFixed(1)));
             setPitchDeg(Number(nextPitch.toFixed(1)));
           }}
           onPointerUp={(event) => {
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
             activePointersRef.current.delete(event.pointerId);
             if (pinchRef.current.active) {
               if (activePointersRef.current.size === 1) {
@@ -989,8 +1108,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                   pointerType: event.pointerType || 'touch',
                   startX: remaining.x,
                   startY: remaining.y,
-                  baseYaw: yawDeg,
-                  basePitch: pitchDeg,
+                  lastX: remaining.x,
+                  lastY: remaining.y,
+                  lastTs: now,
+                  velYaw: 0,
+                  velPitch: 0,
+                  baseYaw: yawRef.current,
+                  basePitch: pitchRef.current,
                 };
               } else if (activePointersRef.current.size === 0) {
                 pinchRef.current.active = false;
@@ -998,9 +1122,19 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               }
               return;
             }
-            const wasTap = dragRef.current.active && !dragRef.current.moved;
+            const wasActive = dragRef.current.active;
+            const wasMoved = dragRef.current.moved;
+            const releaseAgeMs = now - dragRef.current.lastTs;
+            const releaseVelYaw = dragRef.current.velYaw;
+            const releaseVelPitch = dragRef.current.velPitch;
             dragRef.current.active = false;
-            if (!wasTap) return;
+            if (wasActive && wasMoved) {
+              if (releaseAgeMs <= 110) {
+                startOrbitInertia(releaseVelYaw, releaseVelPitch);
+              }
+              return;
+            }
+            if (!wasActive) return;
             const rect = event.currentTarget.getBoundingClientRect();
             const localX = event.clientX - rect.left;
             const localY = event.clientY - rect.top;
@@ -1018,10 +1152,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               setSelectedHotspot((prev) => (prev?.id === best.id ? null : best));
               return;
             }
-            const now = Date.now();
+            const tapNow = Date.now();
             const prevEmpty = lastEmptyTapRef.current;
             if (
-              now - prevEmpty.ts <= 320 &&
+              tapNow - prevEmpty.ts <= 320 &&
               Math.hypot(localX - prevEmpty.x, localY - prevEmpty.y) <= 28
             ) {
               lastEmptyTapRef.current = { ts: 0, x: 0, y: 0 };
@@ -1029,10 +1163,11 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               applyCameraPreset('quarter');
               return;
             }
-            lastEmptyTapRef.current = { ts: now, x: localX, y: localY };
+            lastEmptyTapRef.current = { ts: tapNow, x: localX, y: localY };
             setSelectedHotspot(null);
           }}
           onPointerCancel={(event) => {
+            stopInertia();
             activePointersRef.current.delete(event.pointerId);
             if (activePointersRef.current.size === 0) {
               dragRef.current.active = false;
@@ -1040,6 +1175,33 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             }
           }}
         />
+      </div>
+
+      {/* 1-tap 3-stage pose snap strip directly beneath the 3D canvas */}
+      <div
+        className="pf-orbit3d-pose-snap-strip"
+        role="group"
+        aria-label="3단계 자세 스냅"
+        data-testid="studio-3d-pose-snap-strip"
+      >
+        {POSE_SNAP_STAGES.map((stage) => {
+          const isActive = resolveActivePoseSnapId(progress) === stage.id;
+          return (
+            <button
+              key={stage.id}
+              type="button"
+              className={`pf-orbit3d-pose-snap-btn ${isActive ? 'is-active' : ''}`.trim()}
+              aria-pressed={isActive}
+              data-pose-snap={stage.id}
+              onClick={() => jumpToProgress(stage.progress)}
+            >
+              <span className="pf-orbit3d-pose-snap-btn__index" aria-hidden="true">
+                {stage.stepKo}
+              </span>
+              <span className="pf-orbit3d-pose-snap-btn__label">{stage.labelKo}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Unobstructed Visual Stage: HUD & hotspot info live cleanly outside the 3D canvas */}
@@ -1184,25 +1346,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         <div
           className="pf-orbit3d-modeler-strip"
           role="group"
-          aria-label="3D 구간 빠른 이동 및 설명 도구"
+          aria-label="3D 시점 및 설명 도구"
           data-testid="studio-3d-modeler-tools"
         >
-          {([
-            { id: 'start', labelKo: '시작', target: 0 },
-            { id: 'mid', labelKo: '중간', target: 0.5 },
-            { id: 'end', labelKo: '끝', target: 0.85 },
-          ] as const).map((phaseBtn) => (
-            <button
-              key={phaseBtn.id}
-              type="button"
-              className={`pf-orbit3d-tool-chip ${
-                Math.abs(progress - phaseBtn.target) < 0.08 ? 'is-active' : ''
-              }`}
-              onClick={() => jumpToProgress(phaseBtn.target)}
-            >
-              {phaseBtn.labelKo}
-            </button>
-          ))}
           <button
             type="button"
             className="pf-orbit3d-tool-chip"

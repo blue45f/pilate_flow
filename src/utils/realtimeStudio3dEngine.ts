@@ -128,7 +128,7 @@ function sampleRounded2SegChain(
   p1: Vec3,
   p2: Vec3,
   s: number,
-  cornerBlend = 0.14,
+  cornerBlend = 0.22,
 ): [Vec3, Vec3] {
   const c0 = 0.5 - cornerBlend;
   const c1 = 0.5 + cornerBlend;
@@ -1101,9 +1101,18 @@ interface LoftStation3D {
   readonly profile: (theta: number) => readonly [number, number];
 }
 
+interface LoftBandStyle3D {
+  readonly baseRgb?: Rgb;
+  readonly spec?: number;
+  readonly emissive?: number;
+  readonly shininess?: number;
+  readonly materialRole?: StudioMaterialRole;
+}
+
 /**
  * Closed manifold multi-station quad loft from anatomical cross-section functions
- * `(center, axisX, axisY, profile(theta) -> [dx, dy])` with smooth domed end caps.
+ * `(center, axisX, axisY, profile(theta) -> [dx, dy])` with true 3D smooth longitudinal vertex normals
+ * and optional per-band material/color routing (`bandStyleFn`) for seamless unified torso+neck meshes.
  */
 function makeStationLoftQuads(
   stations: readonly LoftStation3D[],
@@ -1117,10 +1126,11 @@ function makeStationLoftQuads(
   capEnd = 0,
   materialRole?: StudioMaterialRole,
   vertexColorFn?: (stationIdx: number, theta: number) => Rgb,
+  bandStyleFn?: (bandIdx: number, theta: number) => LoftBandStyle3D | undefined,
 ): QuadFace[] {
   if (stations.length < 2) return [];
   const rings: Vec3[][] = [];
-  const ringNormals: Vec3[][] = [];
+  const radialNormals: Vec3[][] = [];
   const ringColors: Rgb[][] | null = vertexColorFn ? [] : null;
 
   for (let stIdx = 0; stIdx < stations.length; stIdx++) {
@@ -1153,9 +1163,27 @@ function makeStationLoftQuads(
       }
     }
     rings.push(row);
-    ringNormals.push(nRow);
+    radialNormals.push(nRow);
     if (ringColors) ringColors.push(cRow);
   }
+
+  // Compute true 3D smooth vertex normals incorporating both circumferential & longitudinal slopes
+  const ringNormals: Vec3[][] = rings.map((row, stIdx) => {
+    const prevRow = rings[Math.max(0, stIdx - 1)]!;
+    const nextRow = rings[Math.min(rings.length - 1, stIdx + 1)]!;
+    const fallbackRow = radialNormals[stIdx]!;
+    return row.map((_, s) => {
+      const sPrev = (s - 1 + radialSegs) % radialSegs;
+      const sNext = (s + 1) % radialSegs;
+      const dTheta = sub3(row[sNext]!, row[sPrev]!);
+      const dSpine = sub3(nextRow[s]!, prevRow[s]!);
+      const cr = cross3(dTheta, dSpine);
+      const fallback = fallbackRow[s]!;
+      if (len3(cr) < 1e-7) return fallback;
+      const cand = norm3(cr);
+      return dot3(cand, fallback) < 0 ? mul3(cand, -1) : cand;
+    });
+  });
 
   const quads: QuadFace[] = [];
   const tan0 = norm3(sub3(stations[1]!.center, stations[0]!.center));
@@ -1170,8 +1198,10 @@ function makeStationLoftQuads(
     const c1 = ringColors ? ringColors[i + 1]! : null;
     for (let s = 0; s < radialSegs; s++) {
       const s2 = (s + 1) % radialSegs;
+      const thMid = (2 * Math.PI * (s + 0.5)) / radialSegs;
+      const bandStyle = bandStyleFn?.(i, thMid);
       const vColors: readonly [Rgb, Rgb, Rgb, Rgb] | undefined =
-        c0 && c1
+        !bandStyle?.baseRgb && c0 && c1
           ? flipWinding
             ? [c0[s]!, c1[s]!, c1[s2]!, c0[s2]!]
             : [c0[s]!, c0[s2]!, c1[s2]!, c1[s]!]
@@ -1184,12 +1214,12 @@ function makeStationLoftQuads(
           ? [n0[s]!, n1[s]!, n1[s2]!, n0[s2]!]
           : [n0[s]!, n0[s2]!, n1[s2]!, n1[s]!],
         vColors,
-        baseRgb: rgb,
+        baseRgb: bandStyle?.baseRgb ?? rgb,
         alpha,
-        spec,
-        emissive,
-        shininess,
-        materialRole,
+        spec: bandStyle?.spec ?? spec,
+        emissive: bandStyle?.emissive ?? emissive,
+        shininess: bandStyle?.shininess ?? shininess,
+        materialRole: bandStyle?.materialRole ?? materialRole,
       });
     }
   }
@@ -3376,7 +3406,6 @@ function buildStudio3DScene(options: {
   const mirrorSign = mirrored ? -1 : 1;
   const segTorso = svgFastMode ? 14 : 34;
   const segLimb = svgFastMode ? 12 : 28;
-  const segNeck = svgFastMode ? 10 : 24;
   const segHead = svgFastMode ? 14 : 36;
   const ringsHead = svgFastMode ? 9 : 24;
   const segCyl = svgFastMode ? 8 : 22;
@@ -5388,20 +5417,144 @@ function buildStudio3DScene(options: {
     return { pt, rAx, fAx, tan };
   };
 
-  // 2A) High-Waisted Sculpted Leggings with Crossover Waistband & Seamless Gluteal-Thigh Sweep (8 stations)
-  const pelvisSpecs: readonly [number, number, number, number, number][] = [
-    [-0.105, 0.098, 0.066, 0.068, 0.004],
-    [-0.025, 0.13, 0.079, 0.092, 0.01],
-    [0.055, 0.14, 0.083, 0.102, 0.011],
-    [0.14, 0.136, 0.081, 0.099, 0.008],
-    [0.22, 0.125, 0.077, 0.089, 0.004],
-    [0.29, 0.111, 0.073, 0.08, 0.001],
-    [0.35, 0.101, 0.07, 0.073, 0.0],
-    [0.405, 0.098, 0.069, 0.072, 0.0],
+  // Compute cervical neck & head frame first so the unified 28-station torso+neck loft flows seamlessly into the skull base
+  const spTan = bezier3Tan(rig.pelvis, rig.spineMid, rig.chest, 1.0);
+  let neckUp: Vec3 =
+    antN[2] > 0.35 && spTan[2] < 0.02
+      ? norm3([spTan[0], spTan[1], Math.max(-0.02, spTan[2] * 0.15)])
+      : norm3(add3(mul3(spUp, 0.35), mul3(spTan, 0.65)));
+  let headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
+  let headAnt: Vec3 =
+    len3(headAntProj) > 1e-4 ? norm3(headAntProj) : norm3(cross3(bodyRight, neckUp));
+  const rawHeadPos = add3(rig.chest, add3(mul3(neckUp, 0.158), mul3(headAnt, 0.012)));
+  const headPos: Vec3 =
+    rawHeadPos[2] < 0.115 ? [rawHeadPos[0], rawHeadPos[1], 0.115] : rawHeadPos;
+  if (rawHeadPos[2] < 0.115) {
+    neckUp = norm3(sub3(sub3(headPos, mul3(headAnt, 0.012)), rig.chest));
+    headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
+    if (len3(headAntProj) > 1e-4) headAnt = norm3(headAntProj);
+  }
+  const yokeTopFrame = spineFrame(1.032);
+  const neckEnd = sub3(headPos, add3(mul3(neckUp, 0.016), mul3(headAnt, 0.01)));
+
+  // 2A) Unified Single Continuous 28-Station Torso + Neck Loft Mesh (ZERO seams across leggings, midriff, crop top, clavicles & neck!)
+  type UnifiedTorsoStationSpec =
+    | {
+        readonly kind: 'pelvis';
+        readonly u: number;
+        readonly rx: number;
+        readonly ryF: number;
+        readonly ryB: number;
+        readonly gluteCleft: number;
+      }
+    | {
+        readonly kind: 'midriff';
+        readonly u: number;
+        readonly rx: number;
+        readonly ry: number;
+        readonly lordosis: number;
+      }
+    | {
+        readonly kind: 'top';
+        readonly u: number;
+        readonly rx: number;
+        readonly ryF: number;
+        readonly ryB: number;
+        readonly bustBoost: number;
+        readonly scapRelief: number;
+      }
+    | {
+        readonly kind: 'clavicle';
+        readonly u: number;
+        readonly rx: number;
+        readonly ryF: number;
+        readonly ryB: number;
+        readonly clavRelief: number;
+        readonly notchDepth: number;
+      }
+    | {
+        readonly kind: 'neck';
+        readonly uNeck: number;
+        readonly rx: number;
+        readonly ryF: number;
+        readonly ryB: number;
+      };
+
+  const unifiedTorsoNeckSpecs: readonly UnifiedTorsoStationSpec[] = [
+    // 0..7 (8 stations): Pelvis & High-Waisted Sculpted Leggings
+    { kind: 'pelvis', u: -0.105, rx: 0.102, ryF: 0.068, ryB: 0.072, gluteCleft: 0.005 },
+    { kind: 'pelvis', u: -0.025, rx: 0.132, ryF: 0.079, ryB: 0.094, gluteCleft: 0.01 },
+    { kind: 'pelvis', u: 0.055, rx: 0.141, ryF: 0.083, ryB: 0.103, gluteCleft: 0.011 },
+    { kind: 'pelvis', u: 0.14, rx: 0.136, ryF: 0.081, ryB: 0.099, gluteCleft: 0.008 },
+    { kind: 'pelvis', u: 0.22, rx: 0.125, ryF: 0.077, ryB: 0.089, gluteCleft: 0.004 },
+    { kind: 'pelvis', u: 0.29, rx: 0.111, ryF: 0.073, ryB: 0.08, gluteCleft: 0.001 },
+    { kind: 'pelvis', u: 0.35, rx: 0.101, ryF: 0.07, ryB: 0.073, gluteCleft: 0.0 },
+    { kind: 'pelvis', u: 0.398, rx: 0.098, ryF: 0.068, ryB: 0.071, gluteCleft: 0.0 },
+    // 8..12 (5 stations): Waistband Hem Transition -> Toned Hourglass Midriff
+    { kind: 'midriff', u: 0.405, rx: 0.095 * breathScale, ry: 0.066 * breathScale, lordosis: 0.003 },
+    { kind: 'midriff', u: 0.435, rx: 0.094 * breathScale, ry: 0.066 * breathScale, lordosis: 0.0045 },
+    { kind: 'midriff', u: 0.472, rx: 0.097 * breathScale, ry: 0.068 * breathScale, lordosis: 0.003 },
+    { kind: 'midriff', u: 0.508, rx: 0.102 * breathScale, ry: 0.072 * breathScale, lordosis: 0.0012 },
+    { kind: 'midriff', u: 0.526, rx: 0.106 * breathScale, ry: 0.074 * breathScale, lordosis: 0.0 },
+    // 13..19 (7 stations): Ivory Underbust Trim -> Botanical Sage Scoop-Neck Crop Top
+    { kind: 'top', u: 0.538, rx: 0.109 * breathScale, ryF: 0.078 * breathScale, ryB: 0.076 * breathScale, bustBoost: 0.002, scapRelief: 0.001 },
+    { kind: 'top', u: 0.585, rx: 0.116 * breathScale, ryF: 0.089 * breathScale, ryB: 0.079 * breathScale, bustBoost: 0.01, scapRelief: 0.002 },
+    { kind: 'top', u: 0.648, rx: 0.123 * breathScale, ryF: 0.098 * breathScale, ryB: 0.082 * breathScale, bustBoost: 0.017, scapRelief: 0.0035 },
+    { kind: 'top', u: 0.715, rx: 0.129 * breathScale, ryF: 0.101 * breathScale, ryB: 0.084 * breathScale, bustBoost: 0.018, scapRelief: 0.005 },
+    { kind: 'top', u: 0.782, rx: 0.134 * breathScale, ryF: 0.093 * breathScale, ryB: 0.083 * breathScale, bustBoost: 0.011, scapRelief: 0.005 },
+    { kind: 'top', u: 0.834, rx: 0.135, ryF: 0.085, ryB: 0.081, bustBoost: 0.004, scapRelief: 0.004 },
+    { kind: 'top', u: 0.87, rx: 0.134, ryF: 0.079, ryB: 0.078, bustBoost: 0.0, scapRelief: 0.0025 },
+    // 20..22 (3 stations): Exposed Upper Thoracic, Delicate Clavicles & Smooth Trapezius Shoulder Yoke
+    { kind: 'clavicle', u: 0.915, rx: 0.141, ryF: 0.076, ryB: 0.075, clavRelief: 0.0034, notchDepth: 0.0024 },
+    { kind: 'clavicle', u: 0.975, rx: 0.144, ryF: 0.071, ryB: 0.072, clavRelief: 0.0044, notchDepth: 0.0038 },
+    { kind: 'clavicle', u: 1.032, rx: 0.094, ryF: 0.055, ryB: 0.057, clavRelief: 0.0018, notchDepth: 0.0022 },
+    // 23..27 (5 stations): Continuous Graceful Swan Neck seamlessly rising into Skull Base
+    { kind: 'neck', uNeck: 0.16, rx: 0.052, ryF: 0.045, ryB: 0.047 },
+    { kind: 'neck', uNeck: 0.38, rx: 0.039, ryF: 0.038, ryB: 0.04 },
+    { kind: 'neck', uNeck: 0.62, rx: 0.036, ryF: 0.036, ryB: 0.038 },
+    { kind: 'neck', uNeck: 0.84, rx: 0.0375, ryF: 0.037, ryB: 0.04 },
+    { kind: 'neck', uNeck: 1.0, rx: 0.041, ryF: 0.0395, ryB: 0.043 },
   ];
-  const leggingStations: LoftStation3D[] = pelvisSpecs.map(
-    ([uS, rx, ryFront, ryBack, gluteCleft]) => {
-      const { pt, rAx, fAx } = spineFrame(uS);
+
+  const unifiedTorsoNeckStations: LoftStation3D[] = unifiedTorsoNeckSpecs.map((spec) => {
+    if (spec.kind === 'pelvis') {
+      const { pt, rAx, fAx } = spineFrame(spec.u);
+      return {
+        center: pt,
+        axisX: rAx,
+        axisY: fAx,
+        profile: (th: number) => {
+          const ct = Math.cos(th);
+          const st = Math.sin(th);
+          if (st >= 0) return [ct * spec.rx, Math.pow(st, 0.88) * spec.ryF] as const;
+          const s2 = Math.sin(2 * th);
+          const gluteLobe = 1 + 0.14 * (s2 * s2);
+          const sacralDip = spec.gluteCleft * Math.exp(-((ct / 0.21) * (ct / 0.21)));
+          return [ct * spec.rx, st * spec.ryB * gluteLobe + sacralDip] as const;
+        },
+      };
+    }
+    if (spec.kind === 'midriff') {
+      const { pt, rAx, fAx } = spineFrame(spec.u);
+      return {
+        center: pt,
+        axisX: rAx,
+        axisY: fAx,
+        profile: (th: number) => {
+          const ct = Math.cos(th);
+          const st = Math.sin(th);
+          const lineaAlba = 0.0034 * Math.exp(-((ct / 0.16) * (ct / 0.16)));
+          const oblique = -0.002 * Math.exp(-(((Math.abs(ct) - 0.58) / 0.2) ** 2)) * Math.max(0, st);
+          const erector = -0.0024 * Math.exp(-(((Math.abs(ct) - 0.34) / 0.22) ** 2)) * Math.max(0, -st);
+          return [
+            ct * spec.rx,
+            st * spec.ry - (st > 0 ? lineaAlba : -lineaAlba * 0.8 - spec.lordosis) + oblique + erector,
+          ] as const;
+        },
+      };
+    }
+    if (spec.kind === 'top') {
+      const { pt, rAx, fAx } = spineFrame(spec.u);
       return {
         center: pt,
         axisX: rAx,
@@ -5410,45 +5563,135 @@ function buildStudio3DScene(options: {
           const ct = Math.cos(th);
           const st = Math.sin(th);
           if (st >= 0) {
-            return [ct * rx, Math.pow(st, 0.88) * ryFront] as const;
+            const dL = (ct - 0.4) / 0.34;
+            const dR = (ct + 0.4) / 0.34;
+            const lobes = spec.bustBoost * st * (Math.exp(-(dL * dL)) + Math.exp(-(dR * dR)));
+            return [ct * spec.rx, st * spec.ryF + lobes] as const;
           }
-          const s2 = Math.sin(2 * th);
-          const gluteLobe = 1 + 0.14 * (s2 * s2);
-          const sacralDip = gluteCleft * Math.exp(-((ct / 0.21) * (ct / 0.21)));
-          return [ct * rx, st * ryBack * gluteLobe + sacralDip] as const;
+          const furrow = 0.0036 * Math.exp(-((ct / 0.16) * (ct / 0.16)));
+          const scap =
+            -spec.scapRelief *
+            (Math.exp(-(((ct - 0.45) / 0.24) ** 2)) + Math.exp(-(((ct + 0.45) / 0.24) ** 2))) *
+            -st;
+          return [ct * spec.rx, st * spec.ryB + furrow + scap] as const;
         },
       };
-    },
-  );
+    }
+    if (spec.kind === 'clavicle') {
+      const { pt, rAx, fAx } = spineFrame(spec.u);
+      return {
+        center: pt,
+        axisX: rAx,
+        axisY: fAx,
+        profile: (th: number) => {
+          const ct = Math.cos(th);
+          const st = Math.sin(th);
+          if (st >= 0) {
+            const jugular = -spec.notchDepth * Math.exp(-((ct / 0.14) * (ct / 0.14))) * st;
+            const scHeads =
+              spec.clavRelief *
+              0.78 *
+              (Math.exp(-(((ct - 0.2) / 0.1) ** 2)) + Math.exp(-(((ct + 0.2) / 0.1) ** 2))) *
+              st;
+            const clavBar =
+              spec.clavRelief *
+              Math.exp(-(((Math.abs(ct) - 0.52) / 0.28) ** 2)) *
+              Math.pow(st, 0.75);
+            return [ct * spec.rx, st * spec.ryF + jugular + scHeads + clavBar] as const;
+          }
+          const spineHollow = 0.003 * Math.exp(-((ct / 0.16) * (ct / 0.16))) * -st;
+          return [ct * spec.rx, st * spec.ryB + spineHollow] as const;
+        },
+      };
+    }
+    // Continuous neck station smoothly blending frame from trapezius yoke -> head orientation
+    const blend = smoothstep(spec.uNeck);
+    const rNeck = norm3(vlerp(yokeTopFrame.rAx, bodyRight, blend));
+    const fRaw = vlerp(yokeTopFrame.fAx, headAnt, blend);
+    const fOrth = sub3(fRaw, mul3(rNeck, dot3(fRaw, rNeck)));
+    const fNeck = len3(fOrth) > 1e-4 ? norm3(fOrth) : headAnt;
+    const cNeck = vlerp(yokeTopFrame.pt, neckEnd, spec.uNeck);
+    return {
+      center: cNeck,
+      axisX: rNeck,
+      axisY: fNeck,
+      profile: (th: number) => {
+        const ct = Math.cos(th);
+        const st = Math.sin(th);
+        const scm = 0.0014 * Math.exp(-(((Math.abs(ct) - 0.44) / 0.22) ** 2)) * Math.max(0, st);
+        const ryN = st >= 0 ? spec.ryF : spec.ryB;
+        return [ct * spec.rx, st * ryN + scm] as const;
+      },
+    };
+  });
+
   quads.push(
     ...makeStationLoftQuads(
-      leggingStations,
-      pelvisTone,
+      unifiedTorsoNeckStations,
+      skinRgb,
       segTorso,
       bodyAlpha,
-      0.032,
-      glutesActive && !isClay ? activePulse * 0.26 : 0,
-      16,
+      0.11,
+      0,
+      20,
       0.02,
-      0.004,
-      'fabric',
-      (stIdx, th) => {
-        // Subtle crossover high-waistband contour + delicate side seam toning
-        if (stIdx >= 6) return leggingBandRgb;
-        const sideSeam = Math.exp(-(((Math.abs(Math.cos(th)) - 1) / 0.1) ** 2));
-        if (sideSeam > 0.65 && !isClay) {
-          return [
-            Math.max(0, Math.round(pelvisTone[0] * 0.92)),
-            Math.max(0, Math.round(pelvisTone[1] * 0.93)),
-            Math.max(0, Math.round(pelvisTone[2] * 0.94)),
-          ];
+      0.012,
+      'skin',
+      undefined,
+      (bandIdx, thMid) => {
+        // Bands 0..7: High-waisted sculpted leggings + crossover waistband
+        if (bandIdx <= 7) {
+          let bandRgb = bandIdx >= 5 ? leggingBandRgb : pelvisTone;
+          if (bandIdx < 5 && !isClay) {
+            const sideSeam = Math.exp(-(((Math.abs(Math.cos(thMid)) - 1) / 0.1) ** 2));
+            if (sideSeam > 0.65) {
+              bandRgb = [
+                Math.max(0, Math.round(pelvisTone[0] * 0.92)),
+                Math.max(0, Math.round(pelvisTone[1] * 0.93)),
+                Math.max(0, Math.round(pelvisTone[2] * 0.94)),
+              ];
+            }
+          }
+          return {
+            baseRgb: bandRgb,
+            spec: 0.032,
+            emissive: glutesActive && !isClay ? activePulse * 0.26 : 0,
+            shininess: 16,
+            materialRole: 'fabric',
+          };
         }
-        return pelvisTone;
+        // Bands 8..11: Toned hourglass bare midriff
+        if (bandIdx <= 11) {
+          return { baseRgb: skinRgb, spec: 0.11, emissive: 0, shininess: 20, materialRole: 'skin' };
+        }
+        // Band 12: Delicate ivory underbust piping trim
+        if (bandIdx === 12) {
+          return {
+            baseRgb: isClay ? cropTopTone : pipingTrimRgb,
+            spec: 0.05,
+            emissive: 0,
+            shininess: 18,
+            materialRole: 'fabric',
+          };
+        }
+        // Bands 13..18: Botanical sage scoop-neck crop top
+        if (bandIdx <= 18) {
+          const isNeckTrim = !isClay && bandIdx === 18 && Math.sin(thMid) > 0.05;
+          return {
+            baseRgb: isNeckTrim ? cropTopSeamRgb : cropTopTone,
+            spec: 0.032,
+            emissive: coreActive && !isClay ? phaseT * 0.28 : 0,
+            shininess: 16,
+            materialRole: 'fabric',
+          };
+        }
+        // Bands 19..26: Upper décolleté, clavicles, trapezius yoke & continuous swan neck
+        return { baseRgb: skinRgb, spec: 0.11, emissive: 0, shininess: 20, materialRole: 'skin' };
       },
     ),
   );
 
-  // Subtle V-Crossover Legging Waistband Piping Line
+  // Subtle V-Crossover Legging Waistband & Ivory Underbust Accents
   const wbFrame = spineFrame(0.398);
   const wbRingPts: Vec3[] = [];
   for (let k = 0; k <= segTorso; k++) {
@@ -5472,158 +5715,7 @@ function buildStudio3DScene(options: {
     depthBias: -0.01,
   });
 
-  // 2B) Slender Toned Hourglass Midriff Sweep (tucked cleanly -4mm inside both hems to prevent poke-through)
-  const midriffSpecs: readonly [number, number, number, number][] = [
-    [0.375, 0.093, 0.064, 0.002],
-    [0.415, 0.094 * breathScale, 0.066 * breathScale, 0.0045],
-    [0.465, 0.096 * breathScale, 0.068 * breathScale, 0.003],
-    [0.51, 0.101 * breathScale, 0.071 * breathScale, 0.001],
-    [0.54, 0.102 * breathScale, 0.071 * breathScale, 0.0],
-  ];
-  const midriffStations: LoftStation3D[] = midriffSpecs.map(([uS, rx, ry, lordosis]) => {
-    const { pt, rAx, fAx } = spineFrame(uS);
-    return {
-      center: pt,
-      axisX: rAx,
-      axisY: fAx,
-      profile: (th: number) => {
-        const ct = Math.cos(th);
-        const st = Math.sin(th);
-        const lineaAlba = 0.0036 * Math.exp(-((ct / 0.16) * (ct / 0.16)));
-        const oblique = -0.0022 * Math.exp(-(((Math.abs(ct) - 0.58) / 0.2) ** 2)) * Math.max(0, st);
-        const erector = -0.0026 * Math.exp(-(((Math.abs(ct) - 0.34) / 0.22) ** 2)) * Math.max(0, -st);
-        return [
-          ct * rx,
-          st * ry - (st > 0 ? lineaAlba : -lineaAlba * 0.8 - lordosis) + oblique + erector,
-        ] as const;
-      },
-    };
-  });
-  quads.push(
-    ...makeStationLoftQuads(
-      midriffStations,
-      skinRgb,
-      segTorso,
-      bodyAlpha,
-      0.11,
-      0,
-      20,
-      0.003,
-      0.003,
-      'skin',
-    ),
-  );
-
-  // 2C) Botanical Sage Wrap Crop Top Sweep (7 stations, u = 0.525 .. 0.872 — ends cleanly below clavicles!)
-  const topSpecs: readonly [number, number, number, number, number, number][] = [
-    [0.525, 0.109, 0.077, 0.076, 0.0, 0.001],
-    [0.58, 0.115 * breathScale, 0.088 * breathScale, 0.079 * breathScale, 0.009, 0.002],
-    [0.645, 0.122 * breathScale, 0.098 * breathScale, 0.082 * breathScale, 0.016, 0.0035],
-    [0.715, 0.128 * breathScale, 0.101 * breathScale, 0.084 * breathScale, 0.018, 0.005],
-    [0.785, 0.133 * breathScale, 0.094 * breathScale, 0.084 * breathScale, 0.011, 0.005],
-    [0.835, 0.135, 0.085, 0.081, 0.004, 0.004],
-    [0.872, 0.133, 0.08, 0.078, 0.0, 0.002],
-  ];
-  const topStations: LoftStation3D[] = topSpecs.map(
-    ([uS, rx, ryFront, ryBack, bustBoost, scapRelief]) => {
-      const { pt, rAx, fAx } = spineFrame(uS);
-      return {
-        center: pt,
-        axisX: rAx,
-        axisY: fAx,
-        profile: (th: number) => {
-          const ct = Math.cos(th);
-          const st = Math.sin(th);
-          if (st >= 0) {
-            const dL = (ct - 0.4) / 0.34;
-            const dR = (ct + 0.4) / 0.34;
-            const lobes = bustBoost * st * (Math.exp(-(dL * dL)) + Math.exp(-(dR * dR)));
-            return [ct * rx, st * ryFront + lobes] as const;
-          }
-          const furrow = 0.0038 * Math.exp(-((ct / 0.16) * (ct / 0.16)));
-          const scap =
-            -scapRelief *
-            (Math.exp(-(((ct - 0.45) / 0.24) ** 2)) + Math.exp(-(((ct + 0.45) / 0.24) ** 2))) *
-            -st;
-          return [ct * rx, st * ryBack + furrow + scap] as const;
-        },
-      };
-    },
-  );
-  quads.push(
-    ...makeStationLoftQuads(
-      topStations,
-      cropTopTone,
-      segTorso,
-      bodyAlpha,
-      0.032,
-      coreActive && !isClay ? phaseT * 0.28 : 0,
-      16,
-      0.003,
-      0.003,
-      'fabric',
-      (stIdx, th) => {
-        if (isClay) return cropTopTone;
-        // Clean silky matte velvet crop top with subtle neckline piping trim (zero jagged stripes!)
-        if (stIdx === 6 && Math.sin(th) > 0.05) return cropTopSeamRgb;
-        return cropTopTone;
-      },
-    ),
-  );
-
-  // 2C-2) Exposed Upper Thoracic, Clavicle & Smooth Trapezius Shoulder Yoke flowing directly into Neck
-  const clavicleSpecs: readonly [number, number, number, number, number, number][] = [
-    [0.83, 0.128, 0.076, 0.074, 0.001, 0.0],
-    [0.895, 0.139, 0.076, 0.075, 0.0032, 0.002],
-    [0.955, 0.148, 0.073, 0.073, 0.0044, 0.0036],
-    [1.005, 0.136, 0.065, 0.067, 0.0038, 0.004],
-    [1.055, 0.088, 0.052, 0.054, 0.0016, 0.0022],
-    [1.105, 0.044, 0.041, 0.042, 0.0, 0.0],
-  ];
-  const clavicleStations: LoftStation3D[] = clavicleSpecs.map(
-    ([uS, rx, ryF, ryB, clavRelief, notchDepth]) => {
-      const { pt, rAx, fAx } = spineFrame(uS);
-      return {
-        center: pt,
-        axisX: rAx,
-        axisY: fAx,
-        profile: (th: number) => {
-          const ct = Math.cos(th);
-          const st = Math.sin(th);
-          if (st >= 0) {
-            const jugular = -notchDepth * Math.exp(-((ct / 0.14) * (ct / 0.14))) * st;
-            const scHeads =
-              clavRelief *
-              0.78 *
-              (Math.exp(-(((ct - 0.2) / 0.1) ** 2)) + Math.exp(-(((ct + 0.2) / 0.1) ** 2))) *
-              st;
-            const clavBar =
-              clavRelief * Math.exp(-(((Math.abs(ct) - 0.52) / 0.28) ** 2)) * Math.pow(st, 0.75);
-            return [ct * rx, st * ryF + jugular + scHeads + clavBar] as const;
-          }
-          const spineHollow = 0.003 * Math.exp(-((ct / 0.16) * (ct / 0.16))) * -st;
-          return [ct * rx, st * ryB + spineHollow] as const;
-        },
-      };
-    },
-  );
-  quads.push(
-    ...makeStationLoftQuads(
-      clavicleStations,
-      skinRgb,
-      segTorso,
-      bodyAlpha,
-      0.11,
-      0,
-      20,
-      0.003,
-      0,
-      'skin',
-    ),
-  );
-
-  // Crisp Ivory Underbust Piping Line around Wrap Crop Top Hem
-  const ubFrame = spineFrame(0.528);
+  const ubFrame = spineFrame(0.532);
   const ubRingPts: Vec3[] = [];
   for (let k = 0; k <= segTorso; k++) {
     const ang = (2 * Math.PI * k) / segTorso;
@@ -5685,51 +5777,8 @@ function buildStudio3DScene(options: {
     );
   }
 
-  // 2D) Graceful 7.5-Head Neck Column seamlessly emerging from Trapezius Yoke + Sculpted Face & Flowing Silk Hair
-  const spTan = bezier3Tan(rig.pelvis, rig.spineMid, rig.chest, 1.0);
-  let neckUp: Vec3 =
-    antN[2] > 0.35 && spTan[2] < 0.02
-      ? norm3([spTan[0], spTan[1], Math.max(-0.02, spTan[2] * 0.15)])
-      : norm3(add3(mul3(spUp, 0.35), mul3(spTan, 0.65)));
-  let headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
-  let headAnt: Vec3 =
-    len3(headAntProj) > 1e-4 ? norm3(headAntProj) : norm3(cross3(bodyRight, neckUp));
-  const rawHeadPos = add3(rig.chest, add3(mul3(neckUp, 0.158), mul3(headAnt, 0.012)));
-  const headPos: Vec3 =
-    rawHeadPos[2] < 0.115 ? [rawHeadPos[0], rawHeadPos[1], 0.115] : rawHeadPos;
-  if (rawHeadPos[2] < 0.115) {
-    neckUp = norm3(sub3(sub3(headPos, mul3(headAnt, 0.012)), rig.chest));
-    headAntProj = sub3(antN, mul3(neckUp, dot3(antN, neckUp)));
-    if (len3(headAntProj) > 1e-4) headAnt = norm3(headAntProj);
-  }
-  const neckStart = add3(rig.chest, mul3(neckUp, 0.016));
-  const neckEnd = sub3(headPos, mul3(neckUp, 0.022));
-  const neckProfileTable: readonly [number, number, number][] = [
-    [0.0, 0.056, 0.048], // Matches trapezius yoke smoothly (zero step seam!)
-    [0.18, 0.044, 0.041], // Lower cervical curve
-    [0.4, 0.037, 0.037], // Slender editorial mid-neck
-    [0.62, 0.035, 0.036], // Narrowest graceful neck waist
-    [0.8, 0.036, 0.037], // Upper neck
-    [0.92, 0.038, 0.039], // Submental jaw blend
-    [1.0, 0.04, 0.041], // Cranium base embed
-  ];
-  const neckPts = neckProfileTable.map(([uN]) => vlerp(neckStart, neckEnd, uN));
-  const neckRadii: [number, number][] = neckProfileTable.map(([, rxN, ryN]) => [rxN, ryN]);
+  // 2D) Sculpted 7.5-Head Korean Studio Face & Flowing Silk Hair seated cleanly atop unified swan neck
   quads.push(
-    ...makeTaperedTubeQuads(
-      neckPts,
-      neckRadii,
-      skinRgb,
-      segNeck,
-      bodyAlpha,
-      0.11,
-      0,
-      20,
-      headAnt,
-      0.01,
-      0.012,
-      'skin',
-    ),
     ...makeAnatomicalHeadWithHairQuads(
       headPos,
       bodyRight,
@@ -5745,7 +5794,7 @@ function buildStudio3DScene(options: {
     ),
   );
 
-  // 2E) High-Resolution 18-Station (17 rings >= 16, segs = 28) Continuous Slender Pilates Leg Sweep + Arched Grip-Sock Foot
+  // 2E) High-Resolution 21-Station Continuous Slender Pilates Leg Sweep with Gluteal Fillet & Bend-Angle Volume Preservation
   const legActive =
     rig.activeZones.includes('quads') ||
     rig.activeZones.includes('glutes') ||
@@ -5760,22 +5809,23 @@ function buildStudio3DScene(options: {
       : leggingRgb;
 
   const legProfileTable: readonly [number, number, number, number][] = [
-    [0.0, 0.08, 0.085, -0.012], // Seamless posterior glute-to-thigh sweep (zero undercut shelf!)
-    [0.07, 0.075, 0.08, -0.006], // Proximal trochanter contour
+    [0.0, 0.088, 0.092, -0.015], // Deep gluteal/trochanter fillet seamlessly embedded into pelvis
+    [0.035, 0.082, 0.086, -0.01], // Smooth hip socket transition fillet 1
+    [0.075, 0.076, 0.081, -0.005], // Smooth hip socket transition fillet 2
     [0.15, 0.069, 0.073, 0.002], // Upper thigh curve
     [0.23, 0.063, 0.066, 0.004], // Quadriceps/hamstring sweep
-    [0.31, 0.057, 0.06, 0.004], // Mid-thigh tone
-    [0.38, 0.051, 0.053, 0.003], // Lower quadriceps taper
-    [0.43, 0.047, 0.049, 0.003], // Suprapatellar slimming
-    [0.465, 0.0445, 0.0465, 0.004], // Upper patella arc
-    [0.5, 0.0435, 0.0455, 0.0045], // Smooth curved knee apex
-    [0.535, 0.042, 0.044, 0.002], // Infrapatellar arc
-    [0.58, 0.041, 0.043, -0.0025], // Upper tibial shaft
-    [0.65, 0.044, 0.048, -0.0075], // High dancer's gastrocnemius calf belly
-    [0.71, 0.043, 0.047, -0.007], // Mid calf curve
-    [0.78, 0.039, 0.042, -0.0045], // Soleus taper
-    [0.85, 0.035, 0.038, -0.002], // Lower calf slimming
-    [0.91, 0.031, 0.034, -0.001], // Supramalleolar Achilles narrow
+    [0.32, 0.056, 0.059, 0.004], // Mid-thigh tone
+    [0.39, 0.05, 0.052, 0.003], // Lower quadriceps taper
+    [0.42, 0.0475, 0.0495, 0.003], // Reinforced knee ring 1
+    [0.46, 0.045, 0.047, 0.004], // Reinforced knee ring 2
+    [0.5, 0.044, 0.046, 0.005], // Smooth curved knee apex
+    [0.54, 0.0425, 0.0445, 0.002], // Reinforced knee ring 4
+    [0.58, 0.0415, 0.0435, -0.0025], // Reinforced knee ring 5
+    [0.66, 0.044, 0.048, -0.0075], // High dancer's gastrocnemius calf belly
+    [0.73, 0.042, 0.046, -0.0065], // Mid calf curve
+    [0.8, 0.038, 0.041, -0.004], // Soleus taper
+    [0.87, 0.034, 0.037, -0.002], // Lower calf slimming
+    [0.92, 0.031, 0.034, -0.001], // Supramalleolar Achilles narrow
     [0.96, 0.029, 0.032, 0.0], // Slender ankle
     [1.0, 0.0285, 0.031, 0.0], // Legging ankle hem into sock cuff
   ];
@@ -5784,17 +5834,33 @@ function buildStudio3DScene(options: {
     [lHip, lKnee, lAnkle, lKneeBend],
     [rHip, rKnee, rAnkle, rKneeBend],
   ] as const) {
-    const hipBlend = add3(hipPt, mul3(spUp, 0.036));
+    // Gluteal/pelvis socket fillet anchor curving smoothly from pelvis into thigh
+    const hipSocketCore = add3(hipPt, add3(mul3(spUp, 0.046), mul3(antN, -0.008)));
+    const hipBlend = add3(hipPt, mul3(spUp, 0.032));
     const hemAnkle = vlerp(kneePt, anklePt, 0.86);
+    const kneeCos = Math.max(
+      -1,
+      Math.min(1, dot3(norm3(sub3(hipBlend, kneePt)), norm3(sub3(hemAnkle, kneePt)))),
+    );
+    const kneeFlexRad = Math.PI - Math.acos(kneeCos);
+    const kneeBendFactor = Math.max(
+      0,
+      Math.min(1, (kneeFlexRad - (22 * Math.PI) / 180) / ((95 * Math.PI) / 180)),
+    );
     const legPts: Vec3[] = [];
     const legRadii: [number, number][] = [];
     for (const [sVal, rxL, ryL, antShift] of legProfileTable) {
-      const [pt, tan] = sampleRounded2SegChain(hipBlend, kneePt, hemAnkle, sVal, 0.18);
+      const [rawPt, tan] = sampleRounded2SegChain(hipBlend, kneePt, hemAnkle, sVal, 0.22);
+      const socketW = sVal < 0.08 ? Math.pow(1 - sVal / 0.08, 1.6) : 0;
+      const pt = socketW > 0 ? vlerp(rawPt, hipSocketCore, socketW * 0.62) : rawPt;
       let fProj = sub3(kBend, mul3(tan, dot3(kBend, tan)));
       if (len3(fProj) < 1e-4) fProj = cross3(tan, bodyRight);
       const fAx = norm3(fProj);
-      legPts.push(add3(pt, mul3(fAx, antShift)));
-      legRadii.push([rxL, ryL]);
+      const jointW = Math.exp(-(((sVal - 0.5) / 0.085) ** 2));
+      const outerBoost = 1 + 0.12 * kneeBendFactor * jointW;
+      const latBoost = 1 + 0.08 * kneeBendFactor * jointW;
+      legPts.push(add3(pt, mul3(fAx, antShift + 0.004 * kneeBendFactor * jointW)));
+      legRadii.push([rxL * latBoost, ryL * outerBoost]);
     }
     quads.push(
       ...makeTaperedTubeQuads(
@@ -5807,7 +5873,7 @@ function buildStudio3DScene(options: {
         legActive && !isClay ? phaseT * 0.2 : 0,
         16,
         kBend,
-        0.018,
+        0.022,
         0.006,
         'fabric',
       ),
@@ -5825,24 +5891,24 @@ function buildStudio3DScene(options: {
     );
   }
 
-  // 2F) High-Resolution 18-Station Continuous Organic Shoulder-to-Wrist Arm Sweep (ZERO ball-joint sphere!)
+  // 2F) High-Resolution Continuous Organic Shoulder-to-Wrist Arm Sweep with Deltoid Fillet & Bend-Angle Volume Preservation
   const armProfileTable: readonly [number, number, number][] = [
-    [0.0, 0.044, 0.042], // Deep clavicle/axilla blend inside upper torso
-    [0.06, 0.043, 0.041], // Natural continuous acromion-deltoid slope
-    [0.13, 0.039, 0.0385], // Rounded feminine deltoid curve
-    [0.21, 0.0355, 0.036], // Deltoid insertion
-    [0.29, 0.0335, 0.0345], // Toned biceps/triceps contour
-    [0.37, 0.0315, 0.032], // Lower humerus slimming
-    [0.43, 0.0305, 0.031], // Upper elbow arc
-    [0.465, 0.03, 0.0305], // Pre-elbow bend
-    [0.5, 0.03, 0.0305], // Silky curved elbow apex (zero sharp kink!)
-    [0.535, 0.0305, 0.0305], // Post-elbow bend
-    [0.58, 0.031, 0.0295], // Proximal brachioradialis belly
-    [0.66, 0.029, 0.027], // Mid forearm taper
-    [0.74, 0.0265, 0.024], // Lower-mid forearm
-    [0.82, 0.0235, 0.0205], // Distal forearm slimming
-    [0.9, 0.021, 0.0175], // Pre-wrist narrow
-    [0.955, 0.0195, 0.0158], // Slender oval wrist
+    [0.0, 0.046, 0.044], // Full acromion-deltoid cap blending seamlessly out of trapezius yoke
+    [0.06, 0.0435, 0.042], // Smooth deltoid sweep
+    [0.13, 0.0395, 0.039], // Rounded feminine deltoid curve
+    [0.22, 0.0355, 0.036], // Deltoid insertion
+    [0.31, 0.0335, 0.0345], // Toned biceps/triceps contour
+    [0.38, 0.0315, 0.032], // Lower humerus slimming
+    [0.42, 0.031, 0.0315], // Reinforced elbow ring 1
+    [0.46, 0.0305, 0.031], // Reinforced elbow ring 2
+    [0.5, 0.0305, 0.031], // Silky curved elbow apex (zero V-kink!)
+    [0.54, 0.0305, 0.031], // Reinforced elbow ring 4
+    [0.58, 0.031, 0.03], // Reinforced elbow ring 5
+    [0.67, 0.0285, 0.0265], // Mid forearm taper
+    [0.75, 0.026, 0.0235], // Lower-mid forearm
+    [0.83, 0.023, 0.02], // Distal forearm slimming
+    [0.91, 0.0205, 0.017], // Pre-wrist narrow
+    [0.96, 0.0195, 0.0156], // Slender oval wrist
     [1.0, 0.019, 0.015], // Seamless wrist-to-palm embed
   ];
 
@@ -5859,17 +5925,35 @@ function buildStudio3DScene(options: {
     ['L', lSh, lElb, lWr, lElbowBend],
     ['R', rSh, rElb, rWr, rElbowBend],
   ] as const) {
-    // Seamless continuous shoulder root curving smoothly out of clavicle yoke -> deltoid -> elbow -> wrist
-    const shInner = sub3(vlerp(rig.chest, shPt, 0.66), mul3(spUp, 0.018));
-    const shOuter = sub3(vlerp(rig.chest, shPt, 0.94), mul3(spUp, 0.016));
-    const armPts: Vec3[] = [shInner];
-    const armRadii: [number, number][] = [[0.044, 0.042]];
+    // 2 smooth deltoid-clavicle fillet rings curving seamlessly out of upper torso yoke -> deltoid -> elbow -> wrist
+    const shInner = sub3(vlerp(rig.chest, shPt, 0.56), mul3(spUp, 0.012));
+    const shFillet1 = sub3(vlerp(rig.chest, shPt, 0.78), mul3(spUp, 0.013));
+    const shOuter = sub3(vlerp(rig.chest, shPt, 0.96), mul3(spUp, 0.015));
+    const armCos = Math.max(
+      -1,
+      Math.min(1, dot3(norm3(sub3(shOuter, elbPt)), norm3(sub3(wrPt, elbPt)))),
+    );
+    const armFlexRad = Math.PI - Math.acos(armCos);
+    const armBendFactor = Math.max(
+      0,
+      Math.min(1, (armFlexRad - (22 * Math.PI) / 180) / ((95 * Math.PI) / 180)),
+    );
+    const armPts: Vec3[] = [shInner, shFillet1];
+    const armRadii: [number, number][] = [
+      [0.052, 0.049],
+      [0.0485, 0.046],
+    ];
     for (const [sVal, rxA, ryA] of armProfileTable) {
-      const [pt] = sampleRounded2SegChain(shOuter, elbPt, wrPt, sVal, 0.2);
-      // Smoothly ease the first two rings out of the clavicle/deltoid shoulder arc
-      const blendedPt = sVal === 0 ? vlerp(shInner, pt, 0.72) : pt;
-      armPts.push(blendedPt);
-      armRadii.push([rxA, ryA]);
+      const [pt, tan] = sampleRounded2SegChain(shOuter, elbPt, wrPt, sVal, 0.22);
+      const blendedPt = sVal === 0 ? vlerp(shFillet1, pt, 0.76) : pt;
+      let fProj = sub3(eBend, mul3(tan, dot3(eBend, tan)));
+      if (len3(fProj) < 1e-4) fProj = cross3(tan, spUp);
+      const fAx = norm3(fProj);
+      const jointW = Math.exp(-(((sVal - 0.5) / 0.085) ** 2));
+      const outerBoost = 1 + 0.12 * armBendFactor * jointW;
+      const latBoost = 1 + 0.09 * armBendFactor * jointW;
+      armPts.push(add3(blendedPt, mul3(fAx, 0.0032 * armBendFactor * jointW)));
+      armRadii.push([rxA * latBoost, ryA * outerBoost]);
     }
     const forearmVec = sub3(wrPt, elbPt);
     const forearmDir = len3(forearmVec) > 1e-4 ? norm3(forearmVec) : antN;
@@ -5884,7 +5968,7 @@ function buildStudio3DScene(options: {
         shoulderActive && !isClay ? activePulse * 0.14 : 0,
         20,
         eBend,
-        0.018,
+        0.02,
         0.006,
         'skin',
       ),

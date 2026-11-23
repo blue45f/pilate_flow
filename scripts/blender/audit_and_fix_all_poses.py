@@ -175,7 +175,10 @@ try {
 def audit_all_poses(poses: list[dict]) -> dict:
     checks = {
         "floor_penetration": [],
+        "mat_supine_foot_float": [],
+        "mat_seated_pelvis_float": [],
         "reformer_supine_elbow": [],
+        "reformer_shblock_arm_clip": [],
         "reformer_strap_body_clip": [],
         "chair_foot_in_seat": [],
         "chair_shin_clips_seat": [],
@@ -259,9 +262,62 @@ def audit_all_poses(poses: list[dict]) -> dict:
                 if pt[2] < min_z:
                     checks["floor_penetration"].append(f"{eid}/{ph}: {jname}.z={pt[2]:.3f} < {min_z}")
 
+            # 1B) Mat supine/seated foot floating & grounded ischium/pelvis floating checks
+            if app == "mat":
+                for sn, ank in [("L", l_ankle), ("R", r_ankle)]:
+                    if bp in ("supine", "seated") and 0.085 < ank[2] <= 0.145:
+                        checks["mat_supine_foot_float"].append(
+                            f"{eid}/{ph}: {sn} foot floats above mat (ankle.z={ank[2]:.3f}m > 0.085m, matTop=0.046m)"
+                        )
+                if (
+                    bp in ("seated", "supine")
+                    and sp_up[2] > 0.55
+                    and ch[2] > 0.30
+                    and 0.118 < pel[2] < 0.22
+                ):
+                    checks["mat_seated_pelvis_float"].append(
+                        f"{eid}/{ph}: seated/teaser pelvis floats above mat (pelvis.z={pel[2]:.3f}m > 0.118m)"
+                    )
+
             # 2) Reformer checks
             if app == "reformer":
                 pad_top = 0.418
+                cx_ref = r.get("carriageX", 0.12)
+                if bp == "supine" and not r.get("withLongbox") and not r.get("withShortbox"):
+                    # Shoulder block AABB: x in [cx - 0.229, cx - 0.161], |y| in [0.089, 0.187], z in [0.420, 0.528]
+                    for sn, sh, eb, wr in [("L", l_sh, l_elb, l_wr), ("R", r_sh, r_elb, r_wr)]:
+                        if (
+                            (cx_ref - 0.239 <= sh[0] <= cx_ref - 0.151)
+                            and (0.079 <= abs(sh[1]) <= 0.197)
+                            and (0.415 <= sh[2] <= 0.538)
+                        ):
+                            checks["reformer_shblock_arm_clip"].append(
+                                f"{eid}/{ph}: {sn} shoulder clips ShBlock (dx={sh[0] - cx_ref:+.3f}, y={sh[1]:+.3f}, z={sh[2]:.3f})"
+                            )
+                        if (
+                            (cx_ref - 0.255 <= eb[0] <= cx_ref - 0.135)
+                            and (0.064 <= abs(eb[1]) <= 0.215)
+                            and (0.405 <= eb[2] <= 0.555)
+                        ):
+                            checks["reformer_shblock_arm_clip"].append(
+                                f"{eid}/{ph}: {sn} elbow clips ShBlock (dx={eb[0] - cx_ref:+.3f}, y={eb[1]:+.3f}, z={eb[2]:.3f})"
+                            )
+                        if r.get("ropeToHands") and eb[2] < 0.65 and abs(eb[1]) > 0.275:
+                            checks["reformer_shblock_arm_clip"].append(
+                                f"{eid}/{ph}: {sn} supine strap elbow off carriage (dx={eb[0] - cx_ref:+.3f}, y={eb[1]:+.3f}, z={eb[2]:.3f})"
+                            )
+                        for seg_a, seg_b, s_vals in [(sh, eb, (0.45, 0.75)), (eb, wr, (0.3, 0.7))]:
+                            for s_chk in s_vals:
+                                p_chk = vadd(vmul(seg_a, 1.0 - s_chk), vmul(seg_b, s_chk))
+                                if (
+                                    (cx_ref - 0.245 <= p_chk[0] <= cx_ref - 0.145)
+                                    and (0.075 <= abs(p_chk[1]) <= 0.205)
+                                    and (0.415 <= p_chk[2] <= 0.542)
+                                ):
+                                    checks["reformer_shblock_arm_clip"].append(
+                                        f"{eid}/{ph}: {sn} arm segment clips ShBlock at ({p_chk[0] - cx_ref:+.3f},{p_chk[1]:+.3f},{p_chk[2]:.3f})"
+                                    )
+                                    break
                 if bp == "supine" and not r.get("withLongbox") and not r.get("withShortbox") and not r.get("ropeToHands"):
                     for sn, eb in [("L", l_elb), ("R", r_elb)]:
                         if abs(eb[1]) > 0.265 or eb[2] < pad_top + 0.015:
@@ -416,6 +472,7 @@ def audit_all_poses(poses: list[dict]) -> dict:
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--sync", action="store_true", help="Explicitly sync poses_studio_canonical.json from TS (default)")
     parser.add_argument("--no-sync", action="store_true", help="Skip syncing poses_studio_canonical.json from TS")
     parser.add_argument("--poses", default=DEFAULT_POSES_PATH)
     parser.add_argument("--report", default=DEFAULT_REPORT_PATH)
