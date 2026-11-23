@@ -18,8 +18,13 @@ import {
   type StudioQuadFace,
 } from './studio3dWebgl2Renderer';
 import { getSharedStudio3DWebGPURenderer } from './studio3dWebgpuRenderer';
+import {
+  getCachedSkinnedHumanoidAsset,
+  skinHumanoidToStudioQuads,
+} from './skinnedHumanoidRetargeter';
 
 export type { Studio3DGpuRenderer, Studio3DRenderBackend, StudioMaterialRole };
+export type Studio3DCharacterPipeline = 'skinned-glb' | 'procedural';
 
 export type Studio3DShaderPreset = 'studio-pbr' | 'biomech-xray' | 'game-arena' | 'clay-wire';
 
@@ -3235,6 +3240,7 @@ interface Built3DScene {
   readonly activeZonesCount: number;
   readonly springStretchPct: number;
   readonly biomechTelemetry: Biomech3DTelemetry;
+  readonly characterPipeline: Studio3DCharacterPipeline;
 }
 
 /** Joint locations shared by the rendered skin, spring attachments, and model angle overlays. */
@@ -5437,6 +5443,54 @@ function buildStudio3DScene(options: {
   const yokeTopFrame = spineFrame(1.032);
   const neckEnd = sub3(headPos, add3(mul3(neckUp, 0.016), mul3(headAnt, 0.01)));
 
+  // Prefer real 21-bone Blender skinned humanoid GLB when loaded in browser (non-SVG mode);
+  // gracefully fall back to the seamless 28-station procedural body in SSR/jsdom or before load.
+  const skinnedHumanoidAsset = !svgFastMode ? getCachedSkinnedHumanoidAsset() : null;
+  const characterPipeline: Studio3DCharacterPipeline = skinnedHumanoidAsset
+    ? 'skinned-glb'
+    : 'procedural';
+
+  if (skinnedHumanoidAsset) {
+    const skinnedQuads = skinHumanoidToStudioQuads(
+      skinnedHumanoidAsset,
+      {
+        pelvis: rig.pelvis,
+        spineMid: rig.spineMid,
+        chest: rig.chest,
+        headPos,
+        headAnt,
+        neckUp,
+        bodyRight,
+        pelvisRight: rig.pelvisRight ?? bodyRight,
+        lSh,
+        lElb,
+        lWr,
+        rSh,
+        rElb,
+        rWr,
+        lHip,
+        lKnee,
+        lAnkle,
+        rHip,
+        rKnee,
+        rAnkle,
+        lKneeBend,
+        rKneeBend,
+        lElbowBend,
+        rElbowBend,
+        breathScale,
+      },
+      {
+        shader,
+        activeZones: rig.activeZones,
+        phaseT,
+        showBiomechOverlay,
+      },
+    );
+    for (let sqi = 0; sqi < skinnedQuads.length; sqi++) {
+      quads.push(skinnedQuads[sqi]!);
+    }
+  } else {
   // 2A) Unified Single Continuous 28-Station Torso + Neck Loft Mesh (ZERO seams across leggings, midriff, crop top, clavicles & neck!)
   type UnifiedTorsoStationSpec =
     | {
@@ -5984,6 +6038,7 @@ function buildStudio3DScene(options: {
       ),
     );
   }
+  }
 
   shadowAnchors.push({ pos: [rig.pelvis[0], rig.pelvis[1], 0.004], rx: 0.42, ry: 0.2 });
 
@@ -6222,6 +6277,7 @@ function buildStudio3DScene(options: {
       comHeightCm,
       activeSpringLabel,
     },
+    characterPipeline,
   };
 }
 
@@ -6976,6 +7032,7 @@ export function renderRealtimeStudio3DFrame({
   readonly biomechTelemetry: Biomech3DTelemetry;
   readonly hotspots: readonly Studio3DHotspot[];
   readonly renderBackend: Studio3DRenderBackend;
+  readonly characterPipeline: Studio3DCharacterPipeline;
 } {
   const scene = buildStudio3DScene({
     exercise,
@@ -7068,6 +7125,7 @@ export function renderRealtimeStudio3DFrame({
     biomechTelemetry: scene.biomechTelemetry,
     hotspots,
     renderBackend,
+    characterPipeline: scene.characterPipeline,
   };
 }
 

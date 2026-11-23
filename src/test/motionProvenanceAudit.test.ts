@@ -2,7 +2,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ALL_STUDIO_GLB_ASSETS } from '../data/blenderStudioGlbManifest';
+import {
+  ALL_STUDIO_GLB_ASSETS,
+  STUDIO_SKINNED_INSTRUCTOR_GLB_META,
+} from '../data/blenderStudioGlbManifest';
 import coreAbdominalLedger from '../data/coreAbdominalSourceLedger.json';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
@@ -197,6 +200,7 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       ...ALL_STUDIO_GLB_ASSETS.map((meta) =>
         path.join(rootDir, 'public', meta.url.replace(/^\//, '')),
       ),
+      path.join(rootDir, 'public', STUDIO_SKINNED_INSTRUCTOR_GLB_META.url.replace(/^\//, '')),
       path.join(rootDir, 'public/models/studio3d/atelier-reformer-v9.glb'),
     ]);
     expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
@@ -215,6 +219,22 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       expect(meta.mobileHeroScore, meta.fileName).toBe(100);
       expect(meta.arkitCompatible, meta.fileName).toBe(true);
     }
+    const skinnedGlbPath = path.join(
+      rootDir,
+      'public',
+      STUDIO_SKINNED_INSTRUCTOR_GLB_META.url.replace(/^\//, ''),
+    );
+    expect(existsSync(skinnedGlbPath), STUDIO_SKINNED_INSTRUCTOR_GLB_META.fileName).toBe(true);
+    const skinnedBuf = readFileSync(skinnedGlbPath);
+    expect(skinnedBuf.readUInt32LE(0)).toBe(0x46546c67);
+    expect(skinnedBuf.readUInt32LE(8)).toBe(STUDIO_SKINNED_INSTRUCTOR_GLB_META.fileBytes);
+    expect(createHash('sha256').update(skinnedBuf).digest('hex')).toBe(
+      STUDIO_SKINNED_INSTRUCTOR_GLB_META.sha256,
+    );
+    expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.boneCount).toBe(21);
+    expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.drawCalls).toBe(1);
+    expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.glbForgeScore).toBe(100);
+    expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.mobileHeroScore).toBe(100);
     const foundUnregisteredBinaryAssets = scannedFiles.filter(
       (filePath) =>
         forbidden3dOrMocapExts.has(path.extname(filePath).toLowerCase()) &&

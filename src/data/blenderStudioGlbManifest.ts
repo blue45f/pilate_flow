@@ -1,7 +1,7 @@
 import type { ApparatusType } from '../types/pilates';
 
 export interface StudioApparatusGlbMeta {
-  readonly apparatus: ApparatusType | 'practitioner';
+  readonly apparatus: ApparatusType | 'practitioner' | 'skinned-instructor';
   readonly labelKo: string;
   readonly url: string;
   readonly fileName: string;
@@ -9,6 +9,7 @@ export interface StudioApparatusGlbMeta {
   readonly triangles: number;
   readonly vertices: number;
   readonly drawCalls: number;
+  readonly boneCount?: number;
   readonly glbForgeScore: number;
   readonly mobileHeroScore: number;
   readonly arkitCompatible: boolean;
@@ -122,6 +123,25 @@ export const STUDIO_PRACTITIONER_GLB_META: StudioApparatusGlbMeta = {
   generator: 'Blender 5.3.0',
   summaryKo:
     '7.5등신 한국 아틀리에 강사 조형 · V라인 페이셜·레이어드 커튼뱅·실크 포니테일·Y분기 무봉제 골반/다리/어깨/스쿱 크롭탑 통합 인체 · 5지 댄서 손·크리스크로스 발레 그립삭스 정본',
+};
+
+export const STUDIO_SKINNED_INSTRUCTOR_GLB_META: StudioApparatusGlbMeta = {
+  apparatus: 'skinned-instructor',
+  labelKo: '21본 단일 스킨드 휴머노이드 강사 정본 (.glb)',
+  url: '/models/pilates-studio/instructor-skinned-v5.glb',
+  fileName: 'instructor-skinned-v5.glb',
+  fileBytes: 548392,
+  triangles: 13536,
+  vertices: 7042,
+  drawCalls: 1,
+  boneCount: 21,
+  glbForgeScore: 100,
+  mobileHeroScore: 100,
+  arkitCompatible: true,
+  sha256: 'cb3695a5d3ac20c7e2c0338479acbd4526c8059d04769c148fd314cb927448e8',
+  generator: 'Blender 5.3.0',
+  summaryKo:
+    '21본 아머처(IBM 포함) · 4본 에르미트 가중치 단일 무봉제 수밀 휴머노이드 메시 · 실시간 WebGPU 1,752동작 본 리타게팅 정본',
 };
 
 export const ALL_STUDIO_GLB_ASSETS: readonly StudioApparatusGlbMeta[] = Object.freeze([

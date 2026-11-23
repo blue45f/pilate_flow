@@ -55,6 +55,10 @@ import {
   readNavigatorGpu,
 } from '../utils/studio3dWebgpuRenderer';
 import {
+  getCachedSkinnedHumanoidAsset,
+  loadSharedSkinnedHumanoidAsset,
+} from '../utils/skinnedHumanoidRetargeter';
+import {
   createStudio3dResourceGuard,
   readAmbientDevice3dSignals,
   resolveAdaptive3dFrameBudget,
@@ -358,6 +362,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   );
   const gpuRendererRef = useRef<Studio3DGpuRenderer | null>(null);
   const [renderBackend, setRenderBackend] = useState<Studio3DRenderBackend>('canvas2d');
+  const [skinnedCharacterReady, setSkinnedCharacterReady] = useState<boolean>(
+    () => getCachedSkinnedHumanoidAsset() !== null,
+  );
   const yawRef = useRef<number>(yawDeg);
   const pitchRef = useRef<number>(pitchDeg);
   const lastDrawSigRef = useRef<string>('');
@@ -465,6 +472,20 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     };
   }, []);
 
+  useEffect(() => {
+    if (getCachedSkinnedHumanoidAsset() !== null) return;
+    let cancelled = false;
+    void loadSharedSkinnedHumanoidAsset().then((asset) => {
+      if (cancelled || !asset) return;
+      setSkinnedCharacterReady(true);
+      lastDrawSigRef.current = '';
+      invalidateViewport();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const paintFrame = useCallback(
     (overridePoseT?: number, overrideYawDeg?: number, force = false, overridePitchDeg?: number) => {
       const canvas = canvasRef.current;
@@ -519,6 +540,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         cssH,
         dpr.toFixed(2),
         activeGpu?.backend ?? 'canvas2d',
+        skinnedCharacterReady ? 'skinned-glb' : 'procedural',
         viewportVersion,
       ].join('|');
 
@@ -583,6 +605,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       selectedHotspotId,
       shader,
       showBiomechOverlay,
+      skinnedCharacterReady,
       springOverride,
       viewportVersion,
       visualPhase.pose,
@@ -916,6 +939,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-frame-budget-tier={frameBudget.tier}
       data-target-fps={String(frameBudget.targetFps)}
       data-render-backend={renderBackend}
+      data-character-pipeline={skinnedCharacterReady ? 'skinned-glb' : 'procedural'}
       data-3d-rig-scope={dedicated3d ? 'dedicated-3d-rig' : 'procedural-3d-synthesis'}
       data-3d-pose-feature={rigMeta.poseFeatureKo}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
@@ -1214,6 +1238,20 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
             {mirrored ? ' · 반전' : ''}
           </span>
+          {skinnedCharacterReady && (
+            <span
+              className="pf-orbit3d-badge"
+              data-testid="studio-3d-skinned-badge"
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                borderRadius: '6px',
+                wordBreak: 'keep-all',
+              }}
+            >
+              스킨드 3D
+            </span>
+          )}
         </div>
         {selectedHotspot && (
           <div
