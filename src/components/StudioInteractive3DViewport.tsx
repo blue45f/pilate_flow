@@ -1344,9 +1344,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         </p>
       )}
       <p className="pf-orbit3d-provenance-note" data-testid="studio-3d-provenance-note">
-        출처 수준: {dedicated3d ? '카탈로그 절차적 3D 참조 도해' : '자세 유형 기반 대표 3D 도해'}{' '}
-        (정적 이미지와 별개 · 외부 전문가 모션 검수 미완료) · 개인별 생체역학 측정, 의료적 교정,
-        통증 치료 효과를 주장하지 않습니다.
+        {dedicated3d ? '3D 동작 자세 가이드' : '대표 자세 3D 참고 가이드'} · 회원 체형과 컨디션에
+        맞게 가동범위와 스프링을 조절해 주세요. 개인별 생체역학 측정이나 의료적 교정·치료 효과를
+        주장하지 않습니다.
       </p>
       {binding?.sourceUrl && (
         <div className="pf-orbit3d-source-row">

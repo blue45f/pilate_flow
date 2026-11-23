@@ -93,7 +93,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background: var(--pf-unslop-raised, #efe9df);
   color: var(--pf-unslop-text-secondary, #5e554a);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.3;
   word-break: keep-all;
@@ -249,7 +249,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background: var(--pf-unslop-card, #ffffff);
   color: var(--pf-unslop-text-primary, #1f1b16);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   box-shadow: inset 0 0 0 1px var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
@@ -363,7 +363,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-muted, #7b7266);
   font-variant-numeric: tabular-nums;
 }
@@ -575,7 +575,7 @@
 }
 
 .pf-rehearsal-chunk-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
@@ -606,7 +606,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background: transparent;
   color: var(--pf-unslop-text-secondary, #5e554a);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.3;
   cursor: pointer;
@@ -650,7 +650,7 @@
 .pf-rehearsal-step-sub {
   display: block;
   margin-top: 2px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: var(--pf-unslop-text-muted, #7b7266);
   line-height: 1.4;
@@ -675,7 +675,7 @@
   border-radius: var(--pf-unslop-radius-row, 8px);
   background: var(--pf-unslop-card, #ffffff);
   color: var(--pf-unslop-text-secondary, #5e554a);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -699,7 +699,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background: var(--pf-unslop-raised, #efe9df);
   color: var(--pf-unslop-text-muted, #7b7266);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -747,7 +747,7 @@
 
 .pf-rehearsal-step-num {
   flex: 0 0 auto;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--pf-unslop-text-muted, #7b7266);
@@ -804,7 +804,7 @@
   }
 
   .pf-rehearsal-mode-tab {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     padding: 6px 4px;
   }
 

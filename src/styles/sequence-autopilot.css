@@ -52,7 +52,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.4;
   color: var(--pf-unslop-accent, #355441);
@@ -256,7 +256,7 @@
 }
 
 .pf-autopilot-label {
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
@@ -334,7 +334,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
@@ -346,7 +346,7 @@
   gap: 4px;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
@@ -490,7 +490,7 @@
 
 .pf-autopilot-row-note {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
@@ -513,7 +513,7 @@
   background-color: #ffffff;
   color: var(--pf-unslop-accent, #355441);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -653,7 +653,7 @@
 }
 
 .pf-autopilot-anchor-item-sub {
-  font-size: 12px;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-variant-numeric: tabular-nums;
 }
@@ -723,7 +723,7 @@
   border-radius: 6px;
   background-color: #ffffff;
   color: var(--pf-unslop-accent, #355441);
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -768,7 +768,7 @@
   }
 
   .pf-autopilot-tab {
-    font-size: 12px;
+    font-size: 0.8125rem;
     padding: 6px 4px;
   }
 

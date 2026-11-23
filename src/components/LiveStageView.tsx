@@ -3294,7 +3294,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             )}
           </p>
           <p className="teaching-safety">
-            수업 전 회원 컨디션과 기구·스프링 설정을 확인하세요.
+            실제 수행 전 몸 상태와 기구 설정을 확인하세요.
           </p>
           <section
             className="teaching-cue-section teaching-voice-section"
@@ -3844,10 +3844,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           title="수업 중 정렬 거울"
           className="pf-pose-camera-dialog"
         >
-          <MobilePoseCameraGuide
-            exercise={exercise ?? null}
-            onClose={() => setPoseMirrorOpen(false)}
-          />
+          <MobilePoseCameraGuide exercise={exercise ?? null} />
         </LightDismissDialog>
       )}
       {exitDialogs}

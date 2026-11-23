@@ -704,7 +704,8 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                 <p className="pf-detail-quick-cue-box__caution">
                   <ShieldAlert size={15} strokeWidth={1.5} aria-hidden="true" />
                   <span>
-                    <strong>주의 포인트:</strong> {exercise.precautions}
+                    <strong>주의 포인트:</strong>{' '}
+                    {exercise.precautions.replace(/^강사 검토 전 계획 자료입니다\.\s*/u, '')}
                   </span>
                 </p>
               )}

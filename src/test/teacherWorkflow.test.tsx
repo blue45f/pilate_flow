@@ -427,7 +427,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     cleanup();
     usePilatesStore.setState({ activeSteps: [{ ...lockedStep, exerciseId: note.id }] });
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByText('계획 검토 전 · 원본 영상 일부 확인')).toBeInTheDocument();
+    expect(screen.queryByText('계획 검토 전 · 원본 영상 일부 확인')).not.toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(
@@ -628,7 +628,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(getExerciseReviewState(edited)).toBe('stale');
     cleanup();
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByText('변경 후 재검토 필요 · 원본 영상 일부 확인')).toBeInTheDocument();
+    expect(screen.queryByText('변경 후 재검토 필요 · 원본 영상 일부 확인')).not.toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(

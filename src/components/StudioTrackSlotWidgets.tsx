@@ -301,10 +301,7 @@ export const WorkbenchLessonAndAutoSlotWidget: React.FC<LessonModeSlotWidgetProp
           title="온디바이스 실시간 정렬 거울"
           className="pf-pose-camera-dialog"
         >
-          <MobilePoseCameraGuide
-            exercise={currentFocusExercise}
-            onClose={() => setCameraOpen(false)}
-          />
+          <MobilePoseCameraGuide exercise={currentFocusExercise} />
         </LightDismissDialog>
       )}
     </div>

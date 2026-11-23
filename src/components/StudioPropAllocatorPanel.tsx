@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -232,7 +232,13 @@ export const StudioPropAllocatorPanel: React.FC<StudioPropAllocatorPanelProps> =
     [roleMode],
   );
 
+  const hasMountedFreelanceRef = useRef(false);
+
   useEffect(() => {
+    if (!hasMountedFreelanceRef.current) {
+      hasMountedFreelanceRef.current = true;
+      return;
+    }
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(

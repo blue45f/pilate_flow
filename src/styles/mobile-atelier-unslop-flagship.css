@@ -97,7 +97,7 @@ html body #root .flow-app .teaching-review-advisory {
   inset: auto !important;
   align-self: flex-start;
   margin-top: 2px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-flagship-accent);
   background: var(--pf-flagship-linen);
@@ -447,7 +447,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-anatomy-muscle-figure figcaption {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.3;
   color: var(--pf-flagship-muted);
   text-align: center;
@@ -561,7 +561,7 @@ html body #root .flow-app .teaching-review-advisory {
   border-radius: 6px;
   background: #f6ebe8;
   color: #7a3124;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -572,7 +572,7 @@ html body #root .flow-app .teaching-review-advisory {
   border-radius: 6px;
   background: var(--pf-flagship-accent-soft);
   color: var(--pf-flagship-accent);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -847,7 +847,7 @@ html body #root .flow-app .teaching-review-advisory {
   border-radius: 6px;
   background: var(--pf-flagship-accent);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -896,7 +896,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-golden-combo-card__apparatus {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-flagship-muted);
   font-variant-numeric: tabular-nums;
@@ -921,7 +921,7 @@ html body #root .flow-app .teaching-review-advisory {
   align-items: center;
   gap: 4px;
   margin-top: 2px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-flagship-accent);
   font-weight: 500;
 }
@@ -946,7 +946,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-remix-base-summary__kicker {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-flagship-muted);
 }
@@ -1529,17 +1529,25 @@ html body #root .flow-app .teaching-review-advisory {
     height: 48px;
   }
 
-  /* Tidy workbench header & brief fields on mobile */
+  /* Tidy workbench header & brief fields on mobile: keep 6-col grid, make class title full width */
   html body #root .flow-app .flow-class-brief {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 10px 8px !important;
     padding: 12px !important;
   }
 
-  html body #root .flow-app .flow-class-brief .flow-class-title,
-  html body #root .flow-app .flow-class-brief .flow-condition-button,
+  html body #root .flow-app .flow-class-brief .flow-class-title {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  html body #root .flow-app .flow-class-brief .flow-condition-button {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
   html body #root .flow-app .flow-class-brief .flow-class-brief-tags {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1 !important;
   }
 
   html body #root .flow-app .flow-location-copy-bar {
@@ -1572,12 +1580,21 @@ html body #root .flow-app .teaching-review-advisory {
   }
 
   .pf-editorial-apparatus-hero {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    padding: 8px 10px;
   }
 
   .pf-editorial-apparatus-hero__media {
-    width: 100%;
-    height: 112px;
+    width: 76px;
+    height: 54px;
+  }
+
+  .pf-editorial-apparatus-hero__caption p {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -1621,7 +1638,7 @@ html body #root .flow-app .teaching-review-advisory {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #355441;
   font-variant-numeric: tabular-nums;
@@ -1786,7 +1803,7 @@ html body #root .flow-app .teaching-review-advisory {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #5e554a;
 }
 
@@ -1826,7 +1843,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-world-card__spring-row small {
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: #5e554a;
 }
 
@@ -1878,7 +1895,7 @@ html body #root .flow-app .teaching-review-advisory {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: #4f483f;
 }
 
@@ -1917,7 +1934,7 @@ html body #root .flow-app .teaching-review-advisory {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #5e554a;
 }
@@ -1959,7 +1976,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-tree-node__school {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: #5e554a;
 }
 
@@ -1970,7 +1987,7 @@ html body #root .flow-app .teaching-review-advisory {
 }
 
 .pf-tree-node__main small {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: #5e554a;
 }
 
@@ -1986,4 +2003,202 @@ html body #root .flow-app .teaching-review-advisory {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+/* ============================================================================
+   Loop-Engineer Visual QA Polish (Mobile 320px–768px & Detail Modal)
+   ============================================================================ */
+
+/* Solid opaque modal footer flush to bottom so scrolled text never bleeds under CTA */
+.atelier-modal-body:has(.library-modal-footer) {
+  padding-bottom: 0 !important;
+}
+
+.pf-p07-clean-detail .library-modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: 12px;
+  padding: 12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #ffffff !important;
+  border-top: 1px solid rgba(31, 27, 22, 0.08);
+}
+
+/* Wrap 3D camera tools cleanly so the 5th+ chip never clips past the modal right edge */
+.pf-orbit3d-modeler-strip {
+  display: flex;
+  flex-wrap: wrap !important;
+  gap: 6px;
+}
+
+/* Never split -30초 / +30초 duration stepper labels onto two lines */
+html body #root .flow-app .step-quick-duration-stepper {
+  flex-wrap: nowrap;
+}
+
+html body #root .flow-app .step-quick-duration-stepper button,
+html body #root .flow-app .step-quick-duration-stepper .v3-step-time {
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+/* Prevent AI quick bar & its recipe strip from widening or clipping past card right edge */
+html body #root .flow-app .pf-ai-quick-bar,
+html body #root .flow-app .pf-ai-quick-bar--collapsed,
+html body #root .flow-app .pf-ai-quick-bar__collapsed-summary,
+html body #root .flow-app .pf-ai-quick-bar__collapsed-body,
+html body #root .flow-app .pf-ai-quick-bar__body,
+html body #root .flow-app .pf-ai-quick-bar__top,
+html body #root .flow-app .pf-ai-quick-bar__form {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+html body #root .flow-app .pf-ai-quick-bar {
+  overflow-x: clip;
+  display: block;
+}
+
+html body #root .flow-app .pf-ai-quick-bar__recipes {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  overscroll-behavior-x: contain;
+}
+
+html body #root .flow-app .pf-ai-quick-bar__form {
+  flex-wrap: nowrap !important;
+  gap: 8px;
+}
+
+html body #root .flow-app .pf-ai-quick-bar__field {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+html body #root .flow-app .pf-ai-quick-bar__input {
+  width: 0 !important;
+  min-width: 0 !important;
+  flex: 1 1 0% !important;
+}
+
+html body #root .flow-app .pf-ai-quick-bar__submit,
+html body #root .flow-app .pf-ai-quick-bar__shuffle {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* Calm spacious mobile top header: move member switcher to drawer on narrow viewports */
+  html body #root .flow-app .topbar .pf-role-switcher {
+    display: none !important;
+  }
+
+  /* Flush mobile bottom nav to viewport bottom so scrolled cards never peek underneath */
+  html body #root .flow-app .bottom-nav {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    background: rgba(250, 248, 244, 0.98) !important;
+    border-top: 1px solid rgba(31, 27, 22, 0.1) !important;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    box-shadow: 0 -4px 16px rgba(31, 27, 22, 0.06) !important;
+  }
+
+  /* Unobstructed Atlas browsing: un-float redundant dark bottom capsule so cards are never covered */
+  html body #root .flow-app .pf-atlas-sequence-dock {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 14px 0 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Compress Atlas above-the-fold filters into crisp single-row scrollable strips */
+  html body #root .flow-app .flow-atlas__toolbar {
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  html body #root .flow-app .flow-atlas__chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    gap: 6px !important;
+    padding-bottom: 2px;
+  }
+
+  html body #root .flow-app .flow-atlas__chips::-webkit-scrollbar,
+  html body #root .flow-app .pf-atlas-difficulty-row::-webkit-scrollbar,
+  html body #root .flow-app .teaching-stage .teaching-presentation-switch::-webkit-scrollbar {
+    display: none;
+  }
+
+  html body #root .flow-app .flow-atlas__chips > button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body #root .flow-app .pf-atlas-difficulty-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    gap: 6px !important;
+  }
+
+  html body #root .flow-app .pf-atlas-difficulty-row .pf-difficulty-filter-chip {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  /* Keep Atlas favorite heart button cleanly inside card padding */
+  html body #root .flow-app .flow-atlas--unslop .flow-atlas__favorite-button {
+    margin: 0 12px 0 auto !important;
+  }
+
+  /* Make Workbench class title field full-width on mobile */
+  html body #root .flow-app .flow-class-brief .flow-class-title,
+  html body #root .flow-app .flow-class-brief .flow-class-title input {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Uniform 44px single-row horizontal mode switcher on LiveStageView */
+  html body #root .flow-app .teaching-stage .teaching-presentation-switch {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 2px 0 4px !important;
+  }
+
+  html body #root .flow-app .teaching-stage .teaching-presentation-switch button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 14px !important;
+  }
+
+  /* Tighter spacing for mobile workbench simple action bar above flush bottom nav */
+  html body #root .flow-app .pf-mobile-simple-seq-bar {
+    bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }

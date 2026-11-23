@@ -904,7 +904,10 @@ export function buildSequenceChunkMap(
           ? uniqueSprings[0] === 'Bodyweight'
             ? '맨몸'
             : `${uniqueSprings[0]} 유지`
-          : uniqueSprings.slice(0, 2).join(' → ');
+          : uniqueSprings
+              .slice(0, 2)
+              .map((s) => (s === 'Bodyweight' ? '맨몸' : s))
+              .join(' → ');
 
     const springChanges = Math.max(0, uniqueSprings.length - 1);
     const transitionHintKo =

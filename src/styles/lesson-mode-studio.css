@@ -163,7 +163,7 @@
 }
 
 .lms-section-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-unslop-text-muted-on-linen, #6b6257);
   font-variant-numeric: tabular-nums;
@@ -184,7 +184,7 @@
   background-color: var(--pf-unslop-bg, #faf8f4);
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -219,7 +219,7 @@
 }
 
 .lms-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
@@ -350,7 +350,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background-color: #e4eadf;
   color: var(--pf-unslop-accent, #355441);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.3;
@@ -379,7 +379,7 @@
 }
 
 .lms-tip-swap-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-secondary, #5e554a);
 }
 
@@ -408,7 +408,7 @@
 }
 
 .lms-recap-date {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-unslop-text-muted-on-linen, #6b6257);
   font-variant-numeric: tabular-nums;
@@ -421,7 +421,7 @@
 }
 
 .lms-recap-kicker {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-unslop-accent, #355441);
 }
@@ -451,7 +451,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--pf-unslop-text-primary, #1f1b16);
 }
 
@@ -500,7 +500,7 @@
 }
 
 .lms-recap-item-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-unslop-accent, #355441);
   flex-shrink: 0;
@@ -516,7 +516,7 @@
 
 .lms-disclaimer {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--pf-unslop-text-muted-on-linen, #6b6257);
 }
@@ -635,7 +635,7 @@
 }
 
 .lms-kpi-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--pf-unslop-text-muted-on-linen, #6b6257);
 }
@@ -739,7 +739,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background-color: var(--pf-unslop-accent, #355441);
   color: #fffef9;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -775,7 +775,7 @@
 }
 
 .lms-tier-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--pf-unslop-accent, #355441);
   padding-top: 1px;
@@ -927,7 +927,7 @@
   border-radius: var(--pf-unslop-radius-keycap, 6px);
   background-color: var(--pf-unslop-bg, #faf8f4);
   color: var(--pf-unslop-text-primary, #1f1b16);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -1030,7 +1030,7 @@
   background-color: #ffffff;
   color: var(--pf-unslop-text-secondary, #5e554a);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1086,7 +1086,7 @@
 
 .mpg-snap-label {
   padding: 6px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   text-align: center;
   color: var(--pf-unslop-text-secondary, #5e554a);
@@ -1104,7 +1104,7 @@
   margin: 14px 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--pf-unslop-text-muted-on-linen, #6b6257);
   display: flex;

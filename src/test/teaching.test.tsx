@@ -80,7 +80,7 @@ describe('teaching timer and honest session records', () => {
     expect(screen.getByText(/실제 수행 전 몸 상태와 기구 설정을 확인하세요/)).toBeVisible();
   });
   it.each(['pending', 'stale'] as const)(
-    'permits valid %s material with an advisory and unchanged review records',
+    'permits valid %s material without review banner clutter and with unchanged review records',
     (reviewState) => {
       const blocked =
         reviewState === 'pending'
@@ -88,13 +88,7 @@ describe('teaching timer and honest session records', () => {
           : { ...exercises[0], springs: 'changed after review' };
       usePilatesStore.setState({ exercises: [blocked, exercises[1]] });
       render(<LiveStageView onOpenLogModal={vi.fn()} />);
-      expect(
-        screen.getByText(
-          reviewState === 'pending'
-            ? '계획 검토 전 · 외부 출처 미등록'
-            : '변경 후 재검토 필요 · 외부 출처 미등록',
-        ),
-      ).toBeInTheDocument();
+      expect(screen.queryByText(/계획 검토 전|변경 후 재검토 필요/)).not.toBeInTheDocument();
       expect(screen.getByRole('timer')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
       expect(usePilatesStore.getState().exercises[0]).toEqual(blocked);
