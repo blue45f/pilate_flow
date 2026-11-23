@@ -1,0 +1,1201 @@
+/* ==========================================================================
+   Pilates Flow Atelier — 강사 동작 숙지·마스터 훈련소 (Movement Mastery Studio)
+   Calm Atelier Tokens · >= 13px Floor · >= 44px Touch Targets · 0px Overflow
+   ========================================================================== */
+
+.pf-mastery-panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--pf-unslop-radius-card, 16px);
+  background: var(--pf-unslop-card, #ffffff);
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-family: var(--pf-font-sans, 'Pretendard Variable', Pretendard, sans-serif);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-mastery-panel *,
+.pf-mastery-panel *::before,
+.pf-mastery-panel *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Header & Progress Strip ---------- */
+.pf-mastery-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-mastery-header__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pf-mastery-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.pf-mastery-title {
+  margin: 0;
+  font-size: 1.1875rem;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-mastery-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-kpi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-kpi-pill strong {
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Mode Tabs (3 Learning Modes) ---------- */
+.pf-mastery-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-raised, #efe9df);
+}
+
+.pf-mastery-tab {
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: transparent;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-tab:hover {
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-tab:active {
+  transform: scale(0.98);
+}
+
+.pf-mastery-tab.is-active {
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-accent, #355441);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pf-mastery-tab:focus-visible,
+.pf-mastery-btn:focus-visible,
+.pf-mastery-chip-btn:focus-visible,
+.pf-mastery-deck-item:focus-visible,
+.pf-mastery-veil-btn:focus-visible,
+.pf-mastery-quiz-option:focus-visible,
+.pf-mastery-rate-btn:focus-visible,
+.pf-mastery-apparatus-row:focus-visible {
+  outline: 2px solid var(--pf-unslop-accent, #355441);
+  outline-offset: 2px;
+}
+
+/* ---------- Deck Switcher & Exercise Navigator ---------- */
+.pf-mastery-deck-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-mastery-deck-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-mastery-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-mastery-chip-btn {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-chip-btn:hover {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-chip-btn:active {
+  transform: scale(0.98);
+}
+
+.pf-mastery-chip-btn.is-active {
+  background: var(--pf-unslop-accent, #355441);
+  border-color: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-mastery-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-stepper-count {
+  min-width: 52px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-btn:hover:not(:disabled) {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-mastery-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pf-mastery-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pf-mastery-btn--primary {
+  background: var(--pf-unslop-accent, #355441);
+  border-color: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-mastery-btn--primary:hover:not(:disabled) {
+  background: var(--pf-unslop-accent-hover, #2e4a3a);
+  border-color: var(--pf-unslop-accent-hover, #2e4a3a);
+  color: #ffffff;
+}
+
+.pf-mastery-deck-rail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: none;
+  padding-bottom: 2px;
+  max-width: 100%;
+}
+
+.pf-mastery-deck-item {
+  flex: 0 0 auto;
+  min-height: 44px;
+  max-width: 220px;
+  padding: 8px 12px;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  text-align: left;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-deck-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-mastery-deck-item.is-active {
+  background: #edf4ef;
+  border-color: var(--pf-unslop-accent, #355441);
+  color: var(--pf-unslop-accent, #355441);
+  font-weight: 600;
+}
+
+.pf-mastery-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+  background: rgba(31, 27, 22, 0.2);
+}
+
+.pf-mastery-status-dot.is-practicing {
+  background: #a46b2c;
+}
+
+.pf-mastery-status-dot.is-ready {
+  background: #4e7c61;
+}
+
+.pf-mastery-status-dot.is-mastered {
+  background: #355441;
+}
+
+/* ---------- Active Exercise Identity Row ---------- */
+.pf-mastery-exercise-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-mastery-exercise-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.pf-mastery-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-mastery-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-tag--status-unseen {
+  background: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-mastery-tag--status-practicing {
+  background: #f5efe2;
+  color: #674b1a;
+}
+
+.pf-mastery-tag--status-ready {
+  background: #edf4ef;
+  color: #244835;
+}
+
+.pf-mastery-tag--status-mastered {
+  background: #355441;
+  color: #ffffff;
+}
+
+.pf-mastery-tag--reason {
+  background: rgba(53, 84, 65, 0.08);
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-exercise-name {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-exercise-en {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--pf-unslop-text-muted, #7b7266);
+}
+
+.pf-mastery-voice-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.pf-mastery-review-meta {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--pf-unslop-text-muted-on-linen, #6b6257);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Tab 1: Visual Stage (3D + Anatomy, Zero Overlays) ---------- */
+.pf-mastery-visual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pf-mastery-visual-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  min-width: 0;
+}
+
+.pf-mastery-pane-heading {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-artwork-frame {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: #f2eee5;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-mastery-artwork-frame .exercise-motion-artwork,
+.pf-mastery-artwork-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.pf-mastery-phase-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.pf-mastery-anatomy-frame {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: #f3f5ee;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-mastery-anatomy-img,
+.pf-mastery-anatomy-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pf-mastery-anatomy-caption {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-mastery-muscle-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-mastery-muscle-chip {
+  padding: 4px 8px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: #edf4ef;
+  color: #244835;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+/* ---------- Blind Active Recall Controls & Sections ---------- */
+.pf-mastery-recall-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: #f3f5ee;
+}
+
+.pf-mastery-recall-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-study-sections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf-mastery-study-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  min-width: 0;
+}
+
+.pf-mastery-block-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-veil-btn {
+  min-height: 88px;
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px dashed rgba(53, 84, 65, 0.35);
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-accent, #355441);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-veil-btn:hover {
+  background: #edf4ef;
+  border-color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-veil-btn:active {
+  transform: scale(0.98);
+}
+
+.pf-mastery-body-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-sub-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-mastery-checklist,
+.pf-mastery-cue-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-fault-box {
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-mastery-fault-kicker {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #7a3124;
+}
+
+.pf-mastery-fix-kicker {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+}
+
+/* ---------- 3-Button Spaced Repetition Rating Bar ---------- */
+.pf-mastery-rating-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-mastery-rating-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pf-mastery-rate-btn {
+  min-height: 54px;
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-rate-btn:active {
+  transform: scale(0.98);
+}
+
+.pf-mastery-rate-btn__label {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.pf-mastery-rate-btn__hint {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-rate-btn--again:hover {
+  background: #f6ebe8;
+  border-color: #b45a4a;
+}
+
+.pf-mastery-rate-btn--good:hover {
+  background: #edf4ef;
+  border-color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-rate-btn--mastered {
+  background: var(--pf-unslop-accent, #355441);
+  border-color: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-mastery-rate-btn--mastered .pf-mastery-rate-btn__hint {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.pf-mastery-rate-btn--mastered:hover {
+  background: var(--pf-unslop-accent-hover, #2e4a3a);
+  border-color: var(--pf-unslop-accent-hover, #2e4a3a);
+}
+
+.pf-mastery-feedback-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: #edf4ef;
+  color: #244835;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* ---------- Tab 2: Live Studio Quiz ---------- */
+.pf-mastery-quiz-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-mastery-quiz-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-quiz-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-mastery-quiz-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-mastery-quiz-qnum {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-quiz-prompt {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-mastery-quiz-option {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-weight: 400;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-quiz-option:hover:not(:disabled) {
+  border-color: var(--pf-unslop-accent, #355441);
+  background: #f3f5ee;
+}
+
+.pf-mastery-quiz-option__num {
+  flex: 0 0 24px;
+  height: 24px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-mastery-quiz-option.is-correct {
+  background: #edf4ef;
+  border-color: var(--pf-unslop-accent, #355441);
+  color: #1f3c2b;
+  font-weight: 500;
+}
+
+.pf-mastery-quiz-option.is-correct .pf-mastery-quiz-option__num {
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-mastery-quiz-option.is-wrong {
+  background: #f6ebe8;
+  border-color: #a94c3c;
+  color: #7a3124;
+}
+
+.pf-mastery-quiz-option.is-wrong .pf-mastery-quiz-option__num {
+  background: #a94c3c;
+  color: #ffffff;
+}
+
+.pf-mastery-quiz-explanation {
+  padding: 12px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-quiz-explanation__badge {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pf-mastery-quiz-explanation__badge.is-correct {
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-quiz-explanation__badge.is-wrong {
+  color: #7a3124;
+}
+
+.pf-mastery-quiz-complete {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: #f3f5ee;
+}
+
+.pf-mastery-quiz-complete__score {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-quiz-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Tab 3: 30s Verbal Cueing + Apparatus Progress ---------- */
+.pf-mastery-cueing-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pf-mastery-rhythm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: #f3f5ee;
+}
+
+.pf-mastery-rhythm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pf-mastery-rhythm-timer {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-mastery-beats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-mastery-beat-cell {
+  min-height: 44px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-beat-cell.is-active {
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-mastery-rhythm-phases {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-mastery-phase-pill {
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-mastery-phase-pill.is-current {
+  background: #edf4ef;
+  color: #1f3c2b;
+  font-weight: 600;
+}
+
+.pf-mastery-scripts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-mastery-scripts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf-mastery-scripts-grid.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pf-mastery-script-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-mastery-script-level {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-mastery-script-quote {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.68;
+  letter-spacing: -0.01em;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+/* ---------- Apparatus Mastery Progress Board ---------- */
+.pf-mastery-progress-board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-mastery-apparatus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-mastery-apparatus-row {
+  min-height: 48px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-apparatus-row:hover {
+  background: #edf4ef;
+}
+
+.pf-mastery-apparatus-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-mastery-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 6px;
+  background: var(--pf-unslop-raised, #efe9df);
+  overflow: hidden;
+}
+
+.pf-mastery-progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--pf-unslop-accent, #355441);
+  transition: width 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-mastery-apparatus-stat {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pf-mastery-empty {
+  padding: 24px 16px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+/* ---------- Responsive (Tablet & Mobile 320px~390px) ---------- */
+@media (max-width: 900px) {
+  .pf-mastery-study-sections,
+  .pf-mastery-scripts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .pf-mastery-panel {
+    padding: 14px 12px;
+    gap: 14px;
+  }
+
+  .pf-mastery-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-mastery-visual-grid,
+  .pf-mastery-rating-grid,
+  .pf-mastery-rhythm-phases {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-mastery-voice-slot {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .pf-mastery-apparatus-row {
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-mastery-tab,
+  .pf-mastery-chip-btn,
+  .pf-mastery-btn,
+  .pf-mastery-deck-item,
+  .pf-mastery-veil-btn,
+  .pf-mastery-rate-btn,
+  .pf-mastery-quiz-option,
+  .pf-mastery-beat-cell,
+  .pf-mastery-apparatus-row,
+  .pf-mastery-progress-fill {
+    transition: none;
+  }
+
+  .pf-mastery-tab:active,
+  .pf-mastery-chip-btn:active,
+  .pf-mastery-btn:active:not(:disabled),
+  .pf-mastery-veil-btn:active,
+  .pf-mastery-rate-btn:active {
+    transform: none;
+  }
+}
