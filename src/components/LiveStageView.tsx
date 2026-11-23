@@ -56,6 +56,9 @@ import {
   LIVE_PLAN_B_OPTIONS,
 } from '../utils/instructorUxHelpers';
 import { getStudioTrackAdapters, type PlanBConstraint } from '../utils/studioTrackSlots';
+import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
+import { triggerSubtleHapticPulse } from '../hooks/useScreenWakeLock';
+import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
@@ -588,6 +591,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const nextExercise = next ? exerciseMap.get(next.exerciseId) : undefined;
   const [tvWidescreenMode, setTvWidescreenMode] = useState(false);
   const [standMode, setStandMode] = useState(false);
+  const [poseMirrorOpen, setPoseMirrorOpen] = useState(false);
   const [activePlanB, setActivePlanB] = useState<PlanBConstraint | null>(null);
   const [planBNotice, setPlanBNotice] = useState('');
   const planBSuggestion = useMemo(() => {
@@ -596,6 +600,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     return findLivePlanBAlternatives(exercise, activePlanB, exercises, usedIds);
   }, [activePlanB, exercise, currentIsRest, steps, exercises]);
   const applyPlanBAlternative = (alternative: PilatesExercise) => {
+    ensureWorldExercisesInStore([alternative]);
+    triggerSubtleHapticPulse(28);
     const idx = clockRef.current.index;
     applySteps((prev) =>
       prev.map((item, i) =>
@@ -2123,9 +2129,20 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           type="button"
           data-testid="live-stage-stand-mode-toggle"
           aria-pressed={standMode}
-          onClick={() => setStandMode((prev) => !prev)}
+          onClick={() => {
+            triggerSubtleHapticPulse(20);
+            setStandMode((prev) => !prev);
+          }}
         >
           거치대 뷰
+        </button>
+        <button
+          type="button"
+          data-testid="live-stage-pose-mirror-toggle"
+          aria-pressed={poseMirrorOpen}
+          onClick={() => setPoseMirrorOpen(true)}
+        >
+          정렬 거울
         </button>
         <button
           type="button"
@@ -3820,6 +3837,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         <span className="muted">{wakeStatus}</span>
         <span className="muted">추가 시간은 이번 진행에만 적용됩니다.</span>
       </div>
+      {poseMirrorOpen && (
+        <LightDismissDialog
+          open={poseMirrorOpen}
+          onClose={() => setPoseMirrorOpen(false)}
+          title="수업 중 정렬 거울"
+          className="pf-pose-camera-dialog"
+        >
+          <MobilePoseCameraGuide
+            exercise={exercise ?? null}
+            onClose={() => setPoseMirrorOpen(false)}
+          />
+        </LightDismissDialog>
+      )}
       {exitDialogs}
     </div>
   );

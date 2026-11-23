@@ -124,6 +124,7 @@ import {
   formatDifficultyMeta,
 } from '../utils/instructorUxHelpers';
 import { getStudioTrackAdapters } from '../utils/studioTrackSlots';
+import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
 import '../styles/sequence-studio.css';
 
 const AdvancedWorkbench = lazy(() =>
@@ -985,6 +986,7 @@ export function SequenceStudioWorkbench(props: Props) {
     override?: SequenceInsertionPlacement,
     allowDuplicate = false,
   ) => {
+    ensureWorldExercisesInStore([exercise]);
     const result = usePilatesStore
       .getState()
       .insertExerciseIntoSequence(exercise.id, override ?? placement, undefined, {
@@ -1029,6 +1031,7 @@ export function SequenceStudioWorkbench(props: Props) {
 
   /** Appends a curated golden 10-min combo in one undoable edit without overwriting existing steps. */
   const insertGoldenCombo = (comboTitle: string, comboExercises: readonly PilatesExercise[]) => {
+    ensureWorldExercisesInStore(comboExercises);
     const current = usePilatesStore.getState();
     const existingIds = new Set(current.activeSteps.map((step) => step.exerciseId));
     const freshExercises = comboExercises.filter((ex) => !existingIds.has(ex.id));

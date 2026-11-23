@@ -19,8 +19,11 @@ import './styles/pf-motion-studio.css';
 import './styles/atelier-covers.css';
 import './styles/mobile-readability-unslop-v17.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
+import { initAllStudioTrackAdapters } from './utils/registerAllStudioAdapters';
 
 import { startPwa } from './lib/pwa';
+
+initAllStudioTrackAdapters();
 
 // Keep the installed worker for this session. Waiting updates are announced by
 // PwaInstallPanel and activate naturally once all app tabs/windows are closed.

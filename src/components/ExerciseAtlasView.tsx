@@ -118,6 +118,7 @@ import {
 } from '../utils/instructorUxHelpers';
 import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
 import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
+import { WorldRepertoireExplorerBar } from './WorldRepertoireExplorerBar';
 
 export { ATLAS_DISCOVERY_RECOVERY_KEY };
 
@@ -1951,6 +1952,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
       ) : null}
 
       <div className="pf-atlas-fundamentals-wrap">
+        <WorldRepertoireExplorerBar onOpenDetail={onOpenDetails} />
         <PilatesFundamentalsDrawer />
       </div>
     </section>

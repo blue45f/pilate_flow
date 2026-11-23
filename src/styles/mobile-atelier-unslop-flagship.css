@@ -1594,3 +1594,396 @@ html body #root .flow-app .teaching-review-advisory {
     transform: none !important;
   }
 }
+
+/* ============================================================================
+   Integrated World Repertoire (1,752+) & Progression Tree Styles
+   ============================================================================ */
+.pf-world-repertoire-panel {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(31, 27, 22, 0.09);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-world-repertoire-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pf-world-repertoire-panel__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #355441;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-world-repertoire-panel__head h3 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f1b16;
+  word-break: keep-all;
+}
+
+.pf-world-toggle-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #355441;
+  background: #355441;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pf-world-toggle-btn.is-open {
+  background: #faf8f4;
+  color: #1f4435;
+}
+
+.pf-world-feedback {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f3f5ee;
+  color: #1f4435;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.pf-world-repertoire-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-world-scope-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #efe9df;
+}
+
+.pf-world-scope-tabs button {
+  min-height: 44px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #5a5247;
+  font-weight: 500;
+  font-size: 0.86rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-world-scope-tabs button.is-active {
+  background: #ffffff;
+  color: #1f4435;
+  border-color: rgba(31, 27, 22, 0.08);
+  font-weight: 600;
+}
+
+.pf-world-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-world-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #faf8f4;
+  border: 1px solid rgba(31, 27, 22, 0.12);
+}
+
+.pf-world-search input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: #1f1b16;
+  outline: none;
+}
+
+.pf-world-chip-row {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+
+.pf-world-chip-row button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 27, 22, 0.12);
+  background: #faf8f4;
+  color: #4f483f;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pf-world-chip-row button.is-active {
+  background: #355441;
+  border-color: #355441;
+  color: #ffffff;
+}
+
+.pf-world-count {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #5e554a;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-world-card-grid,
+.pf-world-program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.pf-world-card,
+.pf-world-program-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #faf8f4;
+  border: 1px solid rgba(31, 27, 22, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-world-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: #5e554a;
+}
+
+.pf-world-card__school {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(31, 27, 22, 0.08);
+  color: #355441;
+  font-weight: 500;
+}
+
+.pf-world-card__title,
+.pf-world-program-card h4 {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #1f1b16;
+  word-break: keep-all;
+}
+
+.pf-world-card__benefit,
+.pf-world-program-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.48;
+  color: #4f483f;
+  word-break: keep-all;
+}
+
+.pf-world-card__spring-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pf-world-card__spring-row small {
+  font-size: 0.76rem;
+  color: #5e554a;
+}
+
+.pf-world-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.pf-world-btn-primary,
+.pf-world-btn-ghost,
+.pf-world-load-more {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.pf-world-btn-primary {
+  background: #355441;
+  border: 1px solid #355441;
+  color: #ffffff;
+}
+
+.pf-world-btn-primary.is-full {
+  width: 100%;
+  margin-top: auto;
+}
+
+.pf-world-btn-ghost,
+.pf-world-load-more {
+  background: #ffffff;
+  border: 1px solid rgba(31, 27, 22, 0.14);
+  color: #1f1b16;
+}
+
+.pf-world-program-weeks {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #4f483f;
+}
+
+/* Progression Tree Card inside Movement Detail */
+.pf-progression-tree-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #faf8f4;
+  border: 1px solid rgba(31, 27, 22, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-progression-tree-card__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #1f4435;
+}
+
+.pf-progression-tree-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.pf-tree-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-tree-group__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5e554a;
+}
+
+.pf-tree-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-tree-node {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(31, 27, 22, 0.08);
+}
+
+.pf-tree-node__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.pf-tree-node__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.pf-tree-node__school {
+  font-size: 0.72rem;
+  color: #5e554a;
+}
+
+.pf-tree-node__main strong {
+  font-size: 0.84rem;
+  color: #1f1b16;
+  word-break: keep-all;
+}
+
+.pf-tree-node__main small {
+  font-size: 0.74rem;
+  color: #5e554a;
+}
+
+.pf-tree-node__add {
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(53, 84, 65, 0.25);
+  background: #f3f5ee;
+  color: #1f4435;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

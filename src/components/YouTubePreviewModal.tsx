@@ -5,6 +5,8 @@ import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { IntuitiveAnatomyGuideCard } from './IntuitiveAnatomyGuideCard';
+import { ProgressionTreeCard } from './ProgressionTreeCard';
+import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
 import { SpringVisualPills } from './SpringVisualPills';
 import React, { useRef, useState } from 'react';
 import {
@@ -1005,6 +1007,13 @@ const MovementDetails: React.FC<{
         <div ref={step1Ref} data-detail-step1-section className="pf-detail-step1-stack">
           <Studio3DMotionHeroCard exercise={exercise} />
           <IntuitiveAnatomyGuideCard exercise={exercise} />
+          <ProgressionTreeCard
+            exercise={exercise}
+            onAddExercise={(target) => {
+              ensureWorldExercisesInStore([target]);
+              usePilatesStore.getState().appendExerciseToSequence(target.id, target.blockCategory);
+            }}
+          />
         </div>
       )}
       <ExerciseVideoGallery

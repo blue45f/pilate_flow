@@ -64,6 +64,9 @@ import './styles/mobile-atelier-unslop-flagship.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 import { cycleWorkspaceLandmark } from './utils/workspaceLandmarkNavigation';
+import { initAllStudioTrackAdapters } from './utils/registerAllStudioAdapters';
+
+initAllStudioTrackAdapters();
 
 const InstructorStudyDialog = lazy(() =>
   import('./components/InstructorStudyDialog').then((module) => ({
