@@ -110,6 +110,11 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
     if (missing.length > 0) ensureWorldExercisesInStore(missing);
   };
 
+  const formatSpringDisplay = (raw?: string) => {
+    const t = raw?.trim() || '';
+    return !t || t === 'Bodyweight' ? '맨몸' : t;
+  };
+
   const dualSnapshot = useMemo(
     () => ({
       sequenceTitle: activeTitle || '오늘의 필라테스 수업',
@@ -118,15 +123,13 @@ export const StudioSmartToolsRail: React.FC<StudioSmartToolsRailProps> = ({
       exerciseId: focusExercise?.id ?? '',
       exerciseNameKo: focusExercise?.nameKo ?? '수업 준비 동작',
       apparatus: focusExercise?.apparatus ?? resolvedApparatus,
-      springs:
-        firstActiveStep?.customSpringOverride?.trim() ||
-        focusExercise?.springs?.trim() ||
-        '맨몸',
+      springs: formatSpringDisplay(
+        firstActiveStep?.customSpringOverride || focusExercise?.springs,
+      ),
       nextExerciseNameKo: nextExercise?.nameKo ?? '마무리 호흡',
-      nextSprings:
-        secondActiveStep?.customSpringOverride?.trim() ||
-        nextExercise?.springs?.trim() ||
-        '맨몸',
+      nextSprings: formatSpringDisplay(
+        secondActiveStep?.customSpringOverride || nextExercise?.springs,
+      ),
       cueLine: focusExercise?.cues[0] ?? '편안한 호흡으로 척추 정렬을 준비합니다.',
       timerRemainingSec: Math.round((firstActiveStep?.durationMin ?? 4) * 60),
       running: false,

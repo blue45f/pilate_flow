@@ -3883,10 +3883,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               exerciseId: exercise?.id ?? '',
               exerciseNameKo: currentIsRest ? '휴식 · 호흡 정리' : exercise?.nameKo ?? '현재 동작',
               apparatus: exercise?.apparatus ?? 'reformer',
-              springs: current?.customSpringOverride?.trim() || exercise?.springs?.trim() || '맨몸',
+              springs: (() => {
+                const s = current?.customSpringOverride?.trim() || exercise?.springs?.trim() || '';
+                return !s || s === 'Bodyweight' ? '맨몸' : s;
+              })(),
               nextExerciseNameKo: nextExercise?.nameKo ?? '수업 마무리',
-              nextSprings:
-                next?.customSpringOverride?.trim() || nextExercise?.springs?.trim() || '맨몸',
+              nextSprings: (() => {
+                const s =
+                  next?.customSpringOverride?.trim() || nextExercise?.springs?.trim() || '';
+                return !s || s === 'Bodyweight' ? '맨몸' : s;
+              })(),
               cueLine: currentIsRest
                 ? '물 한 모금 마시고 다음 기구 세팅을 준비해 주세요.'
                 : exercise?.cues[0] ?? '편안한 호흡으로 척추 정렬을 유지합니다.',
