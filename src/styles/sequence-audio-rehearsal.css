@@ -1,0 +1,840 @@
+/* ==========================================================================
+   Pilates Flow Atelier — Natural Voice Speak Button & Sequence Audio Rehearsal
+   Follows DESIGN.md Calm Atelier tokens (Warm Ivory, Botanical Sage, tabular-nums,
+   word-break: keep-all, 44px+ touch targets, concentric radii, zero nested borders)
+   ========================================================================== */
+
+.pf-voice-btn-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.pf-voice-btn-wrap--card {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-card, 16px);
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+
+.pf-voice-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pf-voice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-voice-btn:hover:not(:disabled) {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-voice-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pf-voice-btn--primary {
+  border-color: var(--pf-unslop-accent, #355441);
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+}
+
+.pf-voice-btn--primary:hover:not(:disabled) {
+  border-color: var(--pf-unslop-accent-hover, #2e4a3a);
+  background: var(--pf-unslop-accent-hover, #2e4a3a);
+}
+
+.pf-voice-btn--compact {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 0.8125rem;
+}
+
+.pf-voice-btn--stop {
+  padding: 0 10px;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-voice-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.pf-voice-quality-badge--studio {
+  background: rgba(53, 84, 65, 0.12);
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-voice-progress-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 6px;
+  background: var(--pf-unslop-raised, #efe9df);
+  overflow: hidden;
+}
+
+.pf-voice-progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--pf-unslop-accent, #355441);
+  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: left center;
+}
+
+.pf-voice-live-line {
+  margin: 0;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.pf-voice-script-fallback {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+/* ==========================================================================
+   Sequence Audio Rehearsal Modal (One-Handed Commuter Sheet)
+   ========================================================================== */
+
+.pf-rehearsal-modal-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Mode Segmented Track (4 one-tap modes: 이어듣기 · 3분 고속 · 빈칸 퀴즈 · 호흡 템포) */
+.pf-rehearsal-mode-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-raised, #efe9df);
+}
+
+.pf-rehearsal-mode-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 52px;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: transparent;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-mode-tab:hover {
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-rehearsal-mode-tab:active {
+  transform: scale(0.98);
+}
+
+.pf-rehearsal-mode-tab--active {
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-accent, #355441);
+  font-weight: 600;
+  box-shadow: var(--pf-unslop-shadow-step, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+
+.pf-rehearsal-mode-desc {
+  margin: 0;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* Main Focal Stage (Single surface, hairline separator, zero nested borders) */
+.pf-rehearsal-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--pf-unslop-radius-card, 16px);
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+
+.pf-rehearsal-stage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-rehearsal-meta-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-rehearsal-counter {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-rehearsal-spring-keycap {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-rehearsal-step-title {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--pf-unslop-text-primary, #1f1b16);
+}
+
+.pf-rehearsal-spoken-cue {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+/* Quiz Mode Focus Card */
+.pf-rehearsal-quiz-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-card, #ffffff);
+}
+
+.pf-rehearsal-quiz-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pf-rehearsal-countdown-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-rehearsal-quiz-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Breath Tempo Pacer Bar */
+.pf-rehearsal-breath-pacer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-card, #ffffff);
+}
+
+.pf-rehearsal-breath-phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+}
+
+.pf-rehearsal-breath-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--pf-unslop-raised, #efe9df);
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-breath-dot--inhale {
+  background: var(--pf-unslop-accent, #355441);
+  transform: scale(1.3);
+}
+
+.pf-rehearsal-breath-dot--exhale {
+  background: #6f8b76;
+  transform: scale(0.85);
+}
+
+.pf-rehearsal-tempo-ratio {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Progress + Transport Controls (One-handed mobile thumb ergonomics) */
+.pf-rehearsal-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--pf-unslop-text-muted, #7b7266);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-rehearsal-transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.pf-rehearsal-play-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 148px;
+  min-height: 54px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-segment, 12px);
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-play-main:hover:not(:disabled) {
+  background: var(--pf-unslop-accent-hover, #2e4a3a);
+}
+
+.pf-rehearsal-play-main:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pf-rehearsal-play-main:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pf-rehearsal-transport-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 10px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-transport-btn:hover:not(:disabled) {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+  background: var(--pf-unslop-bg, #faf8f4);
+}
+
+.pf-rehearsal-transport-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pf-rehearsal-transport-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Secondary Settings Row (Speed + Chimes) */
+.pf-rehearsal-options-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-rehearsal-speed-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pf-rehearsal-speed-btn {
+  min-height: 36px;
+  min-width: 42px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: transparent;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-speed-btn--active {
+  background: var(--pf-unslop-accent, #355441);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pf-rehearsal-toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-toggle-chip--on {
+  border-color: var(--pf-unslop-accent, #355441);
+  background: rgba(53, 84, 65, 0.08);
+  color: var(--pf-unslop-accent, #355441);
+}
+
+/* 3~4막 체위·스프링 덩어리 청킹 지도 */
+.pf-rehearsal-chunk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-rehearsal-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-rehearsal-section-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+}
+
+.pf-rehearsal-chunk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.pf-rehearsal-chunk-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 68px;
+  padding: 10px 11px;
+  border: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-chunk-card:hover {
+  border-color: var(--pf-unslop-border-hover, rgba(31, 27, 22, 0.24));
+}
+
+.pf-rehearsal-chunk-card:active {
+  transform: scale(0.98);
+}
+
+.pf-rehearsal-chunk-card--active {
+  border-color: var(--pf-unslop-accent, #355441);
+  background: rgba(53, 84, 65, 0.08);
+}
+
+.pf-rehearsal-chunk-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-unslop-accent, #355441);
+  line-height: 1.35;
+}
+
+.pf-rehearsal-chunk-meta {
+  font-size: 0.75rem;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+/* 3단계 블라인드 가리기 컨트롤 */
+.pf-rehearsal-blind-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-rehearsal-blind-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 4px;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: var(--pf-unslop-raised, #efe9df);
+}
+
+.pf-rehearsal-blind-btn {
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: transparent;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  word-break: keep-all;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-blind-btn--active {
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-accent, #355441);
+  font-weight: 600;
+  box-shadow: var(--pf-unslop-shadow-step, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+
+.pf-rehearsal-confused-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-control, 10px);
+  background: #f4f1e3;
+  color: #6b4010;
+  font-size: 0.8125rem;
+}
+
+.pf-rehearsal-step-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.pf-rehearsal-step-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pf-rehearsal-step-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--pf-unslop-text-muted, #7b7266);
+  line-height: 1.4;
+}
+
+.pf-rehearsal-step-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.pf-rehearsal-mini-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--pf-unslop-border-control, rgba(31, 27, 22, 0.14));
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-card, #ffffff);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-mini-action--confused {
+  border-color: #8a644a;
+  background: #f4f1e3;
+  color: #6b4010;
+  font-weight: 600;
+}
+
+.pf-rehearsal-mask-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--pf-unslop-radius-keycap, 6px);
+  background: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-muted, #7b7266);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Step Jump List */
+.pf-rehearsal-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 2px 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pf-rehearsal-step-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-rehearsal-step-item:hover {
+  background: var(--pf-unslop-raised, #efe9df);
+}
+
+.pf-rehearsal-step-item--active {
+  background: rgba(53, 84, 65, 0.12);
+  color: var(--pf-unslop-accent, #355441);
+  font-weight: 600;
+}
+
+.pf-rehearsal-step-num {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--pf-unslop-text-muted, #7b7266);
+}
+
+.pf-rehearsal-step-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pf-rehearsal-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-raised, #efe9df);
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.pf-rehearsal-script-disclosure {
+  padding-top: 6px;
+  border-top: 1px solid var(--pf-unslop-hairline, rgba(31, 27, 22, 0.08));
+}
+
+.pf-rehearsal-script-body {
+  margin-top: 8px;
+  padding: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  border-radius: var(--pf-unslop-radius-row, 8px);
+  background: var(--pf-unslop-bg, #faf8f4);
+  color: var(--pf-unslop-text-primary, #1f1b16);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.pf-rehearsal-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--pf-unslop-text-secondary, #5e554a);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 599px) {
+  .pf-rehearsal-stage {
+    padding: 14px;
+  }
+
+  .pf-rehearsal-mode-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf-rehearsal-mode-tab {
+    font-size: 0.75rem;
+    padding: 6px 4px;
+  }
+
+  .pf-rehearsal-chunk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf-rehearsal-play-main {
+    flex: 1 1 auto;
+  }
+
+  .pf-rehearsal-speed-btn {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-voice-btn,
+  .pf-voice-progress-fill,
+  .pf-rehearsal-mode-tab,
+  .pf-rehearsal-chunk-card,
+  .pf-rehearsal-blind-btn,
+  .pf-rehearsal-mini-action,
+  .pf-rehearsal-breath-dot,
+  .pf-rehearsal-play-main,
+  .pf-rehearsal-transport-btn,
+  .pf-rehearsal-speed-btn,
+  .pf-rehearsal-toggle-chip,
+  .pf-rehearsal-step-item {
+    transition: none;
+    transform: none;
+  }
+}

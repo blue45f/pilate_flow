@@ -270,6 +270,17 @@ function normalizeVoiceLang(lang: string | undefined | null): string {
   return (lang ?? '').replace(/_/g, '-').trim().toLowerCase();
 }
 
+function scoreLocalKoreanVoice(voice: SpeechSynthesisVoice): number {
+  const lang = normalizeVoiceLang(voice.lang);
+  const name = (voice.name ?? '').trim();
+  let score = lang === 'ko-kr' ? 100 : 50;
+  if (/(?:premium|enhanced|고품질|향상)/i.test(name)) score += 40;
+  if (/(?:natural|neural|sunhi|injoon)/i.test(name)) score += 30;
+  if (/\b(?:yuna|sora|minsu|유나|소라)\b/i.test(name)) score += 15;
+  if (/compact|espeak/i.test(name)) score -= 10;
+  return score;
+}
+
 /** Select only an explicitly local Korean voice; never infer locale from its name.
  */
 export function selectBestKoreanVoice(
@@ -280,11 +291,8 @@ export function selectBestKoreanVoice(
     (voice) =>
       voice.localService === true && /^ko(?:-|$)/.test(normalizeVoiceLang(voice.lang)),
   );
-  return (
-    localKorean.find((voice) => normalizeVoiceLang(voice.lang) === 'ko-kr') ??
-    localKorean[0] ??
-    null
-  );
+  if (localKorean.length === 0) return null;
+  return [...localKorean].sort((a, b) => scoreLocalKoreanVoice(b) - scoreLocalKoreanVoice(a))[0];
 }
 
 export interface TtsEnvironmentInspectionOptions {

@@ -2,6 +2,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ClassVoiceController } from '../models/ClassVoiceController';
 import type { ClassVoicePreferences, ClassVoiceSnapshot } from '../models/ClassVoiceController';
 
+function scoreLocalKoreanVoice(voice: SpeechSynthesisVoice): number {
+  const lang = (voice.lang ?? '').replace(/_/g, '-').trim().toLowerCase();
+  const name = (voice.name ?? '').trim();
+  let score = lang === 'ko-kr' ? 100 : 50;
+  if (/(?:premium|enhanced|고품질|향상)/i.test(name)) score += 40;
+  if (/(?:natural|neural|sunhi|injoon)/i.test(name)) score += 30;
+  if (/\b(?:yuna|sora|minsu|유나|소라)\b/i.test(name)) score += 15;
+  if (/compact|espeak/i.test(name)) score -= 10;
+  return score;
+}
+
 function pickLocalKoreanVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | undefined {
   try {
     const voices = synth.getVoices?.();
@@ -11,11 +22,8 @@ function pickLocalKoreanVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | un
         item.localService === true &&
         /^ko(?:-|$)/i.test((item.lang ?? '').replace(/_/g, '-').trim()),
     );
-    return (
-      localKorean.find(
-        (item) => (item.lang ?? '').replace(/_/g, '-').trim().toLowerCase() === 'ko-kr',
-      ) ?? localKorean[0]
-    );
+    if (localKorean.length === 0) return undefined;
+    return [...localKorean].sort((a, b) => scoreLocalKoreanVoice(b) - scoreLocalKoreanVoice(a))[0];
   } catch {
     return undefined;
   }

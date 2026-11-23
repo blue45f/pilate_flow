@@ -3,10 +3,12 @@ import type { RouterMiddleware, RouterResponse } from '@appdeploy/sdk';
 import { BackupError, createBackupService } from './backupService';
 import type { BackupRecord } from './backupService';
 import { createFreeAiRoutes, createFreeAiService } from './freeAiService';
+import { createVoiceEngineRoutes, createVoiceEngineService } from './voiceEngineService';
 import { assertExpectedPrincipal } from './principalAssertion';
 import { TeamSharingError } from './teamSharingService';
 
 const freeAiRoutes = createFreeAiRoutes(createFreeAiService());
+const voiceEngineRoutes = createVoiceEngineRoutes(createVoiceEngineService());
 
 const TABLE = 'studio_backups';
 const backups = createBackupService({
@@ -125,5 +127,13 @@ export const handler = router({
   'POST /api/studio/ai/assist': [
     requireAuth(),
     protect('body', (context) => freeAiRoutes['POST /api/studio/ai/assist'](context)),
+  ],
+  'GET /api/studio/voice/status': [
+    requireAuth(),
+    protect('query', (context) => voiceEngineRoutes['GET /api/studio/voice/status'](context)),
+  ],
+  'POST /api/studio/voice/synthesize': [
+    requireAuth(),
+    protect('body', (context) => voiceEngineRoutes['POST /api/studio/voice/synthesize'](context)),
   ],
 });
