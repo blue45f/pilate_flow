@@ -15,12 +15,12 @@ const PHASES = ['start', 'middle', 'end'];
 const LABELS = { start: '시작 자세', middle: '정점 자세', end: '종료 자세' };
 export const PRACTITIONER_ATLAS_URL = '/images/motion-atlas-v3/practitioner.webp';
 export const RASTER_SETTINGS = Object.freeze({
-  pipeline: 'blender-cycles-3d-flagship-v4',
-  width: 640,
-  height: 400,
+  pipeline: 'blender-cycles-3d-flagship-v5',
+  width: 960,
+  height: 600,
   density: 144,
   resize: { fit: 'fill', kernel: 'lanczos3' },
-  webp: { quality: 88, alphaQuality: 100, lossless: false, effort: 6 },
+  webp: { quality: 90, alphaQuality: 100, lossless: false, effort: 6 },
 });
 export const ENCODER_VERSIONS = Object.freeze({
   sharp: sharp.versions.sharp,
@@ -176,6 +176,9 @@ export async function generateExerciseArtwork({
     const { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } = await server.ssrLoadModule(
       '/src/data/globalCrawledRepertoirePack.ts',
     );
+    const { WORLD_PILATES_EXERCISES } = await server.ssrLoadModule(
+      '/src/data/worldPilatesRepertoire1000.ts',
+    );
     const { getCatalogContinuousMotionAsset } = await server.ssrLoadModule(
       '/src/data/catalogMotionAssets/index.ts',
     );
@@ -183,7 +186,12 @@ export async function generateExerciseArtwork({
       '/src/data/universal3dExerciseRigs.ts',
     );
 
-    const allExercises = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+    const coreExercises = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+    const coreIdSet = new Set(coreExercises.map((item) => item.id));
+    const worldAtomics = WORLD_PILATES_EXERCISES.filter(
+      (item) => item.tier === 'atomic' && !coreIdSet.has(item.id),
+    );
+    const allExercises = [...coreExercises, ...worldAtomics];
     const entries = {};
     const jobs = [];
     const outputFiles = new Set();
@@ -195,7 +203,9 @@ export async function generateExerciseArtwork({
     for (const exercise of allExercises) {
       assert.match(exercise.id, /^[a-zA-Z0-9_-]+$/);
       const isExpandedOrCrawled =
-        exercise.id.startsWith('expanded-') || exercise.id.startsWith('crawled-');
+        exercise.id.startsWith('expanded-') ||
+        exercise.id.startsWith('crawled-') ||
+        exercise.id.startsWith('world-');
       const motion = isExpandedOrCrawled ? null : getCatalogContinuousMotionAsset(exercise);
       const startRig = sampleUniversal3DExerciseRig(exercise, 0);
       const phases = Object.fromEntries(PHASES.map((phase) => [phase, null]));
@@ -218,8 +228,8 @@ export async function generateExerciseArtwork({
         const inputSha256 = sha256(
           JSON.stringify({
             renderer: rigSample.rolldownBar
-              ? 'BlenderCycles3DStudio-rollbar-grip-v2-atelier'
-              : 'BlenderCycles3DStudio-v4-atelier',
+              ? 'BlenderCycles3DStudio-v5-rollbar-960x600'
+              : 'BlenderCycles3DStudio-v5-atelier-960x600',
             svgSha256,
             settings: RASTER_SETTINGS,
             encoder: ENCODER_VERSIONS,

@@ -81,10 +81,10 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
     expect(quickHub).toHaveTextContent('필라테스 기초 원리');
     expect(quickHub).toHaveTextContent('기구 NFC · QR');
 
-    // Transparent summary bar displays 1,752 / 218 / 13
+    // Transparent summary bar displays 1,752 / 1,752 unified 3D / 13
     const summary = screen.getByTestId('atlas-results-summary');
     expect(summary).toHaveTextContent('1,752개 동작');
-    expect(summary).toHaveTextContent('3D 정밀 218');
+    expect(summary).toHaveTextContent('3D 정밀 1,752');
     expect(summary).toHaveTextContent(`4·8주 프로그램 ${CURATED_MULTI_WEEK_PROGRAMS.length}`);
 
     // Unified scope row uses role="group" + aria-pressed buttons
@@ -92,7 +92,7 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
     expect(scopeRow).toHaveAttribute('role', 'group');
     expect(screen.getByTestId('atlas-scope-all')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('atlas-scope-all')).toHaveTextContent('전체 1,752');
-    expect(screen.getByTestId('atlas-scope-3d')).toHaveTextContent('3D 정밀 도해 218');
+    expect(screen.getByTestId('atlas-scope-3d')).toHaveTextContent('3D 정밀 도해 1,752');
     expect(screen.getByTestId('atlas-scope-atomic')).toHaveTextContent('대표 동작 524');
     expect(screen.getByTestId('atlas-scope-fusion')).toHaveTextContent('퓨전 (바레·기능성)');
     expect(screen.getByTestId('atlas-scope-programs')).toHaveTextContent('4·8주 프로그램 13');
@@ -105,15 +105,15 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
     }
   });
 
-  it('switches scopes cleanly across 3D precision (218), atomic (524), fusion (152), and inline 4·8-week programs (13)', () => {
+  it('switches scopes cleanly across unified 3D precision (1,752), atomic (524), fusion (152), and inline 4·8-week programs (13)', () => {
     const { container } = render(
       <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
     );
 
-    // 1. 3D precision scope -> 218
+    // 1. 3D precision scope -> 1,752 (all 524 atomics directly rendered + 1,228 parent-matched variations)
     fireEvent.click(screen.getByTestId('atlas-scope-3d'));
     expect(screen.getByTestId('atlas-scope-3d')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('atlas-results-summary')).toHaveTextContent('218개 동작');
+    expect(screen.getByTestId('atlas-results-summary')).toHaveTextContent('1,752개 동작');
 
     // 2. Atomic scope -> 524
     fireEvent.click(screen.getByTestId('atlas-scope-atomic'));

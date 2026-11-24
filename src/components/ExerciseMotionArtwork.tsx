@@ -2,7 +2,7 @@ import { memo, useEffect, useState, type ComponentType } from 'react';
 import { hasDedicated3DExerciseRig } from '../data/universal3dExerciseRigs';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
-import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
+import { getExerciseArtworkFrame, hasDirectExerciseArtwork } from '../utils/exerciseArtworkCache';
 import {
   getLoadedNativeExerciseArtwork,
   loadNativeExerciseArtwork,
@@ -100,7 +100,7 @@ export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
   }
 
   if (cachedFrame && cachedFrame.src !== failedFrameSrc) {
-    const dedicated = hasDedicated3DExerciseRig(exercise);
+    const dedicated = hasDedicated3DExerciseRig(exercise) || hasDirectExerciseArtwork(exercise);
     const phaseLabel =
       cachedFrame.labelKo ??
       (phase === 'start' ? '시작 자세' : phase === 'middle' ? '정점 자세' : '종료 자세');

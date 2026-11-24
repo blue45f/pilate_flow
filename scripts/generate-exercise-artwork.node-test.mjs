@@ -81,16 +81,16 @@ test('fingerprints geometry, original and embedded assets, settings and encoder 
   assert.equal(getArtworkInputFingerprint(svg, registered).svgSha256, sha256(svg));
 });
 
-test('renders the embedded PNG through SVG use into deterministic visible 640x400 WebP', async () => {
+test('renders the embedded PNG through SVG use into deterministic visible 960x600 WebP', async () => {
   const registered = await assets();
   const first = await rasterizeArtwork(svg, registered);
   assert.deepEqual(await rasterizeArtwork(svg, registered), first);
   const meta = await sharp(first).metadata();
   assert.equal(meta.format, 'webp');
-  assert.equal(meta.width, 640);
-  assert.equal(meta.height, 400);
+  assert.equal(meta.width, 960);
+  assert.equal(meta.height, 600);
   const { data } = await sharp(first).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const center = (200 * 640 + 320) * 3;
+  const center = (300 * 960 + 480) * 3;
   assert(data[center] > 180 && data[center + 1] < 110 && data[center + 2] < 90);
 });
 

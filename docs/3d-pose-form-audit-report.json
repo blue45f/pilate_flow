@@ -1,33 +1,33 @@
 {
-  "generatedAtUtc": "2026-11-23T12:39:21.294300+00:00",
-  "totalExercises": 218,
-  "totalPosesAudited": 654,
+  "generatedAtUtc": "2026-11-24T09:31:52.852679+00:00",
+  "totalExercises": 524,
+  "totalPosesAudited": 1572,
   "totalDefects": 0,
   "passed": true,
   "perApparatusSummary": {
     "reformer": {
-      "exercises": 63,
-      "poses": 189,
+      "exercises": 155,
+      "poses": 465,
       "defects": 0
     },
     "mat": {
-      "exercises": 52,
-      "poses": 156,
+      "exercises": 140,
+      "poses": 420,
       "defects": 0
     },
     "cadillac": {
-      "exercises": 40,
-      "poses": 120,
+      "exercises": 87,
+      "poses": 261,
       "defects": 0
     },
     "chair": {
-      "exercises": 35,
-      "poses": 105,
+      "exercises": 76,
+      "poses": 228,
       "defects": 0
     },
     "barrel": {
-      "exercises": 28,
-      "poses": 84,
+      "exercises": 66,
+      "poses": 198,
       "defects": 0
     }
   },
@@ -50,6 +50,9 @@
     "cadillac_pushthrough_bar_miss": 0,
     "mini_ball_placement_defect": 0,
     "extreme_reach_overflow": 0,
+    "extreme_elbow_kink": 0,
+    "extreme_knee_flip": 0,
+    "phase_delta_missing": 0,
     "degenerate_pole": 0
   },
   "defects": {},

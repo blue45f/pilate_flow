@@ -1,16 +1,18 @@
 """
-Flagship Precision Blender 5.2 LTS Cycles Metal GPU Renderer — All 218 Pilates 3D Exercises (654 Frames @ 640x400)
-Powered by `pilates_3d_modeling_kernel.py` v3:
-- Seamless 360-Degree Curved Infinity Cyclorama (`build_infinity_cyclorama_bowl`) eliminating hard wall/floor horizon seams
-  and matching Pilates Flow's `#f7f4ee` / `#f3efe7` warm atelier linen palette
-- Stylized Korean Webtoon / Atelier Practitioner + True Cathedral European White Oak, Satin Brass & Pebbled Sage Leather
+Flagship Precision Blender 5.3 Cycles Metal GPU Renderer — All 218 Pilates 3D Exercises (654 Frames @ 960x600)
+Powered by `pilates_3d_modeling_kernel.py` v5:
+- Seamless 360-Degree Curved Infinity Cyclorama (`build_infinity_cyclorama_bowl`) with grounded soft contact shadows
+  and luxury Korean editorial warm alabaster linen (`#FAF7F0`) cove lift
+- Sculpted Korean Pilates Studio Instructor + Rich Cathedral European White Oak, Satin Brass & Supple Sage Leather
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import shutil
 import sys
 import time
 import bpy
@@ -85,7 +87,7 @@ def build_infinity_cyclorama_bowl(collection, mat) -> bpy.types.Object:
     return obj
 
 
-def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: int = 20, target_scene: bpy.types.Scene | None = None):
+def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: int = 24, target_scene: bpy.types.Scene | None = None):
     scene = target_scene or bpy.context.scene
     for obj in list(scene.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -104,18 +106,18 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
 
     scene.cycles.samples = samples
     scene.cycles.use_adaptive_sampling = True
-    scene.cycles.adaptive_threshold = 0.032
+    scene.cycles.adaptive_threshold = 0.024
     scene.cycles.use_denoising = True
     scene.cycles.denoiser = "OPENIMAGEDENOISE"
     if hasattr(scene.cycles, "denoising_prefilter"):
         scene.cycles.denoising_prefilter = "FAST"
     if hasattr(scene.cycles, "denoising_use_gpu"):
         scene.cycles.denoising_use_gpu = True
-    scene.cycles.max_bounces = 3
+    scene.cycles.max_bounces = 4
     scene.cycles.diffuse_bounces = 2
     scene.cycles.glossy_bounces = 2
     scene.cycles.filter_width = 1.15
-    scene.render.use_persistent_data = True
+    scene.render.use_persistent_data = False
     scene.render.resolution_x = res_x
     scene.render.resolution_y = res_y
     scene.render.resolution_percentage = 100
@@ -127,13 +129,13 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
         scene.view_settings.look = "AgX - Medium High Contrast"
     except Exception:
         scene.view_settings.look = "None"
-    scene.view_settings.exposure = -0.10
+    scene.view_settings.exposure = -0.08
 
     mats = build_cycles_studio_materials()
 
-    # Calibrate studio_bg with camera-ray-only warm morning linen (#FAF7F0) cove lift:
-    # preserves 100% sculptural lighting on the practitioner & crisp grounded floor shadows
-    # while eliminating dark grazing-angle gray falloff on the upper infinity cyclorama.
+    # Calibrate studio_bg with camera-ray-only warm alabaster linen (#FAF7F0) cove lift:
+    # `To Min = 0.14` preserves rich, soft grounded shadows under the apparatus & feet while
+    # the upper cyclorama transitions seamlessly to warm editorial alabaster linen.
     nt_bg = mats["studio_bg"].node_tree
     bsdf_bg = nt_bg.nodes.get("Principled BSDF")
     out_bg = nt_bg.nodes.get("Material Output")
@@ -144,18 +146,18 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
         map_z = nt_bg.nodes.new("ShaderNodeMapRange")
         map_z.clamp = True
         map_z.interpolation_type = "SMOOTHSTEP"
-        map_z.inputs["From Min"].default_value = 0.04
-        map_z.inputs["From Max"].default_value = 1.65
-        map_z.inputs["To Min"].default_value = 0.36
-        map_z.inputs["To Max"].default_value = 0.92
+        map_z.inputs["From Min"].default_value = 0.06
+        map_z.inputs["From Max"].default_value = 1.45
+        map_z.inputs["To Min"].default_value = 0.14
+        map_z.inputs["To Max"].default_value = 0.96
 
         mul_cam = nt_bg.nodes.new("ShaderNodeMath")
         mul_cam.operation = "MULTIPLY"
 
         linen_emit = nt_bg.nodes.new("ShaderNodeEmission")
-        # AgX-calibrated warm morning linen radiance -> renders cleanly at #FAF7F0 / #F7F3EA
-        linen_emit.inputs["Color"].default_value = (1.0, 0.952, 0.858, 1.0)
-        linen_emit.inputs["Strength"].default_value = 5.6
+        # AgX-calibrated warm alabaster linen radiance (#FAF7F0) — balanced without washing out subject shading
+        linen_emit.inputs["Color"].default_value = (1.0, 0.962, 0.892, 1.0)
+        linen_emit.inputs["Strength"].default_value = 4.10
 
         mix_bg = nt_bg.nodes.new("ShaderNodeMixShader")
         nt_bg.links.new(geom.outputs["Position"], sep_xyz.inputs["Vector"])
@@ -174,8 +176,8 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
     if world.node_tree is None:
         world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
-    bg.inputs["Color"].default_value = (*srgb_tuple((0.992, 0.984, 0.964)), 1.0)
-    bg.inputs["Strength"].default_value = 0.36
+    bg.inputs["Color"].default_value = (*srgb_tuple((0.990, 0.980, 0.958)), 1.0)
+    bg.inputs["Strength"].default_value = 0.24
 
     def add_area_light(lname: str, loc, target_pt, energy: float, size: float, color, size_y: float | None = None):
         ldata = bpy.data.lights.new(lname, type="AREA")
@@ -193,13 +195,13 @@ def setup_flagship_cycles_studio(res_x: int = 960, res_y: int = 600, samples: in
         scene.collection.objects.link(lobj)
         return lobj
 
-    # Editorial 3-Point + Dual Silhouette Rim Atelier Lighting (Warm Morning Sunlight + Cream Fill + Crisp Rim Halo)
-    add_area_light("AtelierKeyLight", (-2.35, -2.65, 3.25), (0.0, 0.0, 0.72), 265.0, 1.45, (1.0, 0.958, 0.896))
-    add_area_light("AtelierFillLight", (2.85, -2.30, 2.15), (0.0, 0.0, 0.70), 68.0, 3.40, (0.992, 0.978, 0.962))
-    # Crisp Back-Right & Back-Left Rim Lights carving glowing edges on silk hair, shoulders, spine & slim legs
-    add_area_light("AtelierRimLight", (0.55, 2.55, 2.60), (0.0, 0.0, 0.80), 275.0, 1.05, (1.0, 0.968, 0.914), size_y=1.65)
-    add_area_light("AtelierKickerLight", (-2.15, 2.20, 1.90), (0.0, 0.0, 0.68), 115.0, 1.25, (1.0, 0.980, 0.945))
-    add_area_light("AtelierCycWash", (0.0, 1.80, 5.40), (0.0, 0.40, 0.0), 175.0, 7.20, (1.0, 0.988, 0.966))
+    # Luxury Korean Editorial 3-Point + Champagne Silhouette Rim Atelier Lighting
+    add_area_light("AtelierKeyLight", (-2.30, -2.55, 3.20), (0.0, 0.0, 0.72), 310.0, 1.30, (1.0, 0.952, 0.884))
+    add_area_light("AtelierFillLight", (2.85, -2.30, 2.15), (0.0, 0.0, 0.70), 55.0, 3.20, (0.948, 0.968, 1.00))
+    # Crisp Champagne Back-Right & Subtle Back-Left Rim Lights carving sculptural glow on silk hair, shoulders & legs
+    add_area_light("AtelierRimLight", (0.55, 2.55, 2.55), (0.0, 0.0, 0.80), 290.0, 0.95, (1.0, 0.962, 0.896), size_y=1.60)
+    add_area_light("AtelierKickerLight", (-2.15, 2.20, 1.90), (0.0, 0.0, 0.68), 95.0, 1.20, (1.0, 0.974, 0.932))
+    add_area_light("AtelierCycWash", (0.0, 2.10, 5.40), (0.0, 0.60, 0.0), 85.0, 7.00, (1.0, 0.986, 0.962))
 
     cam_data = bpy.data.cameras.new("StudioCamera")
     cam_data.lens = 66.0
@@ -270,7 +272,7 @@ def frame_inside_studio(cam, envelope, exercise_id):
     for focal_length in (66, 50, 35, 24):
         cam.data.lens = focal_length
         aim_camera_perspective_exact(cam, envelope, azim_deg=azimuth, elev_deg=elevation,
-                                     margin=1.11, aspect=640.0 / 400.0)
+                                     margin=1.11, aspect=960.0 / 600.0)
         height = max(0, min(cam.location.z, COVE_RADIUS))
         wall_radius = FLOOR_RADIUS + math.sqrt(height * (2 * COVE_RADIUS - height))
         if math.hypot(cam.location.x, cam.location.y) < wall_radius - 0.05:
@@ -287,9 +289,10 @@ def main():
     parser.add_argument("--end", type=int, default=9999)
     parser.add_argument("--apparatus", type=str, default="")
     parser.add_argument("--ids", type=str, default="")
-    parser.add_argument("--res-x", type=int, default=720)
-    parser.add_argument("--res-y", type=int, default=450)
-    parser.add_argument("--samples", type=int, default=14)
+    parser.add_argument("--res-x", type=int, default=960)
+    parser.add_argument("--res-y", type=int, default=600)
+    parser.add_argument("--samples", type=int, default=24)
+    parser.add_argument("--subsurf", type=int, default=2)
     parser.add_argument("--skip-existing", action="store_true")
     args = parser.parse_args(argv)
 
@@ -310,25 +313,65 @@ def main():
 
     t0 = time.time()
     rendered = 0
+    reused_scene = 0
+    scene_cache: dict[str, str] = {}
+
+    def frame_scene_signature(ex_item: dict, phase_key: str) -> str:
+        cam_override = {
+            "original-cadillac-seated-rotation": (-27.0, 28.0),
+            "original-cadillac-seated-side-reach": (-18.0, 14.0),
+        }.get(ex_item["id"], (-64.0, 20.0))
+        payload = {
+            "apparatus": ex_item["apparatus"],
+            "box": ex_item.get("box"),
+            "footbar": ex_item.get("footbar"),
+            "headrest": ex_item.get("headrest"),
+            "props": sorted(ex_item.get("props") or []),
+            "cam": cam_override,
+            "env": ex_item["phases"],
+            "rig": ex_item["phases"][phase_key],
+        }
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+    # Pre-seed cache with any valid PNGs already present on disk when --skip-existing is set
+    if args.skip_existing:
+        for ex_item in all_exercises:
+            for ph in ("start", "middle", "end"):
+                p_existing = os.path.join(args.outdir, f"{ex_item['id']}.{ph}.png")
+                if os.path.isfile(p_existing) and os.path.getsize(p_existing) > 15000:
+                    sig = frame_scene_signature(ex_item, ph)
+                    scene_cache.setdefault(sig, p_existing)
+
     for idx, ex in enumerate(subset):
         env_pts = collect_exercise_envelope_points(ex)
-        frame_inside_studio(cam, env_pts, ex["id"])
+        camera_aimed = False
         for phase in ("start", "middle", "end"):
             out_png = os.path.join(args.outdir, f"{ex['id']}.{phase}.png")
-            if args.skip_existing and os.path.isfile(out_png) and os.path.getsize(out_png) > 10000:
+            sig = frame_scene_signature(ex, phase)
+            if args.skip_existing and os.path.isfile(out_png) and os.path.getsize(out_png) > 15000:
+                scene_cache.setdefault(sig, out_png)
                 continue
+            cached_src = scene_cache.get(sig)
+            if cached_src and os.path.isfile(cached_src) and os.path.getsize(cached_src) > 15000:
+                shutil.copyfile(cached_src, out_png)
+                reused_scene += 1
+                continue
+            if not camera_aimed:
+                frame_inside_studio(cam, env_pts, ex["id"])
+                camera_aimed = True
             clear_subject_collection(subj_col)
             mc = MeshCollector(subj_col, mats, glb_mode=False)
             rig = ex["phases"][phase]
             build_apparatus_and_props(mc, ex, rig)
-            build_sculpted_practitioner(mc, rig, subsurf=2)
+            build_sculpted_practitioner(mc, rig, subsurf=args.subsurf)
             scene.render.filepath = out_png
             bpy.ops.render.render(write_still=True)
+            scene_cache[sig] = out_png
             rendered += 1
         if (idx + 1) % 10 == 0 or (idx + 1) == len(subset):
             elapsed = time.time() - t0
             print(
-                f"[Flagship Worker {args.start}..{args.end}] {idx + 1}/{len(subset)} exercises ({rendered} frames) in {elapsed:.1f}s ({elapsed / max(1, rendered):.2f}s/frame)",
+                f"[Flagship Worker {args.start}..{args.end}] {idx + 1}/{len(subset)} exercises ({rendered} rendered, {reused_scene} reused) in {elapsed:.1f}s ({elapsed / max(1, rendered):.2f}s/render)",
                 flush=True,
             )
 

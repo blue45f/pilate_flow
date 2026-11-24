@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-218종 전체 필라테스 3D 동작(654포즈) 전수 IK · 기구 접점 · 충돌 자동 감사 및 정합화 스크립트.
+전체 필라테스 3D 동작(핵심 218종 654포즈 및 `--all-atomics` 524종 1,572포즈) 전수 IK · 기구 접점 · 충돌 자동 감사 및 정합화 스크립트.
 
 기능:
 1. `src/data/universal3dExerciseRigs.ts`의 정본 218종 × 3자세(start/middle/end)를 Node/Vite SSR로
    추출해 `scripts/blender/poses_studio_canonical.json`에 100% 동기화한다.
-2. 모든 654포즈에 대해 실제 Blender 5.3 커널과 동일한 2-Bone IK 및 기구 3D 경계 좌표로 다음을 전수 감사한다:
+   `--all-atomics` 지정 시 전체 524 아토믹 동작(핵심 218종 + 월드 아토믹/퓨전 306종 = 1,572포즈)을
+   `scripts/blender/poses_studio_canonical_524.json`에 함께 동기화하고 전수 감사한다.
+2. 모든 포즈에 대해 실제 Blender 5.3 커널과 동일한 2-Bone IK 및 기구 3D 경계 좌표로 다음을 전수 감사한다:
    - 바닥 관통 (`z < 0` 및 관절/발 최소 여유고 위반)
    - 리포머 누운 자세 팔꿈치 캐리지 이탈/관통 및 스트랩 몸통 관통
    - 운다 체어 시트 관통, 페달 접점 오차, 핸들 그립 오차
    - 래더 바렐 사다리 봉 발/정강이 관통, 아치 지지, 엎드린 팔 T-포즈 꺾임
    - 캐딜락 롤백바/푸쉬스루바 접점 오차
-   - 관절 도달 거리 초과(과도한 IK 클램핑) 및 극단 역꺾임
+   - 관절 도달 거리 초과(과도한 IK 클램핑), 극단 팔꿈치/무릎 역꺾임
+   - 시작/중간/종료 3자세 구분 델타 검증
    - 소도구(미니볼·써클링·폼롤러) 배치 충돌 검증
 3. 전수 감사 리포트를 `docs/3d-pose-form-audit-report.json`에 저장하고 결함이 남아 있으면 종료 코드 1을 반환한다.
 """
@@ -21,6 +24,7 @@ import argparse
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -28,6 +32,7 @@ from datetime import datetime, timezone
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 DEFAULT_POSES_PATH = os.path.join(SCRIPT_DIR, "poses_studio_canonical.json")
+DEFAULT_POSES_524_PATH = os.path.join(SCRIPT_DIR, "poses_studio_canonical_524.json")
 DEFAULT_REPORT_PATH = os.path.join(ROOT_DIR, "docs", "3d-pose-form-audit-report.json")
 
 
@@ -102,13 +107,24 @@ def chair_pedal_tread_top(deg: float) -> tuple[float, float]:
     return (-0.20 + 0.54 * ax + 0.036 * ux, 0.088 + 0.54 * az + 0.036 * uz)
 
 
-def sync_poses_from_ts(poses_path: str) -> int:
-    """Exports all 218 exercises × 3 phases directly from universal3dExerciseRigs.ts."""
+def resolve_node_bin() -> str:
+    found = shutil.which("node")
+    if found:
+        return found
+    nvm_fallback = "/Users/hjunkim/.nvm/versions/node/v24.22.1/bin/node"
+    if os.path.exists(nvm_fallback):
+        return nvm_fallback
+    return "node"
+
+
+def sync_poses_from_ts(poses_path: str, all_atomics_path: str | None = None) -> tuple[int, int]:
+    """Exports core 218 exercises (and optionally all 524 atomic exercises) × 3 phases from universal3dExerciseRigs.ts."""
     node_script = r"""
 import { writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 
-const outPath = process.argv[1];
+const outPath218 = process.argv[1];
+const outPath524 = process.argv[2] || '';
 const server = await createServer({
   root: process.cwd(),
   configFile: false,
@@ -134,42 +150,60 @@ function roundVal(v) {
 try {
   const { INITIAL_EXERCISES } = await server.ssrLoadModule('/src/data/pilatesCatalog.ts');
   const { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } = await server.ssrLoadModule('/src/data/globalCrawledRepertoirePack.ts');
+  const { WORLD_PILATES_EXERCISES } = await server.ssrLoadModule('/src/data/worldPilatesRepertoire1000.ts');
   const { PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule('/src/data/universal3dExerciseRigs.ts');
 
-  const all = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
-  const exported = all.map((ex) => {
-    const phases = {};
-    for (const phase of ['start', 'middle', 'end']) {
-      const rig = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T[phase]);
-      const { rigId, rigScope, poseFeatureKo, trajectoryFocus, activeZones, ...geom } = rig;
-      phases[phase] = roundVal(geom);
-    }
-    return {
-      id: ex.id,
-      apparatus: ex.apparatus,
-      bodyPosition: ex.bodyPosition,
-      footbar: ex.footbar,
-      headrest: ex.headrest,
-      box: ex.box,
-      props: ex.props,
-      phases,
-    };
-  });
-  await writeFile(outPath, JSON.stringify(exported, null, 2) + '\n', 'utf8');
-  console.log(JSON.stringify({ syncedExercises: exported.length }));
+  const exportList = (list) =>
+    list.map((ex) => {
+      const phases = {};
+      let resolvedRigId = '';
+      for (const phase of ['start', 'middle', 'end']) {
+        const rig = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T[phase]);
+        resolvedRigId = rig.rigId;
+        const { rigId, rigScope, poseFeatureKo, trajectoryFocus, activeZones, ...geom } = rig;
+        phases[phase] = roundVal(geom);
+      }
+      return {
+        id: ex.id,
+        rigId: resolvedRigId,
+        apparatus: ex.apparatus,
+        bodyPosition: ex.bodyPosition,
+        footbar: ex.footbar,
+        headrest: ex.headrest,
+        box: ex.box,
+        props: ex.props,
+        phases,
+      };
+    });
+
+  const core218 = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+  const exported218 = exportList(core218);
+  await writeFile(outPath218, JSON.stringify(exported218, null, 2) + '\n', 'utf8');
+
+  let count524 = 0;
+  if (outPath524) {
+    const coreIdSet = new Set(core218.map((e) => e.id));
+    const worldAtomics306 = WORLD_PILATES_EXERCISES.filter((e) => e.tier === 'atomic' && !coreIdSet.has(e.id));
+    const all524 = [...core218, ...worldAtomics306];
+    const exported524 = exportList(all524);
+    await writeFile(outPath524, JSON.stringify(exported524, null, 2) + '\n', 'utf8');
+    count524 = exported524.length;
+  }
+
+  console.log(JSON.stringify({ synced218: exported218.length, synced524: count524 }));
 } finally {
   await server.close();
 }
 """
     proc = subprocess.run(
-        ["node", "--input-type=module", "-e", node_script, poses_path],
+        [resolve_node_bin(), "--input-type=module", "-e", node_script, poses_path, all_atomics_path or ""],
         cwd=ROOT_DIR,
         capture_output=True,
         text=True,
         check=True,
     )
     info = json.loads(proc.stdout.strip().splitlines()[-1])
-    return int(info["syncedExercises"])
+    return int(info["synced218"]), int(info["synced524"])
 
 
 def audit_all_poses(poses: list[dict]) -> dict:
@@ -192,6 +226,9 @@ def audit_all_poses(poses: list[dict]) -> dict:
         "cadillac_pushthrough_bar_miss": [],
         "mini_ball_placement_defect": [],
         "extreme_reach_overflow": [],
+        "extreme_elbow_kink": [],
+        "extreme_knee_flip": [],
+        "phase_delta_missing": [],
         "degenerate_pole": [],
     }
 
@@ -201,11 +238,25 @@ def audit_all_poses(poses: list[dict]) -> dict:
 
     for ex in poses:
         eid = ex["id"]
+        rig_id = ex.get("rigId", "")
         app = ex["apparatus"]
         bp = ex["bodyPosition"]
         props = [p for p in (ex.get("props") or []) if p != "none"]
         per_apparatus.setdefault(app, {"exercises": 0, "poses": 0, "defects": 0})
         per_apparatus[app]["exercises"] += 1
+
+        # Distinct start / middle / end pose delta check
+        phase_sigs = {
+            ph: json.dumps(ex["phases"][ph], sort_keys=True)
+            for ph in ("start", "middle", "end")
+        }
+        if (
+            phase_sigs["start"] == phase_sigs["middle"]
+            or phase_sigs["end"] == phase_sigs["middle"]
+            or phase_sigs["start"] == phase_sigs["end"]
+        ):
+            checks["phase_delta_missing"].append(f"{eid}: duplicate start/middle/end pose")
+            per_apparatus[app]["defects"] += 1
 
         for ph in ("start", "middle", "end"):
             total_poses += 1
@@ -245,6 +296,50 @@ def audit_all_poses(poses: list[dict]) -> dict:
                 checks["extreme_reach_overflow"].append(
                     f"{eid}/{ph}: overreach leg=({l_leg_over:.3f},{r_leg_over:.3f}) arm=({l_arm_over:.3f},{r_arm_over:.3f})"
                 )
+
+            # Extreme upright upward chicken-wing elbow kink check
+            is_overhead_tricep_or_row = any(
+                k in f"{eid} {rig_id}"
+                for k in ("shave", "salute", "zip-up", "seated-arm-springs")
+            )
+            if sp_up[2] > 0.48 and not is_overhead_tricep_or_row:
+                for sn, sh_pt, eb_pt, wr_pt in [("L", l_sh, l_elb, l_wr), ("R", r_sh, r_elb, r_wr)]:
+                    u1 = vnorm(vsub(eb_pt, sh_pt))
+                    u2 = vnorm(vsub(wr_pt, eb_pt))
+                    bend_deg = math.degrees(math.acos(max(-1.0, min(1.0, vdot(u1, u2)))))
+                    if eb_pt[2] > max(sh_pt[2], wr_pt[2]) + 0.085 and bend_deg > 52.0:
+                        checks["extreme_elbow_kink"].append(
+                            f"{eid}/{ph}: {sn} upward elbow kink sh.z={sh_pt[2]:.2f} elb.z={eb_pt[2]:.2f} wr.z={wr_pt[2]:.2f} bend={bend_deg:.0f}deg"
+                        )
+
+            # Extreme anatomical knee hinge flip check (matches TS unslop test)
+            sp_mid = tuple(r["spineMid"])
+            pel_up = vnorm(vsub(sp_mid, pel))
+            pel_ant_p = vsub(ant, vmul(pel_up, vdot(ant, pel_up)))
+            pel_ant = vnorm(pel_ant_p) if vlen(pel_ant_p) > 1e-4 else ant_n
+            is_lunge_or_horse = any(
+                k in f"{eid} {rig_id}"
+                for k in ("lunge", "scooter", "splits", "horseback", "bulgarian", "pigeon", "curtsy", "handstand", "barrel-standing")
+            )
+            for sn, hip_pt, kn_pt, ank_pt in [("L", l_hip, l_knee, l_ankle), ("R", r_hip, r_knee, r_ankle)]:
+                u1 = vnorm(vsub(kn_pt, hip_pt))
+                u2 = vnorm(vsub(ank_pt, kn_pt))
+                bend_deg = math.degrees(math.acos(max(-1.0, min(1.0, vdot(u1, u2)))))
+                if bend_deg > 18.0 and not r.get("trapezeStrap"):
+                    patella = vnorm(vsub(u1, u2))
+                    outward = vmul(pr, -1.0 if sn == "L" else 1.0)
+                    is_prone_curl = pel_ant[2] < -0.45 and (patella[2] < -0.10 or "rocking" in f"{eid} {rig_id}")
+                    if not is_prone_curl and not is_lunge_or_horse:
+                        valid_hinge = (
+                            vdot(patella, pel_ant) >= -0.10
+                            or vdot(patella, ant_n) >= -0.08
+                            or vdot(patella, pel_up) >= 0.35
+                            or vdot(patella, outward) >= 0.50
+                        )
+                        if not valid_hinge:
+                            checks["extreme_knee_flip"].append(
+                                f"{eid}/{ph}: {sn} inverted knee hinge bend={bend_deg:.0f}deg patella=({patella[0]:.2f},{patella[1]:.2f},{patella[2]:.2f})"
+                            )
 
             # 1) Floor penetration check (zero z < 0 & clearance for limb thickness)
             for jname, pt, min_z in [
@@ -359,8 +454,11 @@ def audit_all_poses(poses: list[dict]) -> dict:
                     "original-chair-seated-arm-arc",
                     "original-chair-seated-spine-twist",
                     "original-chair-seated-back-reach",
+                    "crawled-chair-teaser-tricep-press",
+                    "world-chair-chair-reverse-pike",
                 }
-                if eid not in non_pedal_seated:
+                is_chair_teaser = "chair-teaser-triceps" in rig_id
+                if eid not in non_pedal_seated and not is_chair_teaser:
                     d_lf = math.hypot(l_ankle[0] - lpt[0], l_ankle[2] - (lpt[1] + 0.036))
                     d_rf = math.hypot(r_ankle[0] - rpt[0], r_ankle[2] - (rpt[1] + 0.036))
                     d_lh = math.hypot(l_wr[0] - lpt[0], l_wr[2] - (lpt[1] + 0.030))
@@ -374,7 +472,11 @@ def audit_all_poses(poses: list[dict]) -> dict:
                 if r.get("withChairHandles"):
                     # Grips run x in [-0.09, +0.03], y = +-0.286, z = 1.26..1.28
                     # In side-facing going-up-side, only lHand grips the front handle (-0.286); rHand balances overhead
-                    grip_sides = [("L", l_wr)] if eid == "crawled-chair-going-up-side" else [("L", l_wr), ("R", r_wr)]
+                    is_single_handle = (
+                        eid == "crawled-chair-going-up-side"
+                        or "chair-goingup-side" in rig_id
+                    )
+                    grip_sides = [("L", l_wr)] if is_single_handle else [("L", l_wr), ("R", r_wr)]
                     for sn, wr in grip_sides:
                         dx_g = max(0.0, -0.09 - wr[0], wr[0] - 0.03)
                         dy_g = abs(abs(wr[1]) - 0.286)
@@ -418,7 +520,11 @@ def audit_all_poses(poses: list[dict]) -> dict:
             if app == "cadillac":
                 if r.get("rolldownBar"):
                     bx, bz = r["rolldownBar"]
-                    grip_sides = [("L", l_wr)] if eid == "expanded-cadillac-roll-back-side-arm" else [("L", l_wr), ("R", r_wr)]
+                    is_single_arm_rdb = (
+                        eid == "expanded-cadillac-roll-back-side-arm"
+                        or "expanded-cadillac-roll-back-side-arm" in rig_id
+                    )
+                    grip_sides = [("L", l_wr)] if is_single_arm_rdb else [("L", l_wr), ("R", r_wr)]
                     for sn, wr in grip_sides:
                         err = math.hypot(wr[0] - bx, wr[2] - bz)
                         if err > 0.025:
@@ -472,17 +578,33 @@ def audit_all_poses(poses: list[dict]) -> dict:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sync", action="store_true", help="Explicitly sync poses_studio_canonical.json from TS (default)")
-    parser.add_argument("--no-sync", action="store_true", help="Skip syncing poses_studio_canonical.json from TS")
+    parser.add_argument("--sync", action="store_true", help="Explicitly sync poses JSON from TS (default)")
+    parser.add_argument("--no-sync", action="store_true", help="Skip syncing poses JSON from TS")
+    parser.add_argument(
+        "--all-atomics",
+        action="store_true",
+        help="Sync and audit ALL 524 atomic exercises (218 core + 306 world atomics = 1,572 poses) to poses_studio_canonical_524.json while also updating poses_studio_canonical.json",
+    )
     parser.add_argument("--poses", default=DEFAULT_POSES_PATH)
+    parser.add_argument("--poses-524", default=DEFAULT_POSES_524_PATH)
     parser.add_argument("--report", default=DEFAULT_REPORT_PATH)
     args = parser.parse_args()
 
-    if not args.no_sync:
-        synced = sync_poses_from_ts(args.poses)
-        print(f"[audit_and_fix_all_poses] Synced {synced} exercises -> {os.path.relpath(args.poses, ROOT_DIR)}")
+    audit_target_path = args.poses_524 if args.all_atomics else args.poses
 
-    with open(args.poses, "r", encoding="utf-8") as f:
+    if not args.no_sync:
+        synced218, synced524 = sync_poses_from_ts(
+            args.poses,
+            args.poses_524 if args.all_atomics else None,
+        )
+        print(f"[audit_and_fix_all_poses] Synced {synced218} core exercises -> {os.path.relpath(args.poses, ROOT_DIR)}")
+        if args.all_atomics:
+            print(
+                f"[audit_and_fix_all_poses] Synced {synced524} atomic exercises ({synced524 * 3} poses) "
+                f"-> {os.path.relpath(args.poses_524, ROOT_DIR)}"
+            )
+
+    with open(audit_target_path, "r", encoding="utf-8") as f:
         poses = json.load(f)
 
     report = audit_all_poses(poses)
@@ -498,7 +620,7 @@ def main():
     for k, count in report["defectCountsByCategory"].items():
         if count > 0:
             print(f"  FAIL {k}: {count}")
-            for sample in report["defects"][k][:8]:
+            for sample in report["defects"][k][:12]:
                 print(f"    - {sample}")
 
     sys.exit(0 if report["passed"] else 1)

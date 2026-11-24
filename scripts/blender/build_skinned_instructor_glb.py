@@ -22,7 +22,7 @@ Architecture:
   non-degenerate `TEXCOORD_0` 4x4 tile UVs encoding exact material role per triangle.
 - Strict hygiene gate before export:
     0 true non-manifold edges, 0 boundary edges, 0 loose verts, 0 wire edges,
-    6,000..18,000 triangles, <= 650 KB GLB, Z = 0.0 grounded, height ~1.65 m.
+    22,000..32,000 smooth triangles, <= 1.4 MB GLB, Z = 0.0 grounded, height ~1.63–1.65 m.
 """
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ import sys
 import bmesh
 import bpy
 from mathutils import Matrix, Quaternion, Vector
+from mathutils.bvhtree import BVHTree
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
@@ -56,26 +57,26 @@ from pilates_3d_modeling_kernel import (
 # 1. PALETTE, ATLAS BANDS & PART REGION CONSTANTS
 # ==============================================================================
 
-# Palette matched closely to `realtimeStudio3dEngine.ts` + `pilates_3d_modeling_kernel.py`
+# Palette matched closely to `realtimeStudio3dEngine.ts` + `pilates_3d_modeling_kernel.py` v5
 COLOR_SRGB: dict[str, tuple[float, float, float]] = {
-    "skin": (0.955, 0.822, 0.745),
-    "skin_face": (0.958, 0.828, 0.752),
-    "cheek_blush": (0.950, 0.625, 0.595),
-    "lid_tint": (0.790, 0.595, 0.560),
-    "lip_halo": (0.885, 0.565, 0.545),
-    "lip_tint": (0.835, 0.442, 0.432),
-    "eye_white": (0.962, 0.950, 0.938),
-    "iris_dark": (0.145, 0.088, 0.062),
-    "iris_glow": (0.415, 0.238, 0.142),
-    "catchlight": (0.992, 0.988, 0.980),
-    "lash_ink": (0.092, 0.064, 0.056),
-    "brow_soft": (0.188, 0.128, 0.098),
-    "suit": (0.275, 0.422, 0.352),
-    "legging": (0.172, 0.292, 0.244),
-    "suit_accent": (0.952, 0.938, 0.906),
-    "scrunchie": (0.905, 0.880, 0.825),
-    "hair": (0.205, 0.138, 0.108),
-    "sock": (0.958, 0.944, 0.912),
+    "skin": (0.958, 0.828, 0.750),
+    "skin_face": (0.962, 0.832, 0.756),
+    "cheek_blush": (0.955, 0.618, 0.588),
+    "lid_tint": (0.788, 0.590, 0.556),
+    "lip_halo": (0.892, 0.562, 0.542),
+    "lip_tint": (0.848, 0.432, 0.425),
+    "eye_white": (0.966, 0.954, 0.942),
+    "iris_dark": (0.118, 0.070, 0.048),
+    "iris_glow": (0.425, 0.242, 0.142),
+    "catchlight": (0.994, 0.990, 0.984),
+    "lash_ink": (0.072, 0.048, 0.042),
+    "brow_soft": (0.162, 0.108, 0.082),
+    "suit": (0.268, 0.422, 0.352),
+    "legging": (0.168, 0.292, 0.242),
+    "suit_accent": (0.958, 0.944, 0.912),
+    "scrunchie": (0.918, 0.872, 0.794),
+    "hair": (0.185, 0.120, 0.092),
+    "sock": (0.960, 0.946, 0.916),
 }
 
 # 4x4 atlas tile index encoding PBR roughness & runtime materialRole
@@ -193,10 +194,10 @@ def build_apose_landmarks() -> dict[str, Vector]:
         lm[f"foot_tip_{side}"] = Vector((sx * 0.104, -0.138, 0.024))
 
         lm[f"clav_{side}"] = Vector((sx * 0.032, -0.004, 1.348))
-        lm[f"shoulder_{side}"] = Vector((sx * 0.148, 0.002, 1.338))
-        lm[f"elbow_{side}"] = Vector((sx * 0.368, 0.018, 1.150))
-        lm[f"wrist_{side}"] = Vector((sx * 0.570, -0.012, 0.980))
-        lm[f"hand_tip_{side}"] = Vector((sx * 0.670, -0.024, 0.896))
+        lm[f"shoulder_{side}"] = Vector((sx * 0.148, 0.002, 1.326))
+        lm[f"elbow_{side}"] = Vector((sx * 0.368, 0.018, 1.142))
+        lm[f"wrist_{side}"] = Vector((sx * 0.570, -0.012, 0.974))
+        lm[f"hand_tip_{side}"] = Vector((sx * 0.670, -0.024, 0.892))
     return lm
 
 
@@ -663,8 +664,8 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
             y = st * (ry_b + garment_offset) * glute_lobe + sacral_dip + spinous_furrow + scapula_blades
         return ct * (rx + garment_offset), y
 
-    # N = 16 -> subsurf 1 produces ~7,600 smooth quads/tris on unified body (~11.5k total with head/hands/feet!)
-    N = 16
+    # N = 24 -> subsurf 1 produces ~13k smooth quads/tris on unified body (~25k–29k total with sculpted head/hair/hands/feet!)
+    N = 24
     quarter = N // 4
     half = N // 2
     bm_body = bmesh.new()
@@ -688,16 +689,16 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
         ("spine",  0.650, 0.114, 0.082, 0.075, 0.000, 0.023, 0.003, 0.000, 0.000, 0.0016, 0.0, 0.0, 2),
         ("spine",  0.740, 0.123, 0.085, 0.079, 0.000, 0.021, 0.005, 0.000, 0.000, 0.0016, 0.0, 0.0, 2),
         ("spine",  0.822, 0.128, 0.077, 0.076, 0.000, 0.006, 0.005, 0.001, 0.000, 0.0016, 0.0, 1.0, 2),
-        # Rings 14..17: upper décolleté, clavicles & shoulder openings (i_sh_lo=14 .. i_sh_hi=17)
-        ("spine",  0.838, 0.128, 0.075, 0.075, 0.000, 0.003, 0.004, 0.002, 0.001, 0.0000, 0.0, 0.85, 2),
-        ("spine",  0.908, 0.129, 0.071, 0.072, 0.000, 0.000, 0.003, 0.005, 0.003, 0.0000, 0.0, 0.0, 0),
-        ("spine",  0.978, 0.118, 0.064, 0.066, 0.000, 0.000, 0.001, 0.006, 0.005, 0.0000, 0.0, 0.0, 0),
-        ("spine",  1.038, 0.074, 0.050, 0.051, 0.000, 0.000, 0.000, 0.002, 0.002, 0.0000, 0.0, 0.0, 0),
-        # Continuous swan neck column seating cleanly inside skull base
-        ("neck",   0.20,  0.045, 0.043, 0.044, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
-        ("neck",   0.52,  0.037, 0.036, 0.038, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
-        ("neck",   0.82,  0.0365, 0.0355, 0.039, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
-        ("neck",   1.00,  0.041, 0.039, 0.043, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
+        # Rings 14..17: upper décolleté, clavicles, graceful sloping trapezius & shoulder openings (i_sh_lo=14 .. i_sh_hi=17)
+        ("spine",  0.838, 0.128, 0.075, 0.075, 0.000, 0.003, 0.004, 0.0025, 0.0015, 0.0000, 0.0, 0.85, 2),
+        ("spine",  0.908, 0.127, 0.070, 0.071, 0.000, 0.000, 0.0035, 0.0056, 0.0042, 0.0000, 0.0, 0.0, 0),
+        ("spine",  0.978, 0.110, 0.061, 0.063, 0.000, 0.000, 0.0015, 0.0064, 0.0060, 0.0000, 0.0, 0.0, 0),
+        ("spine",  1.038, 0.065, 0.045, 0.047, 0.000, 0.000, 0.000, 0.0022, 0.0024, 0.0000, 0.0, 0.0, 0),
+        # Continuous slender swan neck (~0.0345m) seating cleanly inside skull base
+        ("neck",   0.18,  0.042, 0.039, 0.041, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
+        ("neck",   0.48,  0.0345, 0.0335, 0.0355, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
+        ("neck",   0.80,  0.0340, 0.0330, 0.0360, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
+        ("neck",   1.00,  0.0380, 0.0360, 0.0395, 0.000, 0.000, 0.000, 0.000, 0.000, 0.0000, 0.0, 0.0, 0),
     ]
 
     neck_end = head_pos - up_axis * 0.014 - ant_n * 0.011
@@ -727,11 +728,11 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
                 row.append(bm_body.verts.new(c_nk + body_right * (ct * rx) + ant_n * (st * ry_nk + scm)))
         torso_rings.append(row)
 
-    # Shoulder hole patches: rings 14..17 (3 rows) x 2 radial quads on each lateral side (N = 16)
+    # Shoulder hole patches: rings 14..17 (3 rows) x 4 radial quads on each lateral side (N = 24 -> 14-vert arm loops!)
     # Note: +cos(th) is +X (Left `_L`), -cos(th) is -X (Right `_R`).
     i_sh_lo, i_sh_hi = 14, 17
-    pos_x_sh_quads = {(N - 1) % N, 0}        # +X side -> Character Left (`_L`)
-    neg_x_sh_quads = {half - 1, half}        # -X side -> Character Right (`_R`)
+    pos_x_sh_quads = {(N - 2) % N, (N - 1) % N, 0, 1}        # +X side -> Character Left (`_L`)
+    neg_x_sh_quads = {half - 2, half - 1, half, half + 1}    # -X side -> Character Right (`_R`)
 
     for i in range(len(torso_rings) - 1):
         mat_idx = torso_ring_specs[i + 1][13]
@@ -798,23 +799,26 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
 
         leg_profile_table = [
             (0.10,  0.065, 0.069,  0.005, 1),
-            (0.20,  0.061, 0.064,  0.005, 1),
-            (0.32,  0.053, 0.055,  0.004, 1),
-            (0.42,  0.045, 0.047,  0.003, 1),
+            (0.19,  0.061, 0.064,  0.005, 1),
+            (0.29,  0.054, 0.056,  0.004, 1),
+            (0.38,  0.047, 0.049,  0.003, 1),
+            (0.42,  0.044, 0.046,  0.003, 1),
             (0.46,  0.042, 0.044,  0.004, 1),
             (0.50,  0.041, 0.043,  0.005, 1),
             (0.54,  0.040, 0.042,  0.002, 1),
             (0.58,  0.039, 0.041, -0.002, 1),
-            (0.68,  0.043, 0.047, -0.007, 1),
+            (0.63,  0.041, 0.044, -0.005, 1),
+            (0.70,  0.043, 0.047, -0.007, 1),
             (0.79,  0.036, 0.039, -0.004, 1),
-            (0.875, 0.0295, 0.0320, -0.001, 1),
-            (0.888, 0.0280, 0.0305, -0.001, 1),
+            (0.872, 0.0298, 0.0322, -0.001, 1),
+            (0.884, 0.0294, 0.0318, -0.001, 1),
+            (0.894, 0.0274, 0.0300, -0.001, 0),
             (0.950, 0.0265, 0.0295,  0.000, 0),
             (1.000, 0.0265, 0.0295,  0.000, 0),
         ]
         leg_stations = []
         for s_val, rx_l, ry_l, ant_shift, m_idx in leg_profile_table:
-            pt, tan = sample_rounded_2seg_chain(hole_c, kn, ankle_end, s_val, corner_blend=0.20)
+            pt, tan = sample_rounded_2seg_chain(hole_c, kn, ankle_end, s_val, corner_blend=0.24)
             f_ax = (ant_n - tan * ant_n.dot(tan)).normalized()
             c_shifted = pt + f_ax * ant_shift
             quad_w = math.exp(-(((s_val - 0.25) / 0.13) ** 2))
@@ -863,18 +867,18 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
         socket_smooth_verts.extend(leg_sock_vs)
         leg_socket_smooth_verts.extend(leg_sock_vs)
 
-    # Shoulder hole loops (10 vertices per lateral shoulder opening for N = 16, 2 quads wide x 3 rows tall)
+    # Shoulder hole loops (14 vertices per lateral shoulder opening for N = 24, 4 quads wide x 3 rows tall)
     pos_x_sh_hole = (
-        [torso_rings[i_sh_lo][s] for s in ((N - 1) % N, 0, 1)]
-        + [torso_rings[i][1] for i in range(i_sh_lo + 1, i_sh_hi + 1)]
-        + [torso_rings[i_sh_hi][s] for s in (0, (N - 1) % N)]
-        + [torso_rings[i][(N - 1) % N] for i in range(i_sh_hi - 1, i_sh_lo, -1)]
+        [torso_rings[i_sh_lo][s] for s in ((N - 2) % N, (N - 1) % N, 0, 1, 2)]
+        + [torso_rings[i][2] for i in range(i_sh_lo + 1, i_sh_hi + 1)]
+        + [torso_rings[i_sh_hi][s] for s in (1, 0, (N - 1) % N, (N - 2) % N)]
+        + [torso_rings[i][(N - 2) % N] for i in range(i_sh_hi - 1, i_sh_lo, -1)]
     )
     neg_x_sh_hole = (
-        [torso_rings[i_sh_lo][s] for s in (half - 1, half, half + 1)]
-        + [torso_rings[i][half + 1] for i in range(i_sh_lo + 1, i_sh_hi + 1)]
-        + [torso_rings[i_sh_hi][s] for s in (half, half - 1)]
-        + [torso_rings[i][half - 1] for i in range(i_sh_hi - 1, i_sh_lo, -1)]
+        [torso_rings[i_sh_lo][s] for s in (half - 2, half - 1, half, half + 1, half + 2)]
+        + [torso_rings[i][half + 2] for i in range(i_sh_lo + 1, i_sh_hi + 1)]
+        + [torso_rings[i_sh_hi][s] for s in (half + 1, half, half - 1, half - 2)]
+        + [torso_rings[i][half - 2] for i in range(i_sh_hi - 1, i_sh_lo, -1)]
     )
 
     for side, sh_hole, out_hint, reg_id in [
@@ -890,38 +894,46 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
         arm_dir0 = (deltoid_cap_pt - sh_hole_c).normalized()
 
         arm_profile_table = [
-            (0.10, 0.042, 0.041),
-            (0.18, 0.036, 0.037),
-            (0.30, 0.033, 0.034),
-            (0.42, 0.030, 0.031),
-            (0.46, 0.029, 0.030),
-            (0.50, 0.029, 0.029),
-            (0.54, 0.029, 0.029),
-            (0.58, 0.030, 0.028),
-            (0.74, 0.025, 0.023),
-            (0.91, 0.020, 0.016),
-            (1.00, 0.019, 0.015),
+            (0.09, 0.043, 0.042),
+            (0.15, 0.038, 0.039),
+            (0.23, 0.0345, 0.0360),
+            (0.32, 0.0320, 0.0335),
+            (0.39, 0.0305, 0.0315),
+            (0.43, 0.0298, 0.0306),
+            (0.465, 0.0294, 0.0298),
+            (0.50, 0.0292, 0.0294),
+            (0.535, 0.0295, 0.0292),
+            (0.57, 0.0302, 0.0288),
+            (0.61, 0.0300, 0.0282),
+            (0.69, 0.0272, 0.0252),
+            (0.79, 0.0235, 0.0210),
+            (0.91, 0.0198, 0.0160),
+            (1.00, 0.0188, 0.0150),
         ]
         arm_stations = []
         for s_val, rx_a, ry_a in arm_profile_table:
-            s_chain = clamp((s_val - 0.10) / 0.90, 0.0, 1.0)
-            pt, tan = sample_rounded_2seg_chain(deltoid_cap_pt, elb, wr, s_chain, corner_blend=0.20)
+            s_chain = clamp((s_val - 0.09) / 0.91, 0.0, 1.0)
+            pt, tan = sample_rounded_2seg_chain(deltoid_cap_pt, elb, wr, s_chain, corner_blend=0.26)
             f_ax = (ant_n - tan * ant_n.dot(tan)).normalized()
-            delt_w = math.exp(-(((s_val - 0.10) / 0.09) ** 2))
-            elb_w = math.exp(-(((s_val - 0.50) / 0.085) ** 2))
+            delt_w = math.exp(-(((s_val - 0.11) / 0.095) ** 2))
+            bicep_w = math.exp(-(((s_val - 0.28) / 0.105) ** 2))
+            elb_w = math.exp(-(((s_val - 0.50) / 0.100) ** 2))
+            forearm_w = math.exp(-(((s_val - 0.61) / 0.090) ** 2))
 
-            def arm_prof(th, a=rx_a, b=ry_a, dw=delt_w, ew=elb_w):
+            def arm_prof(th, a=rx_a, b=ry_a, dw=delt_w, bw=bicep_w, ew=elb_w, fw=forearm_w):
                 ct, st = math.cos(th), math.sin(th)
-                deltoid_cap = 0.0030 * dw * math.exp(-(((abs(ct) - 0.60) / 0.45) ** 2))
-                olecranon = 0.0014 * ew * math.exp(-((ct / 0.32) ** 2)) * max(0.0, -st)
-                return ct * (a + deltoid_cap), st * b - olecranon
+                deltoid_cap = 0.0034 * dw * math.exp(-(((abs(ct) - 0.52) / 0.48) ** 2))
+                bicep_tricep = (0.0018 if st > 0.0 else 0.0014) * bw * math.exp(-((ct / 0.48) ** 2)) * abs(st)
+                brachiorad = 0.0015 * fw * math.exp(-(((abs(ct) - 0.58) / 0.36) ** 2))
+                olecranon = 0.0015 * ew * math.exp(-((ct / 0.34) ** 2)) * max(0.0, -st)
+                return ct * (a + deltoid_cap + brachiorad), st * (b + bicep_tricep) - olecranon
 
             arm_stations.append((pt, tan, f_ax, arm_prof, 0))
 
         before_faces = len(bm_body.faces)
         arm_sock_vs = _extrude_seamless_limb_from_hole(
             bm_body, sh_hole, arm_dir0, arm_stations, cap_end=0.005,
-            socket_s_pair=(0.025, 0.065), station0_s=0.10,
+            socket_s_pair=(0.025, 0.060), station0_s=0.09,
         )
         bm_body.faces.ensure_lookup_table()
         for f in bm_body.faces[before_faces:]:
@@ -968,25 +980,78 @@ def build_seamless_body_apose(pc: SkinnedPartCollector, lm: dict[str, Vector]) -
     mod.render_levels = 1
     pc.objects.append(body_obj)
 
-    # Surface-hugging botanical sage crop-top shoulder straps (flush on trapezius & clavicle skin!)
+    # Project crop-top shoulder straps & scoop-neck piping strictly onto the evaluated Subsurf Body_Unified surface (ZERO air gap!)
+    bpy.context.view_layer.update()
+    deps_strap = bpy.context.evaluated_depsgraph_get()
+    body_bvh = BVHTree.FromObject(body_obj, deps_strap)
+
+    def snap_to_body_surface(pt: Vector, lift: float = 0.0006) -> tuple[Vector, Vector]:
+        hit_loc, hit_nrm, _, _ = body_bvh.find_nearest(pt)
+        if hit_loc is not None and hit_nrm is not None:
+            n = hit_nrm.normalized() if hit_nrm.length > 1e-6 else Vector((0.0, 0.0, 1.0))
+            return hit_loc + n * lift, n
+        return pt, Vector((0.0, 0.0, 1.0))
+
     for sx, side, reg_id in ((1.0, "L", REGION_STRAP_L), (-1.0, "R", REGION_STRAP_R)):
         strap_ctrl = []
         for u_st, th_st, rx_m, ryf_m, ryb_m, lift_up in [
-            (0.815, math.radians(52.0 if sx > 0 else 128.0), 0.125, 0.075, 0.074, 0.000),
-            (0.908, math.radians(48.0 if sx > 0 else 132.0), 0.124, 0.069, 0.070, 0.000),
-            (0.975, math.radians(38.0 if sx > 0 else 142.0), 0.112, 0.061, 0.063, -0.001),
-            (1.018, math.radians(0.0 if sx > 0 else 180.0),  0.082, 0.048, 0.049, -0.003),
-            (0.975, math.radians(-38.0 if sx > 0 else -142.0), 0.112, 0.061, 0.063, -0.001),
-            (0.908, math.radians(-48.0 if sx > 0 else -132.0), 0.124, 0.069, 0.070, 0.000),
-            (0.810, math.radians(-52.0 if sx > 0 else -128.0), 0.125, 0.075, 0.074, 0.000),
+            (0.815, math.radians(52.0 if sx > 0 else 128.0), 0.128, 0.077, 0.076, 0.000),
+            (0.908, math.radians(50.0 if sx > 0 else 130.0), 0.127, 0.070, 0.071, 0.000),
+            (0.978, math.radians(46.0 if sx > 0 else 134.0), 0.110, 0.061, 0.063, 0.000),
+            (1.016, math.radians(0.0 if sx > 0 else 180.0),  0.076, 0.048, 0.049, 0.002),
+            (0.978, math.radians(-46.0 if sx > 0 else -134.0), 0.110, 0.061, 0.063, 0.000),
+            (0.908, math.radians(-50.0 if sx > 0 else -130.0), 0.127, 0.070, 0.071, 0.000),
+            (0.810, math.radians(-52.0 if sx > 0 else -128.0), 0.128, 0.077, 0.076, 0.000),
         ]:
             pt_s, r_s, f_s, t_s = spine_frame(u_st)
-            dx_s, dy_s = torso_contour(u_st, th_st, rx_m, ryf_m, ryb_m, garment_offset=0.0010)
+            dx_s, dy_s = torso_contour(u_st, th_st, rx_m, ryf_m, ryb_m, garment_offset=0.0012)
             strap_ctrl.append(pt_s + r_s * dx_s + f_s * dy_s + t_s * lift_up)
+        dense_strap = eval_catmull_rom_spline(strap_ctrl, 4)
+        snapped_pts = []
+        snapped_nrms = []
+        for sp in dense_strap:
+            p_hit, n_hit = snap_to_body_surface(sp, lift=0.0005)
+            snapped_pts.append(p_hit)
+            snapped_nrms.append(n_hit)
+        # Mild 1-pass Laplacian smoothing on snapped centerline then re-snap for silky contour with 0 air gap
+        for _ in range(2):
+            sm_pts = [snapped_pts[0]]
+            for k in range(1, len(snapped_pts) - 1):
+                mid = snapped_pts[k - 1] * 0.25 + snapped_pts[k] * 0.50 + snapped_pts[k + 1] * 0.25
+                p_hit, _ = snap_to_body_surface(mid, lift=0.0005)
+                sm_pts.append(p_hit)
+            sm_pts.append(snapped_pts[-1])
+            snapped_pts = sm_pts
+
+        def strap_surface_normal(qpt: Vector) -> Vector:
+            _, hn, _, _ = body_bvh.find_nearest(qpt)
+            return hn.normalized() if (hn is not None and hn.length > 1e-6) else Vector((0.0, 0.0, 1.0))
+
         add_closed_tube(
-            pc, f"CropStrap_{side}", eval_catmull_rom_spline(strap_ctrl, 2),
-            0.0064, "suit", reg_id, closed=False, radial_segs=6, aspect_b=0.35,
+            pc, f"CropStrap_{side}", snapped_pts,
+            0.0062, "suit", reg_id, closed=False, radial_segs=8, aspect_b=0.30,
+            surface_normal_fn=strap_surface_normal,
         )
+
+    # Tailored satin ivory scoop-neck piping snapped strictly flush along the crop-top neckline
+    scoop_pipe_pts = []
+    n_pipe = 32
+    for k in range(n_pipe):
+        th = (k + 0.5) * 2.0 * math.pi / n_pipe
+        ct, st = math.cos(th), math.sin(th)
+        center_mask = max(0.0, 1.0 - (abs(ct) / 0.58) ** 2)
+        u_eff = 0.830 - ((0.046 if st > 0.0 else 0.058) * center_mask * abs(st))
+        pt_p, r_p, f_p, _ = spine_frame(u_eff)
+        dx_p, dy_p = torso_contour(
+            u_eff, th, 0.128, 0.076, 0.075,
+            bust_boost=0.004, scap_relief=0.0045, clav_relief=0.0015, garment_offset=0.0015,
+        )
+        p_hit, _ = snap_to_body_surface(pt_p + r_p * dx_p + f_p * dy_p, lift=0.0005)
+        scoop_pipe_pts.append(p_hit)
+    add_closed_tube(
+        pc, "CropScoopPiping", scoop_pipe_pts, 0.0020, "suit_accent", REGION_TORSO_NECK,
+        closed=True, radial_segs=6,
+    )
 
 
 def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> None:
@@ -1021,23 +1086,23 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
                 z -= 0.0018 * chin_w
                 mento_w = math.exp(-((nx / 0.20) ** 2)) * math.exp(-(((nz + 0.65) / 0.085) ** 2))
                 y -= 0.0020 * mento_w * ny
-            temple_w = math.exp(-(((abs(nx) - 0.85) / 0.16) ** 2)) * math.exp(-(((nz - 0.24) / 0.22) ** 2))
+            temple_w = math.exp(-(((abs(nx) - 0.85) / 0.16) ** 2)) * math.exp(-(((nz - 0.18) / 0.22) ** 2))
             x -= math.copysign(0.0022 * temple_w * max(0.0, ny + 0.2), nx)
-            cheek_w = math.exp(-(((abs(nx) - 0.48) / 0.25) ** 2)) * math.exp(-(((nz + 0.14) / 0.23) ** 2))
+            cheek_w = math.exp(-(((abs(nx) - 0.48) / 0.25) ** 2)) * math.exp(-(((nz + 0.20) / 0.23) ** 2))
             x += math.copysign(0.0038 * cheek_w * ny, nx)
             y += 0.0046 * cheek_w * ny
-            brow_w = math.exp(-(((abs(nx) - 0.35) / 0.24) ** 2)) * math.exp(-(((nz - 0.22) / 0.09) ** 2))
-            eye_w = math.exp(-(((abs(nx) - 0.36) / 0.19) ** 2)) * math.exp(-(((nz - 0.01) / 0.13) ** 2))
-            y += (0.0020 * brow_w - 0.0050 * eye_w) * ny
-            bridge_w = math.exp(-((nx / 0.088) ** 2)) * math.exp(-(((nz + 0.07) / 0.20) ** 2))
-            tip_w = math.exp(-((nx / 0.105) ** 2)) * math.exp(-(((nz + 0.24) / 0.090) ** 2))
-            alar_w = math.exp(-(((abs(nx) - 0.135) / 0.055) ** 2)) * math.exp(-(((nz + 0.26) / 0.060) ** 2))
-            subnasal_w = math.exp(-((nx / 0.14) ** 2)) * math.exp(-(((nz + 0.34) / 0.052) ** 2))
-            y += (0.0098 * bridge_w + 0.0124 * tip_w + 0.0030 * alar_w - 0.0028 * subnasal_w) * ny
-            z += (0.0020 * tip_w) * ny
-            phil_w = math.exp(-((nx / 0.055) ** 2)) * math.exp(-(((nz + 0.39) / 0.055) ** 2))
-            mouth_w = math.exp(-((nx / 0.25) ** 2)) * math.exp(-(((nz + 0.49) / 0.11) ** 2))
-            y += (0.0040 * mouth_w - 0.0014 * phil_w) * ny
+            brow_w = math.exp(-(((abs(nx) - 0.35) / 0.24) ** 2)) * math.exp(-(((nz - 0.145) / 0.09) ** 2))
+            eye_w = math.exp(-(((abs(nx) - 0.36) / 0.19) ** 2)) * math.exp(-(((nz + 0.055) / 0.13) ** 2))
+            y += (0.0020 * brow_w - 0.0052 * eye_w) * ny
+            bridge_w = math.exp(-((nx / 0.088) ** 2)) * math.exp(-(((nz + 0.125) / 0.19) ** 2))
+            tip_w = math.exp(-((nx / 0.105) ** 2)) * math.exp(-(((nz + 0.285) / 0.088) ** 2))
+            alar_w = math.exp(-(((abs(nx) - 0.135) / 0.055) ** 2)) * math.exp(-(((nz + 0.305) / 0.058) ** 2))
+            subnasal_w = math.exp(-((nx / 0.14) ** 2)) * math.exp(-(((nz + 0.375) / 0.050) ** 2))
+            y += (0.0096 * bridge_w + 0.0120 * tip_w + 0.0028 * alar_w - 0.0026 * subnasal_w) * ny
+            z += (0.0018 * tip_w) * ny
+            phil_w = math.exp(-((nx / 0.055) ** 2)) * math.exp(-(((nz + 0.425) / 0.052) ** 2))
+            mouth_w = math.exp(-((nx / 0.29) ** 2)) * math.exp(-(((nz + 0.515) / 0.105) ** 2))
+            y += (0.0038 * mouth_w - 0.0014 * phil_w) * ny
         else:
             if nz < -0.22:
                 occ_t = (-0.22 - nz) / 0.78
@@ -1053,9 +1118,30 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
         p = eval_head_local(nx, ny, nz)
         return Vector((p.x, p.y + y_out, p.z + z_off))
 
-    # 1) Sculpted Oval-Heart Head Cranium + Soft Editorial Makeup Vertex Colors
+    def head_surface_pt(nx: float, nz: float, out_offset: float = 0.0) -> Vector:
+        """Evaluates exact point on sculpted cranium/cheek surface + radial outward normal offset."""
+        r2 = nx * nx + nz * nz
+        if r2 > 0.985:
+            s_clamp = math.sqrt(0.985 / r2)
+            nx *= s_clamp
+            nz *= s_clamp
+        ny = math.sqrt(max(0.01, 1.0 - nx * nx - nz * nz))
+        p = eval_head_local(nx, ny, nz)
+        n_out = Vector((p.x / (RX * RX), p.y / (RY * RY), p.z / (RZ * RZ)))
+        if n_out.length > 1e-6:
+            n_out.normalize()
+        else:
+            n_out = Vector((0.0, 1.0, 0.0))
+        return p + n_out * out_offset
+
+    def eval_surface_hair_spline(ctrl_triplets: list[tuple[float, float, float]], samples_per_seg: int = 3) -> list[Vector]:
+        ctrl_vecs = [Vector(c) for c in ctrl_triplets]
+        dense = eval_catmull_rom_spline(ctrl_vecs, samples_per_seg)
+        return [basis @ head_surface_pt(v.x, v.y, v.z) for v in dense]
+
+    # 1) High-Density Sculpted Oval-Heart Head Cranium + Soft Editorial Makeup Vertex Colors
     bm_head = bmesh.new()
-    bmesh.ops.create_uvsphere(bm_head, u_segments=22, v_segments=15, radius=1.0)
+    bmesh.ops.create_uvsphere(bm_head, u_segments=36, v_segments=24, radius=1.0)
     vert_n = {}
     for v in bm_head.verts:
         nx, ny, nz = v.co.x, v.co.y, v.co.z
@@ -1072,18 +1158,18 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
         r, g, b = skin_base
         if ny > 0.15:
             f_w = min(1.0, (ny - 0.15) / 0.55)
-            blush_w = min(0.32, (
-                0.28 * math.exp(-(((abs(nx) - 0.46) / 0.21) ** 2)) * math.exp(-(((nz + 0.16) / 0.15) ** 2))
-                + 0.10 * math.exp(-((nx / 0.13) ** 2)) * math.exp(-(((nz + 0.24) / 0.085) ** 2))
+            blush_w = min(0.36, (
+                0.32 * math.exp(-(((abs(nx) - 0.45) / 0.21) ** 2)) * math.exp(-(((nz + 0.22) / 0.15) ** 2))
+                + 0.12 * math.exp(-((nx / 0.13) ** 2)) * math.exp(-(((nz + 0.285) / 0.085) ** 2))
             ) * f_w)
             r = r * (1.0 - blush_w) + cheek_blush[0] * blush_w
             g = g * (1.0 - blush_w) + cheek_blush[1] * blush_w
             b = b * (1.0 - blush_w) + cheek_blush[2] * blush_w
-            lid_w = 0.24 * math.exp(-(((abs(nx) - 0.36) / 0.16) ** 2)) * math.exp(-(((nz - 0.085) / 0.068) ** 2)) * f_w
+            lid_w = 0.28 * math.exp(-(((abs(nx) - 0.36) / 0.16) ** 2)) * math.exp(-(((nz - 0.018) / 0.068) ** 2)) * f_w
             r = r * (1.0 - lid_w) + lid_tint[0] * lid_w
             g = g * (1.0 - lid_w) + lid_tint[1] * lid_w
             b = b * (1.0 - lid_w) + lid_tint[2] * lid_w
-            lip_w = 0.24 * math.exp(-((nx / 0.18) ** 2)) * math.exp(-(((nz + 0.485) / 0.072) ** 2)) * f_w
+            lip_w = 0.28 * math.exp(-((nx / 0.23) ** 2)) * math.exp(-(((nz + 0.515) / 0.068) ** 2)) * f_w
             r = r * (1.0 - lip_w) + lip_halo[0] * lip_w
             g = g * (1.0 - lip_w) + lip_halo[1] * lip_w
             b = b * (1.0 - lip_w) + lip_halo[2] * lip_w
@@ -1091,81 +1177,89 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
 
     pc.emit_bmesh("Head_Cranium", bm_head, "skin_face", REGION_HEAD, matrix=basis, custom_vertex_color_fn=face_color_fn)
 
-    # 2) Luminous Almond Eyes, Winged Eyelashes & Soft Arched Brows
+    # 2) Luminous Golden-Ratio Almond Eyes, Winged Eyelashes & Soft Arched Brows (seated cleanly on anatomical midline)
     for sign, side in ((-1.0, "L"), (1.0, "R")):
         eye_dir = (fwd + right * (sign * 0.26)).normalized()
         eye_q = eye_dir.to_track_quat("Y", "Z")
 
         brow_ctrl = [
-            basis @ front_pt(sign * (0.17 + u_b * 0.36), 0.205 + math.sin(u_b * math.pi * 0.84) * 0.042 - u_b * 0.022, y_out=0.0014)
+            basis @ front_pt(sign * (0.160 + u_b * 0.375), 0.132 + math.sin(u_b * math.pi * 0.84) * 0.042 - u_b * 0.020, y_out=0.0014)
             for u_b in (0.0, 0.33, 0.68, 1.0)
         ]
         add_closed_tube(
-            pc, f"Face_Brow_{side}", eval_catmull_rom_spline(brow_ctrl, 2),
-            0.0021, "brow_soft", REGION_HEAD, closed=False, radial_segs=5, aspect_b=0.45,
-            radius_scale_fn=lambda t: 0.60 + 0.44 * math.sin(t * math.pi) * (1.0 - 0.48 * t),
+            pc, f"Face_Brow_{side}", eval_catmull_rom_spline(brow_ctrl, 3),
+            0.0021, "brow_soft", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.45,
+            radius_scale_fn=lambda t: 0.58 + 0.44 * math.sin(t * math.pi) * (1.0 - 0.46 * t),
         )
 
-        sc_local = front_pt(sign * 0.355, 0.012, y_out=-0.0001)
-        add_closed_ellipsoid(pc, f"Face_Sclera_{side}", basis @ sc_local, 0.0112, 0.0028, 0.0073, "eye_white", REGION_HEAD, u_seg=10, v_seg=7, quat=eye_q)
+        sc_local = front_pt(sign * 0.355, -0.052, y_out=-0.0001)
+        add_closed_ellipsoid(pc, f"Face_Sclera_{side}", basis @ sc_local, 0.0122, 0.0028, 0.0076, "eye_white", REGION_HEAD, u_seg=14, v_seg=10, quat=eye_q)
 
-        ir_local = front_pt(sign * 0.348, 0.011, y_out=0.0015)
-        add_closed_ellipsoid(pc, f"Face_Iris_{side}", basis @ ir_local, 0.0066, 0.0022, 0.0073, "iris_dark", REGION_HEAD, u_seg=10, v_seg=7, quat=eye_q)
+        ir_local = front_pt(sign * 0.348, -0.053, y_out=0.0015)
+        add_closed_ellipsoid(pc, f"Face_Iris_{side}", basis @ ir_local, 0.0072, 0.0022, 0.0076, "iris_dark", REGION_HEAD, u_seg=14, v_seg=10, quat=eye_q)
 
-        cl1_local = ir_local + Vector((-sign * 0.0020, 0.0017, 0.0024))
-        add_closed_ellipsoid(pc, f"Face_Catchlight_{side}", basis @ cl1_local, 0.0019, 0.0011, 0.0019, "catchlight", REGION_HEAD, u_seg=6, v_seg=5, quat=eye_q)
+        glow_local = ir_local + Vector((0.0, 0.0009, -0.0024))
+        add_closed_ellipsoid(pc, f"Face_IrisGlow_{side}", basis @ glow_local, 0.0046, 0.0014, 0.0029, "iris_glow", REGION_HEAD, u_seg=10, v_seg=7, quat=eye_q)
+
+        cl1_local = ir_local + Vector((-sign * 0.0021, 0.0018, 0.0024))
+        add_closed_ellipsoid(pc, f"Face_Catchlight_{side}", basis @ cl1_local, 0.0021, 0.0011, 0.0021, "catchlight", REGION_HEAD, u_seg=8, v_seg=6, quat=eye_q)
+
+        cl2_local = ir_local + Vector((sign * 0.0022, 0.0016, -0.0022))
+        add_closed_ellipsoid(pc, f"Face_Catchlight2_{side}", basis @ cl2_local, 0.0010, 0.0008, 0.0010, "catchlight", REGION_HEAD, u_seg=6, v_seg=5, quat=eye_q)
 
         lash_ctrl = [
             basis @ front_pt(
-                sign * (0.195 + u_l * 0.345),
-                0.015 + math.sin(u_l * math.pi * 0.90) * 0.072 + (0.016 if u_l > 0.80 else 0.0),
+                sign * (0.185 + u_l * 0.360),
+                -0.048 + math.sin(u_l * math.pi * 0.90) * 0.074 + (0.016 if u_l > 0.80 else 0.0),
                 y_out=0.0016 if u_l < 0.88 else 0.0009,
             )
             for u_l in (0.0, 0.25, 0.55, 0.82, 1.0)
         ]
         add_closed_tube(
-            pc, f"Face_Lash_{side}", eval_catmull_rom_spline(lash_ctrl, 2),
-            0.0022, "lash_ink", REGION_HEAD, closed=False, radial_segs=5, aspect_b=0.38,
+            pc, f"Face_Lash_{side}", eval_catmull_rom_spline(lash_ctrl, 3),
+            0.0024, "lash_ink", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.38,
             radius_scale_fn=lambda t: 0.42 + 0.80 * math.sin(min(1.0, t * 1.05) * math.pi * 0.86),
         )
 
-    # 3) Hydrated MLBB Coral-Rose Cupid's-Bow Lips
+    # 3) Graceful, Softly Widened Hydrated MLBB Coral-Rose Cupid's-Bow Lips (Serene Smile Curve)
     lip_u_ctrl = [
         basis @ front_pt(lx_n, lz_n, y_out=ly_o)
         for lx_n, lz_n, ly_o in [
-            (-0.220, -0.452, 0.0011),
-            (-0.095, -0.446, 0.0026),
-            (0.000, -0.458, 0.0023),
-            (0.095, -0.446, 0.0026),
-            (0.220, -0.452, 0.0011),
+            (-0.278, -0.492, 0.0007),
+            (-0.140, -0.486, 0.0022),
+            (-0.068, -0.478, 0.0025),
+            (0.000, -0.490, 0.0023),
+            (0.068, -0.478, 0.0025),
+            (0.140, -0.486, 0.0022),
+            (0.278, -0.492, 0.0007),
         ]
     ]
     add_closed_tube(
-        pc, "Face_LipUpper", eval_catmull_rom_spline(lip_u_ctrl, 2),
-        0.0026, "lip_tint", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.72,
-        radius_scale_fn=lambda t: 0.28 + 0.80 * math.sin(t * math.pi),
+        pc, "Face_LipUpper", eval_catmull_rom_spline(lip_u_ctrl, 3),
+        0.0024, "lip_tint", REGION_HEAD, closed=False, radial_segs=8, aspect_b=0.58,
+        radius_scale_fn=lambda t: 0.16 + 0.88 * (math.sin(t * math.pi) ** 0.85),
     )
     lip_l_ctrl = [
         basis @ front_pt(lx_n, lz_n, y_out=ly_o)
         for lx_n, lz_n, ly_o in [
-            (-0.188, -0.476, 0.0013),
-            (-0.080, -0.514, 0.0029),
-            (0.000, -0.522, 0.0032),
-            (0.080, -0.514, 0.0029),
-            (0.188, -0.476, 0.0013),
+            (-0.248, -0.502, 0.0008),
+            (-0.118, -0.532, 0.0026),
+            (0.000, -0.542, 0.0030),
+            (0.118, -0.532, 0.0026),
+            (0.248, -0.502, 0.0008),
         ]
     ]
     add_closed_tube(
-        pc, "Face_LipLower", eval_catmull_rom_spline(lip_l_ctrl, 2),
-        0.0030, "lip_tint", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.78,
-        radius_scale_fn=lambda t: 0.32 + 0.78 * math.sin(t * math.pi),
+        pc, "Face_LipLower", eval_catmull_rom_spline(lip_l_ctrl, 3),
+        0.0029, "lip_tint", REGION_HEAD, closed=False, radial_segs=8, aspect_b=0.64,
+        radius_scale_fn=lambda t: 0.18 + 0.86 * (math.sin(t * math.pi) ** 0.82),
     )
 
-    # 4) Dainty Tucked Ears
+    # 4) Dainty Tucked Ears (aligned gracefully with lowered eye-to-nose golden-ratio band)
     for sign, side in ((-1.0, "L"), (1.0, "R")):
         bm_e = bmesh.new()
-        bmesh.ops.create_uvsphere(bm_e, u_segments=10, v_segments=8, radius=1.0)
-        flare = math.radians(11.0 * sign)
+        bmesh.ops.create_uvsphere(bm_e, u_segments=14, v_segments=10, radius=1.0)
+        flare = math.radians(10.0 * sign)
         cf, sf = math.cos(flare), math.sin(flare)
         for v in bm_e.verts:
             ux, uy, uz = v.co.x, v.co.y, v.co.z
@@ -1175,82 +1269,95 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
             lz = uz * 0.0205
             rx_e = lx * cf - ly * sf
             ry_e = lx * sf + ly * cf
-            v.co = (rx_e + sign * 0.066, ry_e - 0.007, lz - 0.008)
+            v.co = (rx_e + sign * 0.0655, ry_e - 0.007, lz - 0.014)
         pc.emit_bmesh(f"Ear_Helix_{side}", bm_e, "skin", REGION_HEAD, matrix=basis)
 
-    # 5) Volumetric Korean Silk Hair Crown with Soft Natural Parting
+    # 5) High-Density Volumetric Korean Silk Hair Crown with Soft Natural Parting & Swept-Down Nape Hairline
     bm_h = bmesh.new()
-    bmesh.ops.create_uvsphere(bm_h, u_segments=20, v_segments=14, radius=1.0)
+    bmesh.ops.create_uvsphere(bm_h, u_segments=34, v_segments=22, radius=1.0)
     for v in bm_h.verts:
         nx, ny, nz = v.co.x, v.co.y, v.co.z
-        hairline_z = 0.46 - 0.20 * abs(nx) - 0.04 * math.exp(-(((nx - 0.08) / 0.16) ** 2))
-        face_mask = max(0.0, ny - 0.03) * max(0.0, hairline_z - nz)
+        hairline_z = 0.42 - 0.22 * abs(nx) - 0.04 * math.exp(-(((nx - 0.08) / 0.16) ** 2))
+        face_mask = max(0.0, ny - 0.14) * max(0.0, hairline_z - nz)
         if face_mask > 0.0:
-            inset = min(0.034, face_mask * 0.105)
+            inset = min(0.034, face_mask * 0.112)
             v.co = (nx * (RX - inset), ny * (RY - inset * 1.40), nz * (RZ - 0.002))
-        elif nz < -0.66 and ny > -0.22:
-            v.co = (nx * 0.046, ny * 0.052, nz * 0.075)
+        elif nz < -0.58 and ny > -0.12:
+            # Tuck cleanly inside submental jaw & anterior ear edge (keeping earlobe/jaw silhouette crisp!)
+            v.co = (nx * 0.044, ny * 0.050, nz * 0.072)
         else:
-            crown_lift = 0.0115 * (max(0.0, nz) ** 1.2)
-            side_fluff = 0.0064 * math.exp(-(((nz - 0.20) / 0.36) ** 2)) * abs(nx)
-            back_gather = 0.0060 * math.exp(-((nx / 0.38) ** 2)) * math.exp(-(((nz - 0.46) / 0.30) ** 2)) * max(0.0, -ny)
-            part_groove = -0.0030 * math.exp(-(((nx - 0.08) / 0.09) ** 2)) * max(0.0, nz - 0.34) * max(0.0, ny + 0.30)
+            crown_lift = 0.0102 * (max(0.0, nz) ** 1.2)
+            side_fluff = 0.0058 * math.exp(-(((nz - 0.16) / 0.36) ** 2)) * abs(nx)
+            back_gather = 0.0060 * math.exp(-((nx / 0.38) ** 2)) * math.exp(-(((nz - 0.42) / 0.30) ** 2)) * max(0.0, -ny)
+            part_groove = -0.0032 * math.exp(-(((nx - 0.08) / 0.09) ** 2)) * max(0.0, nz - 0.32) * max(0.0, ny + 0.30)
+            # Softly sweep rear hairline lower strictly behind ears into the nape (eliminating high helmet step!)
+            nape_w = smoothstep(-0.08, -0.45, ny) * smoothstep(-0.08, -0.78, nz)
+            nape_taper = 1.0 - 0.22 * nape_w
+            nape_drop = -0.017 * nape_w
             v.co = (
-                nx * (RX + 0.0090 + side_fluff),
-                ny * (RY + 0.0095 + back_gather) - 0.0045,
-                nz * (RZ + 0.0075) + 0.0045 + crown_lift + part_groove,
+                nx * (RX + 0.0084 + side_fluff) * nape_taper,
+                (ny * (RY + 0.0090 + back_gather) - 0.0045) * (1.0 - 0.14 * nape_w),
+                nz * (RZ + 0.0066) + 0.0040 + crown_lift + part_groove + nape_drop,
             )
     pc.emit_bmesh("Hair_Crown", bm_h, "hair", REGION_HEAD, matrix=basis)
 
-    # 6) Forehead-Hugging Korean Curtain Bangs & Cheek-Framing Side Locks
+    # 6) Surface-Clamped Forehead/Temple-Hugging Korean Curtain Bangs & Tucked Side Locks (aligned with golden-ratio browline)
     skull_out_normal = lambda pt: (pt - skull_center).normalized()
-    for sign, side in ((-1.0, "L"), (1.0, "R")):
-        curtain_ctrl = [
-            basis @ front_pt(sign * cx_n, cz_n, y_out=c_o)
-            for cx_n, cz_n, c_o in [
-                (0.06, 0.88, -0.0085),
-                (0.28, 0.64,  0.0014),
-                (0.56, 0.36,  0.0018),
-                (0.75, 0.05,  0.0014),
-                (0.78, -0.22, 0.0008),
-            ]
-        ]
+    for w_tag, w_triplets in [
+        ("Hair_SoftFringeL", [(0.05, 0.80, -0.0055), (-0.05, 0.54, 0.0011), (-0.20, 0.35, 0.0009), (-0.34, 0.24, 0.0001)]),
+        ("Hair_SoftFringeR", [(0.07, 0.80, -0.0055), (0.16, 0.54, 0.0011), (0.30, 0.35, 0.0009), (0.43, 0.24, 0.0001)]),
+    ]:
         add_closed_tube(
-            pc, f"Hair_Curtain_{side}", eval_catmull_rom_spline(curtain_ctrl, 2),
-            0.0132, "hair", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.18,
-            radius_scale_fn=lambda t: (0.15 + 0.96 * math.sin(min(1.0, t * 1.04) * math.pi * 0.90)) * (1.0 - 0.60 * (t ** 1.6)),
-            surface_normal_fn=skull_out_normal,
-        )
-        sidelock_ctrl = [
-            basis @ Vector((sign * 0.057, 0.004, 0.036)),
-            basis @ Vector((sign * 0.061, 0.012, -0.004)),
-            basis @ Vector((sign * 0.053, 0.017, -0.038)),
-            basis @ Vector((sign * 0.043, 0.020, -0.066)),
-            basis @ Vector((sign * 0.034, 0.016, -0.080)),
-        ]
-        add_closed_tube(
-            pc, f"Hair_SideLock_{side}", eval_catmull_rom_spline(sidelock_ctrl, 2),
-            0.0070, "hair", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.22,
-            radius_scale_fn=lambda t: (0.35 + 0.72 * math.sin(t * math.pi * 0.88)) * (1.0 - 0.78 * (t ** 1.5)),
+            pc, w_tag, eval_surface_hair_spline(w_triplets, 3),
+            0.0056, "hair", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.16,
+            radius_scale_fn=lambda t: (0.20 + 0.85 * math.sin(min(1.0, t * 1.04) * math.pi * 0.88)) * max(0.08, 1.0 - 0.84 * (t ** 1.45)),
             surface_normal_fn=skull_out_normal,
         )
 
-    # 7) Chic Satin Silk Scrunchie & Cascading Silky Ponytail (driven by `Ponytail` bone!)
+    for sign, side in ((-1.0, "L"), (1.0, "R")):
+        curtain_triplets = [
+            (sign * 0.04,  0.84, -0.0060),
+            (sign * 0.25,  0.60,  0.0012),
+            (sign * 0.52,  0.34,  0.0015),
+            (sign * 0.74,  0.11,  0.0009),
+            (sign * 0.86, -0.04, -0.0018),
+        ]
+        add_closed_tube(
+            pc, f"Hair_Curtain_{side}", eval_surface_hair_spline(curtain_triplets, 3),
+            0.0108, "hair", REGION_HEAD, closed=False, radial_segs=7, aspect_b=0.16,
+            radius_scale_fn=lambda t: (0.24 + 0.86 * math.sin(min(1.0, t * 1.02) * math.pi * 0.90)) * max(0.10, 1.0 - 0.72 * (t ** 1.55)),
+            surface_normal_fn=skull_out_normal,
+        )
+        sidelock_triplets = [
+            (sign * 0.91,  0.20, -0.0025),
+            (sign * 0.95,  0.02,  0.0005),
+            (sign * 0.95, -0.11,  0.0004),
+            (sign * 0.91, -0.22, -0.0006),
+            (sign * 0.85, -0.29, -0.0018),
+        ]
+        add_closed_tube(
+            pc, f"Hair_SideLock_{side}", eval_surface_hair_spline(sidelock_triplets, 3),
+            0.0062, "hair", REGION_HEAD, closed=False, radial_segs=6, aspect_b=0.16,
+            radius_scale_fn=lambda t: (0.38 + 0.70 * math.sin(t * math.pi * 0.85)) * max(0.08, 1.0 - 0.86 * (t ** 1.45)),
+            surface_normal_fn=skull_out_normal,
+        )
+
+    # 7) Chic Pleated Champagne Satin Scrunchie & Multi-Layered Flowing Silk Ponytail (driven by `Ponytail` bone!)
     tie_world = lm["ponytail_root"]
     tie_axis = (-fwd * 0.80 + up * 0.60).normalized()
     tie_u = right
     tie_v = tie_axis.cross(tie_u).normalized()
 
     sc_pts = []
-    n_sc = 18
+    n_sc = 26
     for k in range(n_sc):
         a = 2.0 * math.pi * k / n_sc
-        pleat = 1.0 + 0.11 * math.sin(a * 9.0)
-        sc_pts.append(tie_world + tie_u * (math.cos(a) * 0.024 * pleat) + tie_v * (math.sin(a) * 0.024 * pleat))
+        pleat = 1.0 + 0.12 * math.sin(a * 10.0) + 0.04 * math.cos(a * 20.0)
+        sc_pts.append(tie_world + tie_u * (math.cos(a) * 0.0245 * pleat) + tie_v * (math.sin(a) * 0.0245 * pleat))
     add_closed_tube(
-        pc, "Hair_Scrunchie", sc_pts, 0.0086, "scrunchie", REGION_HEAD,
-        closed=True, radial_segs=6,
-        radius_scale_fn=lambda t: 0.86 + 0.18 * math.sin(t * 2.0 * math.pi * 9.0),
+        pc, "Hair_Scrunchie", sc_pts, 0.0090, "scrunchie", REGION_HEAD,
+        closed=True, radial_segs=8,
+        radius_scale_fn=lambda t: 0.85 + 0.19 * math.sin(t * 2.0 * math.pi * 10.0),
     )
 
     tail_flow = (lm["ponytail_tip"] - tie_world).normalized()
@@ -1260,22 +1367,39 @@ def build_head_face_and_hair(pc: SkinnedPartCollector, lm: dict[str, Vector]) ->
         tail_lift = -tail_lift
 
     strand_specs = [
-        ("Main",  0.192, 0.0285, 0.74,  0.000, 0.036,  0.004, 0.012),
-        ("FlowL", 0.200, 0.0165, 0.52, -0.016, 0.042, -0.010, 0.015),
-        ("FlowR", 0.200, 0.0165, 0.52,  0.016, 0.042,  0.010, 0.015),
+        ("Main",           0.195, 0.0285, 0.76,  0.000, 0.038,  0.003, 0.011),
+        ("UpperCrownWave", 0.205, 0.0185, 0.54,  0.000, 0.050, -0.003, 0.013),
+        ("FlowL",          0.202, 0.0165, 0.52, -0.014, 0.042, -0.007, 0.012),
+        ("FlowR",          0.202, 0.0165, 0.52,  0.014, 0.042,  0.007, 0.012),
+        ("UnderFlow",      0.190, 0.0170, 0.58,  0.000, 0.022,  0.002, 0.006),
     ]
     for stag, slen, srad, s_asp, lat_o, lift_a, sw_lat, sw_lift in strand_specs:
-        n_seg = 8
+        n_seg = 14
         s_pts = []
         for k in range(n_seg):
             t = k / (n_seg - 1)
-            arch = math.sin(min(1.0, t * 1.25) * math.pi) * lift_a + math.sin(t * math.pi * 1.8) * sw_lift * (t ** 0.85)
-            lat = lat_o * (0.20 + 0.85 * math.sin(t * math.pi * 0.80)) + math.sin(t * math.pi * 1.45) * sw_lat
-            s_pts.append(tie_world + tail_flow * ((t ** 0.94) * slen) + tail_lift * arch + tail_lat * lat)
+            arch = math.sin(min(1.0, t * 1.24) * math.pi) * lift_a + math.sin(t * math.pi * 1.65) * sw_lift * (t ** 0.88)
+            lat = lat_o * (0.20 + 0.82 * math.sin(t * math.pi * 0.82)) + math.sin(t * math.pi * 1.35) * sw_lat * (t ** 0.90)
+            s_pts.append(tie_world + tail_flow * ((t ** 0.95) * slen) + tail_lift * arch + tail_lat * lat)
         add_closed_tube(
             pc, f"Hair_Ponytail_{stag}", s_pts, srad, "hair", REGION_PONYTAIL,
-            closed=False, radial_segs=7, aspect_b=s_asp,
-            radius_scale_fn=lambda t: (0.58 + 0.68 * math.sin(min(1.0, t * 1.08) * math.pi * 0.82)) * max(0.08, 1.0 - 0.90 * (t ** 1.55)),
+            closed=False, radial_segs=10, aspect_b=s_asp,
+            radius_scale_fn=lambda t: (0.56 + 0.70 * math.sin(min(1.0, t * 1.08) * math.pi * 0.82)) * max(0.06, 1.0 - 0.92 * (t ** 1.50)),
+        )
+
+    # Dainty satin scrunchie ribbon tails flowing gently along the ponytail
+    for r_sign, r_tag, r_len in ((-1.0, "L", 0.072), (1.0, "R", 0.084)):
+        rib_ctrl = [
+            tie_world
+            + tail_flow * (0.010 + t * r_len)
+            + tail_lat * (r_sign * (0.017 + 0.016 * (t ** 0.82)))
+            + tail_lift * (0.004 + 0.011 * math.sin(t * math.pi) - 0.008 * t)
+            for t in (0.0, 0.35, 0.72, 1.0)
+        ]
+        add_closed_tube(
+            pc, f"Hair_ScrunchieRibbon_{r_tag}", eval_catmull_rom_spline(rib_ctrl, 3), 0.0048, "scrunchie", REGION_PONYTAIL,
+            closed=False, radial_segs=6, aspect_b=0.25,
+            radius_scale_fn=lambda t: 0.55 + 0.50 * math.sin(t * math.pi * 0.85),
         )
 
 
@@ -1308,7 +1432,7 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
         ]:
             c = wr + fdir * (palm_len * u_p)
             palm_stations.append((c, lat, dorsal, lambda th, a=wx, bd=wy_dors, bp=wy_palm: (math.cos(th) * a, math.sin(th) * (bd if math.sin(th) >= 0 else bp))))
-        add_closed_loft(pc, f"Hand_Palm_{side}", palm_stations, "skin", reg_id, radial_segs=10, cap_start=0.005, cap_end=0.005)
+        add_closed_loft(pc, f"Hand_Palm_{side}", palm_stations, "skin", reg_id, radial_segs=16, cap_start=0.005, cap_end=0.005)
 
         # Opposable Thumb (pointing gently anterior-medial)
         th_p0 = wr + fdir * 0.014 + lat * 0.020 - dorsal * 0.004
@@ -1316,8 +1440,8 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
         th_p2 = th_p1 + (fdir * 0.84 + lat * 0.30 - dorsal * 0.40).normalized() * 0.020
         th_p3 = th_p2 + (fdir * 0.92 + lat * 0.08 - dorsal * 0.34).normalized() * 0.016
         add_closed_tube(
-            pc, f"Thumb_{side}", [th_p0, th_p1, th_p2, th_p3], 0.0078, "skin", reg_id,
-            closed=False, radial_segs=6, radius_scale_fn=lambda t: 1.0 - 0.42 * t,
+            pc, f"Thumb_{side}", eval_catmull_rom_spline([th_p0, th_p1, th_p2, th_p3], 2), 0.0078, "skin", reg_id,
+            closed=False, radial_segs=8, radius_scale_fn=lambda t: 1.0 - 0.42 * t,
         )
 
         # 4 gracefully gathered dancer fingers
@@ -1335,8 +1459,8 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
             dip = pip + d2 * (flen * 0.31)
             tip = dip + d3 * (flen * 0.25)
             add_closed_tube(
-                pc, f"Finger_{fname}_{side}", [mcp - d1 * 0.004, pip, dip, tip], frad, "skin", reg_id,
-                closed=False, radial_segs=6, aspect_b=0.90, radius_scale_fn=lambda t: 1.04 - 0.46 * t,
+                pc, f"Finger_{fname}_{side}", eval_catmull_rom_spline([mcp - d1 * 0.004, pip, dip, tip], 2), frad, "skin", reg_id,
+                closed=False, radial_segs=8, aspect_b=0.90, radius_scale_fn=lambda t: 1.04 - 0.46 * t,
             )
 
     # 2) Low-Cut Ivory Ballet Grip-Sock Feet (grounded flat at Z = 0.000!)
@@ -1356,7 +1480,7 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
         for u_c, r_lat, r_ap in [(0.00, 0.0285, 0.0315), (0.55, 0.0280, 0.0310), (1.05, 0.0272, 0.0300)]:
             c = cuff_top.lerp(ank, u_c)
             cuff_stations.append((c, foot_lat, foot_fwd, lambda th, a=r_lat, b=r_ap: (math.cos(th) * a, math.sin(th) * b)))
-        add_closed_loft(pc, f"Sock_Cuff_{side}", cuff_stations, "sock", reg_id, radial_segs=12, cap_start=0.004, cap_end=0.005)
+        add_closed_loft(pc, f"Sock_Cuff_{side}", cuff_stations, "sock", reg_id, radial_segs=16, cap_start=0.004, cap_end=0.005)
 
         # Sculpted dancer foot with subtle medial arch & flat plantar ground contact
         foot_stations = []
@@ -1379,7 +1503,7 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
                 return ct * a, yv
 
             foot_stations.append((c, foot_lat, foot_up, foot_prof))
-        add_closed_loft(pc, f"Foot_Sculpt_{side}", foot_stations, "sock", reg_id, radial_segs=10, cap_start=0.008, cap_end=0.010)
+        add_closed_loft(pc, f"Foot_Sculpt_{side}", foot_stations, "sock", reg_id, radial_segs=14, cap_start=0.008, cap_end=0.010, subsurf_levels=1)
 
         # Crisscross botanical-sage ballet elastic instep ribbons
         for strap_tag, s0, s1 in (("CrossA", -1.0, 1.0), ("CrossB", 1.0, -1.0)):
@@ -1389,8 +1513,8 @@ def build_hands_and_feet(pc: SkinnedPartCollector, lm: dict[str, Vector]) -> Non
                 ank + foot_fwd * 0.080 + foot_lat * (s1 * 0.0305) + foot_up * (-0.036),
             ]
             add_closed_tube(
-                pc, f"Sock_Strap_{strap_tag}_{side}", eval_catmull_rom_spline(strap_ctrl, 2),
-                0.0025, "suit", reg_id, closed=False, radial_segs=5, aspect_b=0.45,
+                pc, f"Sock_Strap_{strap_tag}_{side}", eval_catmull_rom_spline(strap_ctrl, 3),
+                0.0025, "suit", reg_id, closed=False, radial_segs=6, aspect_b=0.45,
             )
 
 
@@ -1843,8 +1967,8 @@ def verify_skinned_hygiene(mesh_obj: bpy.types.Object, arm_obj: bpy.types.Object
         )
     if uv_oob != 0 or uv_degen != 0:
         raise RuntimeError(f"UV hygiene failed: oob={uv_oob}, degen={uv_degen}")
-    if not (6000 <= tris <= 18000):
-        raise RuntimeError(f"Triangle count {tris} outside 6,000..18,000 target range!")
+    if not (20000 <= tris <= 34000):
+        raise RuntimeError(f"Triangle count {tris} outside 20,000..34,000 high-density target range!")
 
     # Verify every vertex has 1..4 normalized bone weights
     unweighted = 0
@@ -2038,8 +2162,8 @@ def build_skinned_instructor(out_glb_path: str | None = None, preview_dir: str |
     file_bytes = export_skinned_glb(arm_obj, mesh_obj, out_glb_path)
     glb_info = inspect_exported_glb_json(out_glb_path)
 
-    if file_bytes > 650 * 1024:
-        raise RuntimeError(f"GLB exceeds 650 KB budget: {file_bytes} bytes ({file_bytes / 1024:.1f} KB)")
+    if file_bytes > 1400 * 1024:
+        raise RuntimeError(f"GLB exceeds 1.4 MB budget: {file_bytes} bytes ({file_bytes / 1024:.1f} KB)")
     if "JOINTS_0" not in glb_info["attributes"] or "WEIGHTS_0" not in glb_info["attributes"]:
         raise RuntimeError(f"Missing skinning attributes in exported GLB: {glb_info['attributes']}")
     if "COLOR_0" not in glb_info["attributes"]:

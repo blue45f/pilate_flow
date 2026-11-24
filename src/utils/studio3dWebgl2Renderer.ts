@@ -694,6 +694,49 @@ uniform int uShaderMode;
 
 out vec4 fragColor;
 
+float dGgx(float NdotH, float roughness) {
+  float a = roughness * roughness;
+  float a2 = a * a;
+  float d = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
+  return a2 / max(3.14159265 * d * d, 0.0001);
+}
+
+float gSchlickGgx(float NdotX, float roughness) {
+  float r = roughness + 1.0;
+  float k = (r * r) * 0.125;
+  return NdotX / max(NdotX * (1.0 - k) + k, 0.0005);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+  return F0 + (vec3(1.0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 ggxSpecular(float NdotV, float NdotL, float NdotH, float VdotH, float roughness, vec3 F0) {
+  if (NdotL <= 0.0001 || NdotV <= 0.0001) {
+    return vec3(0.0);
+  }
+  float D = dGgx(NdotH, roughness);
+  float G = gSchlickGgx(NdotV, roughness) * gSchlickGgx(NdotL, roughness);
+  vec3 F = fresnelSchlick(VdotH, F0);
+  float denom = max(4.0 * NdotV * NdotL, 0.004);
+  return min((D * G * F / denom) * NdotL, vec3(2.4));
+}
+
+vec3 filmicAgxRolloff(vec3 c) {
+  vec3 x = max(c, vec3(0.0));
+  float luma = dot(x, vec3(0.2126, 0.7152, 0.0722));
+  // Soft AgX-inspired purity attenuation on bright highlights above 0.76
+  float shoulder = max(luma - 0.76, 0.0);
+  float desat = clamp(shoulder * 0.24, 0.0, 0.28);
+  vec3 inset = mix(x, vec3(luma), desat);
+  // C1-smooth ACES/AgX soft-shoulder highlight rolloff preserving midtone calibration
+  vec3 knee = vec3(0.78);
+  vec3 head = vec3(0.22);
+  vec3 over = max(inset - knee, vec3(0.0));
+  vec3 rolled = min(inset, knee) + (head * over) / (head + over);
+  return clamp(rolled, 0.0, 1.0);
+}
+
 void main() {
   vec3 N = normalize(vNormal);
   vec3 V = normalize(uCamPos - vWorldPos);
@@ -711,10 +754,20 @@ void main() {
   float diffKey = max(0.0, rawNdl);
   float diffFill = max(0.0, dot(N, fillDir));
   float diffBounce = max(0.0, dot(N, vec3(0.0, 0.0, -1.0))) * 0.11;
-  float ao = clamp(0.84 + max(0.0, vWorldPos.z) * 0.18, 0.82, 1.0);
+
+  // Enhanced vertical + hemisphere contact ambient occlusion (grounded floor & underside depth)
+  float zPos = max(0.0, vWorldPos.z);
+  float floorAo = mix(0.76, 1.0, smoothstep(0.0, 0.28, zPos));
+  float hemiAo = mix(0.84, 1.0, clamp(N.z * 0.5 + 0.5, 0.0, 1.0));
+  float underContact = 1.0 - smoothstep(0.32, 0.0, zPos) * max(0.0, -N.z) * 0.22;
+  float ao = clamp(floorAo * hemiAo * underContact, 0.62, 1.0);
 
   vec3 H = normalize(keyDir + V);
   float NdotH = max(0.0, dot(N, H));
+  float VdotH = max(0.0, dot(V, H));
+  vec3 fillH = normalize(fillDir + V);
+  float fillNdotH = max(0.0, dot(N, fillH));
+  float fillVdotH = max(0.0, dot(V, fillH));
 
   float alpha = clamp(vMat.x, 0.0, 1.0);
   int role = int(floor(vMat.y + 0.5));
@@ -729,15 +782,16 @@ void main() {
   vec3 col;
 
   if (role == 9) {
-    // Physical 3D springs, ropes & piping ribbons
-    float ribShade = 0.78 + diffKey * 0.24 + pow(NdotH, 32.0) * 0.16;
-    col = base * ribShade;
+    // Physical 3D springs, ropes & piping ribbons with GGX glint
+    float ribSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.28, vec3(0.08)).x;
+    float ribShade = 0.76 + diffKey * 0.24 + ribSpec * 0.85;
+    col = base * ribShade * mix(0.88, 1.0, ao);
   } else if (uShaderMode == 3) {
-    // Clay-wire sculptural mode with anti-aliased quad edges (diagonal suppressed)
+    // Clay-wire sculptural mode with GGX sheen & anti-aliased quad edges (diagonal suppressed)
     float rim = pow(1.0 - NdotV, 2.5) * 0.20;
-    float spec = pow(NdotH, 24.0) * specW * 0.45;
+    vec3 spec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.44, vec3(0.04)) * max(0.5, specW * 3.0);
     float shade = (0.46 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim) * ao;
-    col = base * shade + vec3(spec);
+    col = base * shade + spec;
 
     vec2 edgeDist = min(vQuadUv, vec2(1.0) - vQuadUv);
     vec2 fw = max(fwidth(vQuadUv), vec2(0.0005));
@@ -748,82 +802,86 @@ void main() {
     // Biomech X-Ray holographic mode
     float rim = pow(1.0 - NdotV, 2.1);
     float shade = (0.42 + diffKey * 0.36 + diffFill * 0.20 + emissiveLift) * ao;
-    col = base * shade + vec3(0.32, 0.92, 0.74) * rim * 0.52 + vec3(pow(NdotH, 28.0) * specW * 0.35);
+    vec3 holoSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.34, vec3(0.06)) * max(0.4, specW * 2.4);
+    col = base * shade + vec3(0.32, 0.92, 0.74) * rim * 0.52 + holoSpec;
     alpha = clamp(alpha + rim * 0.28, 0.18, 0.96);
   } else if (role == 1) {
-    // Porcelain-Peach Skin with Dual-Lobe Subsurface Scattering Wrap & Champagne Rim
+    // Porcelain-Peach Skin with Dual-Lobe Subsurface Scattering Wrap, Soft GGX Dermal Micro-Sheen & Champagne Rim
     float wrapKey = clamp((rawNdl + 0.46) / 1.46, 0.0, 1.0);
     float wrapFill = clamp((dot(N, fillDir) + 0.36) / 1.36, 0.0, 1.0);
     float scatterBand = exp(-pow((rawNdl + 0.08) * 2.35, 2.0));
     vec3 sssGlow = vec3(0.98, 0.48, 0.36) * scatterBand * 0.145;
-    float fresnel = pow(1.0 - NdotV, 2.75);
+    float fresnel = fresnelSchlick(NdotV, vec3(0.028)).x;
     float backMask = smoothstep(-0.22, 0.85, dot(N, rimDir) * 0.68 + 0.32);
-    vec3 rimCol = vec3(1.00, 0.94, 0.87) * fresnel * (0.12 + 0.24 * backMask);
-    float dermalSpec = pow(NdotH, 24.0) * min(specW, 0.11);
-    vec3 diffuse = (vec3(0.45) + wrapKey * 0.46 * keyTint + wrapFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
+    vec3 rimCol = vec3(1.00, 0.94, 0.87) * (fresnel * 0.34 + pow(max(0.0, 1.0 - NdotV), 2.8) * 0.10) * (0.45 + 0.85 * backMask);
+    vec3 dermalSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.44, vec3(0.032)) * (0.65 + min(specW, 0.18) * 3.2)
+      + ggxSpecular(NdotV, diffFill, fillNdotH, fillVdotH, 0.52, vec3(0.026)) * 0.35;
+    vec3 diffuse = (vec3(0.44) + wrapKey * 0.47 * keyTint + wrapFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
     col = base * diffuse + base * sssGlow + rimCol + vec3(1.00, 0.96, 0.92) * dermalSpec;
   } else if (role == 2) {
-    // Silky Espresso Hair with Dual-Band Anisotropic-Inspired Sheen & Crisp Rim Light
-    float fresnel = pow(1.0 - NdotV, 2.35);
+    // Silky Espresso Hair with Dual-Band Anisotropic GGX Microfacet Sheen & Crisp Champagne Rim Light
+    float fresnel = fresnelSchlick(NdotV, vec3(0.046)).x;
     float backMask = smoothstep(-0.25, 0.88, dot(N, rimDir) * 0.72 + 0.28);
     // Shifted specular highlights simulating silk hair fiber anisotropy along up/down flow
     vec3 shiftN1 = normalize(N + uCamUp * 0.14);
     vec3 shiftN2 = normalize(N - uCamUp * 0.10);
-    float primarySilk = pow(max(0.0, dot(shiftN1, H)), 46.0) * 0.34;
-    float secondarySilk = pow(max(0.0, dot(shiftN2, H)), 18.0) * 0.18;
-    vec3 fillH = normalize(fillDir + V);
-    float fillSilk = pow(max(0.0, dot(shiftN1, fillH)), 26.0) * 0.12;
-    vec3 diffuse = (vec3(0.42) + diffKey * 0.44 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint) * ao;
-    vec3 silkHighlight = vec3(0.94, 0.82, 0.72) * (primarySilk + fillSilk) + vec3(0.68, 0.46, 0.34) * secondarySilk;
-    vec3 hairRim = vec3(0.98, 0.90, 0.80) * fresnel * (0.16 + 0.34 * backMask);
+    float primarySilk = dGgx(max(0.0, dot(shiftN1, H)), 0.25) * fresnel * diffKey * 0.24;
+    float secondarySilk = dGgx(max(0.0, dot(shiftN2, H)), 0.44) * fresnel * diffKey * 0.34;
+    float fillSilk = dGgx(max(0.0, dot(shiftN1, fillH)), 0.30) * fresnel * diffFill * 0.12;
+    vec3 diffuse = (vec3(0.40) + diffKey * 0.44 * keyTint + diffFill * 0.21 * fillTint + diffBounce * bounceTint) * ao;
+    vec3 silkHighlight = vec3(0.95, 0.83, 0.73) * min(primarySilk + fillSilk, 0.55) + vec3(0.72, 0.48, 0.34) * min(secondarySilk, 0.36);
+    vec3 hairRim = vec3(0.98, 0.90, 0.80) * pow(max(0.0, 1.0 - NdotV), 2.4) * (0.16 + 0.34 * backMask);
     col = base * diffuse + silkHighlight + hairRim;
   } else if (role == 3) {
-    // Matte Botanical Velvet Athleisure Fabric (zero plastic shine)
+    // Matte Botanical Velvet Athleisure Fabric (velvet Fresnel sheen + subtle woven GGX micro-spec)
     float fresnel = pow(1.0 - NdotV, 2.75);
     float backMask = smoothstep(-0.2, 0.85, dot(N, rimDir) * 0.65 + 0.35);
     vec3 velvetSheen = mix(base, vec3(0.84, 0.89, 0.85), 0.42) * fresnel * (0.18 + 0.18 * backMask);
-    float microSpec = pow(NdotH, 16.0) * min(specW, 0.032);
-    vec3 diffuse = (vec3(0.46) + diffKey * 0.42 * keyTint + diffFill * 0.23 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
+    vec3 microSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.78, vec3(0.025)) * 0.85;
+    vec3 diffuse = (vec3(0.45) + diffKey * 0.43 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
     col = base * diffuse + velvetSheen + vec3(0.88, 0.90, 0.88) * microSpec;
   } else if (role == 4) {
-    // Satin European White-Oak Wood with subtle procedural grain & clearcoat
+    // Satin European White-Oak Wood with cathedral grain & dual-lobe GGX satin + clearcoat
     float grainWave = sin(vWorldPos.x * 40.0 + vWorldPos.y * 11.5 + sin(vWorldPos.z * 26.0) * 1.2);
-    float grain = 1.0 + 0.036 * grainWave;
-    float coatRim = pow(1.0 - NdotV, 3.0) * 0.12;
-    float baseSpec = pow(NdotH, 28.0) * (specW * 0.56);
-    float coatSpec = pow(NdotH, 54.0) * 0.18;
-    vec3 diffuse = (vec3(0.46) + diffKey * 0.43 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(coatRim + emissiveLift)) * ao * grain;
-    col = base * diffuse + vec3(0.98, 0.95, 0.90) * (baseSpec + coatSpec);
+    float grain = 1.0 + 0.044 * grainWave;
+    float coatRim = fresnelSchlick(NdotV, vec3(0.04)).x * 0.16;
+    vec3 baseSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.38, vec3(0.042)) * (0.95 + specW * 1.2);
+    vec3 coatSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.20, vec3(0.048)) * 0.32;
+    vec3 diffuse = (vec3(0.45) + diffKey * 0.44 * keyTint + diffFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(coatRim + emissiveLift)) * ao * grain;
+    col = base * diffuse + vec3(0.99, 0.96, 0.90) * (baseSpec + coatSpec);
   } else if (role == 5) {
-    // Supple Sage Leather Upholstery
-    float edgeCatch = pow(1.0 - NdotV, 2.7) * 0.16;
-    float spec = pow(NdotH, 26.0) * min(specW, 0.20);
-    vec3 diffuse = (vec3(0.46) + diffKey * 0.41 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
-    col = base * diffuse + vec3(0.68, 0.74, 0.69) * edgeCatch + vec3(0.92, 0.93, 0.90) * spec;
+    // Supple Sage Leather Upholstery with GGX microfacet satin sheen
+    float edgeCatch = fresnelSchlick(NdotV, vec3(0.04)).x * 0.22;
+    vec3 spec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.44, vec3(0.042)) * (0.90 + min(specW, 0.28) * 1.4);
+    vec3 diffuse = (vec3(0.45) + diffKey * 0.42 * keyTint + diffFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
+    col = base * diffuse + vec3(0.68, 0.74, 0.69) * edgeCatch + vec3(0.94, 0.95, 0.92) * spec;
   } else if (role == 6 || role == 7) {
-    // Brushed Chrome (6) & Anodized Brass (7) with Studio Hemisphere Environment Reflection
+    // Brushed Chrome (6) & Satin Champagne Brass (7) with Conductor GGX Microfacet & Studio Hemisphere Reflection
     vec3 refl = reflect(-V, N);
     float skyT = clamp(N.z * 0.55 + refl.z * 0.45, -1.0, 1.0);
     vec3 envCol = skyT >= 0.0
       ? mix(vec3(0.84, 0.82, 0.79), vec3(0.99, 0.97, 0.94), skyT)
-      : mix(vec3(0.84, 0.82, 0.79), vec3(0.56, 0.54, 0.50), -skyT);
-    float dirBoost = (0.68 + diffKey * 0.34 + diffFill * 0.18) * ao;
-    float fresnel = pow(1.0 - NdotV, 3.1) * 0.18;
-    vec3 fillH = normalize(fillDir + V);
-    float aniso = (pow(NdotH, 68.0) * 0.72 + pow(max(0.0, dot(N, fillH)), 58.0) * 0.22) * max(0.55, specW);
-    vec3 metalSpecTint = role == 7 ? vec3(1.00, 0.92, 0.74) : vec3(0.96, 0.98, 1.00);
-    col = (base / 0.92) * envCol * dirBoost + metalSpecTint * (aniso + fresnel);
+      : mix(vec3(0.84, 0.82, 0.79), vec3(0.54, 0.52, 0.48), -skyT);
+    vec3 metalF0 = clamp(base * 1.05, vec3(0.55), vec3(1.0));
+    float metalRough = role == 7 ? 0.25 : 0.22;
+    vec3 keyMetal = ggxSpecular(NdotV, diffKey, NdotH, VdotH, metalRough, metalF0) * 0.34;
+    vec3 fillMetal = ggxSpecular(NdotV, diffFill, fillNdotH, fillVdotH, metalRough + 0.06, metalF0) * 0.14;
+    vec3 fEnv = fresnelSchlick(NdotV, metalF0);
+    float dirBoost = (0.64 + diffKey * 0.36 + diffFill * 0.18) * ao;
+    vec3 metalSpecTint = role == 7 ? vec3(1.00, 0.93, 0.76) : vec3(0.97, 0.98, 1.00);
+    col = (base / 0.92) * envCol * dirBoost + fEnv * envCol * 0.16 * ao + metalSpecTint * (keyMetal + fillMetal);
   } else if (role == 8) {
-    // Glossy Eye Iris, Catchlight Pearls & Satin Coral Lips
-    float sparkle = pow(NdotH, 86.0) * max(specW, 0.35) * 1.15;
-    float rim = pow(1.0 - NdotV, 2.8) * 0.14;
+    // Glossy Eye Iris, Catchlight Pearls & Hydrated MLBB Rose Lips with Crisp Clearcoat GGX
+    vec3 sparkle = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.12, vec3(0.055)) * 0.48
+      + ggxSpecular(NdotV, diffFill, fillNdotH, fillVdotH, 0.16, vec3(0.05)) * 0.18;
+    float rim = fresnelSchlick(NdotV, vec3(0.05)).x * 0.18;
     vec3 diffuse = (vec3(0.52) + diffKey * 0.40 * keyTint + diffFill * 0.22 * fillTint + vec3(emissiveLift)) * ao;
-    col = base * diffuse + vec3(1.0, 0.98, 0.95) * (sparkle + rim);
+    col = base * diffuse + vec3(1.0, 0.98, 0.95) * (sparkle + vec3(rim));
   } else {
-    float rim = pow(1.0 - NdotV, 2.6) * 0.16;
-    float spec = pow(NdotH, 24.0) * specW;
-    vec3 diffuse = (vec3(0.46) + diffKey * 0.42 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(rim + emissiveLift)) * ao;
-    col = base * diffuse + vec3(0.95, 0.94, 0.91) * spec;
+    float rim = fresnelSchlick(NdotV, vec3(0.04)).x * 0.18;
+    vec3 spec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.40, vec3(0.04)) * max(0.4, specW * 2.5);
+    vec3 diffuse = (vec3(0.45) + diffKey * 0.43 * keyTint + diffFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(rim + emissiveLift)) * ao;
+    col = base * diffuse + vec3(0.96, 0.95, 0.92) * spec;
   }
 
   if (uShaderMode == 2) {
@@ -832,9 +890,8 @@ void main() {
     col += vec3(0.18, 0.78, 0.58) * arenaRim;
   }
 
-  // Filmic soft-shoulder rolloff so highlights stay silky and never harshly clip
-  col = col / (vec3(1.0) + max(col - vec3(0.86), vec3(0.0)) * 0.42);
-  col = clamp(col, 0.0, 1.0);
+  // Soft ACES/AgX-inspired filmic highlight rolloff for creamy, non-clipping studio luminance
+  col = filmicAgxRolloff(col);
 
   // Premultiplied alpha output for clean Canvas2D drawImage compositing
   fragColor = vec4(col * alpha, alpha);

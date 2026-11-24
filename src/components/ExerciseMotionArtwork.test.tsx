@@ -52,8 +52,8 @@ describe('shared exercise artwork across planning surfaces', () => {
       expect(art).toHaveAttribute('src', frame.src);
       expect(art).toHaveAttribute('data-exercise-id', bridge.id);
       expect(art).toHaveAttribute('data-phase', phase);
-      expect(art).toHaveAttribute('width', '640');
-      expect(art).toHaveAttribute('height', '400');
+      expect(art).toHaveAttribute('width', '960');
+      expect(art).toHaveAttribute('height', '600');
       expect(art).toHaveAttribute('loading', 'lazy');
       expect(art).toHaveAttribute('decoding', 'async');
       expect(frame.src).toMatch(/^\/motion-artwork-v2\/.+\.webp$/);

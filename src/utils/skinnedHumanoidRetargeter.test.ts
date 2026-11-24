@@ -154,14 +154,14 @@ afterEach(() => {
 });
 
 describe('skinnedHumanoidRetargeter (real Blender 5.3 instructor-skinned-v5.glb)', () => {
-  it('parses real instructor-skinned-v5.glb with <= 650KB budget, 6k..18k tris, 21 bones, IBM & normalized weights', () => {
+  it('parses real instructor-skinned-v5.glb with <= 1.2MB high-density budget, 20k..40k tris, 21 bones, IBM & normalized weights', () => {
     const { bytes, asset } = loadRealGlbAsset();
 
-    expect(bytes.byteLength).toBeGreaterThan(100_000);
-    expect(bytes.byteLength).toBeLessThanOrEqual(650 * 1024);
+    expect(bytes.byteLength).toBeGreaterThan(500_000);
+    expect(bytes.byteLength).toBeLessThanOrEqual(1_200 * 1024);
 
-    expect(asset.triangleCount).toBeGreaterThanOrEqual(6_000);
-    expect(asset.triangleCount).toBeLessThanOrEqual(18_000);
+    expect(asset.triangleCount).toBeGreaterThanOrEqual(20_000);
+    expect(asset.triangleCount).toBeLessThanOrEqual(40_000);
     expect(asset.vertexCount).toBeGreaterThan(3_000);
     expect(asset.jointCount).toBe(REQUIRED_BONES.length);
 
