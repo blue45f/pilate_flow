@@ -140,9 +140,81 @@ function createStudioAiServerPlugin(mode: string): Plugin {
   };
 }
 
+function createCompactArtworkManifestPlugin(): Plugin {
+  return {
+    name: 'pilates-flow-compact-artwork-manifest',
+    enforce: 'pre',
+    apply: 'build',
+    transform(code, id) {
+      if (!id.replace(/\\/g, '/').endsWith('/src/data/exerciseArtworkManifest.json')) {
+        return null;
+      }
+      const parsed = JSON.parse(code) as {
+        schemaVersion: number;
+        renderer: string;
+        width: number;
+        height: number;
+        format: string;
+        purpose: string;
+        professionalReviewVerified: boolean;
+        sourceFrameMappingVerified: boolean;
+        entries: Record<
+          string,
+          {
+            apparatus: string;
+            bodyPosition: string;
+            archetypeId: string;
+            phases: Record<
+              string,
+              {
+                src: string;
+                labelKo?: string;
+              }
+            >;
+          }
+        >;
+      };
+      const compactEntries: Record<string, unknown> = {};
+      for (const [exerciseId, entry] of Object.entries(parsed.entries)) {
+        const compactPhases: Record<string, { src: string; labelKo?: string }> = {};
+        for (const [phaseId, phase] of Object.entries(entry.phases)) {
+          compactPhases[phaseId] = phase.labelKo
+            ? { src: phase.src, labelKo: phase.labelKo }
+            : { src: phase.src };
+        }
+        compactEntries[exerciseId] = {
+          apparatus: entry.apparatus,
+          bodyPosition: entry.bodyPosition,
+          archetypeId: entry.archetypeId,
+          phases: compactPhases,
+        };
+      }
+      return {
+        code: JSON.stringify({
+          schemaVersion: parsed.schemaVersion,
+          renderer: parsed.renderer,
+          width: parsed.width,
+          height: parsed.height,
+          format: parsed.format,
+          purpose: parsed.purpose,
+          professionalReviewVerified: parsed.professionalReviewVerified,
+          sourceFrameMappingVerified: parsed.sourceFrameMappingVerified,
+          entries: compactEntries,
+        }),
+        map: null,
+      };
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react(), pwaBuild(), createStudioAiServerPlugin(mode)],
+  plugins: [
+    createCompactArtworkManifestPlugin(),
+    react(),
+    pwaBuild(),
+    createStudioAiServerPlugin(mode),
+  ],
   resolve: {
     alias: localSdkFallback
       ? {
@@ -184,7 +256,9 @@ export default defineConfig(({ mode }) => ({
           }
           if (
             id.includes('/src/data/expandedPilatesVideoCatalog.json') ||
-            id.includes('/src/data/expandedPilatesVideoProvenance.json')
+            id.includes('/src/data/expandedPilatesVideoProvenance.json') ||
+            id.includes('/src/data/verifiedPilatesYouTubeCatalog.json') ||
+            id.includes('/src/data/exerciseVideoBindings.ts')
           ) {
             return 'data-video-catalog';
           }
@@ -210,6 +284,85 @@ export default defineConfig(({ mode }) => ({
           }
           if (id.includes('/src/data/classBlockPresets.ts')) {
             return 'data-class-presets';
+          }
+          if (
+            id.includes('/src/data/worldPilatesAtomicSeeds.ts') ||
+            id.includes('/src/data/worldPilatesFusionAndAdvancedSeeds.ts')
+          ) {
+            return 'data-world-atomic-seeds';
+          }
+          if (
+            id.includes('/src/data/worldPilatesRepertoire1000.ts') ||
+            id.includes('/src/data/globalCrawledRepertoirePack.ts') ||
+            id.includes('/src/data/additionalPilatesVideoCatalog.json') ||
+            id.includes('/src/data/creatorPilatesVideoCatalog.json') ||
+            id.includes('/src/utils/videoSemanticMatching.ts')
+          ) {
+            return 'data-world-repertoire';
+          }
+          if (
+            id.includes('/src/data/verifiedReferences.ts') ||
+            id.includes('/src/data/publicReferences.ts') ||
+            id.includes('/src/data/courseReferences.ts') ||
+            id.includes('/src/data/motionPatternReferences.ts')
+          ) {
+            return 'data-verified-references';
+          }
+          if (
+            id.includes('/src/data/extendedMotionVerificationCatalog.ts') ||
+            id.includes('/src/data/movementVisualSourceAudit.ts') ||
+            id.includes('/src/data/motionPhaseContextNotes.ts') ||
+            id.includes('/src/data/motionReferences.ts') ||
+            id.includes('/src/data/motionReferenceSource.json')
+          ) {
+            return 'data-motion-audit';
+          }
+          if (
+            id.includes('/src/data/footworkLowerDiagramData.ts') ||
+            id.includes('/src/data/footworkLowerSourceLedger.json') ||
+            id.includes('/src/data/lateralAndApparatusDiagramData.ts') ||
+            id.includes('/src/data/breathingPelvicDiagramData.ts') ||
+            id.includes('/src/data/breathingPelvicSourceLedger.json') ||
+            id.includes('/src/data/upperBodyArmDiagramData.ts')
+          ) {
+            return 'data-motion-diagrams';
+          }
+          if (
+            id.includes('/src/components/MovementPhaseDiagramSvg.tsx') ||
+            id.includes('/src/components/GeneratedPractitionerFigure.tsx') ||
+            id.includes('/src/utils/generatedPractitionerArt.ts') ||
+            id.includes('/src/utils/motionStudioMaterials.ts') ||
+            id.includes('/src/data/expandedMovementVisualBindings.ts')
+          ) {
+            return 'feature-motion-phase-svg';
+          }
+          if (
+            id.includes('/src/data/studioNeuralVoiceManifest.ts') ||
+            id.includes('/src/utils/studioNeuralVoiceResolver.ts') ||
+            id.includes('/src/utils/koreanVoiceNarration.ts') ||
+            id.includes('/src/utils/breathingCadenceEngine.ts') ||
+            id.includes('/src/utils/naturalVoiceScriptBuilder.ts') ||
+            id.includes('/src/utils/naturalVoiceEngine.ts') ||
+            id.includes('/src/utils/teachingVoiceCoachEngine.ts') ||
+            id.includes('/src/components/NaturalVoiceSpeakButton.tsx') ||
+            id.includes('/src/components/TeachingVoiceCoachPanel.tsx')
+          ) {
+            return 'feature-studio-voice';
+          }
+          if (
+            id.includes('/src/utils/composableHierarchyEngine.ts') ||
+            id.includes('/src/utils/sequenceAutomationEngine.ts') ||
+            id.includes('/src/utils/studioPropAllocator.ts') ||
+            id.includes('/src/utils/lessonFormatEngine.ts') ||
+            id.includes('/src/utils/onDevicePoseAnalyzer.ts') ||
+            id.includes('/src/utils/instructorChoreAutomation.ts') ||
+            id.includes('/src/utils/studioBusinessAdvisorEngine.ts') ||
+            id.includes('/src/components/StudioPropAllocatorPanel.tsx') ||
+            id.includes('/src/components/SequenceAutoPilotDrawer.tsx') ||
+            id.includes('/src/components/LessonModeSwitchPanel.tsx') ||
+            id.includes('/src/components/SmartBusinessAdvisorPanel.tsx')
+          ) {
+            return 'feature-studio-automation';
           }
           if (
             id.includes('/src/data/pilatesCatalog.ts') ||
