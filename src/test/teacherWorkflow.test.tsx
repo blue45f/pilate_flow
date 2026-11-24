@@ -17,7 +17,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { LiveStageView } from '../components/LiveStageView';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
-import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
+import { ALL_VERIFIED_PUBLIC_REFERENCES, VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   AutoGenerateCriteria,
@@ -141,7 +141,7 @@ const openHandoff = async () => {
   await navigate(/동작 라이브러리/);
   await openAtlasTools();
   fireEvent.click(
-    await screen.findByRole('tab', { name: `공개 자료 ${VERIFIED_REFERENCES.length}` }),
+    await screen.findByRole('tab', { name: `공개 자료 ${ALL_VERIFIED_PUBLIC_REFERENCES.length}` }),
   );
   fireEvent.click(screen.getByRole('button', { name: '전체 장비 보기' }));
   fireEvent.change(screen.getByRole('searchbox', { name: '공개 참고 자료 검색' }), {

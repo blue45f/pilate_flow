@@ -271,7 +271,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     // Baseline invariants preserved
     expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(420);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(505);
   });
 
   it('routes new motion families separately from inversions and ladder-barrel poses', () => {

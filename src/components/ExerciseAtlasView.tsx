@@ -41,7 +41,8 @@ import {
 import { getMovementProvenance } from '../data/movementProvenance';
 import { PUBLIC_REFERENCES } from '../data/publicReferences';
 import {
-  VERIFIED_REFERENCES,
+  ALL_VERIFIED_PUBLIC_REFERENCES,
+  EXPANDED_OFFICIAL_REFERENCES,
   SOURCE_CATALOG_SUMMARY,
   type VerifiedPublicReference,
 } from '../data/verifiedReferences';
@@ -574,17 +575,19 @@ const VerifiedReferencesSection: React.FC<{
   };
   const sourceLevels = [
     ...new Set(
-      VERIFIED_REFERENCES.flatMap((reference) =>
+      ALL_VERIFIED_PUBLIC_REFERENCES.flatMap((reference) =>
         reference.levelLabel ? [reference.levelLabel] : [],
       ),
     ),
   ].sort();
   const sourceBodies = [
-    ...new Set(VERIFIED_REFERENCES.flatMap((reference) => reference.bodyFocus)),
+    ...new Set(ALL_VERIFIED_PUBLIC_REFERENCES.flatMap((reference) => reference.bodyFocus)),
   ].sort();
   const sourceLanguages = [
     ...new Set(
-      VERIFIED_REFERENCES.flatMap((reference) => (reference.language ? [reference.language] : [])),
+      ALL_VERIFIED_PUBLIC_REFERENCES.flatMap((reference) =>
+        reference.language ? [reference.language] : [],
+      ),
     ),
   ].sort();
   const filterCount =
@@ -594,7 +597,7 @@ const VerifiedReferencesSection: React.FC<{
     Number(ownedOnly) +
     Number(region !== 'all') +
     Number(Boolean(search.trim()));
-  const references = VERIFIED_REFERENCES.filter((reference) => {
+  const references = ALL_VERIFIED_PUBLIC_REFERENCES.filter((reference) => {
     if (region !== 'all' && reference.region !== region) return false;
     if (verification === 'official' && reference.region !== 'global') return false;
     if (verification === 'partial' && reference.verificationStatus !== 'partial-playback-checked')
@@ -658,7 +661,7 @@ const VerifiedReferencesSection: React.FC<{
     ownedProps,
   });
   const sourceVisibleCount = sourceVisible.signature === sourceSignature ? sourceVisible.limit : 6;
-  if (VERIFIED_REFERENCES.length === 0) return null;
+  if (ALL_VERIFIED_PUBLIC_REFERENCES.length === 0) return null;
   return (
     <section className="verified-reference-section" aria-labelledby="verified-reference-heading">
       <header className="verified-reference-header">
@@ -667,11 +670,12 @@ const VerifiedReferencesSection: React.FC<{
             공개 참고 모음
           </span>
           <h2 id="verified-reference-heading">
-            공개 참고 자료와 국내 후보 <span>{VERIFIED_REFERENCES.length}</span>
+            공개 참고 자료와 국내 후보 <span>{ALL_VERIFIED_PUBLIC_REFERENCES.length}</span>
           </h2>
           <p>
             해외 동작 참조 {SOURCE_CATALOG_SUMMARY.overseasMovementReferences}건 · 시리즈{' '}
-            {SOURCE_CATALOG_SUMMARY.overseasSeriesReferences}건 · 국내 후보{' '}
+            {SOURCE_CATALOG_SUMMARY.overseasSeriesReferences}건 · 확장 공식 교본{' '}
+            {EXPANDED_OFFICIAL_REFERENCES.length}건 · 국내 후보{' '}
             {SOURCE_CATALOG_SUMMARY.koreanCandidates}건
           </p>
         </div>
@@ -825,7 +829,7 @@ const VerifiedReferencesSection: React.FC<{
           내 보유 기구·소도구로 모두 가능한 자료만
         </label>
         <p>
-          <strong>{references.length}</strong> / {VERIFIED_REFERENCES.length}개 출처
+          <strong>{references.length}</strong> / {ALL_VERIFIED_PUBLIC_REFERENCES.length}개 출처
         </p>
         {filterCount > 0 && (
           <button type="button" className="btn-ghost" onClick={reset}>
@@ -3117,7 +3121,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           className={collection === 'references' ? 'selected' : ''}
           onClick={() => setCollection('references')}
         >
-          공개 자료 <span>{VERIFIED_REFERENCES.length}</span>
+          공개 자료 <span>{ALL_VERIFIED_PUBLIC_REFERENCES.length}</span>
         </button>
         <button
           type="button"
