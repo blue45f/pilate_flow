@@ -1,7 +1,7 @@
 import type { ApparatusType } from '../types/pilates';
 
 export interface StudioApparatusGlbMeta {
-  readonly apparatus: ApparatusType | 'practitioner' | 'skinned-instructor';
+  readonly apparatus: ApparatusType | 'practitioner' | 'skinned-instructor' | 'apparatus-dynamic-parts';
   readonly labelKo: string;
   readonly url: string;
   readonly fileName: string;
@@ -10,6 +10,7 @@ export interface StudioApparatusGlbMeta {
   readonly vertices: number;
   readonly drawCalls: number;
   readonly boneCount?: number;
+  readonly partCount?: number;
   readonly glbForgeScore: number;
   readonly mobileHeroScore: number;
   readonly arkitCompatible: boolean;
@@ -142,6 +143,25 @@ export const STUDIO_SKINNED_INSTRUCTOR_GLB_META: StudioApparatusGlbMeta = {
   generator: 'Blender 5.3.0',
   summaryKo:
     '21본 아머처(IBM 포함) · 27,520삼각형 고밀도 단일 무봉제 수밀 휴머노이드 메시 · BVH 밀착 크롭탑 스트랩·실크 포니테일 · 실시간 WebGPU 1,752동작 본 리타게팅 정본',
+};
+
+export const STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META: StudioApparatusGlbMeta = {
+  apparatus: 'apparatus-dynamic-parts',
+  labelKo: '5대 필라테스 기구 12분절 실시간 동적 파츠 정본 (.glb)',
+  url: '/models/pilates-studio/apparatus-dynamic-parts-v1.glb',
+  fileName: 'apparatus-dynamic-parts-v1.glb',
+  fileBytes: 1818556,
+  triangles: 32404,
+  vertices: 31124,
+  drawCalls: 1,
+  partCount: 12,
+  glbForgeScore: 100,
+  mobileHeroScore: 100,
+  arkitCompatible: true,
+  sha256: '65353dee425b27d65b60a5a0fd1ebf6eda3c4a388ac7cedc2c7a253240b5cce0',
+  generator: 'Blender 5.3.0',
+  summaryKo:
+    '리포머(프레임·캐리지·풋바·숏/롱박스)·운다체어(프레임·스플릿 페달)·캐딜락(캐노피·푸쉬스루바)·래더바렐·스파인코렉터·스튜디오 매트 12분절 단일 드로콜(TEXCOORD_1 패킹) 실시간 WebGPU 기구 정본',
 };
 
 export const ALL_STUDIO_GLB_ASSETS: readonly StudioApparatusGlbMeta[] = Object.freeze([

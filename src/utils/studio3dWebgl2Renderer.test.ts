@@ -105,12 +105,64 @@ afterEach(() => {
 });
 
 describe('Studio3DWebGL2Renderer (Priority-2 Hardware Fallback & Smooth Normal Welder)', () => {
-  it('defines GLSL ES 3.00 shaders with SSS skin wrap, silk hair, Fresnel rim, and hardware depth', () => {
+  it('defines GLSL ES 3.00 shaders with SSS skin wrap, silk hair, Fresnel rim, anatomical terracotta activation, and hardware depth', () => {
     expect(STUDIO_3D_VERTEX_SHADER).toContain('#version 300 es');
     expect(STUDIO_3D_FRAGMENT_SHADER).toContain('#version 300 es');
     expect(STUDIO_3D_FRAGMENT_SHADER).toContain('sssGlow');
     expect(STUDIO_3D_FRAGMENT_SHADER).toContain('hairRim');
     expect(STUDIO_3D_FRAGMENT_SHADER).toContain('rimDir');
+    // Fresnel-contoured warm botanical terracotta-gold anatomical heatmap activation before AgX tone mapping
+    expect(STUDIO_3D_FRAGMENT_SHADER).toContain('if (emissive > 0.05 && (role == 1 || role == 3))');
+    expect(STUDIO_3D_FRAGMENT_SHADER).toContain('vec3(0.92, 0.48, 0.28)');
+    expect(STUDIO_3D_FRAGMENT_SHADER).toContain('0.38 + 0.62 * anatFresnel');
+    expect(STUDIO_3D_FRAGMENT_SHADER).toContain('1.8');
+    const anatIdx = STUDIO_3D_FRAGMENT_SHADER.indexOf('anatTerracotta');
+    const agxIdx = STUDIO_3D_FRAGMENT_SHADER.indexOf('col = filmicAgxRolloff(col)');
+    expect(anatIdx).toBeGreaterThan(-1);
+    expect(agxIdx).toBeGreaterThan(anatIdx);
+  });
+
+  it('packs smooth per-vertex vEmissive intensities per corner while preserving flat emissive fallback', () => {
+    const smoothQuad: StudioQuadFace[] = [
+      {
+        verts: [
+          [0, 0, 0.5],
+          [0.2, 0, 0.5],
+          [0.2, 0.2, 0.5],
+          [0, 0.2, 0.5],
+        ],
+        baseRgb: [218, 114, 72],
+        vEmissive: [0.0, 0.45, 0.92, 0.3],
+        emissive: 0.4,
+        alpha: 1,
+        spec: 0.04,
+        materialRole: 'fabric',
+      },
+      {
+        verts: [
+          [0.3, 0, 0.5],
+          [0.5, 0, 0.5],
+          [0.5, 0.2, 0.5],
+          [0.3, 0.2, 0.5],
+        ],
+        baseRgb: [196, 114, 92],
+        emissive: 0.18,
+        alpha: 1,
+        spec: 0.11,
+        materialRole: 'skin',
+      },
+    ];
+    const packed = triangulateAndWeldQuads(smoothQuad);
+    expect(packed.opaqueVertexCount).toBe(12);
+    // First quad triangles emit corners (0,1,2) and (0,2,3) with exact per-vertex emissive
+    expect(packed.opaqueData[0 * FLOATS_PER_VERTEX + 12]).toBeCloseTo(0.0, 5);
+    expect(packed.opaqueData[1 * FLOATS_PER_VERTEX + 12]).toBeCloseTo(0.45, 5);
+    expect(packed.opaqueData[2 * FLOATS_PER_VERTEX + 12]).toBeCloseTo(0.92, 5);
+    expect(packed.opaqueData[5 * FLOATS_PER_VERTEX + 12]).toBeCloseTo(0.3, 5);
+    // Second quad without vEmissive uses flat emissive fallback across all 6 triangle vertices
+    for (let v = 6; v < 12; v++) {
+      expect(packed.opaqueData[v * FLOATS_PER_VERTEX + 12]).toBeCloseTo(0.18, 5);
+    }
   });
 
   it('welds shared vertex normals smoothly on curved skin/hair while keeping sharp architectural wood corners crisp', () => {

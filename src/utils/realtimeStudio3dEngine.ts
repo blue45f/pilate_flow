@@ -22,9 +22,14 @@ import {
   getCachedSkinnedHumanoidAsset,
   skinHumanoidToStudioQuads,
 } from './skinnedHumanoidRetargeter';
+import {
+  buildDynamicApparatusQuads,
+  getCachedApparatusDynamicAsset,
+} from './apparatusDynamicGlbLoader';
 
 export type { Studio3DGpuRenderer, Studio3DRenderBackend, StudioMaterialRole };
 export type Studio3DCharacterPipeline = 'skinned-glb' | 'procedural';
+export type Studio3DApparatusPipeline = 'dynamic-glb' | 'procedural';
 
 export type Studio3DShaderPreset = 'studio-pbr' | 'biomech-xray' | 'game-arena' | 'clay-wire';
 
@@ -3211,6 +3216,7 @@ export interface Render3DFrameOptions {
   readonly shader: Studio3DShaderPreset;
   readonly mirrored?: boolean;
   readonly showBiomechOverlay?: boolean;
+  readonly showMuscleHeatmap?: boolean;
   readonly dualView?: boolean;
   readonly springOverride?: string;
   readonly footbarOverride?: 'default' | FootbarState;
@@ -3238,9 +3244,11 @@ interface Built3DScene {
   readonly halfSize: Vec3;
   readonly signatureId: Studio3DSignatureId;
   readonly activeZonesCount: number;
+  readonly activeZones: readonly ActiveMuscleZone3D[];
   readonly springStretchPct: number;
   readonly biomechTelemetry: Biomech3DTelemetry;
   readonly characterPipeline: Studio3DCharacterPipeline;
+  readonly apparatusPipeline: Studio3DApparatusPipeline;
 }
 
 /** Joint locations shared by the rendered skin, spring attachments, and model angle overlays. */
@@ -3352,6 +3360,7 @@ function buildStudio3DScene(options: {
   shader: Studio3DShaderPreset;
   mirrored: boolean;
   showBiomechOverlay: boolean;
+  showMuscleHeatmap?: boolean;
   springOverride?: string;
   footbarOverride?: 'default' | FootbarState;
   headrestOverride?: 'default' | HeadrestState;
@@ -3364,6 +3373,7 @@ function buildStudio3DScene(options: {
     shader,
     mirrored,
     showBiomechOverlay,
+    showMuscleHeatmap = false,
     springOverride,
     footbarOverride = 'default',
     headrestOverride = 'default',
@@ -3484,7 +3494,37 @@ function buildStudio3DScene(options: {
 
   let springStretchPct = Math.round(smoothstep(phaseT) * 100);
 
-  // 1. Flagship Industrial Studio Apparatus Geometry
+  // 1. Flagship Industrial Studio Apparatus Geometry (High-Density Dynamic GLB Parts when loaded, seamless procedural fallback otherwise)
+  const dynamicApparatusAsset = !svgFastMode ? getCachedApparatusDynamicAsset() : null;
+  const apparatusPipeline: Studio3DApparatusPipeline = dynamicApparatusAsset
+    ? 'dynamic-glb'
+    : 'procedural';
+  if (dynamicApparatusAsset) {
+    const dynamicQuads = buildDynamicApparatusQuads(dynamicApparatusAsset, {
+      apparatus,
+      carriageX: rig.carriageX ?? 0.12,
+      footbar: apparatus === 'reformer' && useJumpboard ? 'none' : effectiveFootbar,
+      box:
+        apparatus === 'reformer' && boxMountedOnReformer
+          ? useLongBox
+            ? 'long-box'
+            : useShortBox
+              ? 'short-box'
+              : 'none'
+          : 'none',
+      pedalDeg: rig.pedalDeg ?? 22,
+      lPedalDeg: rig.lPedalDeg,
+      rPedalDeg: rig.rPedalDeg,
+      ptbDeg: rig.pushthroughDeg,
+      showPtb: rig.pushthroughDeg !== undefined,
+      useSpineCorrector: Boolean(rig.isSpineCorrector),
+      shader,
+    });
+    for (let dqi = 0; dqi < dynamicQuads.length; dqi++) {
+      quads.push(dynamicQuads[dqi]!);
+    }
+  }
+
   if (apparatus === 'reformer') {
     const cx = rig.carriageX ?? 0.12;
     springStretchPct =
@@ -3494,6 +3534,7 @@ function buildStudio3DScene(options: {
 
     shadowAnchors.push({ pos: [0, 0, 0.004], rx: 1.18, ry: 0.36 });
 
+    if (!dynamicApparatusAsset) {
     // Routed European White-Oak Side & End Rails + Recessed Brushed-Steel C-Tracks
     for (const sy of [-0.3, 0.3]) {
       quads.push(
@@ -3840,6 +3881,7 @@ function buildStudio3DScene(options: {
         );
       }
     }
+    } // end !dynamicApparatusAsset reformer rigid frame/carriage/boxes
 
     if (useJumpboard) {
       for (const sy of [-0.19, 0.19]) {
@@ -3879,7 +3921,7 @@ function buildStudio3DScene(options: {
       );
       quads.push(...jb.quads);
       lines.push(jb.piping);
-    } else if (effectiveFootbar !== 'down' && effectiveFootbar !== 'none') {
+    } else if (!dynamicApparatusAsset && effectiveFootbar !== 'down' && effectiveFootbar !== 'none') {
       const fbZ = effectiveFootbar === 'low' ? 0.48 : effectiveFootbar === 'mid' ? 0.53 : 0.575;
       const fbX = effectiveFootbar === 'low' ? 0.88 : effectiveFootbar === 'mid' ? 0.85 : 0.825;
       for (const sy of [-0.282, 0.282]) {
@@ -3945,6 +3987,7 @@ function buildStudio3DScene(options: {
     }
 
     // Rear Stainless Risers + Swivel Clevis Yokes + Brass Pulley Sheaves + Double Cotton Loops
+    if (!dynamicApparatusAsset) {
     for (const ry of [-0.28, 0.28]) {
       quads.push(
         ...makeCylinder3D(
@@ -4007,6 +4050,7 @@ function buildStudio3DScene(options: {
           'chrome',
         ),
       );
+    }
     }
     if (rig.ropeToFeet) {
       const [negFoot, posFoot] =
@@ -4087,6 +4131,7 @@ function buildStudio3DScene(options: {
   } else if (apparatus === 'cadillac') {
     shadowAnchors.push({ pos: [0, 0, 0.004], rx: 1.12, ry: 0.38 });
 
+    if (!dynamicApparatusAsset) {
     const bed = makePipedCushion(
       [0, 0, 0.545],
       [2.08, 0.64, 0.066],
@@ -4097,6 +4142,7 @@ function buildStudio3DScene(options: {
     );
     quads.push(...bed.quads);
     lines.push(bed.piping);
+    }
 
     if (boxMountedOnCadillac && (useLongBox || useShortBox)) {
       const box = makeStudioBoxProp(
@@ -4113,6 +4159,7 @@ function buildStudio3DScene(options: {
       lines.push(box.piping);
     }
 
+    if (!dynamicApparatusAsset) {
     // Heavy Oak Trapeze Table Frame + Lower Oak H-Stretcher Rails (z = 0.14)
     for (const sy of [-0.32, 0.32]) {
       quads.push(
@@ -4266,6 +4313,7 @@ function buildStudio3DScene(options: {
         }
       }
     }
+    } // end !dynamicApparatusAsset reformer rigid frame/carriage/boxes
 
     if (useJumpboard) {
       for (const sy of [-0.31, 0.31]) {
@@ -4384,6 +4432,7 @@ function buildStudio3DScene(options: {
       const ez = 1.94 - Math.cos(rad) * 0.66;
       const mx = (0.62 + ex) * 0.5;
       const mz = (1.94 + ez) * 0.5;
+      if (!dynamicApparatusAsset) {
       quads.push(
         ...makeCylinder3D(
           [0.62, -0.27, 1.94],
@@ -4440,6 +4489,9 @@ function buildStudio3DScene(options: {
           24,
           'leather',
         ),
+      );
+      }
+      quads.push(
         // Authentic Overhead Safety Strap on Push-Through Bar
         ...makeCylinder3D(
           [1.05, -0.26, 1.94],
@@ -4551,6 +4603,7 @@ function buildStudio3DScene(options: {
     const cx = -0.1;
     shadowAnchors.push({ pos: [cx, 0, 0.004], rx: 0.48, ry: 0.34 });
 
+    if (!dynamicApparatusAsset) {
     // Open C-Frame Laminated Oak Arch Side Panels + Walnut Base Runners + Tie Dowels
     quads.push(
       ...makeOpenCFramePanelQuads(cx, -0.252, 0.036, oakRgb, appAlpha),
@@ -4637,6 +4690,7 @@ function buildStudio3DScene(options: {
     );
     quads.push(...seat.quads);
     lines.push(seat.piping);
+    }
 
     // Split-Pedal Walnut Arms + Charcoal Padded Crossbars + Central Brass Split-Pedal Lock Dowel
     const pdeg = rig.pedalDeg ?? 22;
@@ -4648,6 +4702,7 @@ function buildStudio3DScene(options: {
     const lPz = 0.088 + Math.sin(lRad) * 0.54;
     const rPx = cx - 0.1 + Math.cos(rRad) * 0.54;
     const rPz = 0.088 + Math.sin(rRad) * 0.54;
+    if (!dynamicApparatusAsset) {
     for (const [py, pxSide, pzSide] of [
       [-0.105, lPx, lPz],
       [0.105, rPx, rPz],
@@ -4691,6 +4746,7 @@ function buildStudio3DScene(options: {
           'brass',
         ),
       );
+    }
     }
 
     lines.push(
@@ -4766,6 +4822,7 @@ function buildStudio3DScene(options: {
   } else if (apparatus === 'barrel') {
     if (rig.isSpineCorrector) {
       shadowAnchors.push({ pos: [0.04, 0, 0.004], rx: 0.56, ry: 0.3 });
+      if (!dynamicApparatusAsset) {
       quads.push(
         ...makeBarrelArchVaultQuads(
           [-0.16, 0, 0.03],
@@ -4818,8 +4875,10 @@ function buildStudio3DScene(options: {
           ),
         );
       }
+      }
     } else {
       shadowAnchors.push({ pos: [0.06, 0, 0.004], rx: 0.68, ry: 0.34 });
+      if (!dynamicApparatusAsset) {
       quads.push(
         ...makeBarrelArchVaultQuads(
           [-0.3, 0, 0.55],
@@ -4912,9 +4971,11 @@ function buildStudio3DScene(options: {
           ),
         );
       }
+      }
     }
   } else {
     shadowAnchors.push({ pos: [0, 0, 0.004], rx: 1.08, ry: 0.44 });
+    if (!dynamicApparatusAsset) {
     // Non-overlapping cork perimeter border around the upholstered studio mat (zero coplanar Z-fighting)
     for (const sy of [-0.37, 0.37]) {
       quads.push(
@@ -4975,6 +5036,7 @@ function buildStudio3DScene(options: {
           'brass',
         ),
       );
+    }
     }
   }
 
@@ -5485,6 +5547,7 @@ function buildStudio3DScene(options: {
         activeZones: rig.activeZones,
         phaseT,
         showBiomechOverlay,
+        showMuscleHeatmap,
       },
     );
     for (let sqi = 0; sqi < skinnedQuads.length; sqi++) {
@@ -6268,6 +6331,7 @@ function buildStudio3DScene(options: {
     halfSize: route.halfSize,
     signatureId: spec.signatureId,
     activeZonesCount: rig.activeZones.length,
+    activeZones: rig.activeZones,
     springStretchPct,
     biomechTelemetry: {
       kneeAngleDeg,
@@ -6278,6 +6342,7 @@ function buildStudio3DScene(options: {
       activeSpringLabel,
     },
     characterPipeline,
+    apparatusPipeline,
   };
 }
 
@@ -6419,6 +6484,15 @@ function evalStudioPbrLitRgb(
     rF = baseRgb[0] * shade + specPow * 232;
     gF = baseRgb[1] * shade + specPow * 229;
     bF = baseRgb[2] * shade + specPow * 222;
+  }
+
+  const rawEmissive = q.emissive ?? 0;
+  if (rawEmissive > 0.05 && (role === 'skin' || role === 'fabric')) {
+    const fresnelRim = Math.pow(1 - ndv, 1.8);
+    const heatBoost = rawEmissive * (0.38 + 0.62 * fresnelRim) * 0.42;
+    rF += 235 * heatBoost;
+    gF += 122 * heatBoost;
+    bF += 71 * heatBoost;
   }
 
   const r = Math.max(0, Math.min(255, Math.round(rF)));
@@ -7019,6 +7093,7 @@ export function renderRealtimeStudio3DFrame({
   shader,
   mirrored = false,
   showBiomechOverlay = false,
+  showMuscleHeatmap = false,
   dualView = false,
   springOverride,
   footbarOverride,
@@ -7028,11 +7103,13 @@ export function renderRealtimeStudio3DFrame({
 }: Render3DFrameOptions): {
   readonly signatureId: Studio3DSignatureId;
   readonly activeZonesCount: number;
+  readonly activeZones: readonly ActiveMuscleZone3D[];
   readonly springStretchPct: number;
   readonly biomechTelemetry: Biomech3DTelemetry;
   readonly hotspots: readonly Studio3DHotspot[];
   readonly renderBackend: Studio3DRenderBackend;
   readonly characterPipeline: Studio3DCharacterPipeline;
+  readonly apparatusPipeline: Studio3DApparatusPipeline;
 } {
   const scene = buildStudio3DScene({
     exercise,
@@ -7040,6 +7117,7 @@ export function renderRealtimeStudio3DFrame({
     shader,
     mirrored,
     showBiomechOverlay,
+    showMuscleHeatmap,
     springOverride,
     footbarOverride,
     headrestOverride,
@@ -7121,11 +7199,13 @@ export function renderRealtimeStudio3DFrame({
   return {
     signatureId: scene.signatureId,
     activeZonesCount: scene.activeZonesCount,
+    activeZones: scene.activeZones,
     springStretchPct: scene.springStretchPct,
     biomechTelemetry: scene.biomechTelemetry,
     hotspots,
     renderBackend,
     characterPipeline: scene.characterPipeline,
+    apparatusPipeline: scene.apparatusPipeline,
   };
 }
 

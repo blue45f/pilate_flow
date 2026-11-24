@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   ALL_STUDIO_GLB_ASSETS,
+  STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META,
   STUDIO_SKINNED_INSTRUCTOR_GLB_META,
 } from '../data/blenderStudioGlbManifest';
 import coreAbdominalLedger from '../data/coreAbdominalSourceLedger.json';
@@ -201,6 +202,7 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
         path.join(rootDir, 'public', meta.url.replace(/^\//, '')),
       ),
       path.join(rootDir, 'public', STUDIO_SKINNED_INSTRUCTOR_GLB_META.url.replace(/^\//, '')),
+      path.join(rootDir, 'public', STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.url.replace(/^\//, '')),
       path.join(rootDir, 'public/models/studio3d/atelier-reformer-v9.glb'),
     ]);
     expect(ALL_STUDIO_GLB_ASSETS).toHaveLength(6);
@@ -235,6 +237,27 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.drawCalls).toBe(1);
     expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.glbForgeScore).toBe(100);
     expect(STUDIO_SKINNED_INSTRUCTOR_GLB_META.mobileHeroScore).toBe(100);
+    const dynamicApparatusGlbPath = path.join(
+      rootDir,
+      'public',
+      STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.url.replace(/^\//, ''),
+    );
+    expect(
+      existsSync(dynamicApparatusGlbPath),
+      STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.fileName,
+    ).toBe(true);
+    const dynamicApparatusBuf = readFileSync(dynamicApparatusGlbPath);
+    expect(dynamicApparatusBuf.readUInt32LE(0)).toBe(0x46546c67);
+    expect(dynamicApparatusBuf.readUInt32LE(8)).toBe(
+      STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.fileBytes,
+    );
+    expect(createHash('sha256').update(dynamicApparatusBuf).digest('hex')).toBe(
+      STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.sha256,
+    );
+    expect(STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.partCount).toBe(12);
+    expect(STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.drawCalls).toBe(1);
+    expect(STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.glbForgeScore).toBe(100);
+    expect(STUDIO_APPARATUS_DYNAMIC_PARTS_GLB_META.mobileHeroScore).toBe(100);
     const foundUnregisteredBinaryAssets = scannedFiles.filter(
       (filePath) =>
         forbidden3dOrMocapExts.has(path.extname(filePath).toLowerCase()) &&

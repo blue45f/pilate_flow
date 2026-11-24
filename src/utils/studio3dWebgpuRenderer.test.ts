@@ -223,7 +223,7 @@ afterEach(() => {
 });
 
 describe('Priority-1 WebGPU -> Priority-2 WebGL2 -> Priority-3 Canvas2D Studio 3D Pipeline', () => {
-  it('validates WGSL shader source for PBR/SSS wrap, silk hair, Fresnel rim, uniform fwidth, and WebGPU [0,1] depth', () => {
+  it('validates WGSL shader source for PBR/SSS wrap, silk hair, Fresnel rim, anatomical terracotta activation, uniform fwidth, and WebGPU [0,1] depth', () => {
     expect(STUDIO_3D_WGSL_SHADER).toContain('@vertex');
     expect(STUDIO_3D_WGSL_SHADER).toContain('@fragment');
     expect(STUDIO_3D_WGSL_SHADER).toContain('let quadFw = max(fwidth(in.quadUv)');
@@ -231,6 +231,15 @@ describe('Priority-1 WebGPU -> Priority-2 WebGL2 -> Priority-3 Canvas2D Studio 3
     expect(STUDIO_3D_WGSL_SHADER).toContain('hairRim');
     expect(STUDIO_3D_WGSL_SHADER).toContain('rimDir');
     expect(STUDIO_3D_WGSL_SHADER).toContain('(farP / (farP - nearP)) * (zCam - nearP)');
+    // Fresnel-contoured warm botanical terracotta-gold anatomical heatmap activation before AgX tone mapping
+    expect(STUDIO_3D_WGSL_SHADER).toContain('if (emissive > 0.05 && (role == 1 || role == 3))');
+    expect(STUDIO_3D_WGSL_SHADER).toContain('vec3<f32>(0.92, 0.48, 0.28)');
+    expect(STUDIO_3D_WGSL_SHADER).toContain('0.38 + 0.62 * anatFresnel');
+    expect(STUDIO_3D_WGSL_SHADER).toContain('1.8');
+    const anatIdx = STUDIO_3D_WGSL_SHADER.indexOf('anatTerracotta');
+    const agxIdx = STUDIO_3D_WGSL_SHADER.indexOf('col = filmicAgxRolloff(col)');
+    expect(anatIdx).toBeGreaterThan(-1);
+    expect(agxIdx).toBeGreaterThan(anatIdx);
   });
 
   it('always selects WebGPU as Priority 1 when navigator.gpu succeeds, even when WebGL2 is also available', async () => {

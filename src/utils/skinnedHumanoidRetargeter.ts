@@ -31,6 +31,139 @@ export const DEFAULT_SKINNED_HUMANOID_GLB_URL =
 
 export type SkinnedMuscleRegion = 'none' | 'core' | 'glutes' | 'legs' | 'shoulders';
 
+export const ANATOMICAL_MUSCLE_ZONES = [
+  'core',
+  'obliques',
+  'back',
+  'glutes',
+  'quads',
+  'hamstrings',
+  'adductors',
+  'shoulders',
+  'calves',
+] as const;
+
+export type AnatomicalMuscleZone = ActiveMuscleZone3D | 'hamstrings' | 'calves';
+
+export const ANATOMICAL_MUSCLE_ZONE_COUNT = ANATOMICAL_MUSCLE_ZONES.length;
+
+export const MUSCLE_ZONE_INDEX: Readonly<Record<AnatomicalMuscleZone, number>> = {
+  core: 0,
+  obliques: 1,
+  back: 2,
+  glutes: 3,
+  quads: 4,
+  hamstrings: 5,
+  adductors: 6,
+  shoulders: 7,
+  calves: 8,
+};
+
+/** Non-medical, non-diagnostic Korean Pilates coaching labels for all 9 anatomical zones. */
+export const MUSCLE_ZONE_LABELS_KO: Readonly<Record<AnatomicalMuscleZone, string>> = {
+  core: '복부 심부',
+  obliques: '측면 복사근',
+  back: '등·척추 신전근',
+  glutes: '둔근',
+  quads: '허벅지 앞쪽',
+  hamstrings: '허벅지 뒤쪽',
+  adductors: '허벅지 안쪽',
+  shoulders: '어깨·견갑대',
+  calves: '종아리·발목',
+};
+
+/** Warm botanical terracotta-amber heatmap accent aligned with Calm Atelier palette. */
+export const HEATMAP_TERRACOTTA_RGB: Rgb = [218, 114, 72];
+
+export interface MuscleHeatmapTelemetry {
+  readonly primaryZonesKo: string[];
+  readonly activationPct: number;
+  readonly phaseCueKo: string;
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return value < 0 ? 0 : value > 1 ? 1 : value;
+}
+
+/**
+ * Pose-excursion-synced anatomical activation curve (`[0.36, 1.0]`):
+ * `poseT = 0` is neutral start/finish posture (`0.36` readable baseline),
+ * smoothly ramping to peak activation (`1.0`) at `poseT = 1` (`02 정점 유지`).
+ */
+export function computeMuscleActivationCurve(poseT: number): number {
+  const t = clamp01(poseT);
+  return 0.36 + 0.64 * Math.pow(t, 0.78);
+}
+
+export type MuscleHeatmapCyclePhaseId = 'setup' | 'move' | 'turn' | 'return' | 'finish';
+
+/**
+ * Pure Korean coaching telemetry for the real-time 9-zone muscle activation heatmap
+ * (strictly non-medical, non-diagnostic Pilates alignment cues).
+ */
+export function computeMuscleHeatmapTelemetry(
+  activeZones: readonly AnatomicalMuscleZone[],
+  poseT: number,
+  cyclePhaseId?: MuscleHeatmapCyclePhaseId,
+): MuscleHeatmapTelemetry {
+  const seen = new Set<AnatomicalMuscleZone>();
+  const primaryZonesKo: string[] = [];
+  for (const zone of activeZones) {
+    if (seen.has(zone)) continue;
+    const label = MUSCLE_ZONE_LABELS_KO[zone];
+    if (label) {
+      seen.add(zone);
+      primaryZonesKo.push(label);
+    }
+  }
+
+  const t = clamp01(poseT);
+  if (primaryZonesKo.length === 0) {
+    return {
+      primaryZonesKo,
+      activationPct: 0,
+      phaseCueKo: '전신 정렬 유지 구간',
+    };
+  }
+
+  const activationPct = Math.round(computeMuscleActivationCurve(t) * 100);
+  let phaseCueKo: string;
+  if (cyclePhaseId === 'setup') {
+    phaseCueKo = '시작 자세 정렬 · 호흡 준비';
+  } else if (cyclePhaseId === 'move') {
+    phaseCueKo = '움직임 전개 · 중심 안정';
+  } else if (cyclePhaseId === 'turn') {
+    phaseCueKo = '최대 활성 구간 · 호흡과 조절';
+  } else if (cyclePhaseId === 'return') {
+    phaseCueKo = '천천히 복귀 · 정렬 유지';
+  } else if (cyclePhaseId === 'finish') {
+    phaseCueKo = '마무리 정렬 · 호흡 정리';
+  } else if (t < 0.2) {
+    phaseCueKo = '시작 자세 정렬 · 호흡 준비';
+  } else if (t < 0.8) {
+    phaseCueKo = '움직임 전개 · 중심 안정';
+  } else {
+    phaseCueKo = '최대 활성 구간 · 호흡과 조절';
+  }
+
+  return {
+    primaryZonesKo,
+    activationPct,
+    phaseCueKo,
+  };
+}
+
+/** Reads the precomputed `[0, 1]` Gaussian anatomical muscle weight for a vertex and zone. */
+export function getVertexMuscleWeight(
+  asset: SkinnedHumanoidAsset,
+  vertexIndex: number,
+  zone: AnatomicalMuscleZone,
+): number {
+  if (vertexIndex < 0 || vertexIndex >= asset.vertexCount) return 0;
+  return asset.vertexMuscleWeights[vertexIndex * ANATOMICAL_MUSCLE_ZONE_COUNT + MUSCLE_ZONE_INDEX[zone]] ?? 0;
+}
+
 export interface SkinnedHumanoidRigJoints {
   readonly pelvis: Vec3;
   readonly spineMid: Vec3;
@@ -61,9 +194,11 @@ export interface SkinnedHumanoidRigJoints {
 
 export interface SkinnedHumanoidRenderOptions {
   readonly shader: StudioWebGLShaderMode;
-  readonly activeZones: readonly ActiveMuscleZone3D[];
+  readonly activeZones: readonly AnatomicalMuscleZone[];
   readonly phaseT: number;
   readonly showBiomechOverlay?: boolean;
+  /** Enables high-clarity 9-zone botanical terracotta-amber muscle activation heatmap. Default: false. */
+  readonly showMuscleHeatmap?: boolean;
 }
 
 export interface SkinnedHumanoidAsset {
@@ -91,9 +226,15 @@ export interface SkinnedHumanoidAsset {
   readonly bindLength: Float32Array;
   /** Precomputed 3x3 offset `R_canon_bind^T * R_bind_exported` (`9 * jointCount`) */
   readonly bindRotOffset: Float32Array;
-  /** Precomputed per-triangle material role & active muscle zone */
+  /** Precomputed per-triangle material role & legacy 4-region classification */
   readonly triRoles: readonly StudioMaterialRole[];
   readonly triMuscleRegions: readonly SkinnedMuscleRegion[];
+  /**
+   * Precomputed 9-zone smooth per-vertex Gaussian anatomical muscle weights (`vertexCount * 9`),
+   * ordered by `ANATOMICAL_MUSCLE_ZONES` (`core`, `obliques`, `back`, `glutes`, `quads`,
+   * `hamstrings`, `adductors`, `shoulders`, `calves`), each in `[0, 1]`.
+   */
+  readonly vertexMuscleWeights: Float32Array;
   /** Approximate bind-pose bounding box in glTF Y-up */
   readonly bindBounds: {
     readonly min: Vec3;
@@ -518,6 +659,285 @@ function classifyBandRole(bandIdx: number): StudioMaterialRole {
   return 'fabric';
 }
 
+function smoothstepRange(edge0: number, edge1: number, x: number): number {
+  const denom = edge1 - edge0;
+  if (Math.abs(denom) < 1e-8) return x >= edge1 ? 1 : 0;
+  const t = clamp01((x - edge0) / denom);
+  return t * t * (3 - 2 * t);
+}
+
+function gaussianWeight(delta: number, sigma: number): number {
+  const ratio = delta / sigma;
+  return Math.exp(-0.5 * ratio * ratio);
+}
+
+/**
+ * Computes 9 anatomically accurate per-vertex Gaussian muscle weight fields once at GLB load time
+ * from rest-pose positions `(x, y, z)`, outward unit normals `(nx, ny, nz)`, UV atlas bands,
+ * bind-pose joint landmarks, and normalized bone skinning weights.
+ */
+function computeVertexMuscleWeightFields(params: {
+  readonly vertexCount: number;
+  readonly positions: Float32Array;
+  readonly normals: Float32Array;
+  readonly joints: Uint16Array;
+  readonly weights: Float32Array;
+  readonly texcoords: Float32Array;
+  readonly bindHeadPos: Float32Array;
+  readonly jointIndexByName: ReadonlyMap<string, number>;
+}): Float32Array {
+  const {
+    vertexCount,
+    positions,
+    normals,
+    joints,
+    weights,
+    texcoords,
+    bindHeadPos,
+    jointIndexByName,
+  } = params;
+
+  const field = new Float32Array(vertexCount * ANATOMICAL_MUSCLE_ZONE_COUNT);
+
+  const headX = (name: string, fallback: number): number => {
+    const ji = jointIndexByName.get(name);
+    return ji !== undefined ? bindHeadPos[ji * 3]! : fallback;
+  };
+  const headY = (name: string, fallback: number): number => {
+    const ji = jointIndexByName.get(name);
+    return ji !== undefined ? bindHeadPos[ji * 3 + 1]! : fallback;
+  };
+
+  const jPelvis = jointIndexByName.get('Pelvis') ?? -1;
+  const jSpL = jointIndexByName.get('SpineLower') ?? -1;
+  const jSpU = jointIndexByName.get('SpineUpper') ?? -1;
+  const jChest = jointIndexByName.get('Chest') ?? -1;
+  const jShL = jointIndexByName.get('Shoulder_L') ?? -1;
+  const jShR = jointIndexByName.get('Shoulder_R') ?? -1;
+  const jUaL = jointIndexByName.get('UpperArm_L') ?? -1;
+  const jUaR = jointIndexByName.get('UpperArm_R') ?? -1;
+  const jThL = jointIndexByName.get('Thigh_L') ?? -1;
+  const jThR = jointIndexByName.get('Thigh_R') ?? -1;
+  const jShinL = jointIndexByName.get('Shin_L') ?? -1;
+  const jShinR = jointIndexByName.get('Shin_R') ?? -1;
+  const jFootL = jointIndexByName.get('Foot_L') ?? -1;
+  const jFootR = jointIndexByName.get('Foot_R') ?? -1;
+
+  const excludedJoints = new Set<number>();
+  for (const name of ['Head', 'Ponytail', 'Neck', 'Forearm_L', 'Forearm_R', 'Hand_L', 'Hand_R']) {
+    const ji = jointIndexByName.get(name);
+    if (ji !== undefined) excludedJoints.add(ji);
+  }
+
+  // Bind-pose anatomical Y/X landmarks in glTF Y-up (+Z anterior, ±X bilateral)
+  const yPelvis = headY('Pelvis', 0.889);
+  const ySpL = headY('SpineLower', 1.0);
+  const ySpU = headY('SpineUpper', 1.137);
+  const yChest = headY('Chest', 1.253);
+  const yNeck = headY('Neck', 1.369);
+  const yKnee = 0.5 * (headY('Shin_L', 0.465) + headY('Shin_R', 0.465));
+  const yAnkle = 0.5 * (headY('Foot_L', 0.053) + headY('Foot_R', 0.053));
+  const xThigh = 0.5 * (Math.abs(headX('Thigh_L', 0.088)) + Math.abs(headX('Thigh_R', -0.088)));
+  const xShin = 0.5 * (Math.abs(headX('Shin_L', 0.092)) + Math.abs(headX('Shin_R', -0.092)));
+  const xSh = 0.5 * (Math.abs(headX('UpperArm_L', 0.148)) + Math.abs(headX('UpperArm_R', -0.148)));
+  const ySh = 0.5 * (headY('UpperArm_L', 1.311) + headY('UpperArm_R', 1.311));
+  const xElb = 0.5 * (Math.abs(headX('Forearm_L', 0.368)) + Math.abs(headX('Forearm_R', -0.368)));
+
+  const yCoreCenter = 0.5 * (ySpL + ySpU);
+  const yOblCenter = ySpL + 0.065;
+  const yBackCenter = 0.5 * (ySpU + yChest) - 0.015;
+  const yGluteCenter = yPelvis - 0.018;
+  const thighSpan = Math.max(0.25, yPelvis - yKnee);
+  const shinSpan = Math.max(0.25, yKnee - yAnkle);
+  const yQuadCenter = yKnee + thighSpan * 0.52;
+  const yHamCenter = yKnee + thighSpan * 0.45;
+  const yAddCenter = yKnee + thighSpan * 0.58;
+  const yCalfCenter = yAnkle + shinSpan * 0.62;
+
+  for (let vi = 0; vi < vertexCount; vi++) {
+    // Exclude gloss (eyes/lips: band 12) and hair/brows (bands 13, 14)
+    const u = texcoords[vi * 2] ?? 0;
+    const vg = texcoords[vi * 2 + 1] ?? 0;
+    const col = Math.max(0, Math.min(3, Math.floor(u * 4)));
+    const row = Math.max(0, Math.min(3, Math.floor((1 - vg) * 4)));
+    const band = row * 4 + col;
+    if (band === 12 || band === 13 || band === 14) continue;
+
+    let wPelvis = 0;
+    let wSpL = 0;
+    let wSpU = 0;
+    let wChest = 0;
+    let wSh = 0;
+    let wUa = 0;
+    let wTh = 0;
+    let wShin = 0;
+    let wFoot = 0;
+    let wExcl = 0;
+
+    const i4 = vi * 4;
+    for (let k = 0; k < 4; k++) {
+      const w = weights[i4 + k]!;
+      if (w <= 1e-5) continue;
+      const ji = joints[i4 + k]!;
+      if (ji === jPelvis) wPelvis += w;
+      else if (ji === jSpL) wSpL += w;
+      else if (ji === jSpU) wSpU += w;
+      else if (ji === jChest) wChest += w;
+      else if (ji === jShL || ji === jShR) wSh += w;
+      else if (ji === jUaL || ji === jUaR) wUa += w;
+      else if (ji === jThL || ji === jThR) wTh += w;
+      else if (ji === jShinL || ji === jShinR) wShin += w;
+      else if (ji === jFootL || ji === jFootR) wFoot += w;
+      else if (excludedJoints.has(ji)) wExcl += w;
+    }
+
+    const keepBody = 1 - clamp01(wExcl * 2.0);
+    if (keepBody <= 0.01) continue;
+
+    const i3 = vi * 3;
+    const x = positions[i3]!;
+    const y = positions[i3 + 1]!;
+    const z = positions[i3 + 2]!;
+    const nx = normals[i3]!;
+    const ny = normals[i3 + 1]!;
+    const nz = normals[i3 + 2]!;
+    const absX = Math.abs(x);
+    const latOut = x >= 0 ? nx : -nx;
+    const medIn = -latOut;
+    const neckCutoff = 1 - smoothstepRange(yNeck - 0.025, yNeck - 0.002, y);
+
+    const out = vi * ANATOMICAL_MUSCLE_ZONE_COUNT;
+
+    // 0: core (rectus & transversus abdominis — anterior abdomen)
+    const coreBone =
+      clamp01(wSpL + wSpU * 0.95 + wPelvis * 0.72 + wChest * 0.25) * (1 - clamp01(wUa + wSh));
+    field[out] = clamp01(
+      gaussianWeight(y - yCoreCenter, 0.098) *
+        gaussianWeight(absX, 0.072) *
+        smoothstepRange(0.18, 0.72, nz) *
+        smoothstepRange(-0.015, 0.032, z) *
+        coreBone *
+        keepBody,
+    );
+
+    // 1: obliques (external/internal obliques — lateral waist flanks)
+    const oblBone =
+      clamp01(wSpL + wSpU + wPelvis * 0.65 + wChest * 0.25) * (1 - clamp01(wUa + wSh));
+    field[out + 1] = clamp01(
+      gaussianWeight(y - yOblCenter, 0.088) *
+        smoothstepRange(0.048, 0.092, absX) *
+        smoothstepRange(0.36, 0.82, latOut) *
+        smoothstepRange(-0.6, 0.12, nz) *
+        oblBone *
+        keepBody,
+    );
+
+    // 2: back (erector spinae, lats & thoracic posterior torso)
+    const backBone =
+      clamp01(wSpL + wSpU + wChest + wPelvis * 0.2) * (1 - clamp01(wUa + wSh * 0.35));
+    field[out + 2] = clamp01(
+      gaussianWeight(y - yBackCenter, 0.138) *
+        smoothstepRange(yPelvis + 0.035, ySpL + 0.035, y) *
+        gaussianWeight(absX, 0.105) *
+        smoothstepRange(0.2, 0.72, -nz) *
+        smoothstepRange(0.012, -0.032, z) *
+        backBone *
+        neckCutoff *
+        keepBody,
+    );
+
+    // 3: glutes (gluteus maximus & medius — posterior/posterolateral pelvis)
+    const gluteBone = clamp01(wPelvis + wTh * 0.85 + wSpL * 0.22);
+    field[out + 3] = clamp01(
+      gaussianWeight(y - yGluteCenter, 0.074) *
+        smoothstepRange(yPelvis - 0.165, yPelvis - 0.075, y) *
+        gaussianWeight(absX - 0.055, 0.074) *
+        smoothstepRange(-0.02, 0.58, -nz) *
+        smoothstepRange(0.01, -0.035, z) *
+        gluteBone *
+        keepBody,
+    );
+
+    // 4: quads (quadriceps femoris — anterior thigh)
+    const quadBone = clamp01(wTh + wPelvis * 0.2 + wShin * 0.1);
+    const yQuadBounds =
+      smoothstepRange(yKnee - 0.015, yKnee + 0.055, y) *
+      (1 - smoothstepRange(yPelvis - 0.045, yPelvis + 0.035, y));
+    field[out + 4] = clamp01(
+      gaussianWeight(y - yQuadCenter, 0.13) *
+        yQuadBounds *
+        gaussianWeight(absX - xThigh - 0.005, 0.052) *
+        smoothstepRange(0.2, 0.74, nz) *
+        smoothstepRange(-0.015, 0.025, z) *
+        quadBone *
+        keepBody,
+    );
+
+    // 5: hamstrings (posterior thigh)
+    const hamBone = clamp01(wTh + wShin * 0.1);
+    const yHamBounds =
+      smoothstepRange(yKnee - 0.015, yKnee + 0.055, y) *
+      (1 - smoothstepRange(yPelvis - 0.125, yPelvis - 0.03, y));
+    field[out + 5] = clamp01(
+      gaussianWeight(y - yHamCenter, 0.118) *
+        yHamBounds *
+        gaussianWeight(absX - xThigh, 0.052) *
+        smoothstepRange(0.22, 0.75, -nz) *
+        smoothstepRange(0.01, -0.026, z) *
+        hamBone *
+        keepBody,
+    );
+
+    // 6: adductors (medial inner thigh)
+    const addBone = clamp01(wTh + wPelvis * 0.25);
+    const yAddBounds =
+      smoothstepRange(yKnee + 0.02, yKnee + 0.1, y) *
+      (1 - smoothstepRange(yPelvis - 0.05, yPelvis + 0.02, y));
+    field[out + 6] = clamp01(
+      gaussianWeight(y - yAddCenter, 0.112) *
+        yAddBounds *
+        smoothstepRange(xThigh + 0.008, xThigh - 0.038, absX) *
+        smoothstepRange(0.28, 0.8, medIn) *
+        addBone *
+        keepBody,
+    );
+
+    // 7: shoulders (deltoid cap & posterior-superior scapular girdle)
+    const shBone = clamp01(wSh + wUa + wChest * 0.35);
+    const deltoid =
+      gaussianWeight(absX - (xSh + 0.022), 0.068) *
+      gaussianWeight(y - (ySh - 0.015), 0.068) *
+      smoothstepRange(0.088, 0.126, absX) *
+      shBone *
+      (1 - smoothstepRange(xElb - 0.1, xElb - 0.02, absX));
+    const scapula =
+      gaussianWeight(absX - 0.102, 0.044) *
+      gaussianWeight(y - (ySh + 0.005), 0.045) *
+      clamp01(smoothstepRange(0.12, 0.65, -nz) + smoothstepRange(0.32, 0.78, ny)) *
+      (1 - smoothstepRange(0.2, 0.62, nz)) *
+      clamp01(wSh + wChest * 0.85) *
+      0.82;
+    field[out + 7] = clamp01(Math.max(deltoid, scapula) * neckCutoff * keepBody);
+
+    // 8: calves (gastrocnemius, soleus & Achilles — posterior lower leg)
+    const calfBone = clamp01(wShin + wFoot * 0.15);
+    const yCalfBounds =
+      smoothstepRange(yAnkle + 0.03, yAnkle + 0.09, y) *
+      (1 - smoothstepRange(yKnee - 0.04, yKnee + 0.02, y));
+    field[out + 8] = clamp01(
+      gaussianWeight(y - yCalfCenter, 0.098) *
+        yCalfBounds *
+        gaussianWeight(absX - xShin, 0.044) *
+        smoothstepRange(0.14, 0.68, -nz) *
+        smoothstepRange(0.012, -0.018, z) *
+        calfBone *
+        keepBody,
+    );
+  }
+
+  return field;
+}
+
 export function parseSkinnedHumanoidGlb(buffer: ArrayBuffer): SkinnedHumanoidAsset {
   if (buffer.byteLength < 20) {
     throw new Error('GLB buffer too short to contain header');
@@ -815,6 +1235,17 @@ export function parseSkinnedHumanoidGlb(buffer: ArrayBuffer): SkinnedHumanoidAss
     }
   }
 
+  const vertexMuscleWeights = computeVertexMuscleWeightFields({
+    vertexCount,
+    positions,
+    normals,
+    joints,
+    weights,
+    texcoords,
+    bindHeadPos,
+    jointIndexByName,
+  });
+
   return {
     vertexCount,
     triangleCount,
@@ -836,6 +1267,7 @@ export function parseSkinnedHumanoidGlb(buffer: ArrayBuffer): SkinnedHumanoidAss
     bindRotOffset,
     triRoles,
     triMuscleRegions,
+    vertexMuscleWeights,
     bindBounds: {
       min: [minX, minY, minZ],
       max: [maxX, maxY, maxZ],
@@ -1297,6 +1729,8 @@ class SkinningScratch {
   boneQuats = new Float32Array(32 * 4);
   skinnedPos = new Float32Array(12288 * 3);
   skinnedNorm = new Float32Array(12288 * 3);
+  vertexTint = new Float32Array(12288);
+  vertexEmissive = new Float32Array(12288);
 
   ensure(jointCount: number, vertexCount: number): void {
     if (this.boneMats.length < jointCount * 16) {
@@ -1306,6 +1740,10 @@ class SkinningScratch {
     if (this.skinnedPos.length < vertexCount * 3) {
       this.skinnedPos = new Float32Array(vertexCount * 3);
       this.skinnedNorm = new Float32Array(vertexCount * 3);
+    }
+    if (this.vertexTint.length < vertexCount) {
+      this.vertexTint = new Float32Array(vertexCount);
+      this.vertexEmissive = new Float32Array(vertexCount);
     }
   }
 }
@@ -1466,43 +1904,83 @@ export function skinHumanoidToStudioQuads(
     outNorm[v3 + 2] = snz;
   }
 
-  // Build vertex Vec3 & Rgb tables once so triangles share tuple references (low GC pressure!)
+  // Build smooth per-vertex muscle activation & color tables once (zero hard facet borders!)
   const isClay = options.shader === 'clay-wire';
   const isXray = options.shader === 'biomech-xray';
   const alpha = isXray ? 0.44 : 1.0;
-  const coralRgb: Rgb = MOTION_STUDIO_RGB.primaryMuscle;
-  const activePulse = Math.max(0.28, smoothstep01(options.phaseT));
-  const showActive = !isClay && (options.phaseT > 0.18 || Boolean(options.showBiomechOverlay));
+  const isHeatmap = Boolean(options.showMuscleHeatmap);
+  const clampedT = clamp01(options.phaseT);
 
-  const coreActive =
-    showActive &&
-    (options.activeZones.includes('core') ||
-      options.activeZones.includes('obliques') ||
-      options.activeZones.includes('back'));
-  const glutesActive =
-    showActive &&
-    (options.activeZones.includes('glutes') || options.activeZones.includes('core'));
-  const legsActive =
-    showActive &&
-    (options.activeZones.includes('quads') ||
-      options.activeZones.includes('glutes') ||
-      options.activeZones.includes('adductors'));
-  const shouldersActive = showActive && options.activeZones.includes('shoulders');
+  const activeZoneIndices: number[] = [];
+  for (const zone of options.activeZones) {
+    const zi = MUSCLE_ZONE_INDEX[zone];
+    if (zi !== undefined && !activeZoneIndices.includes(zi)) {
+      activeZoneIndices.push(zi);
+    }
+  }
+  const activeZoneCount = activeZoneIndices.length;
+
+  const showWhisper =
+    !isHeatmap &&
+    !isClay &&
+    activeZoneCount > 0 &&
+    (clampedT > 0.18 || Boolean(options.showBiomechOverlay));
+  const computeActivation = (isHeatmap && activeZoneCount > 0) || showWhisper;
+
+  const phaseCurve = computeMuscleActivationCurve(clampedT);
+  const whisperPulse = Math.max(0.24, smoothstep01(clampedT));
+  const glowRgb: Rgb = isHeatmap ? HEATMAP_TERRACOTTA_RGB : MOTION_STUDIO_RGB.primaryMuscle;
+
+  const muscleFields = asset.vertexMuscleWeights;
+  const vTint = SHARED_SCRATCH.vertexTint;
+  const vEmissive = SHARED_SCRATCH.vertexEmissive;
 
   const vertsVec: Vec3[] = new Array(vc);
   const normsVec: Vec3[] = new Array(vc);
   const rawCols: Rgb[] = new Array(vc);
+  const shadedCols: Rgb[] = new Array(vc);
   const colArr = asset.colorsSrgb;
+
   for (let vi = 0; vi < vc; vi++) {
     const v3 = vi * 3;
     vertsVec[vi] = [outPos[v3]!, outPos[v3 + 1]!, outPos[v3 + 2]!];
     normsVec[vi] = [outNorm[v3]!, outNorm[v3 + 1]!, outNorm[v3 + 2]!];
-    rawCols[vi] = [colArr[v3]!, colArr[v3 + 1]!, colArr[v3 + 2]!];
+    const baseCol: Rgb = [colArr[v3]!, colArr[v3 + 1]!, colArr[v3 + 2]!];
+    rawCols[vi] = baseCol;
+
+    let tintMix = 0;
+    let em = 0;
+    if (computeActivation) {
+      const mBase = vi * ANATOMICAL_MUSCLE_ZONE_COUNT;
+      let complement = 1;
+      for (let a = 0; a < activeZoneCount; a++) {
+        const w = muscleFields[mBase + activeZoneIndices[a]!]!;
+        if (w > 1e-4) {
+          complement *= 1 - w;
+        }
+      }
+      const rawWeight = 1 - complement;
+      if (rawWeight > 0.004) {
+        if (isHeatmap) {
+          const activation = rawWeight * phaseCurve;
+          tintMix = Math.min(0.86, activation * 0.84);
+          em = Math.min(0.95, activation * 0.95);
+        } else {
+          // Default Calm Atelier whisper (<= 0.24 at peak, zero visual clutter)
+          const whisper = rawWeight * whisperPulse;
+          tintMix = Math.min(0.24, whisper * 0.24);
+          em = Math.min(0.2, whisper * 0.2);
+        }
+      }
+    }
+
+    vTint[vi] = tintMix;
+    vEmissive[vi] = em;
+    shadedCols[vi] = tintMix > 0.002 ? blendRgb(baseCol, glowRgb, tintMix) : baseCol;
   }
 
   const idx = asset.indices;
   const roles = asset.triRoles;
-  const regions = asset.triMuscleRegions;
   const quads: StudioQuadFace[] = new Array(tc);
 
   for (let ti = 0; ti < tc; ti++) {
@@ -1510,43 +1988,43 @@ export function skinHumanoidToStudioQuads(
     const i1 = idx[ti * 3 + 1]!;
     const i2 = idx[ti * 3 + 2]!;
     const role = roles[ti]!;
-    const region = regions[ti]!;
+    const allowMuscleGlow = role === 'skin' || role === 'fabric';
 
-    let highlightMix = 0;
-    let emissive = 0;
-    if (region === 'core' && coreActive) {
-      highlightMix = activePulse * 0.34;
-      emissive = options.phaseT * 0.26;
-    } else if (region === 'glutes' && glutesActive) {
-      const isGlutePrimary = options.activeZones.includes('glutes');
-      highlightMix = activePulse * (isGlutePrimary ? 0.32 : 0.16);
-      emissive = isGlutePrimary ? activePulse * 0.24 : 0;
-    } else if (region === 'legs' && legsActive) {
-      highlightMix = options.phaseT * 0.26;
-      emissive = options.phaseT * 0.18;
-    } else if (region === 'shoulders' && shouldersActive) {
-      highlightMix = activePulse * 0.18;
-      emissive = activePulse * 0.14;
-    }
+    const e0 = allowMuscleGlow ? vEmissive[i0]! : 0;
+    const e1 = allowMuscleGlow ? vEmissive[i1]! : 0;
+    const e2 = allowMuscleGlow ? vEmissive[i2]! : 0;
+    const emissiveAvg = (e0 + e1 + e2) / 3;
+    const hasVertEmissive = e0 > 0.001 || e1 > 0.001 || e2 > 0.001;
 
     let c0: Rgb;
     let c1: Rgb;
     let c2: Rgb;
     if (isClay) {
       const clay = CLAY_PALETTE[role];
-      c0 = clay;
-      c1 = clay;
-      c2 = clay;
+      if (isHeatmap && allowMuscleGlow && hasVertEmissive) {
+        c0 = vTint[i0]! > 0.002 ? blendRgb(clay, glowRgb, vTint[i0]! * 0.72) : clay;
+        c1 = vTint[i1]! > 0.002 ? blendRgb(clay, glowRgb, vTint[i1]! * 0.72) : clay;
+        c2 = vTint[i2]! > 0.002 ? blendRgb(clay, glowRgb, vTint[i2]! * 0.72) : clay;
+      } else {
+        c0 = clay;
+        c1 = clay;
+        c2 = clay;
+      }
     } else if (isXray) {
       const baseX = XRAY_PALETTE[role];
-      const tinted = highlightMix > 0 ? blendRgb(baseX, coralRgb, highlightMix) : baseX;
-      c0 = tinted;
-      c1 = tinted;
-      c2 = tinted;
-    } else if (highlightMix > 0) {
-      c0 = blendRgb(rawCols[i0]!, coralRgb, highlightMix);
-      c1 = blendRgb(rawCols[i1]!, coralRgb, highlightMix);
-      c2 = blendRgb(rawCols[i2]!, coralRgb, highlightMix);
+      if (allowMuscleGlow && hasVertEmissive) {
+        c0 = vTint[i0]! > 0.002 ? blendRgb(baseX, glowRgb, vTint[i0]!) : baseX;
+        c1 = vTint[i1]! > 0.002 ? blendRgb(baseX, glowRgb, vTint[i1]!) : baseX;
+        c2 = vTint[i2]! > 0.002 ? blendRgb(baseX, glowRgb, vTint[i2]!) : baseX;
+      } else {
+        c0 = baseX;
+        c1 = baseX;
+        c2 = baseX;
+      }
+    } else if (allowMuscleGlow) {
+      c0 = shadedCols[i0]!;
+      c1 = shadedCols[i1]!;
+      c2 = shadedCols[i2]!;
     } else {
       c0 = rawCols[i0]!;
       c1 = rawCols[i1]!;
@@ -1564,12 +2042,13 @@ export function skinHumanoidToStudioQuads(
       verts: [vertsVec[i0]!, vertsVec[i1]!, v2, v2],
       vNormals: [normsVec[i0]!, normsVec[i1]!, n2, n2],
       vColors: [c0, c1, c2, c2],
+      vEmissive: hasVertEmissive ? [e0, e1, e2, e2] : undefined,
       cullBackface: false,
       baseRgb: c0,
       alpha,
       spec,
       shininess,
-      emissive,
+      emissive: emissiveAvg,
       materialRole: role,
     };
   }

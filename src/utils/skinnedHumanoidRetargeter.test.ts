@@ -11,17 +11,25 @@ import {
   resolveStudio3DBody,
 } from './realtimeStudio3dEngine';
 import {
+  ANATOMICAL_MUSCLE_ZONE_COUNT,
+  ANATOMICAL_MUSCLE_ZONES,
+  computeMuscleActivationCurve,
+  computeMuscleHeatmapTelemetry,
   computeRetargetedBoneMatrices,
   getCachedSkinnedHumanoidAsset,
+  getVertexMuscleWeight,
+  HEATMAP_TERRACOTTA_RGB,
   loadSharedSkinnedHumanoidAsset,
+  MUSCLE_ZONE_LABELS_KO,
   parseSkinnedHumanoidGlb,
   setCachedSkinnedHumanoidAsset,
   skinHumanoidToStudioQuads,
+  type AnatomicalMuscleZone,
   type SkinnedHumanoidAsset,
   type SkinnedHumanoidRigJoints,
 } from './skinnedHumanoidRetargeter';
 import { sampleStudio3DMotionRig } from './studio3dMotionTrack';
-import { triangulateAndWeldQuads } from './studio3dWebgl2Renderer';
+import { FLOATS_PER_VERTEX, triangulateAndWeldQuads } from './studio3dWebgl2Renderer';
 
 const GLB_FILE_PATH = path.resolve(
   import.meta.dirname,
@@ -480,5 +488,351 @@ describe('skinnedHumanoidRetargeter (real Blender 5.3 instructor-skinned-v5.glb)
     expect(viewport).toHaveAttribute('data-character-pipeline', 'skinned-glb');
     const badge = screen.getByTestId('studio-3d-skinned-badge');
     expect(badge).toHaveTextContent('스킨드 3D');
+  });
+
+  it('computes 9 anatomically distinct, smooth Gaussian per-vertex muscle fields on real instructor-skinned-v5.glb with zero head/foot/hair leakage', () => {
+    const { asset } = loadRealGlbAsset();
+
+    expect(ANATOMICAL_MUSCLE_ZONE_COUNT).toBe(9);
+    expect(asset.vertexMuscleWeights.length).toBe(asset.vertexCount * ANATOMICAL_MUSCLE_ZONE_COUNT);
+    expect(asset.triMuscleRegions.length).toBe(asset.triangleCount);
+
+    // Every weight is finite and clamped to [0, 1]
+    let invalidWeights = 0;
+    for (let i = 0; i < asset.vertexMuscleWeights.length; i++) {
+      const w = asset.vertexMuscleWeights[i]!;
+      if (!Number.isFinite(w) || w < 0 || w > 1) invalidWeights += 1;
+    }
+    expect(invalidWeights).toBe(0);
+
+    // Compute per-zone weighted rest-space centroids, normal orientations, and gradient smoothness
+    const stats = new Map<
+      AnatomicalMuscleZone,
+      {
+        maxW: number;
+        strongCount: number;
+        midGradientCount: number;
+        meanAbsX: number;
+        meanY: number;
+        meanZ: number;
+        meanAbsNx: number;
+        meanNz: number;
+      }
+    >();
+
+    for (const zone of ANATOMICAL_MUSCLE_ZONES) {
+      let maxW = 0;
+      let strongCount = 0;
+      let midGradientCount = 0;
+      let wSum = 0;
+      let absXSum = 0;
+      let ySum = 0;
+      let zSum = 0;
+      let absNxSum = 0;
+      let nzSum = 0;
+
+      for (let vi = 0; vi < asset.vertexCount; vi++) {
+        const w = getVertexMuscleWeight(asset, vi, zone);
+        if (w > maxW) maxW = w;
+        if (w >= 0.5) strongCount += 1;
+        if (w > 0.1 && w < 0.7) midGradientCount += 1;
+        if (w > 0.05) {
+          wSum += w;
+          absXSum += Math.abs(asset.positions[vi * 3]!) * w;
+          ySum += asset.positions[vi * 3 + 1]! * w;
+          zSum += asset.positions[vi * 3 + 2]! * w;
+          absNxSum += Math.abs(asset.normals[vi * 3]!) * w;
+          nzSum += asset.normals[vi * 3 + 2]! * w;
+        }
+      }
+
+      expect(maxW).toBeGreaterThanOrEqual(0.9);
+      expect(strongCount).toBeGreaterThanOrEqual(100);
+      // Organic Gaussian falloff produces smooth intermediate gradient vertices (zero hard facets)
+      expect(midGradientCount).toBeGreaterThanOrEqual(60);
+
+      stats.set(zone, {
+        maxW,
+        strongCount,
+        midGradientCount,
+        meanAbsX: absXSum / wSum,
+        meanY: ySum / wSum,
+        meanZ: zSum / wSum,
+        meanAbsNx: absNxSum / wSum,
+        meanNz: nzSum / wSum,
+      });
+    }
+
+    // Core (anterior abdomen) vs Back (posterior torso) vs Obliques (lateral waist)
+    const core = stats.get('core')!;
+    const back = stats.get('back')!;
+    const obliques = stats.get('obliques')!;
+    expect(core.meanNz).toBeGreaterThan(0.7);
+    expect(core.meanZ).toBeGreaterThan(0.03);
+    expect(core.meanY).toBeGreaterThan(1.0);
+    expect(core.meanY).toBeLessThan(1.18);
+    expect(core.meanAbsX).toBeLessThan(0.065);
+
+    expect(back.meanNz).toBeLessThan(-0.7);
+    expect(back.meanZ).toBeLessThan(-0.03);
+    expect(back.meanY).toBeGreaterThan(1.08);
+    expect(back.meanY).toBeLessThan(1.28);
+
+    expect(obliques.meanAbsX).toBeGreaterThan(0.08);
+    expect(obliques.meanAbsNx).toBeGreaterThan(0.7);
+    expect(obliques.meanY).toBeGreaterThan(1.0);
+    expect(obliques.meanY).toBeLessThan(1.18);
+
+    // Glutes (posterior pelvis) vs Quads (anterior thigh) vs Hamstrings (posterior thigh) vs Adductors (inner thigh)
+    const glutes = stats.get('glutes')!;
+    const quads = stats.get('quads')!;
+    const hamstrings = stats.get('hamstrings')!;
+    const adductors = stats.get('adductors')!;
+    expect(glutes.meanNz).toBeLessThan(-0.6);
+    expect(glutes.meanZ).toBeLessThan(-0.04);
+    expect(glutes.meanY).toBeGreaterThan(0.8);
+    expect(glutes.meanY).toBeLessThan(0.95);
+
+    expect(quads.meanNz).toBeGreaterThan(0.7);
+    expect(quads.meanZ).toBeGreaterThan(0.03);
+    expect(quads.meanY).toBeGreaterThan(0.58);
+    expect(quads.meanY).toBeLessThan(0.78);
+
+    expect(hamstrings.meanNz).toBeLessThan(-0.7);
+    expect(hamstrings.meanZ).toBeLessThan(-0.025);
+    expect(hamstrings.meanY).toBeGreaterThan(0.55);
+    expect(hamstrings.meanY).toBeLessThan(0.75);
+
+    expect(adductors.meanAbsX).toBeLessThan(0.055);
+    expect(adductors.meanAbsNx).toBeGreaterThan(0.7);
+    expect(adductors.meanY).toBeGreaterThan(0.6);
+    expect(adductors.meanY).toBeLessThan(0.8);
+
+    // Shoulders (deltoid/scapula) & Calves (posterior lower leg)
+    const shoulders = stats.get('shoulders')!;
+    const calves = stats.get('calves')!;
+    expect(shoulders.meanAbsX).toBeGreaterThan(0.11);
+    expect(shoulders.meanY).toBeGreaterThan(1.22);
+    expect(shoulders.meanY).toBeLessThan(1.35);
+
+    expect(calves.meanNz).toBeLessThan(-0.65);
+    expect(calves.meanY).toBeGreaterThan(0.2);
+    expect(calves.meanY).toBeLessThan(0.38);
+
+    // Anterior/posterior opposing pairs have zero strong overlap
+    let coreBackConflict = 0;
+    let quadHamConflict = 0;
+    let headOrFootLeak = 0;
+    const exclJoints = new Set(
+      ['Head', 'Ponytail', 'Neck', 'Foot_L', 'Foot_R']
+        .map((n) => asset.jointIndexByName.get(n))
+        .filter((j): j is number => j !== undefined),
+    );
+    for (let vi = 0; vi < asset.vertexCount; vi++) {
+      if (
+        getVertexMuscleWeight(asset, vi, 'core') >= 0.3 &&
+        getVertexMuscleWeight(asset, vi, 'back') >= 0.3
+      ) {
+        coreBackConflict += 1;
+      }
+      if (
+        getVertexMuscleWeight(asset, vi, 'quads') >= 0.3 &&
+        getVertexMuscleWeight(asset, vi, 'hamstrings') >= 0.3
+      ) {
+        quadHamConflict += 1;
+      }
+      const domJoint = asset.joints[vi * 4]!;
+      if (exclJoints.has(domJoint)) {
+        for (const zone of ANATOMICAL_MUSCLE_ZONES) {
+          if (getVertexMuscleWeight(asset, vi, zone) > 0.05) {
+            headOrFootLeak += 1;
+            break;
+          }
+        }
+      }
+    }
+    expect(coreBackConflict).toBe(0);
+    expect(quadHamConflict).toBe(0);
+    expect(headOrFootLeak).toBe(0);
+  });
+
+  it('amplifies terracotta tint & smooth per-vertex emissive on active zones when showMuscleHeatmap is true while leaving inactive zones untouched', () => {
+    const { asset } = loadRealGlbAsset();
+    const { rigJoints } = buildRigJointsForExercise(0, 0.5);
+
+    // Find representative triangles clearly inside `core` vs strictly inside `calves`
+    const coreTriIndices: number[] = [];
+    const calfTriIndices: number[] = [];
+    const hairTriIndices: number[] = [];
+    for (let ti = 0; ti < asset.triangleCount; ti++) {
+      const i0 = asset.indices[ti * 3]!;
+      const i1 = asset.indices[ti * 3 + 1]!;
+      const i2 = asset.indices[ti * 3 + 2]!;
+      const role = asset.triRoles[ti]!;
+      if (role === 'hair') {
+        hairTriIndices.push(ti);
+        continue;
+      }
+      if (role !== 'skin' && role !== 'fabric') continue;
+      const coreAvg =
+        (getVertexMuscleWeight(asset, i0, 'core') +
+          getVertexMuscleWeight(asset, i1, 'core') +
+          getVertexMuscleWeight(asset, i2, 'core')) /
+        3;
+      const calfAvg =
+        (getVertexMuscleWeight(asset, i0, 'calves') +
+          getVertexMuscleWeight(asset, i1, 'calves') +
+          getVertexMuscleWeight(asset, i2, 'calves')) /
+        3;
+      if (coreAvg > 0.75) coreTriIndices.push(ti);
+      if (calfAvg > 0.75 && coreAvg < 0.01) calfTriIndices.push(ti);
+    }
+    expect(coreTriIndices.length).toBeGreaterThan(20);
+    expect(calfTriIndices.length).toBeGreaterThan(20);
+    expect(hairTriIndices.length).toBeGreaterThan(20);
+
+    // 1) Heatmap ON with activeZones: ['core'] at peak pose excursion phaseT = 1.0
+    const heatmapPeak = skinHumanoidToStudioQuads(asset, rigJoints, {
+      shader: 'studio-pbr',
+      activeZones: ['core'],
+      phaseT: 1.0,
+      showMuscleHeatmap: true,
+    });
+    // 2) Heatmap ON at start pose phaseT = 0 (must still be clearly readable via 0.36 floor)
+    const heatmapStart = skinHumanoidToStudioQuads(asset, rigJoints, {
+      shader: 'studio-pbr',
+      activeZones: ['core'],
+      phaseT: 0,
+      showMuscleHeatmap: true,
+    });
+    // 3) Heatmap OFF (default calm studio whisper <= 0.24)
+    const defaultWhisper = skinHumanoidToStudioQuads(asset, rigJoints, {
+      shader: 'studio-pbr',
+      activeZones: ['core'],
+      phaseT: 1.0,
+      showMuscleHeatmap: false,
+    });
+    // 4) No active zones reference baseline
+    const baselineNone = skinHumanoidToStudioQuads(asset, rigJoints, {
+      shader: 'studio-pbr',
+      activeZones: [],
+      phaseT: 1.0,
+      showMuscleHeatmap: true,
+    });
+
+    let maxCoreHeatmapEmissive = 0;
+    let maxCoreStartEmissive = 0;
+    let maxCoreWhisperEmissive = 0;
+    let maxHeatmapColorShift = 0;
+    let maxWhisperColorShift = 0;
+    for (const ti of coreTriIndices) {
+      const qPeak = heatmapPeak[ti]!;
+      const qStart = heatmapStart[ti]!;
+      const qWhisper = defaultWhisper[ti]!;
+      const qBase = baselineNone[ti]!;
+
+      maxCoreHeatmapEmissive = Math.max(maxCoreHeatmapEmissive, qPeak.emissive ?? 0);
+      maxCoreStartEmissive = Math.max(maxCoreStartEmissive, qStart.emissive ?? 0);
+      maxCoreWhisperEmissive = Math.max(maxCoreWhisperEmissive, qWhisper.emissive ?? 0);
+
+      // Measure terracotta shift toward HEATMAP_TERRACOTTA_RGB ([218, 114, 72])
+      const distBase = Math.hypot(
+        qBase.baseRgb[0] - HEATMAP_TERRACOTTA_RGB[0],
+        qBase.baseRgb[1] - HEATMAP_TERRACOTTA_RGB[1],
+        qBase.baseRgb[2] - HEATMAP_TERRACOTTA_RGB[2],
+      );
+      const distPeak = Math.hypot(
+        qPeak.baseRgb[0] - HEATMAP_TERRACOTTA_RGB[0],
+        qPeak.baseRgb[1] - HEATMAP_TERRACOTTA_RGB[1],
+        qPeak.baseRgb[2] - HEATMAP_TERRACOTTA_RGB[2],
+      );
+      const distWhisper = Math.hypot(
+        qWhisper.baseRgb[0] - HEATMAP_TERRACOTTA_RGB[0],
+        qWhisper.baseRgb[1] - HEATMAP_TERRACOTTA_RGB[1],
+        qWhisper.baseRgb[2] - HEATMAP_TERRACOTTA_RGB[2],
+      );
+      maxHeatmapColorShift = Math.max(maxHeatmapColorShift, distBase - distPeak);
+      maxWhisperColorShift = Math.max(maxWhisperColorShift, distBase - distWhisper);
+    }
+
+    // Heatmap peak glows richly (up to 0.95), endpoint stays readable (> 0.25), whisper stays calm (<= 0.24)
+    expect(maxCoreHeatmapEmissive).toBeGreaterThan(0.75);
+    expect(maxCoreHeatmapEmissive).toBeLessThanOrEqual(0.95);
+    expect(maxCoreStartEmissive).toBeGreaterThan(0.25);
+    expect(maxCoreStartEmissive).toBeLessThan(maxCoreHeatmapEmissive * 0.5);
+    expect(maxCoreWhisperEmissive).toBeLessThanOrEqual(0.24);
+    expect(maxHeatmapColorShift).toBeGreaterThan(maxWhisperColorShift * 2);
+
+    // Inactive calf & hair triangles remain 100% untouched when only `core` is active
+    for (const ti of calfTriIndices) {
+      expect(heatmapPeak[ti]!.emissive).toBe(0);
+      expect(heatmapPeak[ti]!.vEmissive).toBeUndefined();
+      expect(heatmapPeak[ti]!.baseRgb).toEqual(baselineNone[ti]!.baseRgb);
+    }
+    for (const ti of hairTriIndices) {
+      expect(heatmapPeak[ti]!.emissive).toBe(0);
+      expect(heatmapPeak[ti]!.baseRgb).toEqual(baselineNone[ti]!.baseRgb);
+    }
+
+    // Now activate `calves` + `hamstrings` and verify per-vertex vEmissive packs cleanly to GPU buffer
+    const posteriorLegs = skinHumanoidToStudioQuads(asset, rigJoints, {
+      shader: 'studio-pbr',
+      activeZones: ['hamstrings', 'calves'],
+      phaseT: 1.0,
+      showMuscleHeatmap: true,
+    });
+    const activeCalfEmissive = Math.max(...calfTriIndices.map((ti) => posteriorLegs[ti]!.emissive ?? 0));
+    expect(activeCalfEmissive).toBeGreaterThan(0.75);
+    expect(Math.max(...coreTriIndices.map((ti) => posteriorLegs[ti]!.emissive ?? 0))).toBe(0);
+
+    const packed = triangulateAndWeldQuads(posteriorLegs);
+    let maxPackedEmissive = 0;
+    for (let v = 0; v < packed.opaqueVertexCount; v++) {
+      const em = packed.opaqueData[v * FLOATS_PER_VERTEX + 12]!;
+      if (em > maxPackedEmissive) maxPackedEmissive = em;
+    }
+    expect(maxPackedEmissive).toBeGreaterThan(0.8);
+    expect(maxPackedEmissive).toBeLessThanOrEqual(0.95);
+  });
+
+  it('exports non-medical Korean coaching labels and phase-synced muscle heatmap telemetry', () => {
+    const forbiddenMedical = /치료|진단|교정|처방|완치|질병|환자/;
+    for (const zone of ANATOMICAL_MUSCLE_ZONES) {
+      const label = MUSCLE_ZONE_LABELS_KO[zone];
+      expect(typeof label).toBe('string');
+      expect(label.length).toBeGreaterThanOrEqual(2);
+      expect(label).not.toMatch(forbiddenMedical);
+    }
+
+    expect(computeMuscleActivationCurve(0)).toBeCloseTo(0.36, 5);
+    expect(computeMuscleActivationCurve(0.5)).toBeGreaterThan(0.7);
+    expect(computeMuscleActivationCurve(0.5)).toBeLessThan(0.8);
+    expect(computeMuscleActivationCurve(1)).toBeCloseTo(1.0, 5);
+
+    const peakTelemetry = computeMuscleHeatmapTelemetry(['core', 'glutes', 'core'], 1.0, 'turn');
+    expect(peakTelemetry.primaryZonesKo).toEqual([
+      MUSCLE_ZONE_LABELS_KO.core,
+      MUSCLE_ZONE_LABELS_KO.glutes,
+    ]);
+    expect(peakTelemetry.activationPct).toBe(100);
+    expect(peakTelemetry.phaseCueKo).toContain('최대 활성');
+    expect(peakTelemetry.phaseCueKo).not.toMatch(forbiddenMedical);
+
+    const startTelemetry = computeMuscleHeatmapTelemetry(['hamstrings', 'calves'], 0, 'setup');
+    expect(startTelemetry.primaryZonesKo).toEqual([
+      MUSCLE_ZONE_LABELS_KO.hamstrings,
+      MUSCLE_ZONE_LABELS_KO.calves,
+    ]);
+    expect(startTelemetry.activationPct).toBe(36);
+    expect(startTelemetry.phaseCueKo).toContain('시작 자세');
+
+    const finishTelemetry = computeMuscleHeatmapTelemetry(['core'], 0, 'finish');
+    expect(finishTelemetry.activationPct).toBe(36);
+    expect(finishTelemetry.phaseCueKo).toContain('마무리 정렬');
+
+    const emptyTelemetry = computeMuscleHeatmapTelemetry([], 1.0, 'turn');
+    expect(emptyTelemetry.primaryZonesKo).toEqual([]);
+    expect(emptyTelemetry.activationPct).toBe(0);
+    expect(emptyTelemetry.phaseCueKo.length).toBeGreaterThan(0);
   });
 });

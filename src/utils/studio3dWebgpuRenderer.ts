@@ -294,7 +294,9 @@ fn fsMain(in: VertexOutput) -> @location(0) vec4<f32> {
   var alpha = clamp(in.mat.x, 0.0, 1.0);
   let role = i32(floor(in.mat.y + 0.5));
   let specW = in.mat.z;
-  let emissiveLift = in.mat.w * 0.24;
+  let emissive = max(0.0, in.mat.w);
+  let emissiveLift = emissive * 0.24;
+  let bodyEmissiveLift = emissive * 0.08;
   let shaderMode = i32(floor(u.camPos.w + 0.5));
 
   let base = in.color;
@@ -345,7 +347,7 @@ fn fsMain(in: VertexOutput) -> @location(0) vec4<f32> {
       + wrapKey * 0.47 * keyTint
       + wrapFill * 0.21 * fillTint
       + diffBounce * bounceTint
-      + vec3<f32>(emissiveLift)) * ao;
+      + vec3<f32>(bodyEmissiveLift)) * ao;
     col = base * diffuse + base * sssGlow + rimCol + vec3<f32>(1.00, 0.96, 0.92) * dermalSpec;
   } else if (role == 2) {
     // Silky Espresso Hair with Dual-Band Anisotropic GGX Microfacet Sheen & Crisp Champagne Rim Light
@@ -374,7 +376,7 @@ fn fsMain(in: VertexOutput) -> @location(0) vec4<f32> {
       + diffKey * 0.43 * keyTint
       + diffFill * 0.22 * fillTint
       + diffBounce * bounceTint
-      + vec3<f32>(emissiveLift)) * ao;
+      + vec3<f32>(bodyEmissiveLift)) * ao;
     col = base * diffuse + velvetSheen + vec3<f32>(0.88, 0.90, 0.88) * microSpec;
   } else if (role == 4) {
     // Satin European White-Oak Wood with cathedral grain & dual-lobe GGX satin + clearcoat
@@ -435,6 +437,15 @@ fn fsMain(in: VertexOutput) -> @location(0) vec4<f32> {
       + diffBounce * bounceTint
       + vec3<f32>(rim + emissiveLift)) * ao;
     col = base * diffuse + vec3<f32>(0.96, 0.95, 0.92) * spec;
+  }
+
+  if (emissive > 0.05 && (role == 1 || role == 3)) {
+    // Fresnel-contoured warm botanical terracotta-gold anatomical rim & gentle subsurface lift
+    let anatMask = smoothstep(0.05, 0.14, emissive);
+    let anatFresnel = pow(max(0.0001, 1.0 - max(dot(N, V), 0.0)), 1.8);
+    let anatActivation = emissive * (0.38 + 0.62 * anatFresnel) * anatMask;
+    let anatTerracotta = vec3<f32>(0.92, 0.48, 0.28) * anatActivation;
+    col = col + anatTerracotta * 0.78 + base * vec3<f32>(0.96, 0.56, 0.34) * (emissive * 0.24 * anatMask);
   }
 
   if (shaderMode == 2) {

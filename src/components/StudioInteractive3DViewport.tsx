@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 import '../styles/studio-interactive-3d.css';
 import { isImeComposing } from '../utils/imeGuard';
 import {
+  Activity,
   Camera,
   Check,
   Columns2,
@@ -55,9 +56,14 @@ import {
   readNavigatorGpu,
 } from '../utils/studio3dWebgpuRenderer';
 import {
+  computeMuscleHeatmapTelemetry,
   getCachedSkinnedHumanoidAsset,
   loadSharedSkinnedHumanoidAsset,
 } from '../utils/skinnedHumanoidRetargeter';
+import {
+  getCachedApparatusDynamicAsset,
+  preloadApparatusDynamicGlb,
+} from '../utils/apparatusDynamicGlbLoader';
 import {
   createStudio3dResourceGuard,
   readAmbientDevice3dSignals,
@@ -365,6 +371,10 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const [skinnedCharacterReady, setSkinnedCharacterReady] = useState<boolean>(
     () => getCachedSkinnedHumanoidAsset() !== null,
   );
+  const [apparatusGlbReady, setApparatusGlbReady] = useState<boolean>(
+    () => getCachedApparatusDynamicAsset() !== null,
+  );
+  const [showMuscleHeatmap, setShowMuscleHeatmap] = useState<boolean>(false);
   const yawRef = useRef<number>(yawDeg);
   const pitchRef = useRef<number>(pitchDeg);
   const lastDrawSigRef = useRef<string>('');
@@ -473,14 +483,23 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   }, []);
 
   useEffect(() => {
-    if (getCachedSkinnedHumanoidAsset() !== null) return;
     let cancelled = false;
-    void loadSharedSkinnedHumanoidAsset().then((asset) => {
-      if (cancelled || !asset) return;
-      setSkinnedCharacterReady(true);
-      lastDrawSigRef.current = '';
-      invalidateViewport();
-    });
+    if (getCachedSkinnedHumanoidAsset() === null) {
+      void loadSharedSkinnedHumanoidAsset().then((asset) => {
+        if (cancelled || !asset) return;
+        setSkinnedCharacterReady(true);
+        lastDrawSigRef.current = '';
+        invalidateViewport();
+      });
+    }
+    if (getCachedApparatusDynamicAsset() === null) {
+      void preloadApparatusDynamicGlb().then((asset) => {
+        if (cancelled || !asset) return;
+        setApparatusGlbReady(true);
+        lastDrawSigRef.current = '';
+        invalidateViewport();
+      });
+    }
     return () => {
       cancelled = true;
     };
@@ -530,6 +549,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         shader,
         mirrored ? '1' : '0',
         showBiomechOverlay ? '1' : '0',
+        showMuscleHeatmap ? '1' : '0',
         dualView ? '1' : '0',
         springOverride,
         footbarOverride,
@@ -541,6 +561,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         dpr.toFixed(2),
         activeGpu?.backend ?? 'canvas2d',
         skinnedCharacterReady ? 'skinned-glb' : 'procedural',
+        apparatusGlbReady ? 'dynamic-glb' : 'procedural',
         viewportVersion,
       ].join('|');
 
@@ -571,6 +592,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         shader,
         mirrored,
         showBiomechOverlay,
+        showMuscleHeatmap,
         dualView,
         springOverride,
         footbarOverride,
@@ -592,6 +614,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       ctx.restore();
     },
     [
+      apparatusGlbReady,
       dualView,
       exercise,
       footbarOverride,
@@ -605,6 +628,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       selectedHotspotId,
       shader,
       showBiomechOverlay,
+      showMuscleHeatmap,
       skinnedCharacterReady,
       springOverride,
       viewportVersion,
@@ -940,6 +964,8 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-target-fps={String(frameBudget.targetFps)}
       data-render-backend={renderBackend}
       data-character-pipeline={skinnedCharacterReady ? 'skinned-glb' : 'procedural'}
+      data-apparatus-pipeline={apparatusGlbReady ? 'dynamic-glb' : 'procedural'}
+      data-muscle-heatmap={showMuscleHeatmap ? 'on' : 'off'}
       data-3d-rig-scope={dedicated3d ? 'dedicated-3d-rig' : 'procedural-3d-synthesis'}
       data-3d-pose-feature={rigMeta.poseFeatureKo}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
@@ -1238,7 +1264,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             {Math.abs(zoom - 1.04) >= 0.05 ? ` · ${zoom.toFixed(1)}x` : ''}
             {mirrored ? ' · 반전' : ''}
           </span>
-          {skinnedCharacterReady && (
+          {(skinnedCharacterReady || apparatusGlbReady) && (
             <span
               className="pf-orbit3d-badge"
               data-testid="studio-3d-skinned-badge"
@@ -1249,9 +1275,40 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 wordBreak: 'keep-all',
               }}
             >
-              스킨드 3D
+              {skinnedCharacterReady && apparatusGlbReady
+                ? '스킨드 3D · 고밀도 기구'
+                : skinnedCharacterReady
+                  ? '스킨드 3D'
+                  : '고밀도 기구'}
             </span>
           )}
+          {showMuscleHeatmap &&
+            (() => {
+              const heat = computeMuscleHeatmapTelemetry(
+                rigMeta.activeZones,
+                visualPhase.pose,
+                visualPhase.id,
+              );
+              if (heat.primaryZonesKo.length === 0) return null;
+              return (
+                <span
+                  className="pf-orbit3d-badge"
+                  data-testid="studio-3d-muscle-heatmap-telemetry"
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    wordBreak: 'keep-all',
+                    fontVariantNumeric: 'tabular-nums',
+                    background: 'rgba(218, 114, 72, 0.14)',
+                    color: '#7C2D12',
+                    border: '1px solid rgba(218, 114, 72, 0.34)',
+                  }}
+                >
+                  {heat.primaryZonesKo.join(' · ')} {heat.activationPct}% · {heat.phaseCueKo}
+                </span>
+              );
+            })()}
         </div>
         {selectedHotspot && (
           <div
@@ -1401,6 +1458,15 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             onClick={() => setDualView((v) => !v)}
           >
             <Columns2 size={13} aria-hidden="true" /> 듀얼 정렬 비교
+          </button>
+          <button
+            type="button"
+            className={`pf-orbit3d-tool-chip ${showMuscleHeatmap ? 'is-active' : ''}`}
+            aria-pressed={showMuscleHeatmap}
+            data-testid="studio-3d-muscle-heatmap-toggle"
+            onClick={() => setShowMuscleHeatmap((v) => !v)}
+          >
+            <Activity size={13} aria-hidden="true" /> 근육 활성
           </button>
           <button
             type="button"

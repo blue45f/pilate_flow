@@ -32,6 +32,8 @@ export interface StudioQuadFace {
   readonly verts: readonly [Vec3, Vec3, Vec3, Vec3];
   readonly vNormals?: readonly [Vec3, Vec3, Vec3, Vec3];
   readonly vColors?: readonly [Rgb, Rgb, Rgb, Rgb];
+  /** Optional per-vertex emissive intensity (`[0..1]`) for smooth anatomical heatmap interpolation. */
+  readonly vEmissive?: readonly [number, number, number, number];
   readonly cullBackface?: boolean;
   readonly depthBias?: number;
   readonly baseRgb: Rgb;
@@ -516,6 +518,7 @@ export function triangulateAndWeldQuads(
     const emitCorner = (ci: 0 | 1 | 2 | 3) => {
       const v = q.verts[ci]!;
       const rgb = q.vColors ? q.vColors[ci]! : q.baseRgb;
+      const vEmissive = q.vEmissive ? q.vEmissive[ci]! : emissive;
       pushVertex(
         translucent,
         v[0],
@@ -530,7 +533,7 @@ export function triangulateAndWeldQuads(
         q.alpha,
         roleId,
         q.spec,
-        emissive,
+        vEmissive,
         depthBias,
         cornerUvU[ci]!,
         cornerUvV[ci]!,
@@ -772,7 +775,9 @@ void main() {
   float alpha = clamp(vMat.x, 0.0, 1.0);
   int role = int(floor(vMat.y + 0.5));
   float specW = vMat.z;
-  float emissiveLift = vMat.w * 0.24;
+  float emissive = max(0.0, vMat.w);
+  float emissiveLift = emissive * 0.24;
+  float bodyEmissiveLift = emissive * 0.08;
 
   vec3 base = vColor;
   vec3 keyTint = vec3(1.03, 0.99, 0.94);
@@ -816,7 +821,7 @@ void main() {
     vec3 rimCol = vec3(1.00, 0.94, 0.87) * (fresnel * 0.34 + pow(max(0.0, 1.0 - NdotV), 2.8) * 0.10) * (0.45 + 0.85 * backMask);
     vec3 dermalSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.44, vec3(0.032)) * (0.65 + min(specW, 0.18) * 3.2)
       + ggxSpecular(NdotV, diffFill, fillNdotH, fillVdotH, 0.52, vec3(0.026)) * 0.35;
-    vec3 diffuse = (vec3(0.44) + wrapKey * 0.47 * keyTint + wrapFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
+    vec3 diffuse = (vec3(0.44) + wrapKey * 0.47 * keyTint + wrapFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(bodyEmissiveLift)) * ao;
     col = base * diffuse + base * sssGlow + rimCol + vec3(1.00, 0.96, 0.92) * dermalSpec;
   } else if (role == 2) {
     // Silky Espresso Hair with Dual-Band Anisotropic GGX Microfacet Sheen & Crisp Champagne Rim Light
@@ -838,7 +843,7 @@ void main() {
     float backMask = smoothstep(-0.2, 0.85, dot(N, rimDir) * 0.65 + 0.35);
     vec3 velvetSheen = mix(base, vec3(0.84, 0.89, 0.85), 0.42) * fresnel * (0.18 + 0.18 * backMask);
     vec3 microSpec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.78, vec3(0.025)) * 0.85;
-    vec3 diffuse = (vec3(0.45) + diffKey * 0.43 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(emissiveLift)) * ao;
+    vec3 diffuse = (vec3(0.45) + diffKey * 0.43 * keyTint + diffFill * 0.22 * fillTint + diffBounce * bounceTint + vec3(bodyEmissiveLift)) * ao;
     col = base * diffuse + velvetSheen + vec3(0.88, 0.90, 0.88) * microSpec;
   } else if (role == 4) {
     // Satin European White-Oak Wood with cathedral grain & dual-lobe GGX satin + clearcoat
@@ -882,6 +887,15 @@ void main() {
     vec3 spec = ggxSpecular(NdotV, diffKey, NdotH, VdotH, 0.40, vec3(0.04)) * max(0.4, specW * 2.5);
     vec3 diffuse = (vec3(0.45) + diffKey * 0.43 * keyTint + diffFill * 0.21 * fillTint + diffBounce * bounceTint + vec3(rim + emissiveLift)) * ao;
     col = base * diffuse + vec3(0.96, 0.95, 0.92) * spec;
+  }
+
+  if (emissive > 0.05 && (role == 1 || role == 3)) {
+    // Fresnel-contoured warm botanical terracotta-gold anatomical rim & gentle subsurface lift
+    float anatMask = smoothstep(0.05, 0.14, emissive);
+    float anatFresnel = pow(max(0.0001, 1.0 - max(dot(N, V), 0.0)), 1.8);
+    float anatActivation = emissive * (0.38 + 0.62 * anatFresnel) * anatMask;
+    vec3 anatTerracotta = vec3(0.92, 0.48, 0.28) * anatActivation;
+    col += anatTerracotta * 0.78 + base * vec3(0.96, 0.56, 0.34) * (emissive * 0.24 * anatMask);
   }
 
   if (uShaderMode == 2) {
