@@ -40,13 +40,67 @@ export interface ApparatusVisualGuideRibbonProps {
   ) => void;
 }
 
+const PROP_ATELIER_ILLUSTRATIONS: Readonly<
+  Record<string, { readonly webpSrc: string; readonly pngSrc: string }>
+> = {
+  'magic-circle': {
+    webpSrc: '/images/atelier-props/prop-magic-circle.webp',
+    pngSrc: '/images/atelier-props/prop-magic-circle.png',
+  },
+  'foam-roller': {
+    webpSrc: '/images/atelier-props/prop-foam-roller.webp',
+    pngSrc: '/images/atelier-props/prop-foam-roller.png',
+  },
+  'mini-ball': {
+    webpSrc: '/images/atelier-props/prop-mini-ball.webp',
+    pngSrc: '/images/atelier-props/prop-mini-ball.png',
+  },
+  theraband: {
+    webpSrc: '/images/atelier-props/prop-theraband.webp',
+    pngSrc: '/images/atelier-props/prop-theraband.png',
+  },
+  bosu: {
+    webpSrc: '/images/atelier-props/prop-bosu.webp',
+    pngSrc: '/images/atelier-props/prop-bosu.png',
+  },
+};
+
 function PropStudioIllustrationSvg({ prop }: { prop: PropQuickGuide }): React.JSX.Element {
+  const [assetStage, setAssetStage] = useState<'webp' | 'png' | 'svg'>('webp');
+  const illustration = PROP_ATELIER_ILLUSTRATIONS[prop.id];
+
+  if (illustration && assetStage !== 'svg') {
+    return (
+      <img
+        src={assetStage === 'webp' ? illustration.webpSrc : illustration.pngSrc}
+        alt={`${prop.nameKo} 소도구 도해`}
+        width={88}
+        height={66}
+        loading="lazy"
+        decoding="async"
+        onError={() => {
+          setAssetStage((prev) => (prev === 'webp' ? 'png' : 'svg'));
+        }}
+        style={{
+          width: '88px',
+          height: '66px',
+          flexShrink: 0,
+          objectFit: 'cover',
+          borderRadius: '10px',
+          border: '1px solid #d7cfc2',
+          backgroundColor: '#f6f3eb',
+          display: 'block',
+        }}
+      />
+    );
+  }
+
   return (
     <svg
       viewBox="0 0 88 56"
       role="img"
       aria-label={`${prop.nameKo} 소도구 도해`}
-      style={{ width: '76px', height: '48px', flexShrink: 0, borderRadius: '8px' }}
+      style={{ width: '88px', height: '66px', flexShrink: 0, borderRadius: '10px' }}
     >
       <rect x="1" y="1" width="86" height="54" rx="8" fill="#F6F3EB" stroke="#D7CFC2" />
       {prop.id === 'magic-circle' && (
