@@ -4,6 +4,7 @@ import type { SequenceStep, SpinalPlane } from '../types/pilates';
 import {
   analyzeSequenceFlow,
   buildOptimizedTransitionSteps,
+  optimizeSequenceTransitions,
   type ExerciseLookupInput,
   type SequenceWavePoint,
 } from '../utils/sequenceFlowAnalytics';
@@ -13,9 +14,21 @@ export interface SequenceFlowTelemetryStripProps {
   steps: readonly SequenceStep[];
   exercisesById: ExerciseLookupInput;
   onApplyTransitionBuffers?: (nextSteps: SequenceStep[]) => void;
+  onApplyOptimizedOrder?: (optimizedSteps: SequenceStep[], summaryKo: string) => void;
+  onUndoOptimizedOrder?: () => void;
   onSelectStep?: (stepId: string) => void;
   defaultExpanded?: boolean;
   className?: string;
+}
+
+interface AppliedOrderUndoState {
+  beforeSteps: SequenceStep[];
+  beforeSignature: string;
+  afterSignature: string;
+}
+
+function buildStepOrderSignature(steps: readonly SequenceStep[]): string {
+  return steps.map((step) => step.stepId).join('|');
 }
 
 const ORDERED_PLANES: readonly SpinalPlane[] = [
@@ -73,17 +86,48 @@ export const SequenceFlowTelemetryStrip: React.FC<SequenceFlowTelemetryStripProp
   steps,
   exercisesById,
   onApplyTransitionBuffers,
+  onApplyOptimizedOrder,
+  onUndoOptimizedOrder,
   onSelectStep,
   defaultExpanded = false,
   className,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(defaultExpanded);
+  const [appliedOrderUndo, setAppliedOrderUndo] = useState<AppliedOrderUndoState | null>(null);
   const inspectorId = useId();
 
   const analysis = useMemo(
     () => analyzeSequenceFlow(steps, exercisesById),
     [steps, exercisesById],
   );
+
+  const hasApplyOptimizedOrder = Boolean(onApplyOptimizedOrder);
+  const optimizationPlan = useMemo(() => {
+    if (!hasApplyOptimizedOrder || analysis.transitionFrictionScore <= 0) {
+      return {
+        optimizedSteps: [...steps],
+        beforeAnalysis: analysis,
+        afterAnalysis: analysis,
+        beforeFrictionScore: analysis.transitionFrictionScore,
+        afterFrictionScore: analysis.transitionFrictionScore,
+        frictionDelta: 0,
+        savedTransitionSec: 0,
+        boxSwapsSaved: 0,
+        springChangesSaved: 0,
+        movedCount: 0,
+        canImprove: false,
+        summaryKo: '현재 블록 내 기구·스프링 전환 동선이 이미 최적화되어 있습니다.',
+      };
+    }
+    return optimizeSequenceTransitions(steps, exercisesById);
+  }, [steps, exercisesById, hasApplyOptimizedOrder, analysis]);
+
+  const currentOrderSignature = useMemo(() => buildStepOrderSignature(steps), [steps]);
+
+  const canUndoOptimizedOrder =
+    appliedOrderUndo !== null &&
+    (currentOrderSignature === appliedOrderUndo.afterSignature ||
+      currentOrderSignature === appliedOrderUndo.beforeSignature);
 
   const sparkline = useMemo(
     () => buildSparklineGeometry(analysis.wavePoints),
@@ -102,6 +146,43 @@ export const SequenceFlowTelemetryStrip: React.FC<SequenceFlowTelemetryStripProp
     const nextSteps = buildOptimizedTransitionSteps(steps, exercisesById);
     onApplyTransitionBuffers(nextSteps);
   };
+
+  const handleApplyOptimizedOrder = () => {
+    if (!onApplyOptimizedOrder || !optimizationPlan.canImprove) return;
+    const beforeSteps = steps.map((step) => ({ ...step }));
+    setAppliedOrderUndo({
+      beforeSteps,
+      beforeSignature: currentOrderSignature,
+      afterSignature: buildStepOrderSignature(optimizationPlan.optimizedSteps),
+    });
+    onApplyOptimizedOrder(optimizationPlan.optimizedSteps, optimizationPlan.summaryKo);
+  };
+
+  const handleUndoOptimizedOrder = () => {
+    if (!appliedOrderUndo) return;
+    const previousSteps = appliedOrderUndo.beforeSteps;
+    setAppliedOrderUndo(null);
+    if (onUndoOptimizedOrder) {
+      onUndoOptimizedOrder();
+      return;
+    }
+    if (onApplyOptimizedOrder) {
+      onApplyOptimizedOrder(previousSteps, '동선 자동 묶기 이전 순서로 되돌렸습니다.');
+    }
+  };
+
+  const optimizeOrderButtonLabel = useMemo(() => {
+    if (optimizationPlan.frictionDelta > 0 && optimizationPlan.savedTransitionSec > 0) {
+      return `동선 자동 묶기 (마찰 -${optimizationPlan.frictionDelta} · -${optimizationPlan.savedTransitionSec}초)`;
+    }
+    if (optimizationPlan.frictionDelta > 0) {
+      return `동선 자동 묶기 (마찰 -${optimizationPlan.frictionDelta})`;
+    }
+    if (optimizationPlan.savedTransitionSec > 0) {
+      return `동선 자동 묶기 (-${optimizationPlan.savedTransitionSec}초)`;
+    }
+    return '동선 자동 묶기';
+  }, [optimizationPlan.frictionDelta, optimizationPlan.savedTransitionSec]);
 
   const totalIssueCount =
     analysis.setupOptimizationTipsKo.length +
@@ -198,6 +279,43 @@ export const SequenceFlowTelemetryStrip: React.FC<SequenceFlowTelemetryStripProp
               {analysis.stepsNeedingBufferUpgradeCount > 0
                 ? `권장 전환 여유시간 자동 반영 (+${analysis.totalRecommendedBufferDeltaSec}초)`
                 : '전환 여유시간 최적화 완료'}
+            </button>
+          )}
+
+          {onApplyOptimizedOrder && optimizationPlan.canImprove && (
+            <button
+              type="button"
+              className="sequence-flow-telemetry__btn sequence-flow-telemetry__btn--toggle"
+              onClick={handleApplyOptimizedOrder}
+              title="워밍업·쿨다운과 블록 경계를 그대로 지킨 채 같은 블록 안의 박스·스프링 전환 동선만 안전하게 묶습니다."
+              style={{
+                borderColor: '#355441',
+                backgroundColor: '#f3f5ee',
+                color: '#173d34',
+                fontVariantNumeric: 'tabular-nums',
+                wordBreak: 'keep-all',
+                overflowWrap: 'break-word',
+              }}
+              data-testid="optimize-transition-order-btn"
+            >
+              {optimizeOrderButtonLabel}
+            </button>
+          )}
+
+          {canUndoOptimizedOrder && (onUndoOptimizedOrder || onApplyOptimizedOrder) && (
+            <button
+              type="button"
+              className="sequence-flow-telemetry__btn sequence-flow-telemetry__btn--toggle"
+              onClick={handleUndoOptimizedOrder}
+              title="방금 정돈한 동선 순서를 적용 직전 상태로 되돌립니다."
+              style={{
+                fontVariantNumeric: 'tabular-nums',
+                wordBreak: 'keep-all',
+                overflowWrap: 'break-word',
+              }}
+              data-testid="undo-optimized-order-btn"
+            >
+              원래 순서로 되돌리기
             </button>
           )}
 

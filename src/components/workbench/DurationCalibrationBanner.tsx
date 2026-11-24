@@ -33,7 +33,7 @@ export const DurationCalibrationBanner: React.FC<DurationCalibrationBannerProps>
     >
       <div className="pf-duration-calibration__copy">
         <strong className="pf-duration-calibration__title">
-          계획 대 실제 시간(`Planned vs. Actual`) 보정 인사이트
+          계획 대 실제 시간(Planned vs. Actual) 보정 인사이트
         </strong>
         <p className="pf-duration-calibration__desc">
           {calibration.recommendationKo}

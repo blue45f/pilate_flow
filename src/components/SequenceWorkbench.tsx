@@ -4495,6 +4495,10 @@ export function SequenceWorkbench({
                               '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
                             );
                           }}
+                          onApplyOptimizedOrder={(optimizedSteps, summaryKo) => {
+                            applyStepsWithUndo(optimizedSteps, summaryKo);
+                          }}
+                          onUndoOptimizedOrder={performUndoSequence}
                           onSelectStep={(stepId) => {
                             setPreviewStep(stepId);
                           }}
