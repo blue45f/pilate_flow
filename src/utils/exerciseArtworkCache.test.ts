@@ -5,14 +5,18 @@ import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
 import manifest from '../data/exerciseArtworkManifest.json';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { FEATURED_VARIATION_3D_IDS } from '../data/universal3dExerciseRigs';
 import { WORLD_PILATES_EXERCISES } from '../data/worldPilatesRepertoire1000';
 import { getExerciseArtworkFrame } from './exerciseArtworkCache';
 
 describe('shared-model 3D WebP thumbnail cache', () => {
-  it('has valid content-addressed 960x600 3D WebP bytes for all three phases of all 524 atomic exercises and unifies all 1,752 catalog movements', async () => {
+  it('has valid content-addressed 960x600 3D WebP bytes for all three phases of all 524 atomic + 96 featured variation exercises (620 total) and unifies all 1,752 catalog movements', async () => {
     const allAtomics = WORLD_PILATES_EXERCISES.filter((item) => item.tier === 'atomic');
     expect(allAtomics).toHaveLength(524);
-    expect(Object.keys(manifest.entries)).toHaveLength(allAtomics.length);
+    expect(FEATURED_VARIATION_3D_IDS).toHaveLength(96);
+    expect(Object.keys(manifest.entries)).toHaveLength(
+      allAtomics.length + FEATURED_VARIATION_3D_IDS.length,
+    );
     expect(manifest).toMatchObject({
       schemaVersion: 3,
       renderer: 'BlenderCycles3DStudio',
@@ -30,8 +34,9 @@ describe('shared-model 3D WebP thumbnail cache', () => {
         expect(frame.src).toMatch(/^\/motion-artwork-v2\/[a-zA-Z0-9_.-]+\.webp$/);
         const bytes = readFileSync(path.join(process.cwd(), 'public', frame.src));
         expect(bytes.length).toBe(frame.bytes);
+        expect(frame.sha256).toMatch(/^[a-f0-9]{64}$/);
         expect(createHash('sha256').update(bytes).digest('hex')).toBe(frame.sha256);
-        expect(frame.src).toContain(frame.sha256.slice(0, 12));
+        expect(frame.src).toContain(frame.sha256!.slice(0, 12));
         expect(frame.svgSha256).toMatch(/^[a-f0-9]{64}$/);
         expect(frame.inputSha256).toMatch(/^[a-f0-9]{64}$/);
       }

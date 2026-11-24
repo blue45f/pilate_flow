@@ -1,33 +1,33 @@
 {
-  "generatedAtUtc": "2026-11-24T09:31:52.852679+00:00",
-  "totalExercises": 524,
-  "totalPosesAudited": 1572,
+  "generatedAtUtc": "2026-11-24T11:40:03.902113+00:00",
+  "totalExercises": 620,
+  "totalPosesAudited": 1860,
   "totalDefects": 0,
   "passed": true,
   "perApparatusSummary": {
     "reformer": {
-      "exercises": 155,
-      "poses": 465,
+      "exercises": 171,
+      "poses": 513,
       "defects": 0
     },
     "mat": {
-      "exercises": 140,
-      "poses": 420,
+      "exercises": 172,
+      "poses": 516,
       "defects": 0
     },
     "cadillac": {
-      "exercises": 87,
-      "poses": 261,
+      "exercises": 101,
+      "poses": 303,
       "defects": 0
     },
     "chair": {
-      "exercises": 76,
-      "poses": 228,
+      "exercises": 95,
+      "poses": 285,
       "defects": 0
     },
     "barrel": {
-      "exercises": 66,
-      "poses": 198,
+      "exercises": 81,
+      "poses": 243,
       "defects": 0
     }
   },
@@ -56,5 +56,5 @@
     "degenerate_pole": 0
   },
   "defects": {},
-  "verifiedSupineMiniBallKneePlacements": 15
+  "verifiedSupineMiniBallKneePlacements": 27
 }

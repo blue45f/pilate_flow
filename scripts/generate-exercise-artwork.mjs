@@ -176,22 +176,25 @@ export async function generateExerciseArtwork({
     const { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } = await server.ssrLoadModule(
       '/src/data/globalCrawledRepertoirePack.ts',
     );
-    const { WORLD_PILATES_EXERCISES } = await server.ssrLoadModule(
+    const { WORLD_PILATES_EXERCISES, WORLD_PILATES_BY_ID } = await server.ssrLoadModule(
       '/src/data/worldPilatesRepertoire1000.ts',
     );
     const { getCatalogContinuousMotionAsset } = await server.ssrLoadModule(
       '/src/data/catalogMotionAssets/index.ts',
     );
-    const { PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule(
-      '/src/data/universal3dExerciseRigs.ts',
-    );
+    const { FEATURED_VARIATION_3D_IDS, PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } =
+      await server.ssrLoadModule('/src/data/universal3dExerciseRigs.ts');
 
     const coreExercises = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
     const coreIdSet = new Set(coreExercises.map((item) => item.id));
     const worldAtomics = WORLD_PILATES_EXERCISES.filter(
       (item) => item.tier === 'atomic' && !coreIdSet.has(item.id),
     );
-    const allExercises = [...coreExercises, ...worldAtomics];
+    const seenIds = new Set([...coreIdSet, ...worldAtomics.map((item) => item.id)]);
+    const featuredVariations = FEATURED_VARIATION_3D_IDS.map((id) =>
+      WORLD_PILATES_BY_ID.get(id),
+    ).filter((item) => item && !seenIds.has(item.id));
+    const allExercises = [...coreExercises, ...worldAtomics, ...featuredVariations];
     const entries = {};
     const jobs = [];
     const outputFiles = new Set();

@@ -6731,68 +6731,303 @@ function normalizeBiomechanicalPoseRig(
   };
 }
 
+export const FEATURED_VARIATION_3D_IDS: readonly string[] = Object.freeze([
+  'original-reformer-parallel-footwork--var-circle',
+  'original-mat-band-row--var-circle',
+  'original-cadillac-seated-roll-back--var-circle',
+  'original-chair-seated-arm-arc--var-circle',
+  'crawled-barrel-shortbox-roundback--var-circle',
+  'original-reformer-strap-frog--var-circle',
+  'original-mat-bridge--var-circle',
+  'original-cadillac-seated-rotation--var-circle',
+  'original-chair-supported-calf-raise--var-circle',
+  'world-barrel-arc-barrel-hundred--var-circle',
+  'original-reformer-supine-arm-press--var-circle',
+  'original-mat-chest-lift--var-circle',
+  'ex-bridging-02--var-circle',
+  'expanded-chair-horseback--var-circle',
+  'world-barrel-barrel-corkscrew--var-circle',
+  'original-reformer-supported-bridge--var-circle',
+  'original-mat-heel-slide--var-circle',
+  'expanded-cadillac-leg-springs-bicycle--var-circle',
+  'expanded-chair-single-arm-twist--var-circle',
+  'world-barrel-barrel-glute-kickback--var-circle',
+  'ex-bridging-01--var-circle',
+  'original-mat-knee-fold--var-circle',
+  'crawled-cadillac-airplane-magician--var-circle',
+  'crawled-chair-teaser-tricep-press--var-circle',
+  'original-reformer-strap-frog--var-miniball',
+  'original-mat-pelvic-clock--var-miniball',
+  'original-cadillac-pelvic-rock--var-miniball',
+  'original-chair-seated-breath--var-miniball',
+  'expanded-barrel-horseback--var-miniball',
+  'original-reformer-supine-breath--var-miniball',
+  'original-mat-side-leg-lift--var-miniball',
+  'original-cadillac-table-ankle--var-miniball',
+  'original-chair-seated-pelvic-rock--var-miniball',
+  'crawled-barrel-arc-thoracic-opener--var-miniball',
+  'ex-footwork-02--var-miniball',
+  'expanded-mat-half-roll-back--var-miniball',
+  'original-cadillac-table-breath--var-miniball',
+  'crawled-chair-intermediate-core-combo--var-miniball',
+  'world-barrel-arc-barrel-thoracic-extension--var-miniball',
+  'ex-kr-reformer-04--var-miniball',
+  'expanded-mat-hip-circles--var-miniball',
+  'original-cadillac-table-knee-fold--var-miniball',
+  'crawled-chair-spine-stretch-forward--var-miniball',
+  'world-barrel-barrel-shortbox-twist--var-miniball',
+  'ex-footwork-02--var-single-leg',
+  'expanded-mat-footwork--var-single-leg',
+  'original-cadillac-table-ankle--var-single-leg',
+  'original-chair-incline-support--var-single-leg',
+  'original-barrel-supported-ankle--var-single-leg',
+  'ex-kr-reformer-01--var-single-leg',
+  'crawled-mat-pilates-pushup--var-single-leg',
+  'expanded-cadillac-leg-springs-beats--var-single-leg',
+  'original-chair-seated-pedal-press--var-single-leg',
+  'world-barrel-barrel-handstand-prep--var-single-leg',
+  'ex-plank-01--var-single-leg',
+  'world-mat-bear-hover--var-single-leg',
+  'crawled-cadillac-hip-opener-legspring--var-single-leg',
+  'ex-kr-chair-01--var-single-leg',
+  'expanded-reformer-long-stretch--var-single-leg',
+  'world-mat-fitnessball-bridge-curl--var-single-leg',
+  'world-cadillac-cadillac-guillotine--var-single-leg',
+  'ex-plank-02--var-single-leg',
+  'original-mat-mermaid--var-band',
+  'original-chair-seated-breath--var-band',
+  'original-barrel-seated-spine-reach--var-band',
+  'original-mat-rib-breath--var-band',
+  'original-chair-seated-mermaid--var-band',
+  'original-barrel-standing-breath--var-band',
+  'ex-core-03--var-band',
+  'original-chair-seated-pelvic-rock--var-band',
+  'original-barrel-standing-rotation--var-band',
+  'expanded-mat-hundred--var-band',
+  'original-chair-seated-spine-twist--var-band',
+  'original-barrel-standing-side-stretch--var-band',
+  'original-mat-pelvic-clock--var-roller',
+  'original-mat-quadruped-reach--var-roller',
+  'original-mat-rib-breath--var-roller',
+  'original-mat-swan-prep--var-roller',
+  'original-mat-swimming-prep--var-roller',
+  'expanded-mat-double-leg-kick--var-roller',
+  'expanded-mat-leg-pull-front--var-roller',
+  'expanded-mat-rocking--var-roller',
+  'expanded-mat-swimming--var-roller',
+  'crawled-mat-corkscrew--var-roller',
+  'ex-upper-02--var-one-arm',
+  'original-mat-seated-arm-reach--var-one-arm',
+  'world-cadillac-armsprings-supine-circles--var-one-arm',
+  'original-chair-seated-arm-arc--var-one-arm',
+  'expanded-reformer-arm-circles--var-one-arm',
+  'world-mat-dumbbell-standing-row-hinge--var-one-arm',
+  'ex-global-reformer-01--var-toningball',
+  'original-mat-ankle-reach--var-toningball',
+  'original-chair-alternating-pedal--var-toningball',
+  'original-barrel-standing-hip-extension--var-toningball',
+  'crawled-mat-pilates-pushup--var-bosu',
+  'world-mat-inverted-v-pike--var-bosu',
+]);
+
+function applyVariationPoseChoreography(
+  raw: Omit<Universal3DPoseRig, 'rigId' | 'rigScope'>,
+  exercise: Pick<PilatesExercise, 'id' | 'apparatus' | 'bodyPosition' | 'props'>,
+  rawT: number,
+): Omit<Universal3DPoseRig, 'rigId' | 'rigScope'> {
+  const id = exercise.id;
+  if (!id.includes('--var-')) return raw;
+
+  const ts = smoothstep(rawT);
+  const props = exercise.props ?? [];
+  let next: Omit<Universal3DPoseRig, 'rigId' | 'rigScope'> = raw;
+
+  // Prop flags synchronized cleanly for real-time 3D & Blender Cycles
+  const wantsBand = id.endsWith('--var-band') || props.includes('theraband');
+  const wantsToning = id.endsWith('--var-toningball') || props.includes('toning-ball');
+  const wantsSupineRoller =
+    (id.endsWith('--var-roller') || props.includes('foam-roller')) &&
+    exercise.apparatus === 'mat' &&
+    exercise.bodyPosition === 'supine' &&
+    !raw.withFoamRollerUnderSpine &&
+    raw.pelvis[2] <= 0.24 &&
+    raw.chest[2] <= 0.24;
+
+  if (wantsBand || wantsToning || wantsSupineRoller) {
+    const rollerLift = wantsSupineRoller ? 0.088 : 0;
+    next = {
+      ...next,
+      pelvis: rollerLift ? [next.pelvis[0], next.pelvis[1], next.pelvis[2] + rollerLift] : next.pelvis,
+      spineMid: rollerLift ? [next.spineMid[0], next.spineMid[1], next.spineMid[2] + rollerLift] : next.spineMid,
+      chest: rollerLift ? [next.chest[0], next.chest[1], next.chest[2] + rollerLift] : next.chest,
+      withTheraband: Boolean(next.withTheraband || wantsBand),
+      withDumbbells: Boolean(next.withDumbbells || wantsToning),
+      withFoamRollerUnderSpine: Boolean(next.withFoamRollerUnderSpine || wantsSupineRoller),
+    };
+  }
+
+  // Unilateral single-leg progression: smoothly elevate right leg without breaking straps/chair/barrel clearance
+  if (
+    id.endsWith('--var-single-leg') &&
+    !next.trapezeStrap &&
+    !next.legSprings &&
+    !next.ropeToFeet &&
+    exercise.apparatus !== 'barrel'
+  ) {
+    const liftZ =
+      exercise.bodyPosition === 'prone' || exercise.bodyPosition === 'quadruped'
+        ? lerp(0.1, 0.24, ts)
+        : exercise.bodyPosition === 'standing'
+          ? lerp(0.08, 0.22, ts)
+          : lerp(0.14, 0.28, ts);
+    const shiftX =
+      exercise.bodyPosition === 'supine' || exercise.bodyPosition === 'seated'
+        ? lerp(-0.04, -0.08, ts)
+        : exercise.bodyPosition === 'prone' || exercise.bodyPosition === 'quadruped'
+          ? lerp(-0.06, -0.14, ts)
+          : 0;
+    // Keep Chair pedal/seat contact intact: lift working leg forward-up clear of seat & pedal
+    const safeFoot: Vec3 =
+      exercise.apparatus === 'chair'
+        ? [next.rFoot[0] + 0.14, next.rFoot[1], next.rFoot[2] + lerp(0.12, 0.24, ts)]
+        : [next.rFoot[0] + shiftX, next.rFoot[1], next.rFoot[2] + liftZ];
+    next = {
+      ...next,
+      rFoot: safeFoot,
+      trajectoryFocus: 'rFoot',
+    };
+  }
+
+  // Unilateral one-arm progression: elevate working right arm while keeping bar/pedal grips intact
+  if (
+    id.endsWith('--var-one-arm') &&
+    !next.rolldownBar &&
+    next.pushthroughDeg === undefined &&
+    !next.withChairHandles &&
+    !next.ropeToHands &&
+    exercise.apparatus !== 'chair'
+  ) {
+    const reachZ = lerp(0.12, 0.24, ts);
+    next = {
+      ...next,
+      rHand: [next.rHand[0], next.rHand[1] + 0.04, next.rHand[2] + reachZ],
+      lHand: [next.lHand[0] - 0.06, next.lHand[1], Math.max(next.lHand[2] - 0.08, 0.1)],
+      trajectoryFocus: 'rHand',
+    };
+  }
+
+  // Thoracic rotation progression for non-locked seated/kneeling/standing variations
+  if (
+    id.endsWith('--var-rotation') &&
+    (exercise.bodyPosition === 'seated' ||
+      exercise.bodyPosition === 'kneeling' ||
+      exercise.bodyPosition === 'standing') &&
+    !next.rolldownBar &&
+    next.pushthroughDeg === undefined &&
+    !next.withChairHandles &&
+    exercise.apparatus !== 'chair'
+  ) {
+    const yaw = lerp(0.08, 0.36, ts);
+    const cosY = Math.cos(yaw);
+    const sinY = Math.sin(yaw);
+    const ah = next.antHint;
+    next = {
+      ...next,
+      antHint: [ah[0] * cosY - ah[1] * sinY, ah[0] * sinY + ah[1] * cosY, ah[2]],
+    };
+  }
+
+  return next;
+}
+
 export function sampleUniversal3DExerciseRig(
   exercise: Pick<
     PilatesExercise,
     'id' | 'nameKo' | 'nameEn' | 'apparatus' | 'bodyPosition' | 'blockCategory' | 'box' | 'props'
-  > & { readonly movementFamily?: string },
+  > & { readonly movementFamily?: string; readonly parentArchetypeId?: string },
   rawT: number,
 ): Universal3DPoseRig {
   const clampedT = Math.max(0, Math.min(1, Number.isFinite(rawT) ? rawT : 0));
+  const variationParentId =
+    exercise.parentArchetypeId ??
+    (exercise.id.includes('--var-') ? exercise.id.split('--var-')[0] : undefined);
+  const lookupIds = variationParentId ? [exercise.id, variationParentId] : [exercise.id];
 
-  const exp = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, exercise.id)
-    ? EXPANDED_DEDICATED_3D_RIGS[exercise.id]
-    : undefined;
-  if (
-    exp &&
-    exp.apparatus === exercise.apparatus &&
-    (!exp.bodyPosition || exp.bodyPosition === exercise.bodyPosition)
-  ) {
-    const normalized = normalizeBiomechanicalPoseRig(
-      exp.build(clampedT),
-      exp.build(0),
-      exp.build(1),
-    );
-    return {
-      rigId: exercise.id,
-      rigScope: 'dedicated-3d-rig',
-      ...normalized,
-    };
-  }
-
-  const cat = Object.hasOwn(CATALOG_AND_CRAWLED_ARCHETYPE_MAP, exercise.id)
-    ? CATALOG_AND_CRAWLED_ARCHETYPE_MAP[exercise.id]
-    : undefined;
-  if (cat && cat.apparatus === exercise.apparatus && cat.bodyPosition === exercise.bodyPosition) {
-    const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, cat.archetype)
-      ? EXPANDED_DEDICATED_3D_RIGS[cat.archetype]
+  for (const lookupId of lookupIds) {
+    const exp = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, lookupId)
+      ? EXPANDED_DEDICATED_3D_RIGS[lookupId]
       : undefined;
-    const evalFn = delegatedExpanded
-      ? delegatedExpanded.build
-      : (tVal: number) => sampleArchetype3DRig(cat.archetype, tVal, exercise);
-    const built = normalizeBiomechanicalPoseRig(evalFn(clampedT), evalFn(0), evalFn(1));
-    return {
-      rigId: cat.archetype,
-      rigScope: 'dedicated-3d-rig',
-      ...built,
-      withDumbbells: Boolean(built.withDumbbells || exercise.props.includes('dumbbell')),
-      withTheraband: Boolean(built.withTheraband || exercise.props.includes('theraband')),
-    };
+    if (
+      exp &&
+      exp.apparatus === exercise.apparatus &&
+      (!exp.bodyPosition || exp.bodyPosition === exercise.bodyPosition)
+    ) {
+      const evalVar = (tVal: number) =>
+        applyVariationPoseChoreography(exp.build(tVal), exercise, tVal);
+      const normalized = normalizeBiomechanicalPoseRig(evalVar(clampedT), evalVar(0), evalVar(1));
+      return {
+        rigId: lookupId === exercise.id ? exercise.id : `${lookupId}:var`,
+        rigScope: 'dedicated-3d-rig',
+        ...normalized,
+        withDumbbells: Boolean(
+          normalized.withDumbbells ||
+            exercise.props.includes('dumbbell') ||
+            exercise.props.includes('toning-ball'),
+        ),
+        withTheraband: Boolean(normalized.withTheraband || exercise.props.includes('theraband')),
+      };
+    }
+
+    const cat = Object.hasOwn(CATALOG_AND_CRAWLED_ARCHETYPE_MAP, lookupId)
+      ? CATALOG_AND_CRAWLED_ARCHETYPE_MAP[lookupId]
+      : undefined;
+    if (cat && cat.apparatus === exercise.apparatus && cat.bodyPosition === exercise.bodyPosition) {
+      const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, cat.archetype)
+        ? EXPANDED_DEDICATED_3D_RIGS[cat.archetype]
+        : undefined;
+      const baseEval = delegatedExpanded
+        ? delegatedExpanded.build
+        : (tVal: number) =>
+            sampleArchetype3DRig(
+              cat.archetype,
+              tVal,
+              lookupId === exercise.id ? exercise : { ...exercise, id: lookupId },
+            );
+      const evalVar = (tVal: number) =>
+        applyVariationPoseChoreography(baseEval(tVal), exercise, tVal);
+      const built = normalizeBiomechanicalPoseRig(evalVar(clampedT), evalVar(0), evalVar(1));
+      return {
+        rigId: lookupId === exercise.id ? cat.archetype : `${cat.archetype}:var`,
+        rigScope: 'dedicated-3d-rig',
+        ...built,
+        withDumbbells: Boolean(
+          built.withDumbbells ||
+            exercise.props.includes('dumbbell') ||
+            exercise.props.includes('toning-ball'),
+        ),
+        withTheraband: Boolean(built.withTheraband || exercise.props.includes('theraband')),
+      };
+    }
   }
 
   const proceduralKey = selectProceduralArchetype(exercise);
   const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, proceduralKey)
     ? EXPANDED_DEDICATED_3D_RIGS[proceduralKey]
     : undefined;
-  const evalProc = delegatedExpanded
+  const baseProc = delegatedExpanded
     ? delegatedExpanded.build
     : (tVal: number) => sampleArchetype3DRig(proceduralKey, tVal, exercise);
+  const evalProc = (tVal: number) => applyVariationPoseChoreography(baseProc(tVal), exercise, tVal);
   const built = normalizeBiomechanicalPoseRig(evalProc(clampedT), evalProc(0), evalProc(1));
   return {
     rigId: `procedural:${exercise.apparatus}:${exercise.bodyPosition}:${proceduralKey}`,
     rigScope: 'procedural-3d-synthesis',
     ...built,
-    withDumbbells: Boolean(built.withDumbbells || exercise.props.includes('dumbbell')),
+    withDumbbells: Boolean(
+      built.withDumbbells ||
+        exercise.props.includes('dumbbell') ||
+        exercise.props.includes('toning-ball'),
+    ),
     withTheraband: Boolean(built.withTheraband || exercise.props.includes('theraband')),
   };
 }

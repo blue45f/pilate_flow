@@ -11,8 +11,8 @@ interface CachedArtworkEntry {
     VisualPhaseId,
     {
       src: string;
-      sha256: string;
-      bytes: number;
+      sha256?: string;
+      bytes?: number;
       labelKo?: string;
       svgSha256?: string;
       inputSha256?: string;

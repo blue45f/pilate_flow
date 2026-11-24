@@ -33,6 +33,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 DEFAULT_POSES_PATH = os.path.join(SCRIPT_DIR, "poses_studio_canonical.json")
 DEFAULT_POSES_524_PATH = os.path.join(SCRIPT_DIR, "poses_studio_canonical_524.json")
+DEFAULT_POSES_620_PATH = os.path.join(SCRIPT_DIR, "poses_studio_canonical_620.json")
 DEFAULT_REPORT_PATH = os.path.join(ROOT_DIR, "docs", "3d-pose-form-audit-report.json")
 
 
@@ -117,14 +118,19 @@ def resolve_node_bin() -> str:
     return "node"
 
 
-def sync_poses_from_ts(poses_path: str, all_atomics_path: str | None = None) -> tuple[int, int]:
-    """Exports core 218 exercises (and optionally all 524 atomic exercises) × 3 phases from universal3dExerciseRigs.ts."""
+def sync_poses_from_ts(
+    poses_path: str,
+    all_atomics_path: str | None = None,
+    all_620_path: str | None = None,
+) -> tuple[int, int, int]:
+    """Exports core 218 exercises (plus 524 atomics and optional 620 atomics+featured variations) × 3 phases."""
     node_script = r"""
 import { writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 
 const outPath218 = process.argv[1];
 const outPath524 = process.argv[2] || '';
+const outPath620 = process.argv[3] || '';
 const server = await createServer({
   root: process.cwd(),
   configFile: false,
@@ -150,8 +156,8 @@ function roundVal(v) {
 try {
   const { INITIAL_EXERCISES } = await server.ssrLoadModule('/src/data/pilatesCatalog.ts');
   const { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } = await server.ssrLoadModule('/src/data/globalCrawledRepertoirePack.ts');
-  const { WORLD_PILATES_EXERCISES } = await server.ssrLoadModule('/src/data/worldPilatesRepertoire1000.ts');
-  const { PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule('/src/data/universal3dExerciseRigs.ts');
+  const { WORLD_PILATES_EXERCISES, WORLD_PILATES_BY_ID } = await server.ssrLoadModule('/src/data/worldPilatesRepertoire1000.ts');
+  const { FEATURED_VARIATION_3D_IDS, PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule('/src/data/universal3dExerciseRigs.ts');
 
   const exportList = (list) =>
     list.map((ex) => {
@@ -181,29 +187,49 @@ try {
   await writeFile(outPath218, JSON.stringify(exported218, null, 2) + '\n', 'utf8');
 
   let count524 = 0;
+  let count620 = 0;
+  const coreIdSet = new Set(core218.map((e) => e.id));
+  const worldAtomics306 = WORLD_PILATES_EXERCISES.filter((e) => e.tier === 'atomic' && !coreIdSet.has(e.id));
+  const all524 = [...core218, ...worldAtomics306];
+
   if (outPath524) {
-    const coreIdSet = new Set(core218.map((e) => e.id));
-    const worldAtomics306 = WORLD_PILATES_EXERCISES.filter((e) => e.tier === 'atomic' && !coreIdSet.has(e.id));
-    const all524 = [...core218, ...worldAtomics306];
     const exported524 = exportList(all524);
     await writeFile(outPath524, JSON.stringify(exported524, null, 2) + '\n', 'utf8');
     count524 = exported524.length;
   }
 
-  console.log(JSON.stringify({ synced218: exported218.length, synced524: count524 }));
+  if (outPath620) {
+    const seen524 = new Set(all524.map((e) => e.id));
+    const featuredVars = FEATURED_VARIATION_3D_IDS
+      .map((id) => WORLD_PILATES_BY_ID.get(id))
+      .filter((ex) => ex && !seen524.has(ex.id));
+    const exported620 = exportList([...all524, ...featuredVars]);
+    await writeFile(outPath620, JSON.stringify(exported620, null, 2) + '\n', 'utf8');
+    count620 = exported620.length;
+  }
+
+  console.log(JSON.stringify({ synced218: exported218.length, synced524: count524, synced620: count620 }));
 } finally {
   await server.close();
 }
 """
     proc = subprocess.run(
-        [resolve_node_bin(), "--input-type=module", "-e", node_script, poses_path, all_atomics_path or ""],
+        [
+            resolve_node_bin(),
+            "--input-type=module",
+            "-e",
+            node_script,
+            poses_path,
+            all_atomics_path or "",
+            all_620_path or "",
+        ],
         cwd=ROOT_DIR,
         capture_output=True,
         text=True,
         check=True,
     )
     info = json.loads(proc.stdout.strip().splitlines()[-1])
-    return int(info["synced218"]), int(info["synced524"])
+    return int(info["synced218"]), int(info["synced524"]), int(info["synced620"])
 
 
 def audit_all_poses(poses: list[dict]) -> dict:
@@ -457,8 +483,9 @@ def audit_all_poses(poses: list[dict]) -> dict:
                     "crawled-chair-teaser-tricep-press",
                     "world-chair-chair-reverse-pike",
                 }
+                base_eid = eid.split("--var-")[0]
                 is_chair_teaser = "chair-teaser-triceps" in rig_id
-                if eid not in non_pedal_seated and not is_chair_teaser:
+                if base_eid not in non_pedal_seated and not is_chair_teaser:
                     d_lf = math.hypot(l_ankle[0] - lpt[0], l_ankle[2] - (lpt[1] + 0.036))
                     d_rf = math.hypot(r_ankle[0] - rpt[0], r_ankle[2] - (rpt[1] + 0.036))
                     d_lh = math.hypot(l_wr[0] - lpt[0], l_wr[2] - (lpt[1] + 0.030))
@@ -542,8 +569,14 @@ def audit_all_poses(poses: list[dict]) -> dict:
                             f"{eid}/{ph}: min hand={min_h:.3f} foot={min_f:.3f} to PTB ({ex_x:.3f},{ez_z:.3f})"
                         )
 
-            # 6) Mini-ball placement check for supine reformer footwork/bridging/core
-            if "mini-ball" in props and app == "reformer" and bp == "supine":
+            # 6) Mini-ball placement check for bilateral parallel-knee supine reformer footwork/bridging/core
+            if (
+                "mini-ball" in props
+                and app == "reformer"
+                and bp == "supine"
+                and "--var-single-leg" not in eid
+                and "frog" not in eid
+            ):
                 knee_span = vlen(vsub(l_knee, r_knee))
                 knee_x_diff = abs(l_knee[0] - r_knee[0])
                 knee_mid = vmul(vadd(l_knee, r_knee), 0.5)
@@ -585,23 +618,39 @@ def main():
         action="store_true",
         help="Sync and audit ALL 524 atomic exercises (218 core + 306 world atomics = 1,572 poses) to poses_studio_canonical_524.json while also updating poses_studio_canonical.json",
     )
+    parser.add_argument(
+        "--all-620",
+        action="store_true",
+        help="Sync and audit ALL 620 exercises (524 atomics + 96 featured variations = 1,860 poses) to poses_studio_canonical_620.json",
+    )
     parser.add_argument("--poses", default=DEFAULT_POSES_PATH)
     parser.add_argument("--poses-524", default=DEFAULT_POSES_524_PATH)
+    parser.add_argument("--poses-620", default=DEFAULT_POSES_620_PATH)
     parser.add_argument("--report", default=DEFAULT_REPORT_PATH)
     args = parser.parse_args()
 
-    audit_target_path = args.poses_524 if args.all_atomics else args.poses
+    audit_target_path = (
+        args.poses_620
+        if args.all_620
+        else (args.poses_524 if args.all_atomics else args.poses)
+    )
 
     if not args.no_sync:
-        synced218, synced524 = sync_poses_from_ts(
+        synced218, synced524, synced620 = sync_poses_from_ts(
             args.poses,
-            args.poses_524 if args.all_atomics else None,
+            args.poses_524 if (args.all_atomics or args.all_620) else None,
+            args.poses_620 if args.all_620 else None,
         )
         print(f"[audit_and_fix_all_poses] Synced {synced218} core exercises -> {os.path.relpath(args.poses, ROOT_DIR)}")
-        if args.all_atomics:
+        if args.all_atomics or args.all_620:
             print(
                 f"[audit_and_fix_all_poses] Synced {synced524} atomic exercises ({synced524 * 3} poses) "
                 f"-> {os.path.relpath(args.poses_524, ROOT_DIR)}"
+            )
+        if args.all_620:
+            print(
+                f"[audit_and_fix_all_poses] Synced {synced620} exercises incl. featured variations ({synced620 * 3} poses) "
+                f"-> {os.path.relpath(args.poses_620, ROOT_DIR)}"
             )
 
     with open(audit_target_path, "r", encoding="utf-8") as f:

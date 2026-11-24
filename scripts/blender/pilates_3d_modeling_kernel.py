@@ -3385,25 +3385,38 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
 
     if "magic-circle" in props:
         ex_id = str(ex.get("id", "")).lower()
-        wants_thigh_ring = any(k in ex_id for k in ("inner-thigh", "thigh", "bridge", "footwork"))
+        is_var_circle = "--var-circle" in ex_id
+        wants_thigh_ring = any(
+            k in ex_id
+            for k in (
+                "inner-thigh",
+                "thigh",
+                "bridge",
+                "footwork",
+                "frog",
+                "pelvic",
+                "heel-slide",
+                "knee-fold",
+            )
+        )
         wants_hand_ring = (ex_id == "ex-core-03") or (
-            ("circle" in ex_id or "ring" in ex_id) and not wants_thigh_ring
+            ("circle" in ex_id or "ring" in ex_id or is_var_circle) and not wants_thigh_ring
         )
         if (
-            (wants_thigh_ring or app != "mat")
-            and 0.14 <= knee_span <= 0.40
-            and abs(l_knee.x - r_knee.x) < 0.14
+            (wants_thigh_ring or app != "mat" or is_var_circle)
+            and 0.14 <= knee_span <= 0.42
+            and abs(l_knee.x - r_knee.x) < 0.15
             and min(l_knee.z, r_knee.z) >= surface_z + 0.08
         ):
             # Placed accurately between the inner knees/thighs (never piercing the footbar!)
             rc = Vector((knee_mid.x, knee_mid.y, max(knee_mid.z, surface_z + 0.175)))
             add_sculpted_magic_circle(mc, rc, resting_horizontal=False)
         elif (
-            (wants_hand_ring or app != "mat")
+            (wants_hand_ring or app != "mat" or is_var_circle)
             and not rig.get("ropeToHands")
             and not rig.get("rolldownBar")
-            and 0.16 <= hand_span <= 0.48
-            and hand_mid.z >= surface_z + 0.20
+            and 0.16 <= hand_span <= 0.52
+            and hand_mid.z >= surface_z + 0.18
         ):
             add_sculpted_magic_circle(mc, hand_mid, resting_horizontal=False)
         else:
@@ -3417,10 +3430,12 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             add_beveled_eva_foam_roller(mc, ry)
 
     if "mini-ball" in props:
+        ex_id_mb = str(ex.get("id", "")).lower()
+        allow_mat_ball = "--var-miniball" in ex_id_mb
         if (
-            app != "mat"
-            and 0.11 <= knee_span <= 0.34
-            and abs(l_knee.x - r_knee.x) < 0.14
+            (app != "mat" or allow_mat_ball)
+            and 0.11 <= knee_span <= 0.36
+            and abs(l_knee.x - r_knee.x) < 0.15
             and min(l_knee.z, r_knee.z) >= surface_z + 0.04
         ):
             # Nestled anatomically between the inner knees / distal inner thighs (never above kneecaps or near footbar!)
@@ -3450,11 +3465,11 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
                 segs=10,
             )
         elif (
-            app != "mat"
+            (app != "mat" or allow_mat_ball)
             and not rig.get("ropeToHands")
             and not rig.get("rolldownBar")
-            and 0.14 <= hand_span <= 0.34
-            and abs(l_hand.x - r_hand.x) < 0.10
+            and 0.14 <= hand_span <= 0.38
+            and abs(l_hand.x - r_hand.x) < 0.12
             and hand_mid.z >= surface_z + 0.16
         ):
             r_hb = max(0.072, min(0.092, hand_span * 0.46))
@@ -3474,7 +3489,45 @@ def build_apparatus_and_props(mc: MeshCollector, ex: dict, rig: dict):
             floor_xy = (0.44, 0.52) if app == "mat" else (0.48, 0.54)
             add_matte_sage_mini_ball(mc, floor_xy)
 
-    if rig.get("withDumbbells") or "dumbbell" in props:
+    if "bosu" in props and app == "mat":
+        bosu_x = hand_mid.x if hand_mid.z < 0.24 else -0.45
+        bosu_y = 0.0 if hand_mid.z < 0.24 else -0.58
+        bosu_z = surface_z if hand_mid.z < 0.24 else 0.0
+        add_cylinder_rod(
+            mc,
+            "Bosu_BaseRim",
+            (bosu_x, bosu_y, bosu_z),
+            (bosu_x, bosu_y, bosu_z + 0.026),
+            0.25,
+            "charcoal",
+            segs=28 if mc.glb_mode else 40,
+        )
+        add_ellipsoid(
+            mc,
+            "Bosu_Dome",
+            Vector((bosu_x, bosu_y, bosu_z + 0.026)),
+            0.235,
+            0.235,
+            0.13,
+            "ball",
+            u_seg=24 if mc.glb_mode else 36,
+            v_seg=14 if mc.glb_mode else 22,
+        )
+
+    if "toning-ball" in props:
+        for idx, hp in enumerate([l_hand, r_hand]):
+            add_ellipsoid(
+                mc,
+                f"ToningBall_{idx}",
+                hp,
+                0.048,
+                0.048,
+                0.048,
+                "ball",
+                u_seg=18 if mc.glb_mode else 26,
+                v_seg=12 if mc.glb_mode else 18,
+            )
+    elif rig.get("withDumbbells") or "dumbbell" in props:
         for idx, hp in enumerate([l_hand, r_hand]):
             add_cylinder_rod(mc, f"DbHandle_{idx}", (hp.x, hp.y - 0.065, hp.z), (hp.x, hp.y + 0.065, hp.z), 0.010, "steel", segs=10)
             for dy in (-0.068, 0.068):
