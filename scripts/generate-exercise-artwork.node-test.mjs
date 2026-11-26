@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import {
   embedLocalArtworkAssets,
   getArtworkInputFingerprint,
+  getBlenderFrameFingerprint,
   rasterizeArtwork,
   RASTER_SETTINGS,
   runArtworkJobs,
@@ -11,6 +12,8 @@ import {
   verifyArtworkBytes,
   verifyArtworkSubject,
 } from './generate-exercise-artwork.mjs';
+
+import { sampleBlenderExercisePose } from './blender/exercise-pose.mjs';
 
 const source = '/images/motion-atlas-v3/practitioner.webp';
 const svg =
@@ -79,6 +82,27 @@ test('fingerprints geometry, original and embedded assets, settings and encoder 
     baseline.inputSha256,
   );
   assert.equal(getArtworkInputFingerprint(svg, registered).svgSha256, sha256(svg));
+});
+
+test('Blender 내보내기 정밀도와 세 단계의 카메라 경계를 지문에 반영한다', () => {
+  const exercise = { id: 'example', apparatus: 'mat', props: [] };
+  const times = { start: 0, middle: 1, end: 0.42 };
+  const makePose = (x, middleHeight = 0.3) =>
+    sampleBlenderExercisePose(exercise, times, (_, t) => ({
+      rigId: 'example',
+      pelvis: [x, 0, t === 1 ? middleHeight : 0.1],
+      activeZones: ['core'],
+    }));
+  const first = makePose(0.39917073254523205);
+  assert.deepEqual(first.phases.start, { pelvis: [0.399171, 0, 0.1] });
+  const fingerprint = (pose) => getBlenderFrameFingerprint(pose, 'start');
+  assert.deepEqual(fingerprint(first), fingerprint(makePose(0.3991707325452321)));
+  assert.notEqual(fingerprint(first).inputSha256, fingerprint(makePose(0.399172)).inputSha256);
+  assert.notEqual(
+    fingerprint(first).inputSha256,
+    fingerprint(makePose(0.39917073254523205, 0.6)).inputSha256,
+  );
+  assert.throws(() => makePose(NaN), /Non-finite/);
 });
 
 test('renders the embedded PNG through SVG use into deterministic visible 960x600 WebP', async () => {

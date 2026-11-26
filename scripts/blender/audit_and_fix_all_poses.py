@@ -140,18 +140,7 @@ const server = await createServer({
   logLevel: 'error',
 });
 
-function roundVal(v) {
-  if (typeof v === 'number') return Math.round(v * 1e6) / 1e6;
-  if (Array.isArray(v)) return v.map(roundVal);
-  if (v && typeof v === 'object') {
-    const out = {};
-    for (const [k, val] of Object.entries(v)) {
-      if (val !== undefined) out[k] = roundVal(val);
-    }
-    return out;
-  }
-  return v;
-}
+const { sampleBlenderExercisePose } = await import('./scripts/blender/exercise-pose.mjs');
 
 try {
   const { INITIAL_EXERCISES } = await server.ssrLoadModule('/src/data/pilatesCatalog.ts');
@@ -160,27 +149,7 @@ try {
   const { FEATURED_VARIATION_3D_IDS, PHASE_3D_RAW_T, sampleUniversal3DExerciseRig } = await server.ssrLoadModule('/src/data/universal3dExerciseRigs.ts');
 
   const exportList = (list) =>
-    list.map((ex) => {
-      const phases = {};
-      let resolvedRigId = '';
-      for (const phase of ['start', 'middle', 'end']) {
-        const rig = sampleUniversal3DExerciseRig(ex, PHASE_3D_RAW_T[phase]);
-        resolvedRigId = rig.rigId;
-        const { rigId, rigScope, poseFeatureKo, trajectoryFocus, activeZones, ...geom } = rig;
-        phases[phase] = roundVal(geom);
-      }
-      return {
-        id: ex.id,
-        rigId: resolvedRigId,
-        apparatus: ex.apparatus,
-        bodyPosition: ex.bodyPosition,
-        footbar: ex.footbar,
-        headrest: ex.headrest,
-        box: ex.box,
-        props: ex.props,
-        phases,
-      };
-    });
+    list.map((exercise) => sampleBlenderExercisePose(exercise, PHASE_3D_RAW_T, sampleUniversal3DExerciseRig));
 
   const core218 = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
   const exported218 = exportList(core218);

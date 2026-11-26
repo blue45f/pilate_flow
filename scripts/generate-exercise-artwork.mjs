@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { createServer } from 'vite';
+import { sampleBlenderExercisePose } from './blender/exercise-pose.mjs';
 
 const SCRIPT = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(SCRIPT), '..');
@@ -95,6 +96,18 @@ export async function rasterizeArtwork(svg, sourceAssets, settings = RASTER_SETT
     .resize(settings.width, settings.height, settings.resize)
     .webp(settings.webp)
     .toBuffer();
+}
+
+export function getBlenderFrameFingerprint(pose, phase) {
+  // Blender frames the camera around the whole sequence of three poses.
+  const svgSha256 = sha256(JSON.stringify({ pose, phase }));
+  const renderer = pose.phases[phase].rolldownBar
+    ? 'BlenderCycles3DStudio-v5-rollbar-960x600'
+    : 'BlenderCycles3DStudio-v5-atelier-960x600';
+  const inputSha256 = sha256(
+    JSON.stringify({ renderer, svgSha256, settings: RASTER_SETTINGS, encoder: ENCODER_VERSIONS }),
+  );
+  return { svgSha256, inputSha256 };
 }
 
 /** Validate stored bytes without rerasterizing all frames during each build. */
@@ -195,6 +208,13 @@ export async function generateExerciseArtwork({
       WORLD_PILATES_BY_ID.get(id),
     ).filter((item) => item && !seenIds.has(item.id));
     const allExercises = [...coreExercises, ...worldAtomics, ...featuredVariations];
+    const canonical = JSON.parse(
+      await readFile(path.join(ROOT, 'scripts/blender/poses_studio_canonical_620.json'), 'utf8'),
+    );
+    const poseById = new Map(canonical.map((pose) => [pose.id, pose]));
+    assert.equal(poseById.size, allExercises.length, 'Unexpected Blender exercise count.');
+    assert.equal(poseById.size, canonical.length, 'Duplicate Blender exercise ID.');
+
     const entries = {};
     const jobs = [];
     const outputFiles = new Set();
@@ -210,34 +230,13 @@ export async function generateExerciseArtwork({
         exercise.id.startsWith('crawled-') ||
         exercise.id.startsWith('world-');
       const motion = isExpandedOrCrawled ? null : getCatalogContinuousMotionAsset(exercise);
-      const startRig = sampleUniversal3DExerciseRig(exercise, 0);
+      const pose = sampleBlenderExercisePose(exercise, PHASE_3D_RAW_T, sampleUniversal3DExerciseRig);
+      assert.deepEqual(pose, poseById.get(exercise.id), 'Stale Blender pose export: ' + exercise.id);
       const phases = Object.fromEntries(PHASES.map((phase) => [phase, null]));
 
       for (const phase of PHASES) {
         const labelKo = phase === 'end' ? (motion?.endPoseLabelKo ?? LABELS.end) : LABELS[phase];
-        const rigSample = sampleUniversal3DExerciseRig(exercise, PHASE_3D_RAW_T[phase]);
-        const rigSpecJson = JSON.stringify({
-          id: exercise.id,
-          apparatus: exercise.apparatus,
-          bodyPosition: exercise.bodyPosition,
-          footbar: exercise.footbar,
-          headrest: exercise.headrest,
-          box: exercise.box,
-          props: exercise.props,
-          phase,
-          rigSample,
-        });
-        const svgSha256 = sha256(rigSpecJson);
-        const inputSha256 = sha256(
-          JSON.stringify({
-            renderer: rigSample.rolldownBar
-              ? 'BlenderCycles3DStudio-v5-rollbar-960x600'
-              : 'BlenderCycles3DStudio-v5-atelier-960x600',
-            svgSha256,
-            settings: RASTER_SETTINGS,
-            encoder: ENCODER_VERSIONS,
-          }),
-        );
+        const { svgSha256, inputSha256 } = getBlenderFrameFingerprint(pose, phase);
 
         jobs.push(async () => {
           const priorFrame = previous?.entries?.[exercise.id]?.phases?.[phase];
@@ -315,7 +314,7 @@ export async function generateExerciseArtwork({
       entries[exercise.id] = {
         apparatus: exercise.apparatus,
         bodyPosition: exercise.bodyPosition,
-        archetypeId: startRig.rigId,
+        archetypeId: pose.rigId,
         phases,
       };
     }
