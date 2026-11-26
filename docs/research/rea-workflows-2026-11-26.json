@@ -1,0 +1,916 @@
+{
+  "date": "2026-11-26",
+  "timezone": "Asia/Seoul",
+  "scope": "동일 날짜 경쟁제품 비교표의 30개 제품과 보조 비교 3개. Forme는 2개 페이지를 조사했다.",
+  "method": {
+    "retrieval": "Firecrawl scrape, maxAge=0, formats=[html], onlyMainContent=true. 티킹은 첫 캡처에서 로딩 표시만 확인되어 waitFor=4800ms로 재수집했다. htmlSha256은 Firecrawl이 반환한 가공 HTML 문자열의 UTF-8 바이트에 대한 SHA-256이다.",
+    "observation": "rea-agents@6.10.1, MCP stdio tools/call, inspect_web_page, rea-cdp-browser v2, Chromium 156.0.8078.79. 실행 환경에서 외부 도메인으로 직접 접속하면 프록시가 CONNECT 403을 반환했다. 공개 HTML을 기기 내에서 열어 구조와 접근성 이름을 읽었다.",
+    "reproduction": "공식 배포 패키지 rea-agents@6.10.1의 rea mcp를 stdio로 실행한다. source를 위 조건으로 조회하고 htmlSha256과 대조한다. 가공 HTML 뒤에 LF 한 개를 덧붙여 UTF-8로 로컬 HTTP에서 제공한다. Content-Security-Policy에서 외부 리소스·스크립트·폼을 모두 차단한다. 새 Chromium 프로필과 루프백 CDP 포트에서 스냅숏을 열고 inspect_web_page에 endpoint, target_id, 로컬 allowed_origins, include_accessibility_text=true, observation_ms=75를 전달한다. 같은 내용을 다시 열어도 관찰 시각과 target_id에 따라 evidenceId가 바뀐다.",
+    "interpretation": "labels는 해당 스냅숏에서 관찰한 역할과 접근성 이름이다. 스토어 페이지에서는 등록 문구와 앱의 식별을 확인할 수 있다. 로그인한 앱의 화면·서버 동작·시각 품질은 확인 대상에서 제외했다. 가공·비활성 스냅숏의 노드 수는 원격 사이트의 성능 측정값으로 쓸 수 없다.",
+    "provider": "https://www.npmjs.com/package/rea-agents",
+    "companionReport": "competitor-workflows-2026-11-26.md"
+  },
+  "catalog": [
+    {
+      "category": "수업 작성·진행",
+      "products": [
+        {
+          "product": "워니노트",
+          "captures": [
+            {
+              "source": "https://wonynote.com/pilates-sequence-app.html",
+              "resolvedUrl": "https://wonynote.com/pilates-sequence-app.html",
+              "surface": "공개 도움말",
+              "retrievalId": "01a21760-332f-700d-945e-a941b1eb2b9a",
+              "observedAtKst": "2026-11-26T19:23:24+09:00",
+              "htmlSha256": "76e20d8d5e3c051b9dcdc2a8eb75009e450e7fd925424edbd078d9e9ad3fcb00",
+              "evidenceId": "ev_cfd8fa38938b20abfdfe1d97a4c351a782c5cb9032c00863863b815bc46d53f0",
+              "domNodes": 459,
+              "accessibilityNodes": 451,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "시퀀스는 이렇게 짭니다"
+                },
+                {
+                  "role": "heading",
+                  "name": "내 동작 — 라이브러리에 없는 동작은 직접"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "베리에이션",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/kr/app/베리에이션-필라테스-강사를-위한-시퀀스-채용-앱/id6475655300",
+              "resolvedUrl": "https://apps.apple.com/kr/app/베리에이션-필라테스-강사를-위한-시퀀스-채용-앱/id6475655300",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-dd07-73ce-9bb8-ade7398adf0a",
+              "observedAtKst": "2026-11-26T19:26:04+09:00",
+              "htmlSha256": "efb31d4992586bb890246019eaf66409d264f52c104d1aa62e0e059c90cef45a",
+              "evidenceId": "ev_e957b1caa4202da63e9f931994b09b879b6d9aa930e0a2f49c0ccd92ebe6f299",
+              "domNodes": 1945,
+              "accessibilityNodes": 1114,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "베리에이션 - 필라테스 강사를 위한 시퀀스 & 채용 앱"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "아틀라스 강사",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/kr/app/아틀라스-강사-atlas-instructor/id6791066416",
+              "resolvedUrl": "https://apps.apple.com/kr/app/아틀라스-강사-atlas-instructor/id6791066416",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-dd16-70b9-8a31-63bad3e040cc",
+              "observedAtKst": "2026-11-26T19:26:05+09:00",
+              "htmlSha256": "f78800d92faf65366cd1dfd38df4930ae301ee740507e03073c155d7f6444668",
+              "evidenceId": "ev_93f5d6f33c1ed578913599541e6bcefb7e29fe066469f821576a2dea4963c508",
+              "domNodes": 1706,
+              "accessibilityNodes": 1003,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "아틀라스 강사 - ATLAS Instructor"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Forme",
+          "captures": [
+            {
+              "source": "https://www.formepilates.app/",
+              "resolvedUrl": "https://www.formepilates.app/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21760-32c5-73ee-b38d-b45bc55a3fad",
+              "observedAtKst": "2026-11-26T19:23:25+09:00",
+              "htmlSha256": "48cb7c559be5eeb38e929c215175c0014d2f3d6e1a4e205062f106fc0f2c45ca",
+              "evidenceId": "ev_77153141216ed0c69fcaad80215ffd9684af9329882afe670faa822520a5c66f",
+              "domNodes": 358,
+              "accessibilityNodes": 384,
+              "labels": [
+                {
+                  "role": "radio",
+                  "name": "As written"
+                },
+                {
+                  "role": "radio",
+                  "name": "Minimized"
+                }
+              ]
+            },
+            {
+              "source": "https://www.formepilates.app/features",
+              "resolvedUrl": "https://www.formepilates.app/features",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a2175e-9f58-752f-acdb-33c1908b8022",
+              "observedAtKst": "2026-11-26T19:23:18+09:00",
+              "htmlSha256": "34b263135e417bb733880f54b91519dd428856acbbe4a930d97dc3ee1eacb7be",
+              "evidenceId": "ev_78d55d0fdd11ba7746517f7524c4309d925f475337dc853f6405c67976a89296",
+              "domNodes": 193,
+              "accessibilityNodes": 217,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "See every spring change"
+                },
+                {
+                  "role": "heading",
+                  "name": "Teach without your notes"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Pilavio",
+          "captures": [
+            {
+              "source": "https://pilavio.com/",
+              "resolvedUrl": "https://pilavio.com/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21760-32dc-7399-9248-afcd1d9862b4",
+              "observedAtKst": "2026-11-26T19:23:26+09:00",
+              "htmlSha256": "031be0be3d2f34ea7d8689908eaa3c2822730766c00edbae07f02576b9158a99",
+              "evidenceId": "ev_15353f6a4130c9ef4a6ce360637f0c319b063e25b9f46a70bf35b54c89a21a4b",
+              "domNodes": 566,
+              "accessibilityNodes": 619,
+              "labels": [
+                {
+                  "role": "button",
+                  "name": "Generate Routine"
+                },
+                {
+                  "role": "heading",
+                  "name": "Weekly Class Scheduler"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "The Class Plan",
+          "captures": [
+            {
+              "source": "https://theclassplan.com/",
+              "resolvedUrl": "https://theclassplan.com/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21762-dd50-750f-b57f-d727494bb3ab",
+              "observedAtKst": "2026-11-26T19:26:06+09:00",
+              "htmlSha256": "adc27f23f285dfea0299709494eae3a97e7aaa3a952d5b18a6e063e4c492bf0b",
+              "evidenceId": "ev_df371fba8c7af328ce29dd861c70a630d14f7cb6dad8f28408c2d3a3ae05b460",
+              "domNodes": 1782,
+              "accessibilityNodes": 968,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Smart filters"
+                },
+                {
+                  "role": "heading",
+                  "name": "A video for every exercise"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "ReformerFlow",
+          "captures": [
+            {
+              "source": "https://reformerflow.app/",
+              "resolvedUrl": "https://reformerflow.app/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21762-dd6d-77e1-9232-df59964d2e39",
+              "observedAtKst": "2026-11-26T19:26:07+09:00",
+              "htmlSha256": "cec35fba46eb7854c2236e1a8a4b793240847798d1d854116b60fa7c03a4c6bf",
+              "evidenceId": "ev_70d8a6e9f76386cd4961db448a144345c32c92d7125458f601823b0cb8679fa9",
+              "domNodes": 904,
+              "accessibilityNodes": 1021,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Springs that match your Reformer."
+                },
+                {
+                  "role": "heading",
+                  "name": "Your own teaching notes, on every exercise."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Pilates Plans",
+          "captures": [
+            {
+              "source": "https://www.pilatesplans.com/en",
+              "resolvedUrl": "https://www.pilatesplans.com/en",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21762-de1e-758a-8215-6c1b7a2880f6",
+              "observedAtKst": "2026-11-26T19:26:08+09:00",
+              "htmlSha256": "bcc74cc406136142f81ee7d9df0d15c275653bff294f41b747c8ce81e8bc8522",
+              "evidenceId": "ev_41c3edd6a507e5407ce23bcf5333fe32dce3fd8a5ca0a1c82b49985bfa0058b5",
+              "domNodes": 1353,
+              "accessibilityNodes": 720,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Every exercisein a short video."
+                },
+                {
+                  "role": "link",
+                  "name": "See all reformer class plans →"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Flowcraft",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/us/app/flowcraft-pilates-planner/id6807913427",
+              "resolvedUrl": "https://apps.apple.com/us/app/flowcraft-pilates-planner/id6807913427",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-f178-742d-a7ba-e45087f7aa5e",
+              "observedAtKst": "2026-11-26T19:26:08+09:00",
+              "htmlSha256": "2176ce102e4f2aa7c5f5536b32c52e6c88c7923046ab7acff9fe7b1462671b98",
+              "evidenceId": "ev_c88d05e2dc7acc28aecbffc07191ad586eb5419882524c801f2c26fcd5bdf794",
+              "domNodes": 1244,
+              "accessibilityNodes": 769,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Flowcraft: pilates planner"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Rō Instruct",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/gb/app/r%C5%8D-instruct-pilates-planner/id6766064527",
+              "resolvedUrl": "https://apps.apple.com/gb/app/rō-instruct-pilates-planner/id6766064527",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-f170-7188-9081-98ad4a2f91f1",
+              "observedAtKst": "2026-11-26T19:26:09+09:00",
+              "htmlSha256": "e9b4ee872f118f13fcc4352ce0cb20d01868fe2694dda629277185e32e8c2db4",
+              "evidenceId": "ev_85ca54f3e5879286c71e2175d683a50b0ed8f634a6195a9d06d41ea1a1fb6edb",
+              "domNodes": 1457,
+              "accessibilityNodes": 841,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Rō Instruct: Pilates Planner"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Studio: Pilates Class Planner",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/us/app/studio-pilates-class-planner/id6817088909",
+              "resolvedUrl": "https://apps.apple.com/us/app/studio-pilates-class-planner/id6817088909",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-f1a2-734b-af0f-a055f9ade176",
+              "observedAtKst": "2026-11-26T19:26:10+09:00",
+              "htmlSha256": "26bcf16b46e4bd6660297260bc72fb184baeb90631b3f5b80a2cbb81bf559ff7",
+              "evidenceId": "ev_7acc3a3841dbd4b2c53e6c1ba544e7ad7df2a28441c862578864a6d01a1447e5",
+              "domNodes": 1017,
+              "accessibilityNodes": 586,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Studio: Pilates Class Planner"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Align Planner",
+          "captures": [
+            {
+              "source": "https://play.google.com/store/apps/details?id=alignplanner.app",
+              "resolvedUrl": "https://play.google.com/store/apps/details?id=alignplanner.app",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-f179-731a-90be-2abfaf57f4fc",
+              "observedAtKst": "2026-11-26T19:26:11+09:00",
+              "htmlSha256": "1ce677c8b611c00d4e78c5c1012276d3116d84782f3a9c58927e2129c28e4ce5",
+              "evidenceId": "ev_01b2c7ba76d8b7667eed70347c1ea4ab0377d068a44b2e22389a067e934164fa",
+              "domNodes": 451,
+              "accessibilityNodes": 363,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Align Planner"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Planoura",
+          "captures": [
+            {
+              "source": "https://play.google.com/store/apps/details?hl=en-US&id=com.planoura",
+              "resolvedUrl": "https://play.google.com/store/apps/details?hl=en-US&id=com.planoura",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21762-f1b8-7425-96df-593a4a22458b",
+              "observedAtKst": "2026-11-26T19:26:11+09:00",
+              "htmlSha256": "ef7e9aa5541bbe8028839b1f88d7a8cf44fd89d39fc8d858af63e4f4e5d4d840",
+              "evidenceId": "ev_6fb12c9a019311d8a47ae578a7d8015967c9ad40d3117c090f149e7c75cb74fe",
+              "domNodes": 380,
+              "accessibilityNodes": 306,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Planoura Pilates Class Planner"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "예약·대기·수강권",
+      "products": [
+        {
+          "product": "바디코디",
+          "captures": [
+            {
+              "source": "https://crm-guide.bodycodi.com/2a22e423-5830-8009-93d2-e228b0305e07",
+              "resolvedUrl": "https://crm-guide.bodycodi.com/2a22e423-5830-8009-93d2-e228b0305e07",
+              "surface": "공개 도움말",
+              "retrievalId": "01a21763-03b9-7753-9b20-9370ca46b996",
+              "observedAtKst": "2026-11-26T19:26:12+09:00",
+              "htmlSha256": "5ebeb69aab04609210314d6b0e2b77aaceb12c3a89bf2e970149cd3948ebe216",
+              "evidenceId": "ev_641381aeb6aa08278c513aa1daacccb9c50e2a4dbdb8206275da2936944d059f",
+              "domNodes": 384,
+              "accessibilityNodes": 374,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "대기자 자동 예약 기능 설정 방법"
+                },
+                {
+                  "role": "heading",
+                  "name": "대기자순번은 PC프로그램에서도 확인 가능해요!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "스튜디오메이트",
+          "captures": [
+            {
+              "source": "https://studiomate.kr/",
+              "resolvedUrl": "https://studiomate.kr/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21762-ffc7-718b-8cda-af11f1bd74f8",
+              "observedAtKst": "2026-11-26T19:26:13+09:00",
+              "htmlSha256": "f1ae5dc681700002b17be2ed1f1d68bd72de8d530db85215777cf46afd0899c4",
+              "evidenceId": "ev_aff89d0b28bb855a5a332c069b1b97cec5ae311add3b5a8e4d2097da672f90b1",
+              "domNodes": 646,
+              "accessibilityNodes": 362,
+              "labels": [
+                {
+                  "role": "link",
+                  "name": "회원용 APP"
+                },
+                {
+                  "role": "link",
+                  "name": "관리자용 APP"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "스튜디오플랜",
+          "captures": [
+            {
+              "source": "https://studioplan.kr/",
+              "resolvedUrl": "https://studioplan.kr/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21760-3337-70ab-a049-8c039e0b9792",
+              "observedAtKst": "2026-11-26T19:23:25+09:00",
+              "htmlSha256": "d9fc6bcc06f1b112077beb155155c468d0ec0922df08b2a40201027846bc90ae",
+              "evidenceId": "ev_b5deeb04e513937ce3b460c1f1e5ca6115b4ab5b3a9deb0c801ac977a143b053",
+              "domNodes": 1061,
+              "accessibilityNodes": 1117,
+              "labels": [
+                {
+                  "role": "list",
+                  "name": "대기 예약 처리 순서"
+                },
+                {
+                  "role": "button",
+                  "name": "강사"
+                },
+                {
+                  "role": "button",
+                  "name": "회원"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "피터스 앱",
+          "captures": [
+            {
+              "source": "https://start.pters.co.kr/pilates",
+              "resolvedUrl": "https://start.pters.co.kr/pilates",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21762-ffbf-72ac-8c9f-16d5664ea52e",
+              "observedAtKst": "2026-11-26T19:26:13+09:00",
+              "htmlSha256": "d96694b5cb7cfb547716caf0834adc108544fc979bf4ec9ecb67aa4bec583c21",
+              "evidenceId": "ev_31ab86f688ee4059c16da553594e0379732a2020f01ae518233fe96cf84fa9b5",
+              "domNodes": 648,
+              "accessibilityNodes": 573,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "개인·그룹 수업에 맞게 예약 설정"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "아하루",
+          "captures": [
+            {
+              "source": "https://aharu.kr/",
+              "resolvedUrl": "https://aharu.kr/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21763-000c-71ff-a8c3-08c7b5baacc7",
+              "observedAtKst": "2026-11-26T19:26:14+09:00",
+              "htmlSha256": "b23f8ae43c150891c5380f7cd00132f5c84524ce43afab0b737ff64a4727a676",
+              "evidenceId": "ev_544f5f19ef9a66fb31e2a75571d7483c233ec9f6e66be631e84a144465a03306",
+              "domNodes": 342,
+              "accessibilityNodes": 393,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "센터, 강사, 수강생이 하나로 연결돼요"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "레슨북",
+          "captures": [
+            {
+              "source": "https://lessonbook.oopy.io/2b09fb5e-3b3c-4bd1-8314-31953a140b98",
+              "resolvedUrl": "https://lessonbook.oopy.io/2b09fb5e-3b3c-4bd1-8314-31953a140b98",
+              "surface": "공개 도움말",
+              "retrievalId": "01a21762-ffe6-71db-8c8e-d5dc91e78d51",
+              "observedAtKst": "2026-11-26T19:26:15+09:00",
+              "htmlSha256": "fbbcb0f4fa9379b2d312557889ac8ee0c7946c64df9f964cb838ce43d5fdb7ce",
+              "evidenceId": "ev_1b9e320930565d122938a4017d042c0575aa5ae8da6b49d6f187cffd0f45f32b",
+              "domNodes": 863,
+              "accessibilityNodes": 862,
+              "labels": [
+                {
+                  "role": "link",
+                  "name": "1. 레슨만 예약하기"
+                },
+                {
+                  "role": "link",
+                  "name": "6. 대기예약하기"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "티킹",
+          "captures": [
+            {
+              "source": "https://www.ticking.co.kr/",
+              "resolvedUrl": "https://www.ticking.co.kr/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21765-1bca-73b9-9061-4a47d1f5410e",
+              "observedAtKst": "2026-11-26T19:27:52+09:00",
+              "htmlSha256": "a5644b15da4fee41be719cd9788d2c4a99bb7f46d647dce40959ba68f37cfbbc",
+              "evidenceId": "ev_4149f441c71a5f02f3c1d907e7401a9c9b251a655dfa3e079c41a33739cd5752",
+              "domNodes": 868,
+              "accessibilityNodes": 917,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "이용권"
+                },
+                {
+                  "role": "heading",
+                  "name": "일정/예약"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "루틴온라인",
+          "captures": [
+            {
+              "source": "https://apps.apple.com/kr/app/루틴온라인-요가필라테스-수업예약/id6760471845",
+              "resolvedUrl": "https://apps.apple.com/kr/app/루틴온라인-요가필라테스-수업예약/id6760471845",
+              "surface": "스토어 등록 설명",
+              "retrievalId": "01a21763-13cd-77b4-8176-87e999551b06",
+              "observedAtKst": "2026-11-26T19:26:16+09:00",
+              "htmlSha256": "49d7f9d1313b6ae745664e3ee756d992a63fb07493958d63217c9be6ceff400a",
+              "evidenceId": "ev_eae2aca8b152b1a03280465d28b5433fa680c6175d575c597ef6b90f966d6354",
+              "domNodes": 1406,
+              "accessibilityNodes": 840,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "루틴온라인 - 요가필라테스 수업예약"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Momence",
+          "captures": [
+            {
+              "source": "https://help.momence.com/en/articles/12028307-waitlist-faqs-classes",
+              "resolvedUrl": "https://help.momence.com/en/articles/12028307-waitlist-faqs-classes",
+              "surface": "공개 도움말",
+              "retrievalId": "01a21763-13b6-778e-82e4-eb83731506d8",
+              "observedAtKst": "2026-11-26T19:26:17+09:00",
+              "htmlSha256": "e051a07735f3e07bccf73273e7b6c6d254ea1674a5035025fad1343657e60013",
+              "evidenceId": "ev_f927154f774aa86333493b60ccd04b891f402d0e2396db85eeca1795654d5674",
+              "domNodes": 451,
+              "accessibilityNodes": 452,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "First come, first serve"
+                },
+                {
+                  "role": "heading",
+                  "name": "Double opt-in"
+                },
+                {
+                  "role": "heading",
+                  "name": "Fast fingers first"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "탐색·재사용·교육",
+      "products": [
+        {
+          "product": "Pilates Anytime",
+          "captures": [
+            {
+              "source": "https://www.pilatesanytime.com/pilates-exercises",
+              "resolvedUrl": "https://www.pilatesanytime.com/pilates-exercises",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a2175e-ec5f-76bf-92e3-ec22e088525d",
+              "observedAtKst": "2026-11-26T19:23:19+09:00",
+              "htmlSha256": "d11eff84cdcd6dc7d128499b8c32545ed341809ba38405cee22a7ba501f941ee",
+              "evidenceId": "ev_54c5b53e21dc30e6a3c3240e2ee0239cd2f49a319becb1f16d8ddc48e65d49a4",
+              "domNodes": 1856,
+              "accessibilityNodes": 971,
+              "labels": [
+                {
+                  "role": "tab",
+                  "name": "Mat"
+                },
+                {
+                  "role": "tab",
+                  "name": "Reformer"
+                },
+                {
+                  "role": "button",
+                  "name": "Beginner"
+                },
+                {
+                  "role": "button",
+                  "name": "Advanced"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Pilatesology",
+          "captures": [
+            {
+              "source": "https://pilatesology.com/classes/",
+              "resolvedUrl": "https://pilatesology.com/classes/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a2175e-ebe6-733a-b2a6-5a26d9fbb4d1",
+              "observedAtKst": "2026-11-26T19:23:19+09:00",
+              "htmlSha256": "fed20cee5804eef9762e304cfa6511bbc2d047bdc235627778a07a780677b85d",
+              "evidenceId": "ev_94c8a2a58b2feca4bc88c2d07091652bab31a2d79c75b017031934fbf4ba24c8",
+              "domNodes": 2420,
+              "accessibilityNodes": 1614,
+              "labels": [
+                {
+                  "role": "button",
+                  "name": "Clear All"
+                },
+                {
+                  "role": "heading",
+                  "name": "Duration"
+                },
+                {
+                  "role": "heading",
+                  "name": "Equipment"
+                },
+                {
+                  "role": "button",
+                  "name": "Add to favorites"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Sequence Wiz",
+          "captures": [
+            {
+              "source": "https://help.sequencewiz.com/knowledge-base/insert-favorite-saved-line-into-sequence/",
+              "resolvedUrl": "https://help.sequencewiz.com/knowledge-base/insert-favorite-saved-line-into-sequence/",
+              "surface": "공개 도움말",
+              "retrievalId": "01a21763-13cb-7193-b754-1898df671368",
+              "observedAtKst": "2026-11-26T19:26:18+09:00",
+              "htmlSha256": "119ba82d598b282bd22004d4771f12246af59c22f4e7b96fd88bba475273b3bd",
+              "evidenceId": "ev_8d7fe3fbc8e85c5d58aec34de9d72a60996a0f487c1335f2128340e9e69f25d7",
+              "domNodes": 395,
+              "accessibilityNodes": 251,
+              "labels": [
+                {
+                  "role": "link",
+                  "name": "Insert Favorite (saved line) into sequence"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Sequence/OS",
+          "captures": [
+            {
+              "source": "https://sequenceos.app/faq",
+              "resolvedUrl": "https://sequenceos.app/faq",
+              "surface": "공개 도움말",
+              "retrievalId": "01a2175e-ec30-742d-ac9e-cecbf12bdae1",
+              "observedAtKst": "2026-11-26T19:23:20+09:00",
+              "htmlSha256": "926ca7f1c724b13d1fea321df68f5e079ca980d9b5af9887a2edd12c46addf85",
+              "evidenceId": "ev_1f3e2ba5e22950f3554fedb9700633708d9629182ea65696a0dec361b0a375f6",
+              "domNodes": 583,
+              "accessibilityNodes": 657,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Planning classes"
+                },
+                {
+                  "role": "heading",
+                  "name": "Teaching with Play Mode"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "BASI Pilates",
+          "captures": [
+            {
+              "source": "https://www.basipilates.com/",
+              "resolvedUrl": "https://www.basipilates.com/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21763-13cc-767c-92ab-7236802c79ae",
+              "observedAtKst": "2026-11-26T19:26:18+09:00",
+              "htmlSha256": "5a50fab691bb2b786fb4e3a84fa7dae18ef933e2959156f049458b3ce7cd5e96",
+              "evidenceId": "ev_81ede4c43c5bab6563dfb246e6d47998026121e3c5d21cb398da1b43a4e4b4fe",
+              "domNodes": 1095,
+              "accessibilityNodes": 506,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Online Workshops"
+                },
+                {
+                  "role": "heading",
+                  "name": "Digital Classes"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Merrithew",
+          "captures": [
+            {
+              "source": "https://www.merrithew.com/",
+              "resolvedUrl": "https://www.merrithew.com/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a2175e-ebe6-718a-9f68-95e4acaad077",
+              "observedAtKst": "2026-11-26T19:23:22+09:00",
+              "htmlSha256": "79343d68b2c9dfc965f8fb27e0cf54865e2c5b2ce81d42879320a0f53918f26a",
+              "evidenceId": "ev_9e48071813f43e77ad237d8437831fdd803da4bd148cc4387df7b38d2f8baaac",
+              "domNodes": 1523,
+              "accessibilityNodes": 682,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Pilates Reformers"
+                },
+                {
+                  "role": "heading",
+                  "name": "Pilates equipment"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Balanced Body",
+          "captures": [
+            {
+              "source": "https://www.pilates.com/",
+              "resolvedUrl": "https://www.pilates.com/",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a2175e-ec72-714d-adb3-dbba75434c79",
+              "observedAtKst": "2026-11-26T19:23:23+09:00",
+              "htmlSha256": "fdc4f93185cc55b22fdd596f21a6b676118a92881592ffe140338dc742394268",
+              "evidenceId": "ev_f14372f4aae2829d1b0cc9ad99b0cd4d527f53e031947fdc90558968dcdf350b",
+              "domNodes": 740,
+              "accessibilityNodes": 767,
+              "labels": [
+                {
+                  "role": "link",
+                  "name": "Reformers"
+                },
+                {
+                  "role": "link",
+                  "name": "Physical Therapy & Rehab"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "product": "Club Pilates",
+          "captures": [
+            {
+              "source": "https://www.clubpilates.com/classes",
+              "resolvedUrl": "https://www.clubpilates.com/classes",
+              "surface": "공개 웹페이지",
+              "retrievalId": "01a21763-255c-748b-8557-b76c5b6e6abf",
+              "observedAtKst": "2026-11-26T19:26:19+09:00",
+              "htmlSha256": "82a3473ab4cd922ae2435d02716cfd3509f12084e0bc3aabd2d0e4dbd1d9438e",
+              "evidenceId": "ev_604b0e483ea9dfce524b55500134494871ecf824a02b82618290640121036e2d",
+              "domNodes": 1171,
+              "accessibilityNodes": 510,
+              "labels": [
+                {
+                  "role": "heading",
+                  "name": "Find your class type"
+                },
+                {
+                  "role": "heading",
+                  "name": "Which level is right for you?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "supplementary": [
+    {
+      "product": "Tummee",
+      "captures": [
+        {
+          "source": "https://www.tummee.com/yoga-sequence-builder",
+          "resolvedUrl": "https://www.tummee.com/",
+          "surface": "공개 웹페이지",
+          "retrievalId": "01a2175e-ecfe-759a-9d43-02f06131a460",
+          "observedAtKst": "2026-11-26T19:23:21+09:00",
+          "htmlSha256": "5217f47e185dbcd190427988e978364396d2c1378445c9322b8c3dec7ada74ba",
+          "evidenceId": "ev_29ea0b9850ff822e4382dcd647c93003a89e0bc735712f1e2279388db128cd2d",
+          "domNodes": 2905,
+          "accessibilityNodes": 1540,
+          "labels": [
+            {
+              "role": "heading",
+              "name": "Yoga Sequence Stats"
+            },
+            {
+              "role": "heading",
+              "name": "Yoga Sequence Print Template"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "product": "Momoyoga",
+      "captures": [
+        {
+          "source": "https://www.momoyoga.com/en",
+          "resolvedUrl": "https://www.momoyoga.com/en",
+          "surface": "공개 웹페이지",
+          "retrievalId": "01a21761-d92d-74fc-9ef7-4dd85996bf0e",
+          "observedAtKst": "2026-11-26T19:26:20+09:00",
+          "htmlSha256": "d3fb72e5f85e96cd5178bb6b12704ce5906c2115dbce54b8b3787b360eabf136",
+          "evidenceId": "ev_43fd0df482f0914cd46ba182cd27fccd672bded96c91e538cb35002c8a8be5fd",
+          "domNodes": 637,
+          "accessibilityNodes": 638,
+          "labels": [
+            {
+              "role": "heading",
+              "name": "Memberships that suit every yogi"
+            },
+            {
+              "role": "heading",
+              "name": "The ultimate booking experience"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "product": "Mindbody",
+      "captures": [
+        {
+          "source": "https://www.mindbodyonline.com/business/fitness-software",
+          "resolvedUrl": "https://www.mindbodyonline.com/business/fitness",
+          "surface": "공개 웹페이지",
+          "retrievalId": "01a2175e-eb80-74ec-918e-7b7d463dab96",
+          "observedAtKst": "2026-11-26T19:23:23+09:00",
+          "htmlSha256": "185d29f2c2a221b24b46e08012b7f5065659bc2c07c6e110403080d0ebbfa597",
+          "evidenceId": "ev_df8ff359e38d5f1ed6498fc5dc46dbfec2f20df8df0ea2def68af7ae7ae5386e",
+          "domNodes": 2306,
+          "accessibilityNodes": 973,
+          "labels": [
+            {
+              "role": "button",
+              "name": "Mindbody app"
+            },
+            {
+              "role": "button",
+              "name": "AI front desk"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "liveChecks": [
+    {
+      "product": "Forme",
+      "source": "https://www.formepilates.app/",
+      "method": "Firecrawl Interact, 로그인 없이 공식 웹 데모 클릭",
+      "scenario": "공개 예제 Core Connections의 원래 순서와 교체 최소화 순서를 번갈아 선택했다.",
+      "observed": [
+        "As written · 16회",
+        "Minimized · 5회",
+        "As written · 16회"
+      ],
+      "scope": "22개 동작·29분 예제의 표시값."
+    },
+    {
+      "product": "스튜디오플랜",
+      "source": "https://studioplan.kr/",
+      "method": "Firecrawl Interact, 로그인 없이 공식 웹 데모 클릭",
+      "scenario": "역할 버튼을 바꿀 때 안내 패널의 제목이 함께 변경되는지 관찰했다.",
+      "observed": [
+        "강사 · 오늘 수업에만 집중하세요.",
+        "회원 · 예약도, 남은 횟수도 직접.",
+        "관리자 · 운영의 흐름이 한눈에."
+      ]
+    }
+  ]
+}
