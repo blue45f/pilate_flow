@@ -11,6 +11,7 @@ import type { InstructorScheduleData } from '../types/instructorSchedule';
 import {
   addScheduleDays,
   expandInstructorSchedule,
+  localScheduleDate,
   scheduleDateRange,
   scheduleWeekStart,
 } from './instructorSchedule';
@@ -629,12 +630,13 @@ export function readPersistedMemberBookingState(
 
 export function writePersistedMemberBookingState(
   state: PersistedMemberBookingState,
-): void {
-  if (typeof window === 'undefined') return;
+): boolean {
+  if (typeof window === 'undefined') return false;
   try {
     window.localStorage.setItem(MEMBER_BOOKING_STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    // Ignore storage quota errors cleanly; state remains live in memory.
+    return false;
   }
 }
 
@@ -653,16 +655,23 @@ export function deriveMemberSlotStatus(slot: MemberBookableSlot): MemberSlotBook
   return 'CLOSED';
 }
 
+export function memberSlotHasStarted(
+  slot: Pick<MemberBookableSlot, 'date' | 'startTime'>,
+  now: Date,
+): boolean {
+  const date = localScheduleDate(now);
+  return slot.date < date || (slot.date === date && slot.startTime <= now.toTimeString().slice(0, 5));
+}
+
 export function resolveMemberActionIntent(
   slot: MemberBookableSlot,
-  todayIso?: string,
+  asOf?: string | Date,
 ): MemberBookingActionIntent | null {
-  if (todayIso && slot.date < todayIso) {
-    return null;
-  }
+  const today = asOf instanceof Date ? localScheduleDate(asOf) : asOf;
+  if (today && slot.date < today) return null;
   if (slot.myState === 'BOOKED') return 'CANCEL_BOOKING';
   if (slot.myState === 'WAITLISTED') return 'CANCEL_WAITLIST';
-  if (slot.occurrenceStatus !== 'scheduled') {
+  if (slot.occurrenceStatus !== 'scheduled' || (asOf instanceof Date && memberSlotHasStarted(slot, asOf))) {
     return null;
   }
   const status = deriveMemberSlotStatus(slot);

@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import { PfBadge, type PfBadgeTone } from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
+import { ACTIVE_OWNER_KEY, getActiveWorkspaceOwner } from '../lib/accountStorage';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
+import { instructorScheduleSchema } from '../schemas/instructorScheduleSchema';
+import { createEmptyInstructorSchedule, type InstructorScheduleData } from '../types/instructorSchedule';
 import type { ApparatusType } from '../types/pilates';
 import {
   addScheduleDays,
@@ -27,6 +31,7 @@ import {
   scheduleWeekStart,
 } from '../utils/instructorSchedule';
 import {
+  MEMBER_BOOKING_STORAGE_KEY,
   type MemberBookableSlot,
   type MemberBookingActionIntent,
   type MemberSlotBookingStatus,
@@ -41,6 +46,7 @@ import {
   getApparatusStudio3dImage,
   getDefaultApparatusSpringsHint,
   isSlotPastFreeCancelDeadline,
+  memberSlotHasStarted,
   pickDefaultOpenSpotId,
   readPersistedMemberBookingState,
   resolveMemberActionIntent,
@@ -68,6 +74,25 @@ import '../styles/member-booking.css';
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
 const FIRST_SCHEDULE_DATE = '1900-01-01';
 const LAST_SCHEDULE_DATE = '2199-12-31';
+
+// 회원 화면에서는 강사 저장소를 읽기만 한다. 전체 작업실을 rehydrate하면 다른 탭의
+// 초안이나 저장되지 않은 로컬 편집까지 함께 교체될 수 있다.
+function readMemberInstructorSchedule(): InstructorScheduleData | null {
+  try {
+    const owner = window.localStorage.getItem(ACTIVE_OWNER_KEY)?.trim() || null;
+    if (owner !== getActiveWorkspaceOwner()) return null;
+    const raw = window.localStorage.getItem(RECOVERY_STORAGE_KEY);
+    if (raw === null) return createEmptyInstructorSchedule();
+    const envelope = JSON.parse(raw);
+    if ((envelope?.version !== 3 && envelope?.version !== 0) ||
+        !envelope.state || typeof envelope.state !== 'object' || Array.isArray(envelope.state)) return null;
+    if (envelope.state.instructorSchedule === undefined) return createEmptyInstructorSchedule();
+    const parsed = instructorScheduleSchema.safeParse(envelope.state.instructorSchedule);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
 
 function clampScheduleDate(date: string): string {
   if (date < FIRST_SCHEDULE_DATE) return FIRST_SCHEDULE_DATE;
@@ -121,15 +146,43 @@ function slotMatchesFilters(
   apparatus: 'all' | ApparatusType,
   focus: MemberFocusFilter,
   availableOnly: boolean,
+  now: Date,
 ): boolean {
   if (apparatus !== 'all' && slot.apparatus !== apparatus) return false;
   if (!slotMatchesFocusFilter(slot, focus)) return false;
   if (!availableOnly) return true;
+  if (memberSlotHasStarted(slot, now)) return false;
   const status = deriveMemberSlotStatus(slot);
   return slot.myState === 'BOOKED' || status === 'AVAILABLE' || status === 'ALMOST_FULL';
 }
 
+function findBookingTimeConflict(
+  target: MemberBookableSlot,
+  daySlots: readonly MemberBookableSlot[],
+  decisions: PersistedMemberBookingState['slotDecisions'],
+): PersistedMemberSlotDecision | undefined {
+  for (const [slotId, decision] of Object.entries(decisions)) {
+    if (slotId === target.id || decision.state !== 'BOOKED') continue;
+    const booked = daySlots.find((slot) => slot.id === slotId);
+    if (booked) {
+      if (
+        booked.occurrenceStatus === 'scheduled' &&
+        booked.startTime < target.endTime &&
+        target.startTime < booked.endTime
+      ) return decision;
+    } else if (decision.slotDate === target.date && decision.slotTime === target.startTime) {
+      // 시간표에서 찾을 수 없는 이전 기록에는 시작 시각만 남아 있다.
+      return decision;
+    }
+  }
+}
+
 type MemberDialogIntent = MemberBookingActionIntent | 'CHANGE_SPOT';
+type MemberDialogAction = {
+  dialogSeq: number;
+  slot: MemberBookableSlot;
+  intent: MemberDialogIntent;
+};
 
 function formatDateBadge(dateIso: string): { weekday: string; monthDay: string } {
   const [y, m, d] = dateIso.split('-').map(Number);
@@ -161,14 +214,12 @@ function formatFreeCancelDeadlineKo(
 function statusPillMeta(
   slot: MemberBookableSlot,
   status: MemberSlotBookingStatus,
-  todayIso: string,
+  now: Date,
 ): { label: string; tone: PfBadgeTone } {
-  if (slot.date < todayIso) {
-    const spotPart = slot.myState === 'BOOKED' && slot.mySpotId ? ` · ${slot.mySpotId}번 자리` : '';
-    return {
-      label: slot.myState === 'BOOKED' ? `✓ 수강 완료${spotPart}` : '■ 종료된 수업',
-      tone: 'neutral',
-    };
+  if (slot.date < localScheduleDate(now)) return { label: '종료된 수업', tone: 'neutral' };
+  if (memberSlotHasStarted(slot, now) && slot.occurrenceStatus === 'scheduled') {
+    const ongoing = slot.date === localScheduleDate(now) && slot.endTime > now.toTimeString().slice(0, 5);
+    return { label: ongoing ? '수업 진행 중' : '종료된 수업', tone: 'neutral' };
   }
   if (slot.myState === 'BOOKED') {
     if (slot.occurrenceStatus === 'cancelled') {
@@ -215,11 +266,11 @@ function statusPillMeta(
 function ctaButtonLabel(
   slot: MemberBookableSlot,
   intent: MemberBookingActionIntent | null,
-  todayIso: string,
+  now: Date,
 ): string {
-  if (slot.date < todayIso) return '종료됨';
   if (intent === 'CANCEL_BOOKING') return '예약 취소';
   if (intent === 'CANCEL_WAITLIST') return '대기 취소';
+  if (memberSlotHasStarted(slot, now)) return '접수 종료';
   if (slot.occurrenceStatus === 'cancelled') return '폐강됨';
   if (slot.occurrenceStatus === 'moved') return '일정 변경됨';
   if (intent === 'BOOK') return '예약하기';
@@ -243,11 +294,30 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   // Embedded views expose all sections. The app's three navigation destinations
   // each present a single task while sharing the booking and filter state.
   const page = onOpenSchedule ? activeSection : undefined;
-  const schedule = usePilatesStore((s) => s.instructorSchedule);
+  const [schedule, setSchedule] = useState(() =>
+    readMemberInstructorSchedule() ?? usePilatesStore.getState().instructorSchedule,
+  );
   const savedSequences = usePilatesStore((s) => s.savedSequences);
   const exercises = usePilatesStore((s) => s.exercises);
   const datedSequencePlanning = usePilatesStore((s) => s.datedSequencePlanning);
-  const todayIso = localScheduleDate();
+  const [now, setNow] = useState(() => new Date());
+  const todayIso = localScheduleDate(now);
+
+  useEffect(() => {
+    let timer: number;
+    const refresh = () => {
+      window.clearTimeout(timer);
+      const current = new Date();
+      setNow(current);
+      timer = window.setTimeout(refresh, 60_000 - (current.getTime() % 60_000));
+    };
+    timer = window.setTimeout(refresh, 60_000 - (Date.now() % 60_000));
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
 
   const [selectedDate, setSelectedDate] = useState<string>(todayIso);
   const [apparatusFilter, setApparatusFilter] = useState<'all' | ApparatusType>('all');
@@ -269,11 +339,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   const nextDialogSeqRef = useRef<number>(0);
   const consumedDialogSeqRef = useRef<number>(0);
 
-  const [pendingAction, setPendingAction] = useState<{
-    dialogSeq: number;
-    slot: MemberBookableSlot;
-    intent: MemberDialogIntent;
-  } | null>(null);
+  const [pendingAction, setPendingAction] = useState<MemberDialogAction | null>(null);
   const [selectedSpotId, setSelectedSpotId] = useState<string>('R2');
   const selectedSpotIdRef = useRef<string>('R2');
   const [lateCancelAgreed, setLateCancelAgreed] = useState<boolean>(false);
@@ -293,8 +359,33 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   };
 
   useEffect(() => {
-    livePortalRef.current = portalState;
-  }, [portalState]);
+    const unsubscribe = usePilatesStore.subscribe((next, previous) => {
+      if (next.instructorSchedule !== previous.instructorSchedule) setSchedule(next.instructorSchedule);
+    });
+    const syncOtherTab = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+      if (event.key === RECOVERY_STORAGE_KEY || event.key === ACTIVE_OWNER_KEY || event.key === null) {
+        const current = readMemberInstructorSchedule();
+        if (current) setSchedule(current);
+        else {
+          setPendingAction(null);
+          setErrorAlert('최신 시간표를 읽을 수 없습니다. 이 기기의 작업실과 저장 권한을 확인해 주세요.');
+        }
+      }
+      if (event.key !== MEMBER_BOOKING_STORAGE_KEY && event.key !== null) return;
+      const next = readPersistedMemberBookingState(localScheduleDate());
+      livePortalRef.current = next;
+      setPortalState(next);
+      setPendingAction(null);
+      setErrorAlert(null);
+      setFeedbackBanner('다른 탭의 변경 사항을 반영했습니다. 예약 내역과 수강권 횟수를 확인해 주세요.');
+    };
+    window.addEventListener('storage', syncOtherTab);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', syncOtherTab);
+    };
+  }, []);
 
   useEffect(() => {
     if (page) {
@@ -362,26 +453,21 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       mat: 0,
     };
     for (const slot of daySlots) {
-      if (availableOnly) {
-        const st = deriveMemberSlotStatus(slot);
-        if (!(slot.myState === 'BOOKED' || st === 'AVAILABLE' || st === 'ALMOST_FULL')) {
-          continue;
-        }
-      }
+      if (!slotMatchesFilters(slot, 'all', focusFilter, availableOnly, now)) continue;
       counts.all += 1;
       if (slot.apparatus !== 'mixed') {
         counts[slot.apparatus] += 1;
       }
     }
     return counts;
-  }, [daySlots, availableOnly]);
+  }, [daySlots, focusFilter, availableOnly, now]);
 
   const filteredSlots = useMemo(
     () =>
       daySlots.filter((slot) =>
-        slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly),
+        slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly, now),
       ),
-    [daySlots, apparatusFilter, focusFilter, availableOnly],
+    [daySlots, apparatusFilter, focusFilter, availableOnly, now],
   );
 
   const nextMatchingClassDate = useMemo(() => {
@@ -405,7 +491,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         slots.some(
           (slot) =>
             slot.occurrenceStatus === 'scheduled' &&
-            slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly),
+            slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly, now),
         )
       ) {
         return date;
@@ -414,6 +500,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     return null;
   }, [
     filteredSlots.length,
+    now,
     selectedDate,
     todayIso,
     schedule,
@@ -460,12 +547,6 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 
   const activeStepIndex: 1 | 2 | 3 = pendingAction ? 3 : hasInteractedSchedule ? 2 : 1;
 
-  const updatePortalState = (next: PersistedMemberBookingState) => {
-    livePortalRef.current = next;
-    setPortalState(next);
-    writePersistedMemberBookingState(next);
-  };
-
   const closePendingDialog = () => {
     if (confirmLockRef.current) return;
     setPendingAction(null);
@@ -510,23 +591,6 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     };
   };
 
-  const findSameTimeConflict = (
-    targetSlot: MemberBookableSlot,
-    decisionsMap: PersistedMemberBookingState['slotDecisions'],
-  ): PersistedMemberSlotDecision | null => {
-    for (const [otherId, dec] of Object.entries(decisionsMap)) {
-      if (
-        otherId !== targetSlot.id &&
-        dec.state === 'BOOKED' &&
-        dec.slotDate === targetSlot.date &&
-        dec.slotTime === targetSlot.startTime
-      ) {
-        return dec;
-      }
-    }
-    return null;
-  };
-
   const handleSlotActionClick = (slot: MemberBookableSlot, preferredSpotId?: string) => {
     if (confirmLockRef.current) return;
     setHasInteractedSchedule(true);
@@ -548,8 +612,13 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       mySpotId: latestDecision?.spotId,
       myWaitlistOrder: latestDecision?.waitlistOrder,
     };
-    const intent = resolveMemberActionIntent(latestSlot, todayIso);
-    if (!intent) return;
+    const current = new Date();
+    const intent = resolveMemberActionIntent(latestSlot, current);
+    if (!intent) {
+      setNow(current);
+      setErrorAlert('이 수업의 접수가 종료되었습니다. 시간표에서 다른 수업을 선택해 주세요.');
+      return;
+    }
 
     if (intent === 'BOOK' || intent === 'WAITLIST') {
       if (currentPortal.pass.expiresAtIso < latestSlot.date) {
@@ -564,10 +633,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         );
         return;
       }
-      const sameTimeBooked = findSameTimeConflict(latestSlot, currentPortal.slotDecisions);
-      if (sameTimeBooked) {
+      const timeConflict = findBookingTimeConflict(latestSlot, daySlots, currentPortal.slotDecisions);
+      if (timeConflict) {
         setErrorAlert(
-          `같은 시각(${latestSlot.date} ${formatScheduleTime(latestSlot.startTime)})에 이미 예약한 수업('${sameTimeBooked.slotTitle ?? '기존 수업'}')이 있습니다. 기존 예약을 먼저 취소한 뒤 신청해 주세요.`,
+          `선택한 시간대(${formatScheduleTime(latestSlot.startTime)} – ${formatScheduleTime(latestSlot.endTime)})에 이미 예약한 수업('${timeConflict.slotTitle ?? '기존 수업'}')이 있습니다. 기존 예약을 먼저 취소한 뒤 신청해 주세요.`,
         );
         return;
       }
@@ -616,7 +685,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       myWaitlistOrder: latestDecision.waitlistOrder,
     };
 
-    if (latestSlot.date < todayIso || latestSlot.occurrenceStatus !== 'scheduled') {
+    if (memberSlotHasStarted(latestSlot, new Date()) || latestSlot.occurrenceStatus !== 'scheduled') {
       setErrorAlert('이미 종료되었거나 일정이 변경된 수업은 자리를 변경할 수 없습니다.');
       return;
     }
@@ -644,204 +713,252 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     return isSlotPastFreeCancelDeadline(pendingAction.slot, decision?.updatedAt);
   }, [pendingAction, portalState.slotDecisions]);
 
-  const confirmPendingAction = () => {
-    if (
-      !pendingAction ||
-      confirmLockRef.current ||
-      consumedDialogSeqRef.current === pendingAction.dialogSeq ||
-      isOfflineReadOnly
-    ) {
+  const commitPendingAction = (
+    { slot, intent, dialogSeq }: MemberDialogAction,
+    expectedPortal: PersistedMemberBookingState,
+  ) => {
+    const current = new Date();
+    const currentPortal = readPersistedMemberBookingState(localScheduleDate(current));
+    if (JSON.stringify(currentPortal) !== JSON.stringify(expectedPortal)) {
+      livePortalRef.current = currentPortal;
+      setPortalState(currentPortal);
+      setPendingAction(null);
+      setErrorAlert('예약 내역이 변경되었습니다. 최신 수강권 횟수를 확인하고 다시 선택해 주세요.');
       return;
     }
-
-    const currentPortal = livePortalRef.current;
     const activeSpotId = selectedSpotIdRef.current;
-    const { slot, intent, dialogSeq } = pendingAction;
     const existingDecision = currentPortal.slotDecisions[slot.id];
-    const lateCancel =
-      intent === 'CANCEL_BOOKING' &&
-      isSlotPastFreeCancelDeadline(slot, existingDecision?.updatedAt);
+    const nowIso = new Date().toISOString();
+    const nextDecisions = { ...currentPortal.slotDecisions };
+    let nextRemaining = currentPortal.pass.remainingCount;
+    let message = '';
 
+    // storage 이벤트가 아직 도착하지 않았더라도 확정하는 순간의 강사 시간표로 판정한다.
+    const currentSchedule = readMemberInstructorSchedule();
+    if (!currentSchedule) {
+      setPendingAction(null);
+      setErrorAlert('최신 시간표를 읽을 수 없어 예약 변경을 멈췄습니다. 작업실과 저장 권한을 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    setSchedule(currentSchedule);
+    const latest = usePilatesStore.getState();
+    const currentDay = buildMemberSlotsForDate({
+      selectedDate: slot.date,
+      schedule: currentSchedule,
+      savedSequences: latest.savedSequences,
+      decisions: currentPortal.slotDecisions,
+      exercises: latest.exercises,
+      datedAssignments: latest.datedSequencePlanning?.assignments ?? [],
+    }).slots;
+    const currentSlot = currentDay.find((item) => item.id === slot.id);
+    const isCancellation = intent === 'CANCEL_BOOKING' || intent === 'CANCEL_WAITLIST';
+    const scheduleChanged = currentSlot
+      ? currentSlot.startTime !== slot.startTime ||
+        currentSlot.endTime !== slot.endTime ||
+        currentSlot.locationAlias !== slot.locationAlias ||
+        currentSlot.apparatus !== slot.apparatus ||
+        currentSlot.title !== slot.title
+      : !isCancellation;
+    if (scheduleChanged) {
+      setErrorAlert('시간표가 변경되었습니다. 최신 수업 일정을 확인하고 다시 선택해 주세요.');
+      setPendingAction(null);
+      return;
+    }
+    // 삭제된 회차에 남은 예약·대기는 정리할 수 있고 회원에게 위약 차감을 적용하지 않는다.
+    const liveSlot = currentSlot ?? { ...slot, occurrenceStatus: 'cancelled' as const };
+    const lateCancel = intent === 'CANCEL_BOOKING' &&
+      isSlotPastFreeCancelDeadline(liveSlot, existingDecision?.updatedAt);
     if (lateCancel && !lateCancelAgreed) {
+      setPendingAction({ slot: liveSlot, intent, dialogSeq });
       return;
     }
-    if (intent === 'CHANGE_SPOT' && existingDecision?.spotId === activeSpotId) {
-      return;
-    }
 
-    confirmLockRef.current = true;
-    consumedDialogSeqRef.current = dialogSeq;
+    if (intent === 'CHANGE_SPOT') {
+      if (!existingDecision || existingDecision.state !== 'BOOKED') {
+        setPendingAction(null);
+        return;
+      }
+      if (memberSlotHasStarted(liveSlot, current) || liveSlot.occurrenceStatus !== 'scheduled') {
+        setErrorAlert('수업 상태가 변경되어 기구 자리를 변경하지 못했습니다.');
+        setPendingAction(null);
+        return;
+      }
+      const chosenSpot = computeStudioSpotStates(liveSlot).find(
+        (item) => item.spotId === activeSpotId,
+      );
+      if (!chosenSpot || chosenSpot.occupiedByOther || activeSpotId === existingDecision.spotId) {
+        setErrorAlert('선택한 기구 자리가 방금 마감되었습니다. 다른 빈 자리를 선택해 주세요.');
+        setPendingAction(null);
+        return;
+      }
+      const prevSpotId = existingDecision.spotId ?? '기존';
+      const spotMeta = findSpotMetaById(liveSlot.apparatus, activeSpotId);
+      const apparatusNameKo = getApparatusSpotLabelKo(liveSlot.apparatus);
+      const nextSpotDesc = spotMeta ? `${spotMeta.spotId}(${spotMeta.zoneKo})` : activeSpotId;
+      nextDecisions[slot.id] = {
+        ...existingDecision,
+        spotId: activeSpotId,
+      };
+      message = `'${slot.title}' 기구 자리를 ${apparatusNameKo} ${prevSpotId}번 → ${nextSpotDesc}번으로 변경했습니다. (추가 차감 없음 · 남은 수강권 ${nextRemaining}회)`;
+    } else {
+      if (resolveMemberActionIntent(liveSlot, current) !== intent) {
+        setErrorAlert(
+          '수업 상태가 변경되었습니다. 최신 예약 가능 상태를 확인한 뒤 다시 시도해 주세요.',
+        );
+        setPendingAction(null);
+        return;
+      }
 
-    try {
-      const nowIso = new Date().toISOString();
-      const nextDecisions = { ...currentPortal.slotDecisions };
-      let nextRemaining = currentPortal.pass.remainingCount;
-      let message = '';
+      if ((intent === 'BOOK' || intent === 'WAITLIST') && currentPortal.pass.expiresAtIso < liveSlot.date) {
+        setErrorAlert('수강권 유효기간이 지나 신청할 수 없습니다.');
+        setPendingAction(null);
+        return;
+      }
 
-      const liveSlot =
-        buildMemberSlotsForDate({
-          selectedDate: slot.date,
-          schedule,
-          savedSequences,
-          decisions: currentPortal.slotDecisions,
-          exercises,
-          datedAssignments: datedSequencePlanning?.assignments ?? [],
-        }).slots.find((item) => item.id === slot.id) ?? slot;
-
-      if (intent === 'CHANGE_SPOT') {
-        if (!existingDecision || existingDecision.state !== 'BOOKED') {
+      if (intent === 'BOOK') {
+        if (existingDecision?.state === 'BOOKED') {
           setPendingAction(null);
           return;
         }
-        if (liveSlot.date < todayIso || liveSlot.occurrenceStatus !== 'scheduled') {
-          setErrorAlert('수업 상태가 변경되어 기구 자리를 변경하지 못했습니다.');
+        if (nextRemaining <= 0) {
+          setErrorAlert('남은 수강권 횟수가 부족해 예약을 확정하지 못했습니다.');
+          setPendingAction(null);
+          return;
+        }
+        if (findBookingTimeConflict(liveSlot, currentDay, currentPortal.slotDecisions)) {
+          setErrorAlert('예약된 다른 수업과 시간이 겹쳐 중복 예약을 차단했습니다.');
           setPendingAction(null);
           return;
         }
         const chosenSpot = computeStudioSpotStates(liveSlot).find(
           (item) => item.spotId === activeSpotId,
         );
-        if (!chosenSpot || chosenSpot.occupiedByOther || activeSpotId === existingDecision.spotId) {
-          setErrorAlert('선택한 기구 자리가 방금 마감되었습니다. 다른 빈 자리를 선택해 주세요.');
+        if (!chosenSpot || chosenSpot.occupiedByOther) {
+          setErrorAlert('선택한 기구 자리가 이미 마감되었습니다. 다른 자리를 선택해 주세요.');
           setPendingAction(null);
           return;
         }
-        const prevSpotId = existingDecision.spotId ?? '기존';
         const spotMeta = findSpotMetaById(liveSlot.apparatus, activeSpotId);
-        const apparatusNameKo = getApparatusSpotLabelKo(liveSlot.apparatus);
-        const nextSpotDesc = spotMeta ? `${spotMeta.spotId}(${spotMeta.zoneKo})` : activeSpotId;
+        const apparatusNameKo = getApparatusSpotLabelKo(slot.apparatus);
+        const spotDesc = spotMeta
+          ? `${apparatusNameKo} ${spotMeta.spotId}(${spotMeta.zoneKo})`
+          : `${apparatusNameKo} ${activeSpotId}`;
+        nextRemaining -= 1;
         nextDecisions[slot.id] = {
-          ...existingDecision,
+          state: 'BOOKED',
           spotId: activeSpotId,
+          slotTitle: slot.title,
+          slotDate: slot.date,
+          slotTime: slot.startTime,
+          updatedAt: nowIso,
         };
-        message = `'${slot.title}' 기구 자리를 ${apparatusNameKo} ${prevSpotId}번 → ${nextSpotDesc}번으로 변경했습니다. (추가 차감 없음 · 남은 수강권 ${nextRemaining}회)`;
-      } else {
-        if (resolveMemberActionIntent(liveSlot, todayIso) !== intent) {
-          setErrorAlert(
-            '수업 상태가 변경되었습니다. 최신 예약 가능 상태를 확인한 뒤 다시 시도해 주세요.',
-          );
+        message = `'${slot.title}' (${formatScheduleTime(slot.startTime)} · ${spotDesc}) 예약이 확정되었습니다. 남은 수강권 ${nextRemaining}회`;
+      } else if (intent === 'WAITLIST') {
+        if (existingDecision?.state === 'WAITLISTED') {
           setPendingAction(null);
           return;
         }
-
-        if (intent === 'BOOK') {
-          if (existingDecision?.state === 'BOOKED') {
-            setPendingAction(null);
-            return;
-          }
-          if (liveSlot.date < todayIso || currentPortal.pass.expiresAtIso < liveSlot.date) {
-            setErrorAlert('예약 가능한 수업일 또는 수강권 유효기간 범위를 벗어났습니다.');
-            setPendingAction(null);
-            return;
-          }
-          if (nextRemaining <= 0) {
-            setErrorAlert('남은 수강권 횟수가 부족해 예약을 확정하지 못했습니다.');
-            setPendingAction(null);
-            return;
-          }
-          if (findSameTimeConflict(liveSlot, currentPortal.slotDecisions)) {
-            setErrorAlert('같은 시각에 이미 예약된 다른 수업이 있어 중복 예약을 차단했습니다.');
-            setPendingAction(null);
-            return;
-          }
-          const chosenSpot = computeStudioSpotStates(liveSlot).find(
-            (item) => item.spotId === activeSpotId,
-          );
-          if (!chosenSpot || chosenSpot.occupiedByOther) {
-            setErrorAlert('선택한 기구 자리가 이미 마감되었습니다. 다른 자리를 선택해 주세요.');
-            setPendingAction(null);
-            return;
-          }
-          const spotMeta = findSpotMetaById(liveSlot.apparatus, activeSpotId);
-          const apparatusNameKo = getApparatusSpotLabelKo(slot.apparatus);
-          const spotDesc = spotMeta
-            ? `${apparatusNameKo} ${spotMeta.spotId}(${spotMeta.zoneKo})`
-            : `${apparatusNameKo} ${activeSpotId}`;
-          nextRemaining -= 1;
-          nextDecisions[slot.id] = {
-            state: 'BOOKED',
-            spotId: activeSpotId,
-            slotTitle: slot.title,
-            slotDate: slot.date,
-            slotTime: slot.startTime,
-            updatedAt: nowIso,
-          };
-          message = `'${slot.title}' (${formatScheduleTime(slot.startTime)} · ${spotDesc}) 예약이 확정되었습니다. 남은 수강권 ${nextRemaining}회`;
-        } else if (intent === 'WAITLIST') {
-          if (existingDecision?.state === 'WAITLISTED') {
-            setPendingAction(null);
-            return;
-          }
-          if (nextRemaining <= 0) {
-            setErrorAlert('남은 수강권 횟수가 0회여서 대기 신청을 확정하지 못했습니다.');
-            setPendingAction(null);
-            return;
-          }
-          if (findSameTimeConflict(liveSlot, currentPortal.slotDecisions)) {
-            setErrorAlert('같은 시각에 이미 예약된 다른 수업이 있어 대기 신청을 차단했습니다.');
-            setPendingAction(null);
-            return;
-          }
-          const waitlistOrder = slot.baseWaitlist + 1;
-          nextDecisions[slot.id] = {
-            state: 'WAITLISTED',
-            slotTitle: slot.title,
-            slotDate: slot.date,
-            slotTime: slot.startTime,
-            waitlistOrder,
-            updatedAt: nowIso,
-          };
-          message = `'${slot.title}' 대기 ${waitlistOrder}번으로 접수했습니다. 빈자리가 나면 순번대로 안내됩니다.`;
-        } else if (intent === 'CANCEL_BOOKING') {
-          if (!existingDecision || existingDecision.state !== 'BOOKED') {
-            setPendingAction(null);
-            return;
-          }
-          delete nextDecisions[slot.id];
-          if (lateCancel) {
-            message = `'${slot.title}' 예약을 취소했습니다. 무료 취소 기한(${slot.freeCancelHoursBefore}시간 전) 경과로 수강권 횟수는 복원되지 않습니다 (남은 수강권 ${nextRemaining}회).`;
-          } else {
-            nextRemaining = Math.min(currentPortal.pass.totalCount, nextRemaining + 1);
-            message = `'${slot.title}' 예약을 취소하고 수강권 1회를 복원했습니다. 남은 수강권 ${nextRemaining}회`;
-          }
-        } else if (intent === 'CANCEL_WAITLIST') {
-          if (!existingDecision || existingDecision.state !== 'WAITLISTED') {
-            setPendingAction(null);
-            return;
-          }
-          delete nextDecisions[slot.id];
-          message = `'${slot.title}' 대기 신청을 취소했습니다.`;
+        if (nextRemaining <= 0) {
+          setErrorAlert('남은 수강권 횟수가 0회여서 대기 신청을 확정하지 못했습니다.');
+          setPendingAction(null);
+          return;
         }
+        if (findBookingTimeConflict(liveSlot, currentDay, currentPortal.slotDecisions)) {
+          setErrorAlert('예약된 다른 수업과 시간이 겹쳐 대기 신청을 차단했습니다.');
+          setPendingAction(null);
+          return;
+        }
+        const waitlistOrder = liveSlot.baseWaitlist + 1;
+        nextDecisions[slot.id] = {
+          state: 'WAITLISTED',
+          slotTitle: slot.title,
+          slotDate: slot.date,
+          slotTime: slot.startTime,
+          waitlistOrder,
+          updatedAt: nowIso,
+        };
+        message = `'${slot.title}' 대기 ${waitlistOrder}번을 이 기기에 기록했습니다. 수강권은 ${nextRemaining}회 남았습니다.`;
+      } else if (intent === 'CANCEL_BOOKING') {
+        if (!existingDecision || existingDecision.state !== 'BOOKED') {
+          setPendingAction(null);
+          return;
+        }
+        delete nextDecisions[slot.id];
+        if (lateCancel) {
+          message = `'${slot.title}' 예약을 취소했습니다. 무료 취소 기한(${slot.freeCancelHoursBefore}시간 전) 경과로 수강권 횟수는 복원되지 않습니다 (남은 수강권 ${nextRemaining}회).`;
+        } else {
+          nextRemaining = Math.min(currentPortal.pass.totalCount, nextRemaining + 1);
+          message = `'${slot.title}' 예약을 취소하고 수강권 1회를 복원했습니다. 남은 수강권 ${nextRemaining}회`;
+        }
+      } else if (intent === 'CANCEL_WAITLIST') {
+        if (!existingDecision || existingDecision.state !== 'WAITLISTED') {
+          setPendingAction(null);
+          return;
+        }
+        delete nextDecisions[slot.id];
+        message = `'${slot.title}' 대기 신청을 취소했습니다.`;
       }
+    }
 
-      const nextPendingReserved = Object.values(nextDecisions).filter(
-        (item) => item?.state === 'BOOKED',
-      ).length;
+    const nextPendingReserved = Object.values(nextDecisions).filter(
+      (item) => item?.state === 'BOOKED',
+    ).length;
 
-      updatePortalState({
-        pass: {
-          ...currentPortal.pass,
-          remainingCount: nextRemaining,
-          pendingReservedCount: nextPendingReserved,
+    const next = {
+      pass: {
+        ...currentPortal.pass,
+        remainingCount: nextRemaining,
+        pendingReservedCount: nextPendingReserved,
+      },
+      slotDecisions: nextDecisions,
+    };
+    if (!writePersistedMemberBookingState(next)) {
+      setErrorAlert('예약 변경을 이 기기에 저장하지 못했습니다. 브라우저 저장 공간과 권한을 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    consumedDialogSeqRef.current = dialogSeq;
+    livePortalRef.current = next;
+    setPortalState(next);
+    setPendingAction(null);
+    setLateCancelAgreed(false);
+    setErrorAlert(null);
+    setFeedbackBanner(message);
+    if (intent === 'BOOK' || intent === 'CHANGE_SPOT') {
+      updateCompanionState({
+        ...companionState,
+        preferredSpotByApparatus: {
+          ...companionState.preferredSpotByApparatus,
+          [slot.apparatus]: activeSpotId,
         },
-        slotDecisions: nextDecisions,
       });
-      setPendingAction(null);
-      setLateCancelAgreed(false);
-      setErrorAlert(null);
-      setFeedbackBanner(message);
-      if (intent === 'BOOK' || intent === 'CHANGE_SPOT') {
-        updateCompanionState({
-          ...companionState,
-          preferredSpotByApparatus: {
-            ...companionState.preferredSpotByApparatus,
-            [slot.apparatus]: activeSpotId,
-          },
+    }
+    if (intent === 'BOOK') {
+      burstFrom(document.getElementById('member-wallet-section'));
+    }
+  };
+
+  const confirmPendingAction = async () => {
+    if (
+      !pendingAction ||
+      confirmLockRef.current ||
+      consumedDialogSeqRef.current === pendingAction.dialogSeq ||
+      isOfflineReadOnly
+    ) return;
+
+    const expectedPortal = livePortalRef.current;
+    confirmLockRef.current = true;
+    setErrorAlert(null);
+    try {
+      if (navigator.locks) {
+        await navigator.locks.request(MEMBER_BOOKING_STORAGE_KEY, { ifAvailable: true }, (lock) => {
+          if (lock) commitPendingAction(pendingAction, expectedPortal);
+          else setErrorAlert('다른 탭에서 예약을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.');
         });
+      } else {
+        commitPendingAction(pendingAction, expectedPortal);
       }
-      if (intent === 'BOOK') {
-        burstFrom(document.getElementById('member-wallet-section'));
-      }
+    } catch {
+      setErrorAlert('이 기기의 예약 저장소를 열지 못했습니다. 브라우저 저장 권한을 확인하고 다시 시도해 주세요.');
     } finally {
       confirmLockRef.current = false;
     }
@@ -1142,9 +1259,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               info.state === 'BOOKED' && info.spotId
                 ? findSpotMetaById(resolvedSlot.apparatus, info.spotId)
                 : undefined;
-            const isUpcomingActionable = resolvedSlot.date >= todayIso;
+            const canCancel = resolveMemberActionIntent(resolvedSlot, now) !== null;
+            const scheduleChanged = resolvedSlot.occurrenceStatus !== 'scheduled';
             const canChangeBookedSpot =
-              isUpcomingActionable &&
+              !memberSlotHasStarted(resolvedSlot, now) &&
               info.state === 'BOOKED' &&
               resolvedSlot.occurrenceStatus === 'scheduled' &&
               computeStudioSpotStates(resolvedSlot).some(
@@ -1176,6 +1294,11 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         : ''}
                       {info.state === 'WAITLISTED' ? ` · 대기 ${info.waitlistOrder ?? 1}번` : ''}
                     </span>
+                    {scheduleChanged && (
+                      <span className="pf-member-my-booking-submeta">
+                        {statusPillMeta(resolvedSlot, deriveMemberSlotStatus(resolvedSlot), now).label}
+                      </span>
+                    )}
                     <div className="pf-member-primary-meta">
                       <span>{getApparatusSpotLabelKo(resolvedSlot.apparatus)}</span>
                       <span aria-hidden="true">·</span>
@@ -1222,7 +1345,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       <ArrowLeftRight size={16} strokeWidth={1.5} aria-hidden="true" /> 자리 변경
                     </button>
                   )}
-                  {info.state === 'BOOKED' && info.slotDate === todayIso && (
+                  {info.state === 'BOOKED' && !scheduleChanged && info.slotDate === todayIso && (
                     <button
                       type="button"
                       className="pf-member-chip"
@@ -1253,16 +1376,18 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         : '스튜디오 셀프 체크인'}
                     </button>
                   )}
-                  {isUpcomingActionable && (
+                  {canCancel && (
                     <button
                       type="button"
                       className="pf-member-chip"
                       data-testid={`my-booking-cancel-${slotId}`}
                       disabled={isOfflineReadOnly}
-                      aria-label={`${titleText} 내 예약에서 바로 취소`}
+                      aria-label={scheduleChanged && info.state === 'BOOKED'
+                        ? `${titleText} 예약 취소 · 1회 복원`
+                        : `${titleText} 내 예약에서 바로 취소`}
                       onClick={() => handleSlotActionClick(resolvedSlot)}
                     >
-                      {info.state === 'WAITLISTED' ? '대기 취소' : '바로 취소'}
+                      {info.state === 'WAITLISTED' ? '대기 취소' : scheduleChanged ? '예약 취소 · 1회 복원' : '바로 취소'}
                     </button>
                   )}
                 </div>
@@ -1337,7 +1462,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </section>
       ) : null)}
 
-      {errorAlert && (
+      {errorAlert && !pendingAction && (
         <p className="status error" role="alert" data-testid="member-booking-error">
           {errorAlert}
         </p>
@@ -1545,9 +1670,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         ) : (
           filteredSlots.map((slot) => {
             const status = deriveMemberSlotStatus(slot);
-            const pill = statusPillMeta(slot, status, todayIso);
-            const intent = resolveMemberActionIntent(slot, todayIso);
-            const ctaLabel = ctaButtonLabel(slot, intent, todayIso);
+            const pill = statusPillMeta(slot, status, now);
+            const intent = resolveMemberActionIntent(slot, now);
+            const ctaLabel = ctaButtonLabel(slot, intent, now);
             const effectiveEnrolled = slot.baseEnrolled + (slot.myState === 'BOOKED' ? 1 : 0);
             const effectiveWaitlist = slot.baseWaitlist + (slot.myState === 'WAITLISTED' ? 1 : 0);
             const isCancelAction = intent === 'CANCEL_BOOKING' || intent === 'CANCEL_WAITLIST';
@@ -1562,7 +1687,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             const openSpots = slotSpotStates.filter((s) => !s.occupiedByOther);
             const canChangeThisSlotSpot =
               slot.myState === 'BOOKED' &&
-              slot.date >= todayIso &&
+              !memberSlotHasStarted(slot, now) &&
               slot.occurrenceStatus === 'scheduled' &&
               openSpots.some((s) => s.spotId !== slot.mySpotId);
 
@@ -2016,21 +2141,14 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             {pendingAction.intent === 'WAITLIST' && (
               <div className="pf-member-dialog-summary">
                 정원이 모두 차 대기 순번(<strong>{pendingAction.slot.baseWaitlist + 1}번</strong>
-                )으로 접수합니다. 대기 신청만으로는 횟수가 차감되지 않으며, 결원 발생 시 수업 시작
-                2시간 전까지 순번대로 안내해 드립니다.
+                )을 이 기기에 기록합니다. 수강권 횟수는 그대로 유지됩니다.
               </div>
             )}
             {pendingAction.intent === 'CANCEL_BOOKING' && !isPendingLateCancel && (
               <div className="pf-member-dialog-summary">
-                무료 취소 마감(
-                <strong>
-                  {pendingFreeCancelDeadlineKo
-                    ? `${pendingFreeCancelDeadlineKo} · 수업 ${pendingAction.slot.freeCancelHoursBefore}시간 전`
-                    : `수업 ${pendingAction.slot.freeCancelHoursBefore}시간 전`}
-                </strong>
-                ) 이전 취소이므로 차감된 수강권 <strong>1회</strong>가 즉시 복원됩니다 (현재{' '}
+                지금 취소하면 예약에 사용한 수강권 <strong>1회</strong>를 복원합니다 (현재{' '}
                 <strong>{portalState.pass.remainingCount}회</strong> → 취소 후{' '}
-                <strong>{portalState.pass.remainingCount + 1}회</strong>).
+                <strong>{Math.min(portalState.pass.totalCount, portalState.pass.remainingCount + 1)}회</strong>).
               </div>
             )}
             {pendingAction.intent === 'CANCEL_BOOKING' && isPendingLateCancel && (
@@ -2080,6 +2198,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               </div>
             )}
 
+            {isOfflineReadOnly && (
+              <p className="status" role="status">연결이 끊겼습니다. 다시 연결되면 선택한 내용으로 확정할 수 있어요.</p>
+            )}
+            {errorAlert && <p className="status error" role="alert">{errorAlert}</p>}
             <div className="pf-member-dialog-actions">
               <button type="button" className="pf-member-chip" onClick={closePendingDialog}>
                 닫기
@@ -2089,7 +2211,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                 className="pf-member-slot-cta"
                 data-testid="confirm-member-booking-btn"
                 disabled={
-                  (isPendingLateCancel && !lateCancelAgreed) ||
+                  isOfflineReadOnly || (isPendingLateCancel && !lateCancelAgreed) ||
                   (pendingAction.intent === 'CHANGE_SPOT' &&
                     selectedSpotId === pendingAction.slot.mySpotId)
                 }

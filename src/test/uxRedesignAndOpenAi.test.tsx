@@ -64,7 +64,10 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(onSelectStep).toHaveBeenCalledWith('history');
   });
 
-  it('supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore', async () => {
+  it('supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore', async (context) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 26, 8));
+    context.onTestFinished(() => { vi.useRealTimers(); });
     const todayIso = localScheduleDate();
 
     // 1. Verify 4-person class spot bounds, moved status blocking, and cancelled booking credit recovery

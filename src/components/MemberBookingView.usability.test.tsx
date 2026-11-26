@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { addScheduleDays, localScheduleDate } from '../utils/instructorSchedule';
 import {
@@ -14,6 +14,8 @@ describe('MemberBookingView usability improvements (discovery, quick-spot, chang
   const initialSchedule = structuredClone(usePilatesStore.getState().instructorSchedule);
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 26, 8));
     window.localStorage.removeItem(MEMBER_BOOKING_STORAGE_KEY);
     usePilatesStore.setState({
       instructorSchedule: {
@@ -26,6 +28,7 @@ describe('MemberBookingView usability improvements (discovery, quick-spot, chang
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     window.localStorage.removeItem(MEMBER_BOOKING_STORAGE_KEY);
     usePilatesStore.setState({
       instructorSchedule: structuredClone(initialSchedule),

@@ -679,7 +679,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     schedRender.unmount();
 
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-11-12T08:00:00.000Z'));
+    vi.setSystemTime(new Date(2026, 10, 12, 8));
 
     const memberRender = render(<MemberBookingView />);
     expect(memberRender.container.textContent).not.toContain('비공개 강사 개인 메모');

@@ -196,6 +196,8 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
   });
 
   it('renders MemberBookingView 360 preview drawer on booking confirmation and InstructorScheduleView cleanly', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 26, 8));
     render(<MemberBookingView onSwitchToInstructor={vi.fn()} />);
     const reserveBtns = screen.getAllByRole('button', { name: /예약하기/ });
     const firstEnabled = reserveBtns.find((b) => !b.hasAttribute('disabled')) ?? reserveBtns[0];
