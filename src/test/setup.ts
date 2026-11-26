@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { RECOVERY_STORAGE_KEY, workspaceStorageGuard } from '../lib/recoveryStorageGuard';
 
 // Polyfill HTMLDialogElement methods and PointerEvent for jsdom environment
 if (typeof HTMLDialogElement !== 'undefined') {
@@ -50,6 +51,9 @@ beforeEach(() => {
   // Continuity is tested with remounts inside a test, never inherited from another test.
   // Keep this independent of app imports so per-file store/account mocks stay isolated.
   try {
+    // Each jsdom case starts as a fresh workspace, including its observed disk baseline.
+    window.localStorage.removeItem(RECOVERY_STORAGE_KEY);
+    workspaceStorageGuard.observedWrite(null);
     for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
       const key = window.sessionStorage.key(index);
       if (

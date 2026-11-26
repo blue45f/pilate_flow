@@ -7,6 +7,7 @@ import {
   addScheduleDays,
   expandInstructorSchedule,
   findInstructorScheduleConflicts,
+  findNextPreparingOccurrence,
   formatScheduleTime,
   getSchedulePlanWarnings,
   scheduleWeekStart,
@@ -67,6 +68,31 @@ describe('instructor schedule calendar and exceptions', () => {
     expect(formatScheduleTime('00:05')).toBe('오전 12:05');
     expect(formatScheduleTime('12:00')).toBe('오후 12:00');
     expect(formatScheduleTime('23:59')).toBe('오후 11:59');
+  });
+
+  it('지나간 마지막 수업을 제외하고 휴무·이동 및 먼 단발 수업까지 반영한다', () => {
+    const calendar = data();
+    calendar.classes[0] = { ...item, recurrence: 'once', weekdays: [], untilDate: undefined };
+    const end = new Date(2026, 10, 2, 9, 50);
+    expect(findNextPreparingOccurrence(calendar, end)).toBeUndefined();
+    expect(findNextPreparingOccurrence(calendar, new Date(2026, 10, 2, 9, 49))?.classId).toBe(
+      item.id,
+    );
+    calendar.classes.push({ ...calendar.classes[0], id: 'next', startDate: '2027-01-08' });
+    expect(findNextPreparingOccurrence(calendar, end)?.classId).toBe('next');
+    calendar.exceptions.push({
+      kind: 'reschedule',
+      id: 'move',
+      classId: item.id,
+      originalDate: item.startDate,
+      date: '2026-12-02',
+      startTime: '10:00',
+      endTime: '10:40',
+      reason: '',
+    });
+    expect(findNextPreparingOccurrence(calendar, end)?.date).toBe('2026-12-02');
+    calendar.exceptions.push({ id: 'close', kind: 'closed', date: '2026-12-02', reason: '' });
+    expect(findNextPreparingOccurrence(calendar, end)?.classId).toBe('next');
   });
 
   it('expands only actual weekdays within inclusive recurrence bounds and once only once', () => {

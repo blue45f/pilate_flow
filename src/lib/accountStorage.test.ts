@@ -56,8 +56,50 @@ describe('account-local workspace preservation', () => {
     await Promise.resolve();
     expect(title(localStorage.getItem(s.accountStorageKey('a')))).toBe('still A edits');
     expect(localStorage.getItem(s.accountStorageKey('b'))).toBe(bRaw);
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(bRaw);
     s.syncAccountWorkspace('b');
     expect(s.store.getState().activeTitle).toBe('untouched B');
+  });
+
+  it('같은 계정의 다른 탭이 저장하면 입력과 탭 이동 중에도 수업을 보존하고 최신본을 읽은 뒤 이전 초안을 복원한다', async () => {
+    const s = await load();
+    s.syncAccountWorkspace('a');
+    const state = s.store.getState();
+    state.setActiveSequenceMeta({ title: 'A 초안' });
+    const remoteId = 'new-plan-from-tab-b';
+    const remote = JSON.parse(localStorage.getItem(RECOVERY_STORAGE_KEY)!);
+    remote.state.activeTitle = 'B 초안';
+    remote.state.savedSequences.unshift({
+      ...remote.state.savedSequences[0],
+      id: remoteId,
+      title: 'B 저장 수업',
+    });
+    const external = JSON.stringify(remote);
+    const slot = s.accountStorageKey('a');
+    localStorage.setItem(slot, external);
+    localStorage.setItem(RECOVERY_STORAGE_KEY, external);
+
+    state.setActiveSequenceMeta({ title: 'A가 이어 쓴 초안' });
+    state.setActiveTab('binder');
+    await Promise.resolve();
+    expect(s.store.getState().activeTitle).toBe('A가 이어 쓴 초안');
+    expect(s.store.getState().activeTab).toBe('binder');
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(external);
+    expect(localStorage.getItem(slot)).toBe(external);
+    expect(s.getRecoveryStorageStatus()).toMatchObject({ ok: false, code: 'storage_changed' });
+
+    expect(state.reloadFromExternalTabStorage().success).toBe(true);
+    expect(s.store.getState().activeTitle).toBe('B 초안');
+    expect(s.store.getState().savedSequences.some((plan) => plan.id === remoteId)).toBe(true);
+    expect(s.store.getState().undoStack.at(-1)?.activeTitle).toBe('A가 이어 쓴 초안');
+    state.undoSequence();
+    expect(s.store.getState().activeTitle).toBe('A가 이어 쓴 초안');
+    for (const key of [RECOVERY_STORAGE_KEY, slot]) {
+      const disk = JSON.parse(localStorage.getItem(key)!).state;
+      expect(disk.activeTitle).toBe('A가 이어 쓴 초안');
+      expect(disk.savedSequences.map((plan: { id: string }) => plan.id)).toContain(remoteId);
+    }
+    expect(s.getRecoveryStorageStatus().ok).toBe(true);
   });
 
   it('preserves a differing pre-existing snapshot before switching out a stale tab', async () => {

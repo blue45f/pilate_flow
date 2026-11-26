@@ -221,6 +221,16 @@ export function resolveInitialLaunchTarget(search: string): InitialLaunchTarget 
   return { portalRole: 'instructor', memberSection: 'schedule', instructorTab: null };
 }
 
+function readSharedSequenceFromLocation(): DecodedSharedSequence | 'invalid' | null {
+  if (
+    typeof window === 'undefined' ||
+    !window.location.hash.startsWith(PF_SEQUENCE_SHARE_HASH_PREFIX)
+  ) {
+    return null;
+  }
+  return parseSequenceShareFromHashOrToken(window.location.hash) ?? 'invalid';
+}
+
 /** Runs only when the workspace inside Suspense actually commits, including its first load. */
 function WorkspaceHeadingFocus({ tab, request }: { tab: ActiveWorkspaceTab; request: number }) {
   useEffect(() => {
@@ -379,28 +389,24 @@ export function App() {
   const [portalRole, setPortalRole] = useState<'instructor' | 'member'>(
     initialLaunch.portalRole,
   );
-  const [incomingSharedSequence, setIncomingSharedSequence] =
-    useState<DecodedSharedSequence | null>(() => {
-      if (typeof window === 'undefined') return null;
-      return window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)
-        ? parseSequenceShareFromHashOrToken(window.location.hash)
-        : null;
-    });
+  const [incomingSharedSequence, setIncomingSharedSequence] = useState(
+    readSharedSequenceFromLocation,
+  );
+  const [awaitingShareStageExit, setAwaitingShareStageExit] = useState(false);
   useEffect(() => {
     const handleHashChange = () => {
-      if (!window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)) return;
-      const decoded = parseSequenceShareFromHashOrToken(window.location.hash);
-      if (decoded) {
-        setIncomingSharedSequence(decoded);
-      }
+      setAwaitingShareStageExit(false);
+      setIncomingSharedSequence(readSharedSequenceFromLocation());
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
-  const clearShareHashFromAddressBar = () => {
+  const dismissSharedSequence = () => {
+    setAwaitingShareStageExit(false);
+    setIncomingSharedSequence(null);
     if (
       typeof window !== 'undefined' &&
-      window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)
+      window.location.hash.startsWith(PF_SEQUENCE_SHARE_HASH_PREFIX)
     ) {
       window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     }
@@ -563,6 +569,10 @@ export function App() {
     setLogId(resolvedId);
     setLogContext(context);
   };
+  const cancelStageTransition = () => {
+    pendingStageTransition.current = null;
+    if (awaitingShareStageExit) dismissSharedSequence();
+  };
   const closeLog = () => {
     if (closingLog.current) return;
     closingLog.current = true;
@@ -582,7 +592,7 @@ export function App() {
     setLogId(null);
     setLogContext(undefined);
     if (requested && recorded) completeStageTransition(requested.target);
-    else pendingStageTransition.current = null;
+    else cancelStageTransition();
   };
   const exportData = () => {
     try {
@@ -1166,9 +1176,7 @@ export function App() {
                     key={getActiveWorkspaceOwner() ?? '__anonymous__'}
                     navigationRef={stageNavigationRef}
                     onNavigate={completeStageTransition}
-                    onNavigationCancelled={() => {
-                      pendingStageTransition.current = null;
-                    }}
+                    onNavigationCancelled={cancelStageTransition}
                     onOpenLogModal={openLog}
                   />
                 )}
@@ -1596,16 +1604,31 @@ export function App() {
         onOpenNewIdea={() => setIdeaSheetState({ open: true, exercise: null })}
         canStartLiveStage={canStartLiveStage}
       />
-      {incomingSharedSequence && (
+      {incomingSharedSequence === 'invalid' && (
+        <LightDismissDialog open onClose={dismissSharedSequence} title="공유 수업을 열 수 없습니다">
+          <p>
+            링크가 잘렸거나 이 버전에서 읽을 수 없는 수업안입니다. 보낸 기기에서 공유 링크를 다시 복사해 주세요.
+          </p>
+          <button type="button" className="btn-secondary" onClick={dismissSharedSequence}>
+            확인
+          </button>
+        </LightDismissDialog>
+      )}
+      {incomingSharedSequence && incomingSharedSequence !== 'invalid' && (
         <SequenceQrImportDialog
           sharedSequence={incomingSharedSequence}
-          onDismiss={() => {
-            clearShareHashFromAddressBar();
-            setIncomingSharedSequence(null);
+          onDismiss={dismissSharedSequence}
+          awaitingStageExit={awaitingShareStageExit}
+          onRequestImport={(commit) => {
+            const reviewedHash = window.location.hash;
+            setAwaitingShareStageExit(true);
+            requestWorkspaceTransition('workbench', () => {
+              setAwaitingShareStageExit(false);
+              if (window.location.hash === reviewedHash) commit();
+            }, '공유 수업 불러오기');
           }}
           onImported={() => {
-            clearShareHashFromAddressBar();
-            setIncomingSharedSequence(null);
+            dismissSharedSequence();
             setPortalRole('instructor');
           }}
         />

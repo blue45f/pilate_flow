@@ -2,6 +2,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SequenceStudioWorkbench } from '../components/SequenceStudioWorkbench';
 import { usePilatesStore } from '../store/usePilatesStore';
+import type { InstructorScheduledClass } from '../types/instructorSchedule';
+import { addScheduleDays, localScheduleDate } from '../utils/instructorSchedule';
 import type {
   AutoGenerateCriteria,
   PilatesExercise,
@@ -114,6 +116,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   usePilatesStore.setState(original, true);
   localStorage.clear();
@@ -155,6 +158,115 @@ function openEditor(exercise: PilatesExercise) {
 }
 
 describe('single-canvas sequence studio journeys', () => {
+  function schedulePreparation(overrides: Partial<InstructorScheduledClass> = {}) {
+    usePilatesStore.setState({
+      instructorSchedule: {
+        locations: [
+          { id: 'studio', alias: '매트실', equipmentIds: ['mat'], propIds: [], notes: '' },
+        ],
+        classes: [
+          {
+            id: 'next-class',
+            title: '예약된 매트 수업',
+            participantAlias: '',
+            notes: '',
+            locationId: 'studio',
+            startDate: addScheduleDays(localScheduleDate(), 1),
+            startTime: '09:00',
+            endTime: '09:50',
+            recurrence: 'once',
+            weekdays: [],
+            ...overrides,
+          },
+        ],
+        exceptions: [],
+      },
+    });
+  }
+
+  it('종료 시각이 되면 작성 화면을 그대로 둬도 지난 회차가 사라진다', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    vi.setSystemTime(new Date(2026, 10, 26, 9, 49, 59));
+    schedulePreparation({ startDate: localScheduleDate() });
+    showStudio();
+    expect(screen.getByTestId('flow-next-scheduled-class-card')).toHaveTextContent(
+      '현재 시간대 수업',
+    );
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.queryByTestId('flow-next-scheduled-class-card')).not.toBeInTheDocument();
+  });
+
+  it('미연결 회차는 원본과 다른 초안을 열고 재진입과 되돌리기에서 편집 내용을 지킨다', () => {
+    schedulePreparation();
+    const store = usePilatesStore.getState();
+    store.loadSequenceIntoWorkbench(savedSource.id);
+    store.setActiveSequenceMeta({ title: '저장하기 전 고친 이름' });
+    showStudio();
+    const prepare = () => fireEvent.click(screen.getByTestId('flow-continue-next-class-btn'));
+    prepare();
+    let dialog = within(screen.getByRole('dialog', { name: '다른 회차의 수업을 준비할까요?' }));
+    fireEvent.click(dialog.getByRole('button', { name: '계속 편집' }));
+    expect(usePilatesStore.getState().activeSequenceId).toBe(savedSource.id);
+    prepare();
+    dialog = within(screen.getByRole('dialog', { name: '다른 회차의 수업을 준비할까요?' }));
+    fireEvent.click(dialog.getByRole('button', { name: '회차 준비하기' }));
+    const fresh = usePilatesStore.getState();
+    expect(fresh.activeSequenceId).not.toBe(savedSource.id);
+    expect(fresh.activeSteps).toHaveLength(0);
+    expect(fresh.activeTitle).toBe('예약된 매트 수업');
+    expect(fresh.activeScheduleContext?.draftSequenceId).toBe(fresh.activeSequenceId);
+    expect(fresh.activeTargetGroupId).toBe('');
+    prepare();
+    expect(usePilatesStore.getState().activeSequenceId).toBe(fresh.activeSequenceId);
+    act(() => usePilatesStore.getState().undoSequence());
+    expect(usePilatesStore.getState().activeTitle).toBe('저장하기 전 고친 이름');
+    expect(usePilatesStore.getState().activeSteps).toEqual([savedStep]);
+    expect(usePilatesStore.getState().savedSequences[0]).toEqual(savedSource);
+  });
+
+  it('연결 원본을 찾지 못하면 현재 초안과 회차를 보존하고 실패 이유를 알린다', () => {
+    schedulePreparation({ linkSavedSequenceId: 'removed-plan' });
+    showStudio();
+    const before = usePilatesStore.getState();
+    fireEvent.click(screen.getByTestId('flow-continue-next-class-btn'));
+    const after = usePilatesStore.getState();
+    expect(after.activeSequenceId).toBe(before.activeSequenceId);
+    expect(after.activeTitle).toBe(before.activeTitle);
+    expect(after.activeSteps).toBe(before.activeSteps);
+    expect(after.datedSequencePlanning).toBe(before.datedSequencePlanning);
+    expect(after.generationError).toContain('찾을 수 없습니다');
+  });
+
+  it('연결된 회차를 준비할 때 저장한 원본과 독립된 회차 사본을 연다', () => {
+    schedulePreparation({ linkSavedSequenceId: savedSource.id });
+    showStudio();
+    fireEvent.click(screen.getByTestId('flow-continue-next-class-btn'));
+    const prepared = usePilatesStore.getState();
+    expect(prepared.activeSequenceId).not.toBe(savedSource.id);
+    expect(prepared.activeSteps).toEqual(savedSource.steps);
+    expect(prepared.activeScheduleContext?.classId).toBe('next-class');
+    expect(prepared.datedSequencePlanning?.assignments).toHaveLength(1);
+    act(() => prepared.setActiveSequenceMeta({ title: '회차 사본 편집' }));
+    fireEvent.click(screen.getByTestId('flow-continue-next-class-btn'));
+    expect(usePilatesStore.getState().activeTitle).toBe('회차 사본 편집');
+    expect(usePilatesStore.getState().savedSequences[0]).toEqual(savedSource);
+  });
+
+  it('확인창을 열어 둔 사이 다음 회차가 바뀌면 새 일정을 대신 적용하지 않는다', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    vi.setSystemTime(new Date(2026, 10, 26, 9, 49, 59));
+    schedulePreparation({ startDate: localScheduleDate() });
+    seedReformer();
+    const previous = usePilatesStore.getState();
+    showStudio();
+    fireEvent.click(screen.getByTestId('flow-continue-next-class-btn'));
+    act(() => vi.advanceTimersByTime(1000));
+    fireEvent.click(screen.getByRole('button', { name: '회차 준비하기' }));
+    expect(usePilatesStore.getState().activeSteps).toBe(previous.activeSteps);
+    expect(usePilatesStore.getState().activeSequenceId).toBe(previous.activeSequenceId);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('opens an unsaved nonempty draft without treating the missing addition receipt as a recent step', () => {
     seedReformer([first, second]);
     usePilatesStore.setState({ activeSequenceId: undefined });

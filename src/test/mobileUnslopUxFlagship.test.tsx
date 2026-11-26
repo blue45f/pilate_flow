@@ -199,6 +199,9 @@ describe('Mobile-First Unslop Flagship Instructor UX', () => {
     expect(screen.getByTestId('editorial-apparatus-hero-reformer')).toBeVisible();
     expect(screen.getByTestId('workbench-difficulty-filter-row')).toBeVisible();
     expect(screen.getByTestId('zero-transition-next-strip')).toBeVisible();
+    expect(screen.queryByTestId('mobile-simple-sequence-bar')).toBeNull();
+    const picker = screen.getByRole('complementary', { name: '수업에 추가할 동작' });
+    fireEvent.click(within(picker).getAllByRole('button', { name: / 추가$/ })[0]!);
     expect(screen.getByTestId('mobile-simple-sequence-bar')).toBeInTheDocument();
 
     // One-tap difficulty filter in workbench

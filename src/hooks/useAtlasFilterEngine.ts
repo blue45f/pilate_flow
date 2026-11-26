@@ -174,6 +174,7 @@ export function useAtlasFilterEngine({
   );
 
   const filtered = useMemo(() => {
+    const hasSearch = Boolean(filters.search.trim());
     return exercises.filter((exercise) => {
       const equipmentMeta = getExerciseEquipment(exercise);
       if (
@@ -186,7 +187,7 @@ export function useAtlasFilterEngine({
         })
       )
         return false;
-      const patterns = getMotionPatternReferences(exercise.id);
+      const patterns = hasSearch || filters.motionDraft !== 'all' ? getMotionPatternReferences(exercise.id) : [];
       const hasProposal = patterns.length > 0;
       if (filters.motionDraft === 'proposal' && !hasProposal) return false;
       if (filters.motionDraft === 'none' && hasProposal) return false;
@@ -208,6 +209,7 @@ export function useAtlasFilterEngine({
       if (filters.duration === 'long' && exercise.defaultDurationMin <= 5) return false;
       if (filters.sides === 'unilateral' && !exercise.isUnilateral) return false;
       if (filters.sides === 'bilateral' && exercise.isUnilateral) return false;
+      if (!hasSearch) return true;
       const blockMeta = CANONICAL_BLOCKS.find((item) => item.category === exercise.blockCategory);
       const ideaDraft = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
       const kinesiology = analyzeExerciseKinesiology(exercise);
@@ -227,6 +229,8 @@ export function useAtlasFilterEngine({
         ...equipmentMeta.requiredEquipment.map(equipmentLabel),
         ...equipmentMeta.requiredProps.map(propLabel),
         ...exercise.targetMuscles,
+      ];
+      const detailFields = [
         ...kinesiology.stabilizersKo,
         kinesiology.commonFaultKo,
         kinesiology.correctionCueKo,
@@ -243,7 +247,7 @@ export function useAtlasFilterEngine({
         exercise.sourceReference?.publisher ?? '',
         ...patterns.flatMap((pattern) => [pattern.title, pattern.variant, pattern.context]),
       ];
-      return matchesDiscoverySearch(fields, filters.search);
+      return matchesDiscoverySearch(fields, filters.search, detailFields);
     });
   }, [exercises, filters, exerciseBrowseScope, ownedEquipment, ownedProps, recent]);
 

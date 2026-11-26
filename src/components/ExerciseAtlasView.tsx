@@ -1725,7 +1725,6 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   };
 
   const filteredPrograms = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return CURATED_MULTI_WEEK_PROGRAMS.filter((program) => {
       if (selectedApparatus && !program.apparatus.includes(selectedApparatus.apparatus)) {
         return false;
@@ -1733,16 +1732,11 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
       if (level !== 'all' && program.level !== level) {
         return false;
       }
-      if (!q) return true;
-      const hay = [
-        program.titleKo,
-        program.subtitleKo,
-        ...program.apparatus.map((app) => APPARATUS_LABELS[app].ko),
-        ...program.weeks.map((week) => week.themeKo),
-      ]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(q);
+      return matchesDiscoverySearch(
+        [program.titleKo, ...program.apparatus.map((app) => APPARATUS_LABELS[app].ko)],
+        search,
+        [program.subtitleKo, ...program.weeks.map((week) => week.themeKo)],
+      );
     });
   }, [search, selectedApparatus, level]);
 
@@ -1822,7 +1816,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                   autoComplete="off"
                   value={search}
                   onChange={(event) => onSearch(event.target.value)}
-                  placeholder="동작 이름·부위·바레·소도구 검색"
+                  placeholder="동작 이름·초성·부위·소도구 검색"
                 />
                 {search ? (
                   <button

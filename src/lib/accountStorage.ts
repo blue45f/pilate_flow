@@ -1,4 +1,4 @@
-import { RECOVERY_STORAGE_KEY } from './recoveryStorageGuard';
+import { RECOVERY_STORAGE_KEY, workspaceStorageGuard } from './recoveryStorageGuard';
 import { isSuppressingStorageWrite, usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import { syncMovementIdeaAccountScope } from '../utils/movementIdeaDraft';
@@ -99,13 +99,22 @@ function savePreservingPrevious(key: string, raw: string): void {
 
 // Mirror the actual in-memory state synchronously. Do not reread the shared working-copy key
 // in a later microtask: a different account/tab may already have replaced that key.
-usePilatesStore.subscribe((state) => {
-  if (switching || isSuppressingStorageWrite()) return;
+usePilatesStore.subscribe((state, previous) => {
+  if (switching) return;
   try {
-    localStorage.setItem(ownerKey(tabOwner), serialize(state));
     const liveOwnerRaw = readOwner();
     const liveOwner = liveOwnerRaw === '__anonymous__' ? null : liveOwnerRaw;
-    if (liveOwner !== tabOwner) return;
+    const sameOwner = liveOwner === tabOwner;
+    if (isSuppressingStorageWrite(sameOwner)) return;
+    const slot = ownerKey(tabOwner);
+    if (!sameOwner) {
+      // The active key now belongs to another account. Keep this tab's edit only in its
+      // own slot, provided that slot still contains the snapshot this edit started from.
+      const saved = localStorage.getItem(slot);
+      if (saved !== null && saved !== serialize(previous)) return;
+    }
+    localStorage.setItem(slot, serialize(state));
+    if (!sameOwner) return;
     if (tabOwner === null) localStorage.removeItem(ACTIVE_OWNER_KEY);
     else localStorage.setItem(ACTIVE_OWNER_KEY, tabOwner);
   } catch {
@@ -177,6 +186,7 @@ export function syncAccountWorkspace(nextUserId: string | null): void {
     if (nextOwner === null) localStorage.removeItem(ACTIVE_OWNER_KEY);
     else localStorage.setItem(ACTIVE_OWNER_KEY, nextOwner);
     localStorage.setItem(RECOVERY_STORAGE_KEY, serializedNext);
+    workspaceStorageGuard.observedWrite(serializedNext);
   } catch (cause) {
     if (previousMarker === null) localStorage.removeItem(ACTIVE_OWNER_KEY);
     else localStorage.setItem(ACTIVE_OWNER_KEY, previousMarker);

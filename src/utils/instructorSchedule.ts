@@ -66,6 +66,35 @@ export function scheduledClassOccursOn(item: InstructorScheduledClass, date: str
   );
 }
 
+/** Look across gaps between classes and honour skipped or moved weekly occurrences. */
+export function findNextPreparingOccurrence(
+  data: InstructorScheduleData,
+  now: Date,
+): InstructorScheduleOccurrence | undefined {
+  if (!data.classes.length) return undefined;
+  const today = localScheduleDate(now);
+  const nowMinute = now.getHours() * 60 + now.getMinutes();
+  // A weekly class recurs within seven days of today, its start, or an exception.
+  const anchors = new Set([today, ...data.classes.map((item) => item.startDate)]);
+  for (const exception of data.exceptions) {
+    if (exception.kind !== 'closed') anchors.add(exception.originalDate);
+    if (exception.kind !== 'cancel') anchors.add(exception.date);
+  }
+  let unsearched = today;
+  for (const anchor of [...anchors].filter((date) => date >= today).sort()) {
+    const start = anchor > unsearched ? anchor : unsearched;
+    const weekEnd = addScheduleDays(anchor, 7);
+    const end = weekEnd > '2199-12-31' ? '2199-12-31' : weekEnd;
+    if (start > end) continue;
+    const next = expandInstructorSchedule(data, start, end).find(
+      (row) => row.status === 'scheduled' && (row.date > today || scheduleMinutes(row.endTime) > nowMinute),
+    );
+    if (next) return next;
+    unsearched = addScheduleDays(end, 1);
+  }
+  return undefined;
+}
+
 export function expandInstructorSchedule(
   data: InstructorScheduleData,
   start: string,

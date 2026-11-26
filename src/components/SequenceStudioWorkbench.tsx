@@ -20,6 +20,7 @@ import {
   Bookmark,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronRight,
   Clock3,
   Copy,
@@ -46,6 +47,8 @@ import {
   downloadEmergencyBackupJson,
   getActiveSequencePlanningCriteria,
   getActiveSequenceSaveState,
+  detectSequenceSaveConflict,
+  saveConfirmedSequenceCopy,
   getLastStorageError,
   getPassiveExternalTabConflict,
   isSavedSequencePersistedOnDisk,
@@ -53,8 +56,7 @@ import {
   usePilatesStore,
 } from '../store/usePilatesStore';
 import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
-import { StudioSmartToolsRail } from './StudioSmartToolsRail';
-import { EQUIPMENT_OPTIONS, getEquipmentFamilies, getEquipmentFamily, getExerciseEquipment } from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, getEquipmentFamilies, getExerciseEquipment } from '../data/equipmentCatalog';
 import type {
   ApparatusType,
   AutoGenerateCriteria,
@@ -70,14 +72,13 @@ import type { ClassSectionRole } from '../types/sequenceMotion';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { isImeComposing } from '../utils/imeGuard';
 import {
-  addScheduleDays,
-  expandInstructorSchedule,
+  findNextPreparingOccurrence,
   formatScheduleDate,
   getSchedulePlanWarnings,
   localScheduleDate,
   scheduleMinutes,
 } from '../utils/instructorSchedule';
-import { getDatedPlanKey } from '../utils/datedSequencePlanning';
+import { getDatedPlanWarnings } from '../utils/datedSequencePlanning';
 import {
   buildSafeTransitionOptimization,
   describeStepTransitionFromPrevious,
@@ -88,13 +89,13 @@ import {
   exerciseMatchesCriteria,
   fitSequenceDuration,
   formatSequenceAsStudioSheet,
-  getMovementKey,
+  formatSecondsToMMSS,
   getStepSideLabels,
   getStepTiming,
   isRestStep,
   proposeBlockAlternatives,
 } from '../utils/sequenceEngine';
-import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { applySequenceGapFill, planSequenceGapFill } from '../utils/sequenceGapFill';
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
@@ -122,12 +123,16 @@ import {
 import { summarizeSequenceSpinalAndFlowBalance } from '../utils/pilatesKinesiologyIntelligence';
 import {
   DIFFICULTY_FILTER_OPTIONS,
+  DIFFICULTY_META,
   formatDifficultyMeta,
 } from '../utils/instructorUxHelpers';
 import { getStudioTrackAdapters } from '../utils/studioTrackSlots';
 import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
 import '../styles/sequence-studio.css';
 
+const StudioSmartToolsRail = lazy(() =>
+  import('./StudioSmartToolsRail').then((module) => ({ default: module.StudioSmartToolsRail })),
+);
 const AdvancedWorkbench = lazy(() =>
   import('./SequenceWorkbench').then((m) => ({ default: m.SequenceWorkbench })),
 );
@@ -158,7 +163,6 @@ interface Props {
   ) => void;
 }
 
-const LEVELS = { '1.0': '입문 ★☆☆', '1.5': '중급 ★★☆', '2.0': '심화 ★★★' } as const;
 const SECTIONS: { id: ClassSectionRole; label: string }[] = [
   { id: 'preparation', label: '준비' },
   { id: 'main', label: '메인' },
@@ -782,6 +786,8 @@ export function SequenceStudioWorkbench(props: Props) {
   } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [briefExpanded, setBriefExpanded] = useState(false);
   const [conditionsOpen, setConditionsOpen] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [newClassOpen, setNewClassOpen] = useState(false);
@@ -918,65 +924,7 @@ export function SequenceStudioWorkbench(props: Props) {
         )
       : [];
 
-  // Smart gap-fill candidates, ported from the legacy workbench: at most 2
-  // authoring-eligible motions not already used (by movement key), matching
-  // the apparatus/level/equipment of the current sequence. Only computed
-  // while the sequence is short of its target.
-  const gapFillCandidates: PilatesExercise[] =
-    !s.activeSteps.length || difference <= 0
-      ? []
-      : (() => {
-          const usedKeys = new Set(
-            s.activeSteps.flatMap((step) => {
-              const exercise = !isRestStep(step) ? byId.get(step.exerciseId) : undefined;
-              return exercise ? [getMovementKey(exercise)] : [];
-            }),
-          );
-          const currentStepEquipment = [
-            ...new Set(
-              s.activeSteps.flatMap((step) => {
-                const exercise = byId.get(step.exerciseId);
-                return exercise ? getExerciseEquipment(exercise).requiredEquipment : [];
-              }),
-            ),
-          ];
-          const effectiveEq = currentStepEquipment.length
-            ? currentStepEquipment
-            : (criteria.availableEquipment ??
-              (criteria.apparatus === 'mixed'
-                ? (criteria.ownedApparatus ?? [])
-                : [criteria.apparatus]));
-          const effectiveApparatus: ApparatusType | 'mixed' =
-            effectiveEq.length === 1
-              ? (getEquipmentFamily(effectiveEq[0]) ?? s.activeApparatus)
-              : effectiveEq.length > 1
-                ? 'mixed'
-                : s.activeApparatus;
-          const picked: PilatesExercise[] = [];
-          for (const exercise of s.exercises) {
-            if (picked.length >= 2) break;
-            if (!isExerciseAuthoringEligible(exercise)) continue;
-            const key = getMovementKey(exercise);
-            if (usedKeys.has(key)) continue;
-            if (
-              !exerciseMatchesCriteria(exercise, {
-                ...criteria,
-                apparatus: effectiveApparatus,
-                level: s.activeLevel,
-                ownedApparatus: getEquipmentFamilies(effectiveEq),
-                availableEquipment: effectiveEq,
-                preferredProps: (s.lastCriteria?.preferredProps ?? criteria.preferredProps).filter(
-                  (prop) => prop === 'none' || s.ownedProps.includes(prop),
-                ),
-              })
-            ) {
-              continue;
-            }
-            usedKeys.add(key);
-            picked.push(exercise);
-          }
-          return picked;
-        })();
+  const gapFill = useMemo(() => planSequenceGapFill(s), [s]);
 
   const updateConditions = (patch: Partial<AutoGenerateCriteria>) => {
     const result = usePilatesStore.getState().updateSequencePlanningConditions(patch);
@@ -1006,28 +954,9 @@ export function SequenceStudioWorkbench(props: Props) {
     return result;
   };
 
-  /** Appends the gap-fill candidates at the end, in one undo step. Existing steps are untouched. */
   const applyGapFill = () => {
-    const current = usePilatesStore.getState();
-    const appendedSteps: SequenceStep[] = gapFillCandidates.map((candidate, index) => ({
-      stepId: `gap-fill-${Date.now()}-${index}`,
-      order: current.activeSteps.length + index + 1,
-      exerciseId: candidate.id,
-      blockCategory: candidate.blockCategory,
-      durationMin: candidate.defaultDurationMin,
-      selectedLayer: 'standard',
-      instructorNote: '',
-    }));
-    const message = `추천 동작 ${gapFillCandidates.length}개를 수업표 끝에 추가했어요. 되돌리기로 복구할 수 있습니다.`;
-    usePilatesStore.setState({
-      undoStack: [...current.undoStack.slice(-19), createSequenceSnapshot(current)],
-      redoStack: [],
-      activeSteps: [...current.activeSteps, ...appendedSteps],
-      generationError: null,
-      saveFeedback: message,
-    });
+    setNotice(applySequenceGapFill(s, gapFill));
     setGapFillOpen(false);
-    setNotice(message);
   };
 
   /** Appends a curated golden 10-min combo in one undoable edit without overwriting existing steps. */
@@ -1099,112 +1028,156 @@ export function SequenceStudioWorkbench(props: Props) {
     () => summarizeSequenceSpinalAndFlowBalance(s.activeSteps, byId),
     [s.activeSteps, byId],
   );
-  const nextScheduledContext = useMemo(() => {
-    if (!s.instructorSchedule.classes.length) return null;
-    try {
-      const today = localScheduleDate();
-      const now = new Date();
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      const occurrences = expandInstructorSchedule(
-        s.instructorSchedule,
-        today,
-        addScheduleDays(today, 14),
-      ).filter((row) => row.status === 'scheduled');
-      const upcoming =
-        occurrences.find(
-          (row) => row.date > today || scheduleMinutes(row.endTime) >= nowMin,
-        ) ?? occurrences[0];
-      if (!upcoming) return null;
-      const location = s.instructorSchedule.locations.find(
-        (loc) => loc.id === upcoming.locationId,
-      );
-      const planKey = getDatedPlanKey(upcoming.classId, upcoming.originalDate);
-      const assignment = s.datedSequencePlanning?.assignments.find(
-        (item) => getDatedPlanKey(item.classId, item.originalDate) === planKey,
-      );
-      const warnings = getSchedulePlanWarnings(
-        upcoming,
-        s.instructorSchedule,
-        s.savedSequences,
-        s.exercises,
-      );
-      const slotMinutes = Math.max(
-        10,
-        Math.min(120, scheduleMinutes(upcoming.endTime) - scheduleMinutes(upcoming.startTime)),
-      );
-      return {
-        occurrence: upcoming,
-        location,
-        assignment,
-        warnings,
-        slotMinutes,
-      };
-    } catch {
-      return null;
-    }
-  }, [s.instructorSchedule, s.datedSequencePlanning, s.savedSequences, s.exercises]);
+  const [scheduleMinute, setScheduleMinute] = useState(() => Math.floor(Date.now() / 60_000));
+  const [pendingPreparation, setPendingPreparation] = useState<{
+    occurrenceId: string;
+    title: string;
+    workspace: ReturnType<typeof usePilatesStore.getState>;
+  } | null>(null);
+  const hasSchedule = s.instructorSchedule.classes.length > 0;
+  useEffect(() => {
+    if (!hasSchedule) return;
+    const refresh = () => setScheduleMinute(Math.floor(Date.now() / 60_000));
+    refresh();
+    const timer = window.setTimeout(refresh, 60_000 - (Date.now() % 60_000));
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [hasSchedule, scheduleMinute]);
 
-  const continueNextScheduledClass = () => {
-    if (!nextScheduledContext) return;
-    const { occurrence, location, assignment, slotMinutes } = nextScheduledContext;
+  const nextScheduledContext = useMemo(() => {
+    const now = new Date(scheduleMinute * 60_000);
+    const occurrence = findNextPreparingOccurrence(s.instructorSchedule, now);
+    if (!occurrence) return null;
+    const location = s.instructorSchedule.locations.find((loc) => loc.id === occurrence.locationId);
+    const assignment = s.datedSequencePlanning?.assignments.find(
+      (item) =>
+        item.classId === occurrence.classId && item.originalDate === occurrence.originalDate,
+    );
+    const warnings = assignment
+      ? getDatedPlanWarnings({ assignment, schedule: s.instructorSchedule, exercises: s.exercises })
+      : getSchedulePlanWarnings(occurrence, s.instructorSchedule, s.savedSequences, s.exercises);
+    const slotMinutes = scheduleMinutes(occurrence.endTime) - scheduleMinutes(occurrence.startTime);
+    const inProgress =
+      occurrence.date === localScheduleDate(now) &&
+      scheduleMinutes(occurrence.startTime) <= now.getHours() * 60 + now.getMinutes();
+    return { occurrence, location, assignment, warnings, slotMinutes, inProgress };
+  }, [
+    scheduleMinute,
+    s.instructorSchedule,
+    s.datedSequencePlanning,
+    s.savedSequences,
+    s.exercises,
+  ]);
+
+  const continueNextScheduledClass = (confirmation: typeof pendingPreparation = null) => {
+    setPendingPreparation(null);
     const store = usePilatesStore.getState();
-    if (assignment) {
-      const loaded = store.loadDatedSequencePlanAsDraft(assignment.id);
-      setNotice(loaded.message);
-      setMobilePane('plan');
+    const current = findNextPreparingOccurrence(store.instructorSchedule, new Date());
+    if (
+      s !== store ||
+      !nextScheduledContext ||
+      !current ||
+      current.id !== nextScheduledContext.occurrence.id ||
+      (confirmation &&
+        (confirmation.workspace !== store || confirmation.occurrenceId !== current.id))
+    ) {
+      setScheduleMinute(Math.floor(Date.now() / 60_000));
+      setNotice('수업이나 초안이 변경되었습니다. 최신 일정을 확인해 주세요.');
       return;
     }
-    if (occurrence.linkSavedSequenceId) {
-      const linked = store.savedSequences.find((seq) => seq.id === occurrence.linkSavedSequenceId);
-      if (linked) {
-        const assigned = store.assignSequenceToOccurrence({
-          sequenceId: linked.id,
-          classId: occurrence.classId,
-          originalDate: occurrence.originalDate,
-          state: 'draft',
-        });
-        if (assigned.success && assigned.assignmentId) {
-          const loaded = usePilatesStore
-            .getState()
-            .loadDatedSequencePlanAsDraft(assigned.assignmentId);
-          setNotice(`${occurrence.title} 회차 계획을 불러왔습니다. ${loaded.message}`);
-          setMobilePane('plan');
-          return;
-        }
-        store.loadSequenceIntoWorkbench(linked.id);
-        setNotice(`${occurrence.title} 연결 시퀀스를 불러왔습니다.`);
-        setMobilePane('plan');
+    const { occurrence, location, assignment, slotMinutes } = nextScheduledContext;
+    const opened = store.activeScheduleContext;
+    if (
+      opened &&
+      opened.draftSequenceId === store.activeSequenceId &&
+      opened.classId === occurrence.classId &&
+      opened.originalDate === occurrence.originalDate &&
+      opened.date === occurrence.date &&
+      opened.startTime === occurrence.startTime &&
+      opened.endTime === occurrence.endTime &&
+      opened.locationId === occurrence.locationId
+    ) {
+      setMobilePane('plan');
+      setNotice('이 회차를 준비하고 있습니다. 현재 작성한 초안을 이어서 편집하세요.');
+      return;
+    }
+    if (
+      !confirmation &&
+      saveStatus !== 'saved-local' &&
+      (store.activeSteps.length || store.undoStack.length)
+    ) {
+      setPendingPreparation({ occurrenceId: current.id, title: current.title, workspace: store });
+      return;
+    }
+    let assignmentId = assignment?.id;
+    if (!assignmentId && occurrence.linkSavedSequenceId) {
+      const linked = store.savedSequences.find(
+        (saved) => saved.id === occurrence.linkSavedSequenceId,
+      );
+      if (linked && (linked.targetMinutes < 10 || linked.targetMinutes > 120)) {
+        setNotice(
+          '연결한 수업의 목표 시간이 작성 가능한 범위(10–120분)를 벗어났습니다. 일정에서 계획을 확인해 주세요.',
+        );
         return;
       }
+      const assigned = store.assignSequenceToOccurrence({
+        sequenceId: occurrence.linkSavedSequenceId,
+        classId: occurrence.classId,
+        originalDate: occurrence.originalDate,
+        state: 'draft',
+      });
+      if (!assigned.success || !assigned.assignmentId) {
+        setNotice(assigned.message);
+        return;
+      }
+      assignmentId = assigned.assignmentId;
     }
-    const validEquip = (location?.equipmentIds ?? []).filter((id) =>
-      store.ownedEquipment.includes(id),
-    );
-    const families = [
-      ...new Set(
-        validEquip
-          .map((id) => EQUIPMENT_OPTIONS.find((opt) => opt.id === id)?.apparatusFamily)
-          .filter((v): v is ApparatusType => Boolean(v)),
-      ),
-    ];
-    const nextApparatus: ApparatusType | 'mixed' =
-      families.length === 1 ? families[0]! : families.length > 1 ? 'mixed' : store.activeApparatus;
-    store.setActiveSequenceMeta({
-      title: occurrence.title,
-      targetMinutes: slotMinutes,
+    if (assignmentId) {
+      const loaded = store.loadDatedSequencePlanAsDraft(assignmentId, assignment?.updatedAt);
+      setNotice(loaded.message);
+      if (loaded.success) setMobilePane('plan');
+      return;
+    }
+
+    const availableEquipment = location?.equipmentIds.length
+      ? location.equipmentIds.filter((id) => store.ownedEquipment.includes(id))
+      : store.ownedEquipment;
+    const families = getEquipmentFamilies(availableEquipment);
+    const result = store.startBlankSequence({
+      apparatus: families.length === 1 ? families[0] : 'mixed',
+      availableEquipment,
+      preferredProps: location?.propIds.filter((id) => store.ownedProps.includes(id)) ?? [],
+      targetMinutes: Math.max(10, Math.min(120, slotMinutes)),
+      targetGroupId: '',
+      instructorObservations: [],
+      planningGoals: [],
+      focusPreset: 'full-body',
+      restMinutes: 0,
     });
-    const res = store.updateSequencePlanningConditions({
-      apparatus: nextApparatus,
-      ...(validEquip.length ? { availableEquipment: validEquip } : {}),
-      ...(location?.propIds.length
-        ? { preferredProps: location.propIds.filter((p) => store.ownedProps.includes(p)) }
-        : {}),
-      targetMinutes: slotMinutes,
+    if (!result.success || !result.sequenceId) {
+      setNotice(result.message);
+      return;
+    }
+    // startBlankSequence captures the previous plan for a single undo. Attach the occurrence to that new draft.
+    usePilatesStore.setState({
+      activeTitle: occurrence.title,
+      activeScheduleContext: {
+        draftSequenceId: result.sequenceId,
+        classId: occurrence.classId,
+        originalDate: occurrence.originalDate,
+        date: occurrence.date,
+        startTime: occurrence.startTime,
+        endTime: occurrence.endTime,
+        locationId: occurrence.locationId,
+        locationAlias: location?.alias ?? '',
+        classTitle: occurrence.title,
+      },
     });
     setNotice(
-      res.success
-        ? `다음 수업(${occurrence.title} · ${location?.alias ?? '장소 미지정'}) 시간·기구 조건을 반영했습니다.`
-        : res.message,
+      `‘${occurrence.title}’ 회차의 새 초안을 열었습니다. 되돌리기로 이전 수업을 복원할 수 있어요.`,
     );
     setMobilePane('plan');
   };
@@ -1231,8 +1204,20 @@ export function SequenceStudioWorkbench(props: Props) {
       search?.focus({ preventScroll: true });
     });
   };
-  const save = async () => {
+  const showPlan = () => {
+    setMobilePane('plan');
+    scheduleRaf(() => {
+      planHeadingRef.current?.scrollIntoView?.({ behavior: 'instant', block: 'center' });
+      planHeadingRef.current?.focus({ preventScroll: true });
+    });
+  };
+  const save = async (overwriteExternal = false) => {
     if (savingLockRef.current) return false;
+    const conflict = !overwriteExternal && detectSequenceSaveConflict();
+    if (conflict) {
+      setNotice(conflict.message);
+      return false;
+    }
     const state = usePilatesStore.getState();
     if (!state.activeSteps.some((step) => !isRestStep(step))) {
       setNotice('동작을 추가한 뒤 저장해 주세요.');
@@ -1241,7 +1226,7 @@ export function SequenceStudioWorkbench(props: Props) {
     savingLockRef.current = true;
     setIsSaving(true);
     try {
-      state.saveCurrentSequenceToBinder();
+      state.saveCurrentSequenceToBinder(false, { overwriteExternal });
       await Promise.resolve();
       const next = usePilatesStore.getState();
       if (next.activeSequenceId) {
@@ -1321,7 +1306,6 @@ export function SequenceStudioWorkbench(props: Props) {
           <h1 id="workspace-main-heading" tabIndex={-1}>
             수업 만들기
           </h1>
-          <p>동작을 고르고 나만의 흐름을 완성하세요</p>
           <span className="pf-studio-spring-meter" aria-hidden="true">
             <StudioSpringHorizon ratio={target ? total / target : 0} />
             <em>{target ? `${Math.min(100, Math.round((total / target) * 100))}%` : '0%'}</em>
@@ -1363,6 +1347,16 @@ export function SequenceStudioWorkbench(props: Props) {
               >
                 자동 구성 · 고급 편집
               </button>
+              <button
+                onClick={() => {
+                  const menu = toolsSummaryRef.current?.closest('details');
+                  if (menu) menu.open = false;
+                  toolsSummaryRef.current?.focus();
+                  setToolsOpen(true);
+                }}
+              >
+                강사 도구
+              </button>
               <button onClick={props.onOpenClipper}>영상에서 동작 가져오기</button>
               <button onClick={() => props.onOpenIdeaSheet?.()}>내 동작 만들기</button>
               <button onClick={props.onOpenInventory}>기구 · 소도구 관리</button>
@@ -1379,7 +1373,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       s.reformerBrand,
                     );
                     try {
-                      await navigator.clipboard?.writeText(sheet);
+                      await navigator.clipboard.writeText(sheet);
                       setNotice('티칭 큐시트 텍스트를 클립보드에 복사했습니다.');
                     } catch {
                       setNotice('큐시트 복사에 실패했습니다. 저장한 수업에서 확인해 주세요.');
@@ -1418,20 +1412,23 @@ export function SequenceStudioWorkbench(props: Props) {
             <button
               type="button"
               className="flow-button"
-              disabled={!exerciseCount}
               onClick={() => {
-                usePilatesStore.getState().saveCurrentSequenceToBinder(true);
-                setNotice('현재 초안을 별도 사본으로 저장해 두 탭의 내용을 모두 보존했습니다.');
+                const requested = downloadEmergencyBackupJson();
+                setNotice(
+                  requested
+                    ? '현재 초안을 포함한 JSON 백업 파일의 다운로드를 요청했습니다.'
+                    : '백업 파일을 만들지 못했습니다. 브라우저의 다운로드 권한을 확인해 주세요.',
+                );
               }}
             >
-              사본으로 따로 저장
+              현재 작업 JSON 백업
             </button>
             <button
               type="button"
               className="flow-button flow-button--primary"
               disabled={!exerciseCount}
               onClick={() => {
-                void save();
+                void save(true);
               }}
             >
               현재 내용으로 덮어쓰기
@@ -1448,7 +1445,7 @@ export function SequenceStudioWorkbench(props: Props) {
         >
           <div className="flow-next-class-card__info">
             <span className="flow-next-class-badge">
-              <CalendarDays size={13} strokeWidth={1.6} aria-hidden="true" /> 다음 수업
+              <CalendarDays size={13} strokeWidth={1.6} aria-hidden="true" /> {nextScheduledContext.inProgress ? '현재 시간대 수업' : '다음 수업'}
             </span>
             <strong>{nextScheduledContext.occurrence.title}</strong>
             <span>
@@ -1491,7 +1488,8 @@ export function SequenceStudioWorkbench(props: Props) {
               type="button"
               className="flow-button flow-button--primary"
               data-testid="flow-continue-next-class-btn"
-              onClick={continueNextScheduledClass}
+              onClick={() => continueNextScheduledClass()}
+              disabled={isSaving || Boolean(activeTabConflict)}
             >
               이어서 준비
             </button>
@@ -1540,9 +1538,34 @@ export function SequenceStudioWorkbench(props: Props) {
         </div>
       )}
 
-      <StudioSmartToolsRail />
+      {toolsOpen && (
+        <LightDismissDialog open onClose={() => setToolsOpen(false)} title="강사 도구" variant="sheet">
+          <Suspense fallback={<p role="status">강사 도구를 불러오는 중…</p>}>
+            <StudioSmartToolsRail />
+          </Suspense>
+        </LightDismissDialog>
+      )}
 
-      <div className="flow-class-brief">
+      <button
+        type="button"
+        className="flow-mobile-brief-toggle"
+        aria-expanded={briefExpanded}
+        aria-controls="flow-class-brief"
+        onClick={() => setBriefExpanded((expanded) => !expanded)}
+      >
+        <span>
+          <strong>{s.activeTitle}</strong>
+          <small>
+            {criteria.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[criteria.apparatus].short}
+            {' · '}{formatDifficultyMeta(criteria.level).labelKo} · 목표 {s.activeTargetMinutes}분
+          </small>
+        </span>
+        <span className="flow-mobile-brief-toggle__action">
+          {briefExpanded ? '접기' : '편집'}
+          <ChevronDown size={16} aria-hidden="true" />
+        </span>
+      </button>
+      <div className="flow-class-brief" id="flow-class-brief" data-expanded={briefExpanded}>
         <label className="flow-field flow-class-title">
           수업 이름
           <PlanningInput
@@ -1583,9 +1606,9 @@ export function SequenceStudioWorkbench(props: Props) {
               updateConditions({ level: e.target.value as AutoGenerateCriteria['level'] })
             }
           >
-            {Object.entries(LEVELS).map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
+            {Object.values(DIFFICULTY_META).map(({ code, labelKo }) => (
+              <option key={code} value={code}>
+                {labelKo}
               </option>
             ))}
           </select>
@@ -1612,17 +1635,10 @@ export function SequenceStudioWorkbench(props: Props) {
           <Settings2 size={16} strokeWidth={1.5} />
           <span>수업 조건</span>
         </button>
-        <div className="flow-class-brief-tags">
-          <RoutineTagInlineStrip
-            routineId={s.activeSequenceId || ACTIVE_DRAFT_TAG_TARGET_ID}
-            routineTitle={s.activeTitle || '현재 수업 초안'}
-            onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
-          />
-        </div>
       </div>
 
       <AiQuickSequenceBar
-        compact={s.activeSteps.length > 0}
+        compact
         onApplied={(composed) => {
           const current = usePilatesStore.getState();
           const preUndoSnapshot = createSequenceSnapshot(current);
@@ -1672,7 +1688,7 @@ export function SequenceStudioWorkbench(props: Props) {
       />
 
       <div className="flow-mobile-panes" role="group" aria-label="작성 화면 선택">
-        <button aria-pressed={mobilePane === 'plan'} onClick={() => setMobilePane('plan')}>
+        <button aria-pressed={mobilePane === 'plan'} onClick={showPlan}>
           내 시퀀스 <span>{exerciseCount}</span>
         </button>
         <button aria-pressed={mobilePane === 'library'} onClick={showLibrary}>
@@ -1684,7 +1700,6 @@ export function SequenceStudioWorkbench(props: Props) {
         <aside className="flow-picker" aria-label="수업에 추가할 동작">
           <div className="flow-panel-heading">
             <div>
-              <span className="flow-step-number">01</span>
               <h2>
                 {criteria.apparatus === 'mixed'
                   ? '동작 찾기'
@@ -1714,7 +1729,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   setQuery('');
                 }
               }}
-              placeholder="이름, 영어명, 근육 검색"
+              placeholder="이름·초성·영어명·근육 검색"
             />
             {query && (
               <button onClick={() => setQuery('')} aria-label="동작 검색 지우기">
@@ -1937,7 +1952,6 @@ export function SequenceStudioWorkbench(props: Props) {
           <div className="flow-plan" aria-label="내 수업 시퀀스">
             <div className="flow-panel-heading">
               <div>
-                <span className="flow-step-number">02</span>
                 <h2 ref={planHeadingRef} tabIndex={-1}>
                   내 시퀀스
                 </h2>
@@ -2003,7 +2017,7 @@ export function SequenceStudioWorkbench(props: Props) {
                 >
                   시간 맞추기
                 </button>
-                {s.activeSteps.length > 0 && difference > 0 && gapFillCandidates.length > 0 && (
+                {s.activeSteps.length > 0 && difference > 0 && gapFill.candidates.length > 0 && (
                   <button
                     type="button"
                     className="flow-text-button"
@@ -2081,7 +2095,7 @@ export function SequenceStudioWorkbench(props: Props) {
             {gapFillOpen &&
               s.activeSteps.length > 0 &&
               difference > 0 &&
-              gapFillCandidates.length > 0 && (
+              gapFill.candidates.length > 0 && (
                 <div
                   className="pf-gap-fill-drawer"
                   data-testid="smart-gap-fill-drawer"
@@ -2110,11 +2124,13 @@ export function SequenceStudioWorkbench(props: Props) {
                   >
                     <strong>
                       <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
-                      {Math.max(1, Math.round(difference / 60))}분 채우기 후보 (기존 수업은
-                      덮어쓰지 않아요)
+                      {formatSecondsToMMSS(difference)} 채우기 후보
                     </strong>
                     <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
-                      원하는 동작만 바로 담기
+                      {formatSecondsToMMSS(gapFill.addedSec)} 추가 ·{' '}
+                      {gapFill.remainingSec
+                        ? `목표까지 ${formatSecondsToMMSS(gapFill.remainingSec)} 남음`
+                        : '목표 시간과 일치'}
                     </span>
                   </div>
                   <div
@@ -2125,7 +2141,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       gap: '8px',
                     }}
                   >
-                    {gapFillCandidates.map((candidate) => (
+                    {gapFill.candidates.map((candidate) => (
                       <div
                         key={candidate.id}
                         className="pf-gap-fill-card"
@@ -2141,7 +2157,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       >
                         <strong>{candidate.nameKo}</strong>
                         <span style={{ fontSize: '0.8rem', color: '#56685f' }}>
-                          기본 {minutes(candidate.defaultDurationMin * 60)} ·{' '}
+                          기본 {formatSecondsToMMSS(Math.round(candidate.defaultDurationMin * 60))} ·{' '}
                           {candidate.targetMuscles.slice(0, 2).join('·') || '체간 정렬'}
                         </span>
                         {candidate.springs && <SpringVisualPills springs={candidate.springs} />}
@@ -2882,7 +2898,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   {saveStatus === 'save-failed'
                     ? '기기 저장 미완료 · 메모리 작업본 유지 중 (JSON 백업 후 여유 공간을 확보해 다시 저장하세요)'
                     : saveStatus === 'cross-tab-conflict'
-                      ? '다른 탭 변경 감지 · 자동 덮어쓰기 중단됨 (위 배너에서 불러오기 또는 사본 저장 선택)'
+                      ? '다른 탭 변경 감지 · 자동 덮어쓰기 중단됨 (위 배너에서 최신 저장본 불러오기 또는 JSON 백업 선택)'
                       : saveStatus === 'saving'
                         ? '이 브라우저에 저장하는 중…'
                         : saveStatus === 'saved-local'
@@ -3035,6 +3051,14 @@ export function SequenceStudioWorkbench(props: Props) {
                 ))}
               </div>
             </fieldset>
+            <fieldset>
+              <legend>수업 태그</legend>
+              <RoutineTagInlineStrip
+                routineId={s.activeSequenceId || ACTIVE_DRAFT_TAG_TARGET_ID}
+                routineTitle={s.activeTitle || '현재 수업 초안'}
+                onOpenTagSheet={(id, title) => setTagSheetTarget({ id, title })}
+              />
+            </fieldset>
             <p className="flow-hint">기존에 담은 동작은 조건을 바꿔도 유지됩니다</p>
             <button
               className="flow-text-button"
@@ -3053,6 +3077,21 @@ export function SequenceStudioWorkbench(props: Props) {
                 완료
               </button>
             </div>
+          </div>
+        </LightDismissDialog>
+      )}
+      {pendingPreparation && (
+        <LightDismissDialog
+          open
+          onClose={() => setPendingPreparation(null)}
+          title="다른 회차의 수업을 준비할까요?"
+          subtitle={`현재 초안 대신 ‘${pendingPreparation.title}’ 회차를 엽니다. 이전 초안은 되돌리기로 복원할 수 있어요.`}
+        >
+          <div className="flow-dialog-actions">
+            <button className="flow-button" onClick={() => setPendingPreparation(null)}>계속 편집</button>
+            <button className="flow-button flow-button--primary" onClick={() => continueNextScheduledClass(pendingPreparation)}>
+              회차 준비하기
+            </button>
           </div>
         </LightDismissDialog>
       )}
@@ -3360,10 +3399,7 @@ export function SequenceStudioWorkbench(props: Props) {
         <Suspense fallback={<p role="status">빠른 요약 리허설을 여는 중…</p>}>
           <LazyQuickPlanRehearsal
             onClose={() => setQuickRehearsalOpen(false)}
-            onSave={() => {
-              usePilatesStore.getState().saveCurrentSequenceToBinder(true);
-              setNotice('미리보기 스냅샷을 별도 사본으로 저장했습니다.');
-            }}
+            onSave={saveConfirmedSequenceCopy}
             onStart={() => {
               setQuickRehearsalOpen(false);
               start();
@@ -3386,25 +3422,27 @@ export function SequenceStudioWorkbench(props: Props) {
         onClose={() => setRemixTarget(null)}
         onCreateAndAdd={handleCreateAndAddRemix}
       />
-      <MobileSimpleSequenceBar
-        exerciseCount={exerciseCount}
-        totalMinutesLabel={minutes(total)}
-        targetMinutes={s.activeTargetMinutes}
-        canStartClass={simulation.gate.canRehearse}
-        isSaving={isSaving}
-        activeMobilePane={mobilePane}
-        onSwitchPane={(pane) => {
-          if (pane === 'library') showLibrary();
-          else setMobilePane('plan');
-        }}
-        onSave={() => {
-          void save();
-        }}
-        onStartClass={start}
-        sequenceTitle={s.activeTitle || '수업 시퀀스'}
-        steps={s.activeSteps}
-        exercises={s.exercises}
-      />
+      {s.activeSteps.length > 0 && (
+        <MobileSimpleSequenceBar
+          exerciseCount={exerciseCount}
+          totalMinutesLabel={minutes(total)}
+          targetMinutes={s.activeTargetMinutes}
+          canStartClass={simulation.gate.canRehearse}
+          isSaving={isSaving}
+          activeMobilePane={mobilePane}
+          onSwitchPane={(pane) => {
+            if (pane === 'library') showLibrary();
+            else showPlan();
+          }}
+          onSave={() => {
+            void save();
+          }}
+          onStartClass={start}
+          sequenceTitle={s.activeTitle || '수업 시퀀스'}
+          steps={s.activeSteps}
+          exercises={s.exercises}
+        />
+      )}
     </section>
   );
 }

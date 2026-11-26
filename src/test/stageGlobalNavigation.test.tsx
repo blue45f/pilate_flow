@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
+import { buildSequenceShareUrl } from '../utils/localQrSequenceShare';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from './planningFixtures';
 import type { SavedSequence, SequenceStep } from '../types/pilates';
@@ -231,6 +233,82 @@ describe('actual app navigation preserves an unrecorded teaching session', () =>
     expect(usePilatesStore.getState().activeSteps).toEqual(savedClass.steps);
     expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
   }, 15000);
+
+  it('손상된 링크를 닫으면 진행 중 수업과 주소를 복구한다', async () => {
+    await runningSession();
+    act(() => {
+      window.history.replaceState(null, '', '#pf_share=broken');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    const dialog = screen.getByRole('dialog', { name: '공유 수업을 열 수 없습니다' });
+    fireEvent.click(within(dialog).getByRole('button', { name: '확인' }));
+    expect(window.location.hash).toBe('');
+    expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+    expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+  });
+
+  it('공유 링크를 가져올 때 진행 중 수업의 이탈 결정을 먼저 적용한다', async () => {
+    await runningSession();
+    const { hashFragment } = buildSequenceShareUrl(savedClass);
+    const openSharedClass = () => {
+      act(() => {
+        window.history.replaceState(null, '', hashFragment);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      });
+      fireEvent.click(screen.getByTestId('confirm-qr-sequence-import-btn'));
+      return within(screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' }));
+    };
+    const cancel = openSharedClass();
+    expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+    fireEvent.click(cancel.getByRole('button', { name: '수업 화면 유지' }));
+    expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+    const confirm = openSharedClass();
+    fireEvent.click(confirm.getByRole('button', { name: '기록 없이 나가기' }));
+    expect(usePilatesStore.getState()).toMatchObject({
+      activeTab: 'workbench',
+      activeTitle: savedClass.title,
+    });
+    expect(usePilatesStore.getState().undoStack.at(-1)?.activeSequenceId).toBe(sequenceId);
+  }, 15000);
+
+  it.each(['가져오기 요청 전', '수업 이탈 확인 중'])(
+    '%s 다른 탭의 사본이 저장되면 디스크와 QR 링크를 유지하고 재확인을 안내한다',
+    async (when) => {
+      await runningSession();
+      const { hashFragment } = buildSequenceShareUrl(savedClass);
+      act(() => {
+        window.history.replaceState(null, '', hashFragment);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      });
+      if (when === '수업 이탈 확인 중') {
+        fireEvent.click(screen.getByTestId('confirm-qr-sequence-import-btn'));
+      }
+      const originalRaw = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
+      const external = JSON.parse(originalRaw);
+      external.state.savedSequences.push({ ...savedClass, id: 'other-tab-copy' });
+      const changedRaw = JSON.stringify(external);
+      localStorage.setItem(RECOVERY_STORAGE_KEY, changedRaw);
+      // Intentionally deliver no storage event, so both checks have to read disk.
+      try {
+        if (when === '수업 이탈 확인 중') {
+          fireEvent.click(within(screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' }))
+            .getByRole('button', { name: '기록 없이 나가기' }));
+        } else {
+          fireEvent.click(screen.getByTestId('confirm-qr-sequence-import-btn'));
+        }
+        const preview = within(screen.getByTestId('sequence-qr-import-dialog'));
+        expect(preview.getByRole('alert')).toHaveTextContent('다른 탭');
+        expect(preview.getByRole('button', { name: '최신 저장본으로 다시 열기' })).toBeEnabled();
+        expect(window.location.hash).toBe(hashFragment);
+        expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+        expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(changedRaw);
+      } finally {
+        localStorage.setItem(RECOVERY_STORAGE_KEY, originalRaw);
+        act(() => usePilatesStore.getState().dismissExternalTabConflict());
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    },
+  );
 
   it('records the original session before committing the saved class replacement', async () => {
     usePilatesStore.setState({ savedSequences: [structuredClone(savedClass)] });

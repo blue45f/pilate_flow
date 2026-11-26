@@ -8,7 +8,7 @@ import { reconstructStepsSnapshotFromHistoryLog } from '../utils/teachingHistory
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { resolveSequenceInsertion } from '../utils/sequenceInsertion';
 import type { SequenceInsertionPlacement } from '../utils/sequenceInsertion';
-import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
+import { workspaceStorageGuard as recoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { canonicalRecoveryContent, inspectBackupRecovery } from '../utils/backupRecoveryInspection';
 import {
   applyRestoredReusableBlocksAndDrafts,
@@ -40,6 +40,7 @@ import type { DatedWeekCopySkip } from '../utils/datedSequencePlanning';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { z } from 'zod';
+import { savedSequenceTrashSchema } from '../schemas/savedSequenceTrash';
 import type { InstructorStudyState } from '../types/instructorStudy';
 import { createEmptyInstructorStudyState } from '../types/instructorStudy';
 import {
@@ -132,6 +133,8 @@ export type ActiveWorkspaceTab =
 export type StepTimingOptions = z.input<typeof stepTimingOptionsSchema>;
 export type StepBlockOptions = z.input<typeof stepBlockOptionsSchema>;
 interface SequenceSnapshot {
+  /** Set for actions that change the manufacturer's spring reference along with the class. */
+  reformerBrand?: ReformerBrand;
   activeScheduleContext?: TeachingScheduleContext;
   activeSequenceId: string;
   activeTitle: string;
@@ -177,6 +180,12 @@ export type ActiveSequenceSaveStatus =
   | 'save-failed'
   | 'cross-tab-conflict';
 
+interface DeletedSavedSequence {
+  trashId: string;
+  deletedAt: string;
+  sequence: SavedSequence;
+}
+
 export interface PilatesStudioState extends SequenceSnapshot {
   activeTab: ActiveWorkspaceTab;
   themeMode: 'system' | 'light' | 'dark';
@@ -188,6 +197,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   mobilePreviewMode: boolean;
   exercises: PilatesExercise[];
   savedSequences: SavedSequence[];
+  deletedSavedSequences: DeletedSavedSequence[];
   classGroups: ClassGroupProfile[];
   historyLogs: ClassHistoryLog[];
   conditionTemplates: ConditionTemplate[];
@@ -351,13 +361,15 @@ export interface PilatesStudioState extends SequenceSnapshot {
   reloadFromExternalTabStorage: () => { success: boolean; message: string };
   optimizeActiveTransitions: () => void;
   swapFreshExercisesForGroup: () => void;
-  saveCurrentSequenceToBinder: (asNew?: boolean) => string;
+  saveCurrentSequenceToBinder: (asNew?: boolean, options?: { overwriteExternal?: boolean }) => string;
   duplicateSavedSequence: (sequenceId: string) => string | undefined;
   openSavedSequenceCopy: (
     sourceId: string,
     expectedState: PilatesStudioState,
   ) => { success: boolean; sequenceId?: string; message: string };
-  deleteSavedSequence: (sequenceId: string) => void;
+  deleteSavedSequence: (sequenceId: string) => SequencePlanningActionResult;
+  restoreDeletedSequence: (trashId: string, asCopy?: boolean) => SequencePlanningActionResult;
+  purgeDeletedSequence: (trashId: string) => SequencePlanningActionResult;
   loadHistoryIntoWorkbench: (logId: string) => void;
   addCustomExercise: (exercise: PilatesExercise) => void;
   addBatchExercisesFromClips: (
@@ -447,9 +459,6 @@ const settingsSchema = z.object({
   conditionTemplates: z.array(templateSchema).optional(),
 });
 
-const recoveryStorageGuard = createRecoveryStorageGuard(() =>
-  localStorage.getItem(RECOVERY_STORAGE_KEY),
-);
 let passiveExternalTabConflict: PilatesStudioState['externalTabConflict'] = null;
 const externalTabConflictListeners = new Set<() => void>();
 function setPassiveExternalTabConflict(next: PilatesStudioState['externalTabConflict']) {
@@ -466,6 +475,24 @@ export function subscribeExternalTabConflict(listener: () => void): () => void {
 export function getPassiveExternalTabConflict(): PilatesStudioState['externalTabConflict'] {
   return passiveExternalTabConflict;
 }
+/** Check again at the save control in case its storage event has not arrived yet. */
+export function detectSequenceSaveConflict(
+  disk = recoveryStorageGuard.check(undefined, { retryFailedWrite: true }),
+): ExternalTabStorageConflict | null {
+  const existing = usePilatesStore.getState().externalTabConflict ?? passiveExternalTabConflict;
+  if (existing) return existing;
+  if (!disk.ok && disk.code === 'storage_changed') {
+    const conflict = {
+      detectedAt: new Date().toISOString(),
+      message:
+        '다른 탭에서 수업 자료가 변경되었습니다. 현재 작업을 JSON으로 백업하거나 최신 저장본을 불러와 주세요.',
+    };
+    setPassiveExternalTabConflict(conflict);
+    return conflict;
+  }
+  return null;
+}
+
 /** Read-only: never sets feedback, rehydrates, writes, or adopts another tab's data. */
 export function getRecoveryStorageStatus(expectedFingerprint?: string) {
   return recoveryStorageGuard.check(expectedFingerprint);
@@ -474,9 +501,35 @@ export function getRecoveryStorageStatus(expectedFingerprint?: string) {
 // Storage errors must not interrupt editing or claim a successful browser save.
 let lastStorageError: string | null = null;
 let suppressRecoveryRevertWrite = false;
+let overwriteExternalWorkspace = false;
 
-export function isSuppressingStorageWrite(): boolean {
-  return suppressRecoveryRevertWrite;
+let openSharedSequenceReviews = 0;
+
+/** A teaching exit can write the whole workspace while the QR decision is deferred. */
+export function protectSharedSequenceReview() {
+  openSharedSequenceReviews++;
+  return () => {
+    openSharedSequenceReviews--;
+  };
+}
+
+export function sharedSequenceStorageIssue(): string | null {
+  const disk = getRecoveryStorageStatus();
+  const conflict = detectSequenceSaveConflict(disk);
+  return conflict?.message ?? (disk.ok ? null : disk.message);
+}
+
+function workspaceWriteIssue(): string | null {
+  if (overwriteExternalWorkspace) return null;
+  const issue = recoveryStorageGuard.writeIssue();
+  if (issue) return detectSequenceSaveConflict(issue)?.message ?? issue.message;
+  return openSharedSequenceReviews > 0 ? sharedSequenceStorageIssue() : null;
+}
+
+export function isSuppressingStorageWrite(sameOwner: boolean): boolean {
+  if (suppressRecoveryRevertWrite) return true;
+  if (sameOwner) return workspaceWriteIssue() !== null;
+  return openSharedSequenceReviews > 0 && sharedSequenceStorageIssue() !== null;
 }
 
 /** Synchronous read of the most recent browser storage write outcome (null when healthy). */
@@ -589,21 +642,25 @@ export function downloadEmergencyBackupJson(): boolean {
   }
 }
 
-function storageResult(error: unknown | null): void {
-  lastStorageError =
-    error === null
-      ? null
-      : '브라우저 저장 공간에 기록하지 못했습니다. 현재 작업을 JSON으로 백업하고 저장 권한과 여유 공간을 확인해 주세요.';
-  const message = lastStorageError;
+function reportStorageResult(message: string | null): void {
+  lastStorageError = message;
   queueMicrotask(() => {
     if (lastStorageError !== message) return;
     const state = usePilatesStore.getState();
-    if (state.persistenceError !== message || (message !== null && state.saveFeedback !== null))
+    if (state.persistenceError === message && (message === null || state.saveFeedback === null)) return;
+    suppressRecoveryRevertWrite = true;
+    try {
       usePilatesStore.setState({
         persistenceError: message,
         ...(message ? { saveFeedback: null } : {}),
       });
+    } finally {
+      suppressRecoveryRevertWrite = false;
+    }
   });
+}
+function storageResult(error: unknown | null): void {
+  reportStorageResult(error === null ? null : '브라우저 저장 공간에 기록하지 못했습니다. 현재 작업을 JSON으로 백업하고 저장 권한과 여유 공간을 확인해 주세요.');
 }
 const browserStorage = createJSONStorage(() => ({
   getItem: (name: string) => {
@@ -621,8 +678,14 @@ const browserStorage = createJSONStorage(() => ({
   setItem: (name: string, value: string) => {
     if (suppressRecoveryRevertWrite) return;
     try {
+      const issue = workspaceWriteIssue();
+      if (issue) {
+        reportStorageResult(issue);
+        return;
+      }
       localStorage.setItem(name, value);
       if (name === RECOVERY_STORAGE_KEY) recoveryStorageGuard.observedWrite(value);
+      setPassiveExternalTabConflict(null);
       storageResult(null);
     } catch (error) {
       if (name === RECOVERY_STORAGE_KEY) recoveryStorageGuard.observedWriteFailure();
@@ -664,8 +727,12 @@ const cloneCriteria = (criteria: AutoGenerateCriteria): AutoGenerateCriteria => 
     : undefined,
   preferredProps: [...criteria.preferredProps],
 });
-export function createSequenceSnapshot(state: PilatesStudioState): SequenceSnapshot {
+export function createSequenceSnapshot(
+  state: PilatesStudioState,
+  includeReformerBrand = false,
+): SequenceSnapshot {
   return {
+    ...(includeReformerBrand ? { reformerBrand: state.reformerBrand } : {}),
     activeScheduleContext: matchingTeachingScheduleContext(
       state.activeScheduleContext,
       state.activeSequenceId,
@@ -1070,6 +1137,59 @@ function errorMessage(error: unknown): string {
     ? error.message
     : '조건을 확인해 주세요. 초안은 그대로 보존했습니다.';
 }
+function restoreAfterFailedSave(before: PilatesStudioState, message: string): void {
+  lastStorageError = message;
+  suppressRecoveryRevertWrite = true;
+  try {
+    // Report the failure without issuing a second write or losing the editable draft.
+    usePilatesStore.setState({ ...before, persistenceError: message, saveFeedback: null }, true);
+  } finally {
+    suppressRecoveryRevertWrite = false;
+  }
+}
+
+export function commitSharedSequenceImport(update: Partial<PilatesStudioState>): string | null {
+  const before = usePilatesStore.getState();
+  const issue = sharedSequenceStorageIssue();
+  if (issue) return issue;
+  usePilatesStore.setState(update);
+  const writeIssue = sharedSequenceStorageIssue() ?? getLastStorageError();
+  if (writeIssue) restoreAfterFailedSave(before, writeIssue);
+  return writeIssue;
+}
+
+/** A failed copy stays editable as the original draft so a retry cannot duplicate it. */
+export function saveConfirmedSequenceCopy(): SequencePlanningActionResult {
+  const disk = recoveryStorageGuard.check(undefined, { retryFailedWrite: true });
+  const conflict = detectSequenceSaveConflict(disk);
+  if (conflict) return { success: false, message: conflict.message };
+  if (!disk.ok) return { success: false, message: disk.message };
+  const before = usePilatesStore.getState();
+  const id = before.saveCurrentSequenceToBinder(true);
+  const copy = usePilatesStore.getState().savedSequences.find((item) => item.id === id);
+  if (!lastStorageError && copy && isSavedSequencePersistedOnDisk(copy, null))
+    return { success: true, sequenceId: id, message: '이 브라우저에 수업 사본을 저장했습니다.' };
+  const message = lastStorageError ?? '사본을 기기에서 확인하지 못했습니다. 다시 저장해 주세요.';
+  restoreAfterFailedSave(before, message);
+  return { success: false, message };
+}
+
+// Both shelves share a single persisted write. Keep the prior in-memory collection on failure.
+function commitSavedCollection(
+  update: Pick<PilatesStudioState, 'deletedSavedSequences'> &
+    Partial<Pick<PilatesStudioState, 'savedSequences'>>,
+  result: SequencePlanningActionResult,
+): SequencePlanningActionResult {
+  const before = usePilatesStore.getState();
+  const disk = recoveryStorageGuard.check(undefined, { retryFailedWrite: true });
+  if (!disk.ok) return { success: false, message: disk.message };
+  usePilatesStore.setState(update);
+  if (!lastStorageError) return result;
+  const message = lastStorageError;
+  restoreAfterFailedSave(before, message);
+  return { success: false, message };
+}
+
 const sampleSequences = () =>
   INITIAL_SAVED_SEQUENCES.map((sequence) => ({
     ...sequence,
@@ -1091,6 +1211,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
       mobilePreviewMode: false,
       exercises: INITIAL_EXERCISES,
       savedSequences: sampleSequences(),
+      deletedSavedSequences: [],
       classGroups: INITIAL_CLASS_GROUPS,
       historyLogs: [],
       instructorSchedule: createEmptyInstructorSchedule(),
@@ -1789,7 +1910,10 @@ export const usePilatesStore = create<PilatesStudioState>()(
             ? {
                 ...previous,
                 undoStack: state.undoStack.slice(0, -1),
-                redoStack: [...state.redoStack.slice(-19), createSequenceSnapshot(state)],
+                redoStack: [
+                  ...state.redoStack.slice(-19),
+                  createSequenceSnapshot(state, previous.reformerBrand !== undefined),
+                ],
                 generationError: null,
                 saveFeedback: null,
               }
@@ -1801,7 +1925,10 @@ export const usePilatesStore = create<PilatesStudioState>()(
           return next
             ? {
                 ...next,
-                undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+                undoStack: [
+                  ...state.undoStack.slice(-19),
+                  createSequenceSnapshot(state, next.reformerBrand !== undefined),
+                ],
                 redoStack: state.redoStack.slice(0, -1),
                 generationError: null,
                 saveFeedback: null,
@@ -2571,7 +2698,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           set({ generationError: errorMessage(error) });
         }
       },
-      saveCurrentSequenceToBinder: (asNew = false) => {
+      saveCurrentSequenceToBinder: (asNew = false, options) => {
         const state = get();
         const existing = state.savedSequences.find(
           (sequence) => sequence.id === state.activeSequenceId,
@@ -2600,22 +2727,26 @@ export const usePilatesStore = create<PilatesStudioState>()(
               }
             : {}),
         };
-        setPassiveExternalTabConflict(null);
-        set({
-          savedSequences:
-            !asNew && existing
-              ? state.savedSequences.map((item) => (item.id === id ? sequence : item))
-              : [sequence, ...state.savedSequences],
-          activeSequenceId: id,
-          externalTabConflict: null,
-          activeScheduleContext: matchingTeachingScheduleContext(
-            state.activeScheduleContext,
-            state.activeSequenceId,
-          )
-            ? { ...state.activeScheduleContext!, draftSequenceId: id }
-            : undefined,
-          saveFeedback: '이 브라우저에 수업을 저장했습니다.',
-        });
+        overwriteExternalWorkspace = options?.overwriteExternal === true;
+        try {
+          set({
+            savedSequences:
+              !asNew && existing
+                ? state.savedSequences.map((item) => (item.id === id ? sequence : item))
+                : [sequence, ...state.savedSequences],
+            activeSequenceId: id,
+            externalTabConflict: null,
+            activeScheduleContext: matchingTeachingScheduleContext(
+              state.activeScheduleContext,
+              state.activeSequenceId,
+            )
+              ? { ...state.activeScheduleContext!, draftSequenceId: id }
+              : undefined,
+            saveFeedback: '이 브라우저에 수업을 저장했습니다.',
+          });
+        } finally {
+          overwriteExternalWorkspace = false;
+        }
         return id;
       },
       openSavedSequenceCopy: (sourceId, expectedState) => {
@@ -2704,10 +2835,68 @@ export const usePilatesStore = create<PilatesStudioState>()(
         });
         return id;
       },
-      deleteSavedSequence: (sequenceId) =>
-        set((state) => ({
-          savedSequences: state.savedSequences.filter((sequence) => sequence.id !== sequenceId),
-        })),
+      deleteSavedSequence: (sequenceId) => {
+        const { savedSequences, deletedSavedSequences } = get();
+        const sequence = savedSequences.find((item) => item.id === sequenceId);
+        if (!sequence) return { success: false, message: '저장한 수업을 찾을 수 없습니다.' };
+        return commitSavedCollection(
+          {
+            savedSequences: savedSequences.filter((item) => item.id !== sequenceId),
+            deletedSavedSequences: [
+              { trashId: newId('trash'), deletedAt: new Date().toISOString(), sequence },
+              ...deletedSavedSequences,
+            ],
+          },
+          { success: true, message: '수업을 휴지통으로 옮겼습니다.' },
+        );
+      },
+      restoreDeletedSequence: (trashId, asCopy = false) => {
+        const { savedSequences, deletedSavedSequences } = get();
+        const entry = deletedSavedSequences.find((item) => item.trashId === trashId);
+        if (!entry) return { success: false, message: '휴지통에서 수업을 찾을 수 없습니다.' };
+        const conflict = savedSequences.some((item) => item.id === entry.sequence.id);
+        if (conflict && !asCopy)
+          return { success: false, message: '같은 ID의 수업이 있어 사본으로 복구할 수 있습니다.' };
+        const now = new Date().toISOString();
+        const copyTitle = textSchema.safeParse(`${entry.sequence.title} (복구 사본)`);
+        const restored = conflict
+          ? {
+              ...entry.sequence,
+              id: newId('seq-copy'),
+              title: copyTitle.success ? copyTitle.data : entry.sequence.title,
+              createdAt: now,
+              updatedAt: now,
+              lastTaughtAt: undefined,
+              taughtCount: 0,
+            }
+          : entry.sequence;
+        return commitSavedCollection(
+          {
+            savedSequences: [restored, ...savedSequences],
+            deletedSavedSequences: deletedSavedSequences.filter((item) => item.trashId !== trashId),
+          },
+          {
+            success: true,
+            sequenceId: restored.id,
+            message: conflict
+              ? '수업을 독립된 사본으로 복구했습니다.'
+              : '저장한 수업으로 복구했습니다.',
+          },
+        );
+      },
+      purgeDeletedSequence: (trashId) => {
+        const { deletedSavedSequences } = get();
+        if (!deletedSavedSequences.some((entry) => entry.trashId === trashId))
+          return { success: false, message: '휴지통에서 수업을 찾을 수 없습니다.' };
+        return commitSavedCollection(
+          {
+            deletedSavedSequences: deletedSavedSequences.filter(
+              (entry) => entry.trashId !== trashId,
+            ),
+          },
+          { success: true, message: '휴지통에서 수업을 영구 삭제했습니다.' },
+        );
+      },
       loadHistoryIntoWorkbench: (logId) => {
         const state = get();
         const log = state.historyLogs.find((item) => item.id === logId);
@@ -3222,18 +3411,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           } finally {
             suppressRecoveryRevertWrite = false;
           }
-          try {
-            const intactRaw = localStorage.getItem(RECOVERY_STORAGE_KEY);
-            const intactStatus = recoveryStorageGuard.check(finalDisk.fingerprint);
-            if (!intactStatus.ok) {
-              recoveryStorageGuard.observedWrite(intactRaw);
-              if (!recoveryStorageGuard.check(finalDisk.fingerprint).ok) {
-                recoveryStorageGuard.observedWriteFailure();
-              }
-            }
-          } catch {
-            recoveryStorageGuard.observedWriteFailure();
-          }
+          recoveryStorageGuard.clearFailedWriteIfUnchanged(finalDisk.fingerprint);
           return { success: false, message };
         }
         if (restoredReusableBlocks !== undefined || restoredHumanDrafts !== undefined) {
@@ -3256,6 +3434,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           edit(state, {
             exercises: INITIAL_EXERCISES,
             savedSequences: sampleSequences(),
+            deletedSavedSequences: [],
             classGroups: INITIAL_CLASS_GROUPS,
             historyLogs: [],
             conditionTemplates: [],
@@ -3278,6 +3457,9 @@ export const usePilatesStore = create<PilatesStudioState>()(
       storage: browserStorage,
       migrate: (persisted) => persisted as PilatesStudioState,
       partialize: (state) => ({
+        ...(state.deletedSavedSequences.length
+          ? { deletedSavedSequences: state.deletedSavedSequences }
+          : {}),
         exercises: state.exercises,
         savedSequences: state.savedSequences,
         classGroups: state.classGroups,
@@ -3324,6 +3506,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
         if (exercises.success) next.exercises = mergeById(exercises.data, INITIAL_EXERCISES);
         const sequences = z.array(sequenceSchema).safeParse(raw.savedSequences);
         if (sequences.success) next.savedSequences = sequences.data;
+        const trash = savedSequenceTrashSchema.safeParse(raw.deletedSavedSequences ?? []);
+        if (trash.success) next.deletedSavedSequences = trash.data;
         const groups = z.array(groupSchema).safeParse(raw.classGroups);
         if (groups.success)
           next.classGroups = preserveCurrentGroupPlanningPreferences(
@@ -3390,17 +3574,9 @@ export const usePilatesStore = create<PilatesStudioState>()(
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('storage', (event: StorageEvent) => {
-    if (event.key !== RECOVERY_STORAGE_KEY || event.newValue === null) return;
-    if (event.oldValue === event.newValue) return;
-    const guardStatus = recoveryStorageGuard.check();
-    if (!guardStatus.ok && guardStatus.code === 'storage_changed') {
-      // Never mutate Zustand store state on passive storage events so RecoveryPreview's
-      // in-memory reference invariants stay untouched until explicit user action.
-      setPassiveExternalTabConflict({
-        detectedAt: new Date().toISOString(),
-        message:
-          '다른 탭에서 수업 자료가 변경되었습니다. 자동 덮어쓰기를 막았으니 최신 저장본을 불러오거나 현재 초안을 사본으로 저장해 주세요.',
-      });
-    }
+    if (event.key !== RECOVERY_STORAGE_KEY && !(event.key === null && event.storageArea === localStorage)) return;
+    if (event.key !== null && event.oldValue === event.newValue) return;
+    // A passive event reports the conflict without a persisted Zustand mutation.
+    detectSequenceSaveConflict();
   });
 }

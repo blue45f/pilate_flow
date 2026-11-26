@@ -46,6 +46,8 @@ import {
 import { canonicalRecoveryContent } from '../utils/backupRecoveryInspection';
 import {
   createSequenceSnapshot,
+  detectSequenceSaveConflict,
+  saveConfirmedSequenceCopy,
   getLastStorageError,
   isSavedSequencePersistedOnDisk,
   usePilatesStore,
@@ -67,6 +69,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
+import { applySequenceGapFill, planSequenceGapFill } from '../utils/sequenceGapFill';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { useSequenceInsertionPlacement } from '../hooks/useSequenceInsertionPlacement';
 import { SequenceOrderCard } from './SequenceOrderCard';
@@ -1114,45 +1117,7 @@ export function SequenceWorkbench({
           return true;
         })
     : [];
-  const gapFillCandidates: PilatesExercise[] =
-    !s.activeSteps.length || delta >= 0
-      ? []
-      : (() => {
-          const usedKeys = new Set(activeMovementKeys);
-          const effectiveEq = currentStepEquipment.length
-            ? currentStepEquipment
-            : equipmentSelection(s.lastCriteria ?? criteria);
-          const effectiveApparatus =
-            effectiveEq.length === 1
-              ? (getEquipmentFamily(effectiveEq[0]) ?? s.activeApparatus)
-              : effectiveEq.length > 1
-                ? 'mixed'
-                : s.activeApparatus;
-          const picked: PilatesExercise[] = [];
-          for (const ex of s.exercises) {
-            if (picked.length >= 2) break;
-            if (!isExerciseAuthoringEligible(ex)) continue;
-            const key = getMovementKey(ex);
-            if (usedKeys.has(key)) continue;
-            if (
-              !exerciseMatchesCriteria(ex, {
-                ...criteria,
-                apparatus: effectiveApparatus,
-                level: s.activeLevel,
-                ownedApparatus: getEquipmentFamilies(effectiveEq),
-                availableEquipment: effectiveEq,
-                preferredProps: (s.lastCriteria?.preferredProps ?? criteria.preferredProps).filter(
-                  (prop) => prop === 'none' || s.ownedProps.includes(prop),
-                ),
-              })
-            ) {
-              continue;
-            }
-            usedKeys.add(key);
-            picked.push(ex);
-          }
-          return picked;
-        })();
+  const gapFill = useMemo(() => planSequenceGapFill(s), [s]);
   const setDuration = (minutes: number) => {
     setCriteria((previous) => ({ ...previous, targetMinutes: minutes }));
     setCustomTime(String(minutes));
@@ -1453,6 +1418,11 @@ export function SequenceWorkbench({
     if (options?.alsoSetNotice !== false) setNotice(feedbackMessage);
   };
   const handleSave = () => {
+    const conflict = detectSequenceSaveConflict();
+    if (conflict) {
+      setNotice(conflict.message);
+      return;
+    }
     if (isSavedClean) {
       usePilatesStore.setState({
         saveFeedback: '이미 최신 상태로 보관함에 저장되어 있습니다.',
@@ -1495,10 +1465,9 @@ export function SequenceWorkbench({
       setNotice('같은 내용의 사본을 방금 저장했어요. 내용을 조정한 뒤 다시 사본을 저장해 보세요.');
       return;
     }
-    s.saveCurrentSequenceToBinder(true);
-    const copyErr = getLastStorageError() ?? usePilatesStore.getState().persistenceError;
-    if (copyErr) {
-      setNotice(copyErr);
+    const copy = saveConfirmedSequenceCopy();
+    if (!copy.success) {
+      setNotice(copy.message);
       return;
     }
     lastSavedCopySignatureRef.current = copySig;
@@ -2903,7 +2872,7 @@ export function SequenceWorkbench({
                           <Clock3 size={14} aria-hidden="true" /> 목표 시간 자동 맞춤
                         </button>
                       )}
-                      {s.activeSteps.length > 0 && delta < 0 && gapFillCandidates.length > 0 && (
+                      {s.activeSteps.length > 0 && delta < 0 && gapFill.candidates.length > 0 && (
                         <button
                           type="button"
                           className="workbench-inline-action-chip"
@@ -2965,7 +2934,7 @@ export function SequenceWorkbench({
                   {gapFillOpen &&
                     s.activeSteps.length > 0 &&
                     delta < 0 &&
-                    gapFillCandidates.length > 0 && (
+                    gapFill.candidates.length > 0 && (
                       <div
                         className="pf-gap-fill-drawer"
                         data-testid="smart-gap-fill-drawer"
@@ -2975,19 +2944,21 @@ export function SequenceWorkbench({
                         <div className="pf-gap-fill-drawer__head">
                           <strong>
                             <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
-                            {Math.max(1, Math.round(Math.abs(delta) / 60))}분 채우기 후보 (기존
-                            수업은 덮어쓰지 않아요)
+                            {formatSecondsToMMSS(-delta)} 채우기 후보
                           </strong>
                           <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
-                            검토 후 원하는 구성만 반영
+                            {formatSecondsToMMSS(gapFill.addedSec)} 추가 ·{' '}
+                            {gapFill.remainingSec
+                              ? `목표까지 ${formatSecondsToMMSS(gapFill.remainingSec)} 남음`
+                              : '목표 시간과 일치'}
                           </span>
                         </div>
                         <div className="pf-gap-fill-drawer__items">
-                          {gapFillCandidates.map((cand) => (
+                          {gapFill.candidates.map((cand) => (
                             <div key={cand.id} className="pf-gap-fill-card">
                               <strong>{cand.nameKo}</strong>
                               <span style={{ fontSize: '0.8rem', color: '#56685f' }}>
-                                기본 {formatSecondsToMMSS(cand.defaultDurationMin * 60)} ·{' '}
+                                기본 {formatSecondsToMMSS(Math.round(cand.defaultDurationMin * 60))} ·{' '}
                                 {cand.targetMuscles.slice(0, 2).join('·') || '체간 정렬'}
                               </span>
                               {cand.springs && <SpringVisualPills springs={cand.springs} />}
@@ -2999,22 +2970,8 @@ export function SequenceWorkbench({
                             variant="primary"
                             data-testid="smart-gap-fill-apply"
                             onClick={() => {
-                              const appendedSteps: SequenceStep[] = gapFillCandidates.map(
-                                (cand, idx) => ({
-                                  stepId: `gap-fill-${Date.now()}-${idx}`,
-                                  order: s.activeSteps.length + idx + 1,
-                                  exerciseId: cand.id,
-                                  blockCategory: cand.blockCategory,
-                                  durationMin: cand.defaultDurationMin,
-                                  selectedLayer: 'standard',
-                                  instructorNote: '',
-                                }),
-                              );
+                              setNotice(applySequenceGapFill(s, gapFill));
                               setGapFillOpen(false);
-                              applyStepsWithUndo(
-                                [...s.activeSteps, ...appendedSteps],
-                                `추천 동작 ${gapFillCandidates.length}개를 수업표 끝에 추가했어요. 되돌리기로 복구할 수 있습니다.`,
-                              );
                             }}
                           >
                             수업표 끝에 추가하기
@@ -4920,10 +4877,7 @@ export function SequenceWorkbench({
             setPlanPreviewOpen(false);
             setWorkflowStep('arrange');
           }}
-          onSave={() => {
-            s.saveCurrentSequenceToBinder(true);
-            setNotice('');
-          }}
+          onSave={saveConfirmedSequenceCopy}
           onStart={startClass}
           canStartClass={canStartClass}
           startReadiness={startReadiness}

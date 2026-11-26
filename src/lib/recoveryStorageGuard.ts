@@ -1,4 +1,4 @@
-/** Recovery-only optimistic observation. This is not cross-tab compare-and-swap. */
+/** Detect completed external writes to the local workspace before persistence or recovery. */
 export const RECOVERY_STORAGE_KEY = 'pilates-flow-atelier-storage-v3';
 
 export type RecoveryStorageStatus =
@@ -71,50 +71,101 @@ function persistedFingerprint(raw: string | null): RecoveryStorageStatus {
 }
 
 export function createRecoveryStorageGuard(read: () => string | null) {
+  let baselineRaw: string | null | undefined;
   let baseline: RecoveryStorageStatus | undefined;
+  let comparedRaw: string | null | undefined;
+  let compared: RecoveryStorageStatus | undefined;
   let writeFailed = false;
+
+  function compare(
+    raw: string | null,
+    expectedFingerprint?: string,
+    retryFailedWrite = false,
+  ): RecoveryStorageStatus {
+    if (baselineRaw === undefined || (writeFailed && !retryFailedWrite)) return unavailable();
+    baseline ??= persistedFingerprint(baselineRaw);
+    if (!baseline.ok) return baseline;
+    let current = baseline;
+    if (raw !== baselineRaw) {
+      if (comparedRaw !== raw || !compared) {
+        comparedRaw = raw;
+        compared = persistedFingerprint(raw);
+      }
+      if (!compared.ok) return compared;
+      current = compared;
+    }
+    if (current.fingerprint !== baseline.fingerprint)
+      return {
+        ok: false,
+        code: 'storage_changed',
+        message:
+          '다른 탭 또는 창에서 브라우저 저장 자료가 바뀌어 복원을 적용하지 않았습니다. 현재 작업을 내보내 보관하고, 다른 탭의 자료를 확인한 뒤 새로 열어 주세요. 자동으로 합치거나 덮어쓰지 않았습니다.',
+      };
+    if (expectedFingerprint !== undefined && current.fingerprint !== expectedFingerprint)
+      return {
+        ok: false,
+        code: 'storage_preview_stale',
+        message:
+          '검토 후 브라우저 저장 자료가 달라졌습니다. 현재 자료로 다시 검토한 뒤 적용해 주세요.',
+      };
+    return current;
+  }
+
   return {
-    /** Called only by the persistence adapter's actual hydration read. */
     observedRead(raw: string | null) {
+      baselineRaw = raw;
       baseline = persistedFingerprint(raw);
     },
     observedReadFailure() {
+      baselineRaw = undefined;
       baseline = undefined;
     },
-    /** A successful normal write advances this tab's known baseline. */
     observedWrite(raw: string | null) {
-      baseline = persistedFingerprint(raw);
+      baselineRaw = raw;
+      baseline = undefined;
+      comparedRaw = undefined;
+      compared = undefined;
       writeFailed = false;
     },
     observedWriteFailure() {
       writeFailed = true;
     },
-    /** Observations and repeated previews NEVER adopt the current disk as the baseline. */
-    check(expectedFingerprint?: string): RecoveryStorageStatus {
-      let current: RecoveryStorageStatus;
+    clearFailedWriteIfUnchanged(expectedFingerprint: string) {
       try {
-        current = persistedFingerprint(read());
+        if (compare(read(), expectedFingerprint, true).ok) writeFailed = false;
+      } catch {
+        writeFailed = true;
+      }
+    },
+    /** Compare the actual key before writing. Matching owned bytes need no JSON parsing. */
+    writeIssue(): Extract<RecoveryStorageStatus, { ok: false }> | null {
+      try {
+        const raw = read();
+        if (raw === baselineRaw && (!baseline || baseline.ok)) return null;
+        const status = compare(raw, undefined, true);
+        return status.ok ? null : status;
+      } catch {
+        return {
+          ok: false,
+          code: 'storage_unavailable',
+          message: '브라우저 저장 자료를 읽지 못했습니다. 저장 권한을 확인해 주세요.',
+        };
+      }
+    },
+    /** Observations and repeated previews never adopt the current disk as the baseline. */
+    check(
+      expectedFingerprint?: string,
+      { retryFailedWrite = false }: { retryFailedWrite?: boolean } = {},
+    ): RecoveryStorageStatus {
+      try {
+        return compare(read(), expectedFingerprint, retryFailedWrite);
       } catch {
         return unavailable();
       }
-      if (!current.ok) return current;
-      if (!baseline || writeFailed) return unavailable();
-      if (!baseline.ok) return baseline;
-      if (current.fingerprint !== baseline.fingerprint)
-        return {
-          ok: false,
-          code: 'storage_changed',
-          message:
-            '다른 탭 또는 창에서 브라우저 저장 자료가 바뀌어 복원을 적용하지 않았습니다. 현재 작업을 내보내 보관하고, 다른 탭의 자료를 확인한 뒤 새로 열어 주세요. 자동으로 합치거나 덮어쓰지 않았습니다.',
-        };
-      if (expectedFingerprint !== undefined && current.fingerprint !== expectedFingerprint)
-        return {
-          ok: false,
-          code: 'storage_preview_stale',
-          message:
-            '검토 후 브라우저 저장 자료가 달라졌습니다. 현재 자료로 다시 검토한 뒤 적용해 주세요.',
-        };
-      return current;
     },
   };
 }
+
+export const workspaceStorageGuard = createRecoveryStorageGuard(() =>
+  localStorage.getItem(RECOVERY_STORAGE_KEY),
+);

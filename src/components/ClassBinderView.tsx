@@ -224,6 +224,11 @@ const savedCardDomKey = (id: string) =>
     .map((unit) => unit.charCodeAt(0).toString(16).padStart(4, '0'))
     .join('');
 
+const findSavedOpenButton = (id: string) =>
+  document.querySelector<HTMLButtonElement>(
+    `[data-saved-sequence-id="${savedCardDomKey(id)}"] [data-open-saved="true"]`,
+  );
+
 const areStepsEquivalentForDraftCheck = (
   savedSteps: SequenceStep[],
   currentSteps: SequenceStep[],
@@ -391,6 +396,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     loadSequenceIntoWorkbench,
     duplicateSavedSequence,
     deleteSavedSequence,
+    deletedSavedSequences,
+    restoreDeletedSequence,
+    purgeDeletedSequence,
     applyConditionTemplate,
     addClassGroup,
     applyPresetDraft,
@@ -433,7 +441,15 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [groupFormError, setGroupFormError] = useState('');
   const [message, setMessage] = useState('');
   const [historyCopyError, setHistoryCopyError] = useState('');
-  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<SavedSequence | null>(null);
+  const [purgeId, setPurgeId] = useState<string | null>(null);
+  const purgeEntry = deletedSavedSequences.find((entry) => entry.trashId === purgeId);
+  const trashSummaryRef = useRef<HTMLElement>(null);
+  const focusAfterTrashAction = (sequenceId?: string) =>
+    scheduleRaf(() => {
+      const restored = sequenceId ? findSavedOpenButton(sequenceId) : null;
+      (restored ?? trashSummaryRef.current ?? savedSearchInputRef.current)?.focus();
+    });
   const [pendingOverwrite, setPendingOverwrite] = useState<{
     sequenceId: string;
     mode: 'workbench' | 'stage';
@@ -1176,9 +1192,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const continueFromPrintModal = () => {
     if (!printSequence) return;
     const target = printSequence;
-    const cardOpenBtn = document.querySelector<HTMLButtonElement>(
-      `[data-saved-sequence-id="${savedCardDomKey(target.id)}"] [data-open-saved="true"]`,
-    );
+    const cardOpenBtn = findSavedOpenButton(target.id);
     setPrintSequence(null);
     requestOpenSavedSequence(target, 'workbench', cardOpenBtn ?? printTriggerRef.current);
   };
@@ -1407,6 +1421,76 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 </button>
               )}
             </div>
+            {deletedSavedSequences.length > 0 && (
+              <details className="binder-trash">
+                <summary ref={trashSummaryRef}>휴지통 ({deletedSavedSequences.length})</summary>
+                <p>휴지통은 이 브라우저에 보관됩니다. 백업에 담으려면 먼저 수업을 복구하세요.</p>
+                <ul>
+                  {deletedSavedSequences.map(({ trashId, deletedAt, sequence }) => {
+                    const asCopy = savedSequences.some((saved) => saved.id === sequence.id);
+                    const restoreLabel = asCopy ? '사본으로 복구' : '복구';
+                    return (
+                      <li key={trashId}>
+                        <div>
+                          <strong>{sequence.title}</strong>
+                          <small>
+                            {getApparatusLabelKo(sequence.apparatus)} · {formatDate(deletedAt)} 삭제
+                            {asCopy && ' · 같은 ID의 수업이 저장되어 있습니다.'}
+                          </small>
+                        </div>
+                        <PfButton
+                          variant="secondary"
+                          aria-label={`${sequence.title} ${restoreLabel}`}
+                          onClick={() => {
+                            const result = restoreDeletedSequence(trashId, asCopy);
+                            setMessage(result.message);
+                            if (result.success) focusAfterTrashAction(result.sequenceId);
+                          }}
+                        >
+                          {restoreLabel}
+                        </PfButton>
+                        <PfButton
+                          variant="ghost"
+                          aria-label={`${sequence.title} 영구 삭제`}
+                          onClick={() => setPurgeId(trashId)}
+                        >
+                          영구 삭제
+                        </PfButton>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            )}
+            {purgeEntry && (
+              <LightDismissDialog
+                open
+                title="휴지통에서 영구 삭제"
+                onClose={() => setPurgeId(null)}
+                maxWidth="440px"
+              >
+                <p>
+                  ‘{purgeEntry.sequence.title}’ 수업을 영구 삭제하면 이 휴지통에서 복구할 수
+                  없습니다.
+                </p>
+                <div className="teaching-form-actions">
+                  <PfButton variant="secondary" onClick={() => setPurgeId(null)}>
+                    취소
+                  </PfButton>
+                  <PfButton
+                    variant="danger"
+                    onClick={() => {
+                      const result = purgeDeletedSequence(purgeEntry.trashId);
+                      setMessage(result.message);
+                      setPurgeId(null);
+                      focusAfterTrashAction();
+                    }}
+                  >
+                    영구 삭제 확인
+                  </PfButton>
+                </div>
+              </LightDismissDialog>
+            )}
             {showSavedQuickFilters && (
               <div
                 className="pf-tabs pf-tabs--pills teaching-saved-quick-filters"
@@ -1974,7 +2058,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                             aria-label={`${sequence.title} 삭제`}
                             onClick={() => {
                               setPendingOverwrite(null);
-                              setPendingDelete(sequence.id);
+                              setPendingDelete(sequence);
                             }}
                           >
                             <Trash2 size={16} />
@@ -1992,13 +2076,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         >
                           <CalendarDays size={15} /> 이미 진행한 수업 기록하기
                         </button>
-                        {pendingDelete === sequence.id && (
+                        {pendingDelete === sequence && (
                           <div
                             className="teaching-delete-confirm"
                             role="region"
                             aria-label="시퀀스 삭제 확인"
                           >
-                            <p>이 시퀀스를 삭제할까요? 남긴 수업 기록은 유지됩니다.</p>
+                            <p>
+                              이 수업을 휴지통으로 옮길까요? 진행 기록은 그대로 남고, 수업안은
+                              나중에 복구할 수 있습니다.
+                            </p>
                             <PfButton
                               variant="secondary"
                               onClick={(event) => {
@@ -2028,9 +2115,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                                     ?.querySelector<HTMLInputElement>('input');
                                 const trigger =
                                   card?.querySelector<HTMLButtonElement>('.teaching-delete');
-                                deleteSavedSequence(sequence.id);
+                                const result = deleteSavedSequence(sequence.id);
                                 setPendingDelete(null);
-                                setMessage('시퀀스를 삭제했습니다.');
+                                setMessage(result.message);
+                                if (result.success) toggleSavedDetails(sequence.id);
                                 scheduleRaf(() =>
                                   (trigger?.isConnected ? trigger : next)?.focus(),
                                 );
@@ -3074,7 +3162,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       <p className="teaching-local-note" data-testid="binder-footer-local-note">
         {hasStorageIssue
           ? '일부 변경분이 아직 이 브라우저 저장소에 기록되지 않았습니다. 새로고침 전 JSON 백업을 내보내고 여유 공간을 확보한 뒤 다시 저장해 주세요.'
-          : '자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.'}
+          : '수업은 이 브라우저에 저장됩니다. 수업 하나는 더보기에서 링크나 QR로 공유하고, 전체 자료는 설정에서 백업할 수 있습니다.'}
       </p>
       <LightDismissDialog
         open={Boolean(savedPreview)}
@@ -3209,6 +3297,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     subtitle={printSequence.subtitle}
                     apparatus={printSequence.apparatus}
                     level={printSequence.level}
+                    targetMinutes={printSequence.targetMinutes}
                     steps={printSequence.steps}
                     exercises={exercises}
                     showPrintButton={false}

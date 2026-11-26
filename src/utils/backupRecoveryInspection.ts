@@ -1,5 +1,6 @@
 import { teachingScheduleContextSchema } from './teachingScheduleContext';
 import { z } from 'zod';
+import { savedSequenceTrashSchema } from '../schemas/savedSequenceTrash';
 import {
   cloudBackupDataSchema,
   criteriaSchema,
@@ -258,6 +259,8 @@ const persistedEnvelope = z
   .strict();
 const dataKeys = new Set(Object.keys(cloudBackupDataSchema.shape));
 const workspaceKeys = new Set([
+  'deletedSavedSequences',
+  'exerciseBrowseScope',
   'activeScheduleContext',
   'activeSequenceId',
   'activeTitle',
@@ -500,6 +503,7 @@ function parseInput(raw: string) {
     draft: SavedSequence | undefined;
   let exportedAt: string | undefined;
   let hadScheduleContext = false;
+  let localTrashCount = 0;
   if (own(input, 'format') || own(input, 'data')) {
     if (input.format === 'pilates-motion-review-packet')
       throw new InspectionError(
@@ -556,6 +560,10 @@ function parseInput(raw: string) {
         '이전 저장 자료에 현재 앱이 보존할 수 없는 항목이 있습니다. 원본 파일을 유지해 주세요.',
         unsupported.length,
       );
+    if (own(state, 'exerciseBrowseScope'))
+      z.enum(['owned', 'all']).parse(state.exerciseBrowseScope);
+    if (own(state, 'deletedSavedSequences'))
+      localTrashCount = savedSequenceTrashSchema.parse(state.deletedSavedSequences).length;
     if (own(state, 'activeScheduleContext')) {
       const context = teachingScheduleContextSchema.safeParse(state.activeScheduleContext);
       if (!context.success || context.data.draftSequenceId !== state.activeSequenceId)
@@ -633,7 +641,7 @@ function parseInput(raw: string) {
       '같은 수업 또는 이력 스냅샷 안에 중복된 stepId가 있어 안전하게 복원할 수 없습니다. 어떤 항목도 적용하지 않았습니다.',
     );
   }
-  return { sourceKind, data: checked, draft, bytes, exportedAt, hadScheduleContext };
+  return { sourceKind, data: checked, draft, bytes, exportedAt, hadScheduleContext, localTrashCount };
 }
 function mergeRecords<T extends { id: string }>(
   key: string,
@@ -999,6 +1007,13 @@ export function inspectBackupRecovery(
       notices.push({
         code: 'local_preferences',
         message: '이전 화면·테마 설정은 적용하지 않으며 현재 블록·제목·시간·잠금은 유지합니다.',
+      });
+    if (parsed.localTrashCount)
+      notices.push({
+        code: 'local_saved_sequence_trash',
+        message:
+          '휴지통의 수업은 가져오지 않습니다. 옮길 수업은 원래 브라우저에서 복구한 후 백업하세요.',
+        count: parsed.localTrashCount,
       });
     if (parsed.hadScheduleContext)
       notices.push({

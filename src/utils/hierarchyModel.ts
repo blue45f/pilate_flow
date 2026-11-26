@@ -1880,7 +1880,7 @@ export function createClassSequenceSnapshot(
   return deepFreeze(snapshot);
 }
 
-function reconstructExerciseFromSnapshot(snapshot: MovementSnapshot): HierarchyPilatesExercise {
+export function reconstructExerciseFromSnapshot(snapshot: MovementSnapshot): HierarchyPilatesExercise {
   return {
     id: snapshot.id,
     nameKo: snapshot.nameKo,

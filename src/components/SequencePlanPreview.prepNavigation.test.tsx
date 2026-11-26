@@ -159,7 +159,7 @@ describe('SequencePlanPreview readiness jump, section shortcuts, and cursor-safe
     const before = usePilatesStore.getState();
 
     const onClose = vi.fn();
-    const onSave = vi.fn();
+    const onSave = vi.fn(() => ({ success: true, message: '사본을 저장했습니다.' }));
     const onStart = vi.fn();
 
     const { container } = render(
@@ -282,7 +282,7 @@ describe('SequencePlanPreview readiness jump, section shortcuts, and cursor-safe
     storeListener.mockClear();
     storageSpy.mockClear();
     const before = usePilatesStore.getState();
-    const onSave = vi.fn();
+    const onSave = vi.fn(() => ({ success: true, message: '사본을 저장했습니다.' }));
     const onStart = vi.fn();
 
     const { container } = render(

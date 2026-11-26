@@ -25,6 +25,19 @@ describe('orthographic discovery separate from identity and safety', () => {
       normalizeDiscoveryText('체어페달'),
     );
   });
+  it('matches Korean initials within one field alongside ordinary search terms', () => {
+    const fields = ['리포머 풋워크', 'Footwork', '양쪽'];
+    for (const query of ['ㄹㅍㅁ', 'ㅍㅇㅋ', 'ᄑᄋᄏ', 'ㄹㅍㅁ foot', 'ㅇㅉ']) {
+      expect(matchesDiscoverySearch(fields, query), query).toBe(true);
+    }
+    expect(matchesDiscoverySearch(fields, '풋웍')).toBe(false);
+    expect(matchesDiscoverySearch(fields, 'ㅋㅇ')).toBe(false);
+    expect(matchesDiscoverySearch(['써클'], 'ㅅㅋ')).toBe(false);
+    expect(matchesDiscoverySearch(['써클'], 'ㅆㅋ')).toBe(true);
+    const teachingNotes = ['골반 시계를 떠올리며 호흡하기'];
+    expect(matchesDiscoverySearch(['브리지'], 'ㄱㅂㅅㄱ', teachingNotes)).toBe(false);
+    expect(matchesDiscoverySearch(['브리지'], 'ㅂㄹㅈ 호흡', teachingNotes)).toBe(true);
+  });
   it('does not create matches across field boundaries or interpret search as a regex', () => {
     expect(matchesDiscoverySearch(['arm', 'chair'], 'armchair')).toBe(false);
     expect(matchesDiscoverySearch(['A separate motion'], '.*approved.*')).toBe(

@@ -343,3 +343,40 @@
     transition: none;
   }
 }
+
+#root .flow-binder .binder-trash {
+  border-block-end: 1px solid var(--flow-binder-line);
+  margin: 8px 0 16px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+#root .flow-binder .binder-trash summary {
+  width: fit-content;
+  padding: 10px 4px;
+  cursor: pointer;
+  color: var(--flow-binder-ink);
+  font-weight: 500;
+}
+#root .flow-binder .binder-trash p,
+#root .flow-binder .binder-trash small {
+  color: #52645a;
+}
+#root .flow-binder .binder-trash ul {
+  padding: 0;
+  list-style: none;
+}
+#root .flow-binder .binder-trash li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-block: 8px;
+}
+#root .flow-binder .binder-trash li > div {
+  flex: 1 1 13rem;
+  min-width: 0;
+}
+#root .flow-binder .binder-trash small {
+  display: block;
+}

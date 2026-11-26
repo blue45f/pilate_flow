@@ -73,7 +73,7 @@ export const MobileSimpleSequenceBar: React.FC<MobileSimpleSequenceBarProps> = (
             className="pf-mobile-bar-btn"
             onClick={() => onSwitchPane('plan')}
           >
-            <span>내 시퀀스 ({exerciseCount})</span>
+            <span>내 시퀀스</span>
           </button>
         )}
         {voiceRehearsalTrigger}

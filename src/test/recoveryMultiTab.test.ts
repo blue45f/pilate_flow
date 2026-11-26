@@ -178,28 +178,36 @@ describe('recovery must preserve newer other-tab records', () => {
     expect(localStorage.getItem(key) === disk).toBe(true);
   });
 
-  it('detects a change between the first read and final changed commit', () => {
-    const before = usePilatesStore.getState();
-    const current = localStorage.getItem(key)!;
-    const external = JSON.parse(current);
-    external.state.exercises.push(externalExercise);
-    const externalRaw = JSON.stringify(external);
-    const originalRead = Storage.prototype.getItem;
-    const originalWrite = Storage.prototype.setItem;
-    let checks = 0;
-    const write = vi.spyOn(Storage.prototype, 'setItem');
-    const read = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (
-      this: Storage,
-      name,
-    ) {
-      if (name === key && ++checks === 2) originalWrite.call(this, key, externalRaw);
-      return originalRead.call(this, name);
-    });
-    expect(before.restoreBackup(backup([incomingExercise])).success).toBe(false);
-    expect(checks).toBe(2);
-    expect(usePilatesStore.getState()).toBe(before);
-    expect(write).not.toHaveBeenCalled();
-    read.mockRestore();
-    expect(localStorage.getItem(key) === externalRaw).toBe(true);
-  });
+  it.each([2, 3])(
+    'protects an external write during recovery check %s and later typing',
+    (changedOnRead) => {
+      const before = usePilatesStore.getState();
+      const current = localStorage.getItem(key)!;
+      const external = JSON.parse(current);
+      external.state.exercises.push(externalExercise);
+      const externalRaw = JSON.stringify(external);
+      const originalRead = Storage.prototype.getItem;
+      const originalWrite = Storage.prototype.setItem;
+      let checks = 0;
+      const write = vi.spyOn(Storage.prototype, 'setItem');
+      const read = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (
+        this: Storage,
+        name,
+      ) {
+        if (name === key && ++checks === changedOnRead) originalWrite.call(this, key, externalRaw);
+        return originalRead.call(this, name);
+      });
+      expect(before.restoreBackup(backup([incomingExercise])).success).toBe(false);
+      expect(checks).toBeGreaterThanOrEqual(changedOnRead);
+      expect(usePilatesStore.getState()).toBe(before);
+      expect(write).not.toHaveBeenCalled();
+      read.mockRestore();
+      expect(localStorage.getItem(key) === externalRaw).toBe(true);
+      before.setActiveSequenceMeta({ title: 'A continues editing after recovery failed' });
+      expect(usePilatesStore.getState().activeTitle).toBe(
+        'A continues editing after recovery failed',
+      );
+      expect(localStorage.getItem(key) === externalRaw).toBe(true);
+    },
+  );
 });

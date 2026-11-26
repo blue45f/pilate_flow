@@ -8,6 +8,19 @@ import type {
   SequenceStep,
   StepSideMode,
 } from '../types/pilates';
+import { z } from 'zod';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import {
+  boxStateSchema,
+  classSectionRoleSchema,
+  footbarStateSchema,
+  headrestStateSchema,
+  movementSnapshotSchema,
+  propSchema,
+  sequenceMotionStudyBindingSchema,
+  stepSchema,
+} from '../schemas/cloudBackupSchema';
+import { stepTimeEstimateSchema } from '../schemas/stepTimeEstimate';
 import type { MovementSnapshot } from '../types/hierarchy';
 import { isRestStep } from './sequenceEngine';
 
@@ -143,9 +156,7 @@ function pickQrVersionForBytePayload(byteLength: number): number {
       return v;
     }
   }
-  throw new Error(
-    'QR 공유 데이터 길이가 로컬 코드 용량(약 1,000바이트)을 초과했습니다. 시퀀스 메모 제외 옵션을 켜 주세요.',
-  );
+  throw new Error('QR 코드 한 장에 담을 수 있는 용량을 초과했습니다.');
 }
 
 function encodeCodewordsLevelL(utf8Bytes: Uint8Array, version: number): Uint8Array {
@@ -481,6 +492,37 @@ export function generateLocalQrCodeSvg(
 // Portable Zero-Server Sequence Share Codec (#pf_share=<base64url>)
 // ============================================================================
 
+const DEFAULT_EXERCISE_IDS = new Set(INITIAL_EXERCISES.map((exercise) => exercise.id));
+const MAX_SHARED_STEPS = 1000;
+const MAX_SHARE_TOKEN_LENGTH = 256 * 1024;
+
+// Only teaching settings travel with the sequence. Local group, schedule and draft IDs stay local.
+const shareStepSettingsSchema = z.object({
+  explanationSec: z.number().finite().nonnegative().optional(),
+  transitionSec: z.number().finite().nonnegative().optional(),
+  footbarOverride: footbarStateSchema.optional(),
+  headrestOverride: headrestStateSchema.optional(),
+  boxOverride: boxStateSchema.optional(),
+  propOverride: propSchema.optional(),
+  classSection: classSectionRoleSchema.optional(),
+  locked: z.boolean().optional(),
+  timeEstimate: stepTimeEstimateSchema.optional(),
+  motionStudy: sequenceMotionStudyBindingSchema.strip().optional(),
+});
+
+const shareMovementSetupSchema = movementSnapshotSchema
+  .pick({
+    isUnilateral: true,
+    bodyPosition: true,
+    spinalPlanes: true,
+    footbar: true,
+    headrest: true,
+    box: true,
+    props: true,
+    requiredEquipment: true,
+  })
+  .strip();
+
 export interface SharedSequenceStepCompact {
   /** 'r' for rest step, else exerciseId */
   readonly id: string;
@@ -492,8 +534,10 @@ export interface SharedSequenceStepCompact {
   readonly st?: number;
   readonly sd?: StepSideMode;
   readonly nt?: string;
+  readonly settings?: z.infer<typeof shareStepSettingsSchema>;
   /** Compact fallback metadata when an exercise is custom or crawled */
   readonly sn?: {
+    readonly setup?: z.infer<typeof shareMovementSetupSchema>;
     readonly ko: string;
     readonly ap: ApparatusType;
     readonly lv: DifficultyLevel;
@@ -522,6 +566,8 @@ export interface DecodedSharedSequence {
   readonly reformerBrand: ReformerBrand;
   readonly notesIncluded: boolean;
   readonly steps: SequenceStep[];
+  /** Snapshots with setup data supplied by the sender, suitable for a missing local record. */
+  readonly restorableMovements?: readonly MovementSnapshot[];
 }
 
 const VALID_EXERCISE_APPARATUS = new Set<string>([
@@ -607,55 +653,50 @@ export function encodeSequenceShareToken(input: EncodeSequenceShareInput): strin
   const includeNotes = Boolean(input.includeInstructorNotes);
   const exById = new Map((input.exercises ?? []).map((ex) => [ex.id, ex]));
 
-  const compactSteps: SharedSequenceStepCompact[] = input.steps.slice(0, 24).map((step) => {
+  if (!input.steps.length || input.steps.length > MAX_SHARED_STEPS) {
+    throw new Error(`공유할 수업 순서는 1개에서 ${MAX_SHARED_STEPS}개까지입니다.`);
+  }
+
+  const compactSteps: SharedSequenceStepCompact[] = input.steps.map((step) => {
+    if (!stepSchema.safeParse(step).success) {
+      throw new Error(`${step.order}번째 순서의 시간과 기구 설정을 확인한 뒤 다시 공유해 주세요.`);
+    }
+    const settings = shareStepSettingsSchema.parse(step);
+    const common = {
+      b: step.blockCategory,
+      d: step.durationMin,
+      ...(Object.keys(settings).length ? { settings } : {}),
+      ...(includeNotes && step.instructorNote?.trim() ? { nt: step.instructorNote } : {}),
+    };
     if (isRestStep(step)) {
       return {
         id: 'r',
-        b: step.blockCategory,
-        d: Number(Math.max(0.5, Math.min(30, step.durationMin)).toFixed(2)),
-        ...(includeNotes && step.instructorNote?.trim()
-          ? { nt: cleanPlainString(step.instructorNote, 80) }
-          : {}),
+        ...common,
       };
     }
 
     const ex = exById.get(step.exerciseId);
+    const source = step.exerciseSnapshot ?? ex;
     const needsSnapshot =
-      Boolean(step.exerciseSnapshot) ||
-      step.exerciseId.startsWith('ex-custom-') ||
-      step.exerciseId.startsWith('crawled-');
+      source &&
+      (step.exerciseSnapshot || ex?.isCustom || !DEFAULT_EXERCISE_IDS.has(step.exerciseId));
 
     return {
-      id: cleanPlainString(step.exerciseId, 64, 'ex-warmup-01'),
-      b: step.blockCategory,
-      d: Number(Math.max(0.5, Math.min(30, step.durationMin)).toFixed(2)),
+      id: step.exerciseId,
+      ...common,
       ...(step.selectedLayer && step.selectedLayer !== 'standard' ? { l: step.selectedLayer } : {}),
-      ...(step.customSpringOverride?.trim()
-        ? { sp: cleanPlainString(step.customSpringOverride, 24) }
-        : {}),
-      ...(step.repetitions !== undefined
-        ? { rp: Math.max(1, Math.min(100, Math.round(step.repetitions))) }
-        : {}),
-      ...(step.sets !== undefined ? { st: Math.max(1, Math.min(20, Math.round(step.sets))) } : {}),
+      ...(step.customSpringOverride?.trim() ? { sp: step.customSpringOverride } : {}),
+      ...(step.repetitions !== undefined ? { rp: step.repetitions } : {}),
+      ...(step.sets !== undefined ? { st: step.sets } : {}),
       ...(step.sideMode ? { sd: step.sideMode } : {}),
-      ...(includeNotes && step.instructorNote?.trim()
-        ? { nt: cleanPlainString(step.instructorNote, 80) }
-        : {}),
       ...(needsSnapshot
         ? {
             sn: {
-              ko: cleanPlainString(
-                ex?.nameKo ?? step.exerciseSnapshot?.nameKo ?? '공유 동작',
-                48,
-                '공유 동작',
-              ),
-              ap: ex?.apparatus ?? step.exerciseSnapshot?.apparatus ?? 'reformer',
-              lv: ex?.level ?? step.exerciseSnapshot?.level ?? '1.5',
-              sp: cleanPlainString(
-                ex?.springs ?? step.exerciseSnapshot?.springs ?? '1R 1B',
-                20,
-                '1R 1B',
-              ),
+              ko: source.nameKo,
+              ap: source.apparatus,
+              lv: source.level,
+              sp: source.springs,
+              setup: shareMovementSetupSchema.parse(source),
             },
           }
         : {}),
@@ -664,8 +705,8 @@ export function encodeSequenceShareToken(input: EncodeSequenceShareInput): strin
 
   const payload: SharedSequencePayloadV1 = {
     v: 1,
-    t: cleanPlainString(input.title, 64, '공유된 수업 시퀀스'),
-    ...(input.subtitle?.trim() ? { sub: cleanPlainString(input.subtitle, 80) } : {}),
+    t: cleanPlainString(input.title, 200, '공유된 수업 시퀀스'),
+    ...(input.subtitle?.trim() ? { sub: cleanPlainString(input.subtitle, 20000) } : {}),
     ap: VALID_APPARATUS.has(input.apparatus) ? input.apparatus : 'reformer',
     lv: VALID_LEVELS.has(input.level) ? input.level : '1.5',
     min: Math.max(5, Math.min(120, Math.round(input.targetMinutes || 50))),
@@ -678,6 +719,11 @@ export function encodeSequenceShareToken(input: EncodeSequenceShareInput): strin
   };
 
   const jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
+  if (Math.ceil((jsonBytes.length * 4) / 3) > MAX_SHARE_TOKEN_LENGTH) {
+    throw new Error(
+      '수업안이 공유 링크의 용량을 초과했습니다. 긴 메모를 제외하거나 수업안을 나누어 공유해 주세요.',
+    );
+  }
   return bytesToBase64Url(jsonBytes);
 }
 
@@ -699,6 +745,35 @@ export function buildSequenceShareUrl(
   };
 }
 
+export function prepareSequenceShare(input: EncodeSequenceShareInput): {
+  shareUrl: string | null;
+  qr: LocalQrMatrixResult | null;
+  message: string | null;
+} {
+  let shareUrl: string;
+  try {
+    shareUrl = buildSequenceShareUrl(input).shareUrl;
+  } catch (error) {
+    return {
+      shareUrl: null,
+      qr: null,
+      message:
+        error instanceof Error && !(error instanceof z.ZodError)
+          ? error.message
+          : '수업 순서의 설정을 확인한 뒤 다시 공유해 주세요.',
+    };
+  }
+  try {
+    return { shareUrl, qr: generateLocalQrCodeSvg(shareUrl), message: null };
+  } catch {
+    return {
+      shareUrl,
+      qr: null,
+      message: 'QR 코드 한 장에 담기에는 수업안이 깁니다. 아래 링크로 전체 순서를 공유하세요.',
+    };
+  }
+}
+
 export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedSharedSequence | null {
   const trimmed = rawInput.trim();
   if (!trimmed) return null;
@@ -711,7 +786,7 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
   }
   const ampIdx = token.indexOf('&');
   if (ampIdx >= 0) token = token.slice(0, ampIdx);
-  if (!token || token.length > 8192) return null;
+  if (!token || token.length > MAX_SHARE_TOKEN_LENGTH) return null;
 
   try {
     const bytes = base64UrlToBytes(token);
@@ -720,12 +795,12 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
     if (!parsed || typeof parsed !== 'object' || parsed.v !== 1 || !Array.isArray(parsed.st)) {
       return null;
     }
-    if (parsed.st.length === 0 || parsed.st.length > 30) {
+    if (parsed.st.length === 0 || parsed.st.length > MAX_SHARED_STEPS) {
       return null;
     }
 
-    const title = cleanPlainString(parsed.t, 64, '공유받은 필라테스 시퀀스');
-    const subtitle = cleanPlainString(parsed.sub, 80, '');
+    const title = cleanPlainString(parsed.t, 200, '공유받은 필라테스 시퀀스');
+    const subtitle = cleanPlainString(parsed.sub, 20000, '');
     const apparatus = (
       typeof parsed.ap === 'string' && VALID_APPARATUS.has(parsed.ap) ? parsed.ap : 'reformer'
     ) as ApparatusType | 'mixed';
@@ -741,17 +816,20 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
     ) as ReformerBrand;
 
     const stamp = Date.now();
+    const restorableMovements = new Map<string, MovementSnapshot>();
     const steps: SequenceStep[] = parsed.st.map((rawStep, idx) => {
       const item = rawStep as Partial<SharedSequenceStepCompact>;
       const blockCategory = (
         typeof item.b === 'string' && VALID_BLOCKS.has(item.b) ? item.b : 'core'
       ) as ClassBlockCategory;
-      const durationMin =
-        typeof item.d === 'number' && Number.isFinite(item.d)
-          ? Number(Math.max(0.5, Math.min(30, item.d)).toFixed(2))
-          : 4;
-      const instructorNote =
-        typeof item.nt === 'string' && item.nt.trim() ? cleanPlainString(item.nt, 80) : undefined;
+      const durationMin = item.d ?? 4;
+      const common = {
+        ...shareStepSettingsSchema.parse(item.settings ?? {}),
+        durationMin,
+        ...(parsed.notesIncluded === true && typeof item.nt === 'string' && item.nt.trim()
+          ? { instructorNote: item.nt }
+          : {}),
+      };
 
       if (item.id === 'r') {
         return {
@@ -760,13 +838,12 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
           order: idx + 1,
           blockCategory,
           exerciseId: '',
-          durationMin,
+          ...common,
           selectedLayer: 'standard',
-          ...(instructorNote ? { instructorNote } : {}),
         };
       }
 
-      const exerciseId = cleanPlainString(item.id, 64, 'ex-warmup-01');
+      const exerciseId = item.id ?? '';
       const selectedLayer = (
         typeof item.l === 'string' && VALID_LAYERS.has(item.l) ? item.l : 'standard'
       ) as LayerMode;
@@ -787,7 +864,7 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
             : '1.5';
         exerciseSnapshot = {
           id: exerciseId,
-          nameKo: cleanPlainString(item.sn.ko, 48, '공유 동작'),
+          nameKo: cleanPlainString(item.sn.ko, 20000, '공유 동작'),
           nameEn: 'Shared Studio Movement',
           apparatus: snAp,
           blockCategory,
@@ -798,20 +875,20 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
           targetMuscles: [],
           capturedAt: new Date(stamp).toISOString(),
           isUnilateral: Boolean(sideMode && sideMode !== 'together'),
-          springs: cleanPlainString(item.sn.sp, 20, '1R 1B'),
+          springs: cleanPlainString(item.sn.sp, 20000),
           box: 'none',
           footbar: 'high',
           headrest: 'flat',
           props: ['none'],
-          breathPattern: '자연스러운 흉식 호흡 유지',
-          cues: ['정렬과 스프링 장력을 현장에서 먼저 확인하세요.'],
-          precautions: '수행 전 대상자 컨디션과 기구 세팅을 강사가 직접 확인합니다.',
-          layers: {
-            easy: '가동범위 축소 진행',
-            standard: '표준 가동범위 진행',
-            hard: '코어 제어 심화 진행',
-          },
+          ...(item.sn.setup ? shareMovementSetupSchema.parse(item.sn.setup) : {}),
+          breathPattern: '',
+          cues: [],
+          precautions: '',
+          layers: { easy: '', standard: '', hard: '' },
         };
+        if (item.sn.setup && !restorableMovements.has(exerciseId)) {
+          restorableMovements.set(exerciseId, exerciseSnapshot);
+        }
       }
 
       return {
@@ -820,22 +897,19 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
         order: idx + 1,
         blockCategory,
         exerciseId,
-        durationMin,
+        ...common,
         selectedLayer,
-        ...(typeof item.sp === 'string' && item.sp.trim()
-          ? { customSpringOverride: cleanPlainString(item.sp, 24) }
-          : {}),
+        ...(typeof item.sp === 'string' && item.sp.trim() ? { customSpringOverride: item.sp } : {}),
         ...(typeof item.rp === 'number' && Number.isFinite(item.rp)
-          ? { repetitions: Math.max(1, Math.min(100, Math.round(item.rp))) }
+          ? { repetitions: item.rp }
           : {}),
-        ...(typeof item.st === 'number' && Number.isFinite(item.st)
-          ? { sets: Math.max(1, Math.min(20, Math.round(item.st))) }
-          : {}),
+        ...(typeof item.st === 'number' && Number.isFinite(item.st) ? { sets: item.st } : {}),
         ...(sideMode ? { sideMode } : {}),
-        ...(instructorNote ? { instructorNote } : {}),
         ...(exerciseSnapshot ? { exerciseSnapshot } : {}),
       };
     });
+
+    if (!steps.every((step) => stepSchema.safeParse(step).success)) return null;
 
     return {
       title,
@@ -844,7 +918,8 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
       level,
       targetMinutes,
       reformerBrand,
-      notesIncluded: Boolean(parsed.notesIncluded),
+      notesIncluded: parsed.notesIncluded === true,
+      restorableMovements: [...restorableMovements.values()],
       steps,
     };
   } catch {

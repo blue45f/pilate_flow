@@ -139,6 +139,7 @@ describe('Natural-Language AI Sequence Composer & In-Place Studio UX', () => {
     fireEvent.click(screen.getByRole('button', { name: '전체' }));
 
     // 2. Natural-language AI prompt compose
+    fireEvent.click(screen.getByText('수업 자동 구성', { selector: 'summary span' }));
     const promptInput = screen.getByTestId('ai-quick-prompt-input');
     fireEvent.change(promptInput, {
       target: { value: '리포머 초급 40분 허리 부담 없이 코어 위주로 짜줘' },

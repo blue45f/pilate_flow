@@ -24,7 +24,7 @@ import {
   formatWholeSecondsToMMSS,
 } from '../utils/durationFormat';
 import { isImeComposing } from '../utils/imeGuard';
-import { localScheduleDate } from '../utils/instructorSchedule';
+import { addScheduleDays, localScheduleDate } from '../utils/instructorSchedule';
 import { getSequenceDurations, getStepTiming } from '../utils/sequenceEngine';
 import {
   addSharedSequenceComment,
@@ -328,7 +328,7 @@ function seedFixtureWorkspace() {
             participantAlias: '가상 그룹 A반',
             recurrence: 'once',
             weekdays: [],
-            startDate: today,
+            startDate: addScheduleDays(today, 1),
             startTime: '23:00',
             endTime: '23:45',
             notes: '다음 수업 준비 연결 확인',
@@ -582,7 +582,7 @@ describe('Instructor loop contracts & 6 mandatory journeys (PF-01 ~ PF-08, P2, P
     const assignRes = usePilatesStore.getState().assignSequenceToOccurrence({
       sequenceId: sourceId,
       classId: 'cls-virtual-next',
-      originalDate: localScheduleDate(),
+      originalDate: usePilatesStore.getState().instructorSchedule.classes[0]!.startDate,
       state: 'prepared',
     });
     expect(assignRes.success).toBe(true);

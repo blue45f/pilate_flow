@@ -125,6 +125,7 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
     const firstEx = usePilatesStore.getState().exercises[0]!;
     usePilatesStore.setState({
       activeTitle: '단계형 테스트 수업',
+      activeApparatus: firstEx.apparatus,
       activeTargetMinutes: 50,
       activeSteps: [
         {

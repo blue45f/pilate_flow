@@ -1,8 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClassBinderView } from './ClassBinderView';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatalog';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
+import { inspectBackupRecovery } from '../utils/backupRecoveryInspection';
 import { revisionExercise, revisionSource } from '../test/datedRevisionFixtures';
 
 const original = usePilatesStore.getState();
@@ -19,6 +21,7 @@ beforeEach(() =>
   usePilatesStore.setState({
     ...original,
     savedSequences: [first(), second()],
+    deletedSavedSequences: [],
     exercises: [revisionExercise],
     generationError: null,
   }),
@@ -159,6 +162,96 @@ describe('compact saved sequence disclosure', () => {
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' })).toHaveFocus(),
     );
+  });
+
+  it('restores the original plan from the local trash after hydration, retaining step and class metadata', async () => {
+    const initial = usePilatesStore.getState();
+    const source = initial.savedSequences[0];
+    const { unmount } = render(<ClassBinderView onOpenLogModal={vi.fn()} />);
+    const scope = expand();
+    fireEvent.click(scope.getByRole('button', { name: 'first 계획 삭제' }));
+    fireEvent.click(scope.getByRole('button', { name: '삭제 확인' }));
+    expect(usePilatesStore.getState().deletedSavedSequences[0].sequence).toEqual(source);
+    expect(JSON.parse(initial.exportBackup()).data.savedSequences).toEqual([second()]);
+    expect(JSON.parse(initial.exportBackup()).data).not.toHaveProperty('deletedSavedSequences');
+    const disk = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
+    const imported = inspectBackupRecovery(disk, usePilatesStore.getState());
+    expect(imported.success && imported.summary.notices).toContainEqual(
+      expect.objectContaining({ code: 'local_saved_sequence_trash', count: 1 }),
+    );
+    unmount();
+    await act(async () => {
+      await usePilatesStore.persist.rehydrate();
+    });
+    render(<ClassBinderView onOpenLogModal={vi.fn()} />);
+    fireEvent.click(screen.getByText('휴지통 (1)'));
+    fireEvent.click(screen.getByRole('button', { name: 'first 계획 복구' }));
+    await waitFor(() => expect(card().getByRole('button', { name: '불러오기' })).toHaveFocus());
+    const restored = usePilatesStore.getState();
+    expect(restored.savedSequences).toEqual([source, second()]);
+    expect(restored.deletedSavedSequences).toEqual([]);
+    expect(restored.historyLogs).toEqual(initial.historyLogs);
+    expect(restored.activeSteps).toEqual(initial.activeSteps);
+    expect(restored.activeSequenceId).toBe(initial.activeSequenceId);
+  });
+
+  it('keeps a newer same-ID plan, allows a separate copy, and ignores a repeated restore', () => {
+    const state = usePilatesStore.getState();
+    state.deleteSavedSequence('first');
+    const { trashId } = usePilatesStore.getState().deletedSavedSequences[0];
+    const newer = { ...first(), title: '같은 ID로 가져온 새 버전' };
+    usePilatesStore.setState({ savedSequences: [newer, second()] });
+    expect(state.restoreDeletedSequence(trashId).success).toBe(false);
+    render(<ClassBinderView onOpenLogModal={vi.fn()} />);
+    fireEvent.click(screen.getByText('휴지통 (1)'));
+    fireEvent.click(screen.getByRole('button', { name: 'first 계획 사본으로 복구' }));
+    const [copy, preserved] = usePilatesStore.getState().savedSequences;
+    expect(preserved).toEqual(newer);
+    expect(copy.id).not.toBe(newer.id);
+    expect(copy.title).toBe('first 계획 (복구 사본)');
+    expect(copy.steps).toEqual(first().steps);
+    expect(state.restoreDeletedSequence(trashId, true).success).toBe(false);
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(3);
+  });
+
+  it('rolls back both shelves if the storage write fails and can retry once storage recovers', async () => {
+    const before = usePilatesStore.getState();
+    const disk = localStorage.getItem(RECOVERY_STORAGE_KEY);
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('용량 초과', 'QuotaExceededError');
+    });
+    try {
+      expect(before.deleteSavedSequence('first')).toMatchObject({ success: false });
+      await Promise.resolve();
+      expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
+      expect(usePilatesStore.getState().deletedSavedSequences).toBe(before.deletedSavedSequences);
+      expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(disk);
+    } finally {
+      write.mockRestore();
+    }
+    expect(before.deleteSavedSequence('first').success).toBe(true);
+    expect(usePilatesStore.getState().deletedSavedSequences).toHaveLength(1);
+  });
+
+  it('keeps deletion reversible until permanent removal is confirmed and refuses a stale disk write', () => {
+    const state = usePilatesStore.getState();
+    state.deleteSavedSequence('first');
+    render(<ClassBinderView onOpenLogModal={vi.fn()} />);
+    fireEvent.click(screen.getByText('휴지통 (1)'));
+    fireEvent.click(screen.getByRole('button', { name: 'first 계획 영구 삭제' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '취소' }));
+    expect(usePilatesStore.getState().deletedSavedSequences).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'first 계획 영구 삭제' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: '영구 삭제 확인' }),
+    );
+    expect(usePilatesStore.getState().deletedSavedSequences).toEqual([]);
+    const changedDisk = JSON.parse(localStorage.getItem(RECOVERY_STORAGE_KEY)!);
+    changedDisk.state.savedSequences = [first(), second()];
+    localStorage.setItem(RECOVERY_STORAGE_KEY, JSON.stringify(changedDisk));
+    expect(state.deleteSavedSequence('second').success).toBe(false);
+    expect(usePilatesStore.getState().savedSequences).toEqual([second()]);
+    expect(JSON.parse(localStorage.getItem(RECOVERY_STORAGE_KEY)!)).toEqual(changedDisk);
   });
 
   it('keeps the expanded original identified by ID after duplication changes the sorted order', () => {

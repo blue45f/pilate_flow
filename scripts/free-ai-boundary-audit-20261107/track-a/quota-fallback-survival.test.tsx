@@ -829,7 +829,6 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
     it.each(FAILURE_MODES)(
       'survives $label — local AI fallbacks, sequence editing, binder saving, history logging, and backup/restore work 100%',
       async ({ expectedClientErrorCode, createFailingTransport }) => {
-        resetStudioStoreWithReviewedCatalog();
         const client = createFreeAiClient({
           transport: createFailingTransport(),
           envRecord: {},

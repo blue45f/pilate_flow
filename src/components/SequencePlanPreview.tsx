@@ -21,7 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, getExerciseEquipment, PROP_OPTIONS } from '../data/equipmentCatalog';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { usePilatesStore, type SequencePlanningActionResult } from '../store/usePilatesStore';
 import type {
   ApparatusType,
   DifficultyLevel,
@@ -55,7 +55,7 @@ import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 interface SequencePlanPreviewProps {
   onClose: () => void;
   /** Explicit plan actions; rehearsal itself never saves or starts teaching. */
-  onSave?: () => void;
+  onSave?: () => SequencePlanningActionResult;
   onStart?: () => void;
   canStartClass?: boolean;
   startReadiness?: string;
@@ -175,9 +175,7 @@ export function SequencePlanPreview({
   const liveLevel = usePilatesStore((state) => state.activeLevel);
   const reformerBrand = usePilatesStore((state) => state.reformerBrand);
   const setReformerBrand = usePilatesStore((state) => state.setReformerBrand);
-  const saveFeedback = usePilatesStore((state) => state.saveFeedback);
-  const persistenceError = usePilatesStore((state) => state.persistenceError);
-  const [saveRequested, setSaveRequested] = useState(false);
+  const [saveResult, setSaveResult] = useState<SequencePlanningActionResult | null>(null);
   const savingCopyRef = useRef(false);
   const titleId = useId();
   const descriptionId = useId();
@@ -533,6 +531,7 @@ export function SequencePlanPreview({
                   title={snapshot.title}
                   apparatus={snapshot.apparatus}
                   level={snapshot.level}
+                  targetMinutes={snapshot.targetMinutes}
                   steps={snapshot.steps}
                   exercises={snapshot.exercises}
                   reviewedTeachingExerciseIds={reviewedTeachingExerciseIds}
@@ -811,6 +810,8 @@ export function SequencePlanPreview({
                           .getState()
                           .setActiveSequenceMeta({ targetMinutes: nextTargetMinutes });
                         setSnapshot((prev) => ({ ...prev, targetMinutes: nextTargetMinutes }));
+                        setSaveResult(null);
+                        savingCopyRef.current = false;
                       }}
                     >
                       현재 계획 시간으로 목표 맞추기
@@ -1180,12 +1181,12 @@ export function SequencePlanPreview({
                     </button>
                   )}
               </div>
-              {saveRequested && (persistenceError || saveFeedback) && (
+              {saveResult && (
                 <p
-                  role={persistenceError ? 'alert' : 'status'}
+                  role={saveResult.success ? 'status' : 'alert'}
                   className="sequence-preview-save-feedback"
                 >
-                  {persistenceError || saveFeedback}
+                  {saveResult.message}
                 </p>
               )}
               <div className="sequence-preview-actions">
@@ -1196,19 +1197,25 @@ export function SequencePlanPreview({
                   <button
                     type="button"
                     className="btn-secondary"
-                    disabled={snapshotChanged || !snapshot.steps.length || saveRequested}
+                    disabled={snapshotChanged || !snapshot.steps.length || saveResult?.success}
                     onClick={() => {
                       if (savingCopyRef.current) return;
                       savingCopyRef.current = true;
                       rehearsal.pause();
-                      setSaveRequested(true);
-                      onSave();
-                      queueMicrotask(() => {
+                      try {
+                        const result = onSave();
+                        setSaveResult(result);
+                        savingCopyRef.current = result.success;
+                      } catch {
+                        setSaveResult({
+                          success: false,
+                          message: '사본을 저장하지 못했습니다. 다시 시도해 주세요.',
+                        });
                         savingCopyRef.current = false;
-                      });
+                      }
                     }}
                   >
-                    <BookmarkPlus size={17} /> {saveRequested && !persistenceError ? '사본 저장됨' : '사본 저장'}
+                    <BookmarkPlus size={17} /> {saveResult?.success ? '사본 저장됨' : '사본 저장'}
                   </button>
                 )}
                 {onStart && (
@@ -1237,8 +1244,8 @@ export function SequencePlanPreview({
             open={qrShareOpen}
             onClose={() => setQrShareOpen(false)}
             title={snapshot.title}
-            apparatus={usePilatesStore.getState().activeApparatus}
-            level={usePilatesStore.getState().activeLevel}
+            apparatus={snapshot.apparatus}
+            level={snapshot.level}
             targetMinutes={snapshot.targetMinutes}
             reformerBrand={reformerBrand}
             steps={snapshot.steps}

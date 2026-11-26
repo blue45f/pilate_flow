@@ -15,7 +15,7 @@ import {
   HONEST_BRAND_SPRING_CAUTION_KO,
   formatBrandSpringEquivalent,
 } from '../utils/brandSpringConverter';
-import { buildSequenceShareUrl, generateLocalQrCodeSvg } from '../utils/localQrSequenceShare';
+import { prepareSequenceShare } from '../utils/localQrSequenceShare';
 import { formatDifficultyBadgeKo } from '../utils/memberBookingBridge';
 import {
   formatSecondsToMMSS,
@@ -33,6 +33,7 @@ export interface OnePageVisual3DCueSheetProps {
   readonly subtitle?: string;
   readonly apparatus: ApparatusType | 'mixed';
   readonly level: DifficultyLevel;
+  readonly targetMinutes?: number;
   readonly steps: readonly SequenceStep[];
   readonly exercises: readonly PilatesExercise[];
   readonly showPrintButton?: boolean;
@@ -54,6 +55,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
   subtitle,
   apparatus,
   level,
+  targetMinutes,
   steps,
   exercises,
   showPrintButton = true,
@@ -84,27 +86,22 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
 
   const cornerQrResult = useMemo(() => {
     if (!showCornerQr || steps.length === 0) return null;
-    try {
-      const targetMin = Math.max(5, Math.round(durations.totalSec / 60) || 50);
-      const built = buildSequenceShareUrl({
-        title,
-        subtitle,
-        apparatus,
-        level,
-        targetMinutes: targetMin,
-        reformerBrand: activeBrand,
-        steps,
-        exercises,
-        includeInstructorNotes: false,
-      });
-      return generateLocalQrCodeSvg(built.shareUrl, { quietZone: 2 });
-    } catch {
-      return null;
-    }
+    return prepareSequenceShare({
+      title,
+      subtitle,
+      apparatus,
+      level,
+      targetMinutes: targetMinutes ?? Math.max(5, Math.round(durations.totalSec / 60) || 50),
+      reformerBrand: activeBrand,
+      steps,
+      exercises,
+      includeInstructorNotes: false,
+    });
   }, [
     showCornerQr,
     steps,
     durations.totalSec,
+    targetMinutes,
     title,
     subtitle,
     apparatus,
@@ -271,7 +268,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
               </PfButton>
             )}
           </div>
-          {cornerQrResult && (
+          {cornerQrResult?.qr && (
             <div
               className="pf-visual-1p-qr-corner"
               data-testid="one-page-visual-cuesheet-qr"
@@ -279,9 +276,25 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
             >
               <div
                 className="pf-visual-1p-qr-corner__svg"
-                dangerouslySetInnerHTML={{ __html: cornerQrResult.svgMarkup }}
+                dangerouslySetInnerHTML={{ __html: cornerQrResult.qr.svgMarkup }}
               />
               <span>태블릿 스캔</span>
+            </div>
+          )}
+          {cornerQrResult?.message && (
+            <div className="cue-sheet-no-print">
+              <p className="status" role="status">
+                {cornerQrResult.message}
+              </p>
+              {cornerQrResult.shareUrl && (
+                <input
+                  type="text"
+                  readOnly
+                  aria-label="큐시트 공유 링크"
+                  value={cornerQrResult.shareUrl}
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              )}
             </div>
           )}
         </div>

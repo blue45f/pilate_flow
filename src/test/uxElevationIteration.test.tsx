@@ -59,6 +59,7 @@ function buildApprovedReformerExercise(
 }
 
 function resetWorkbenchStore() {
+  usePilatesStore.persist.clearStorage();
   localStorage.clear();
   sessionStorage.clear();
   const initial = usePilatesStore.getState();

@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createRecoveryStorageGuard } from './recoveryStorageGuard';
 
 const data = (version = 3, state: Record<string, unknown> = { exercises: [] }) =>
   JSON.stringify({ version, state });
 
-describe('recovery-only disk observation', () => {
+describe('workspace disk observation', () => {
   it.each([0, 3])(
     'accepts an observed version %s and advances on confirmed owned writes',
     (version) => {
@@ -23,6 +23,28 @@ describe('recovery-only disk observation', () => {
         });
     },
   );
+
+  it('skips JSON parsing for owned writes and reuses comparisons for repeated external bytes', () => {
+    let disk = data();
+    const guard = createRecoveryStorageGuard(() => disk);
+    guard.observedRead(disk);
+    const parse = vi.spyOn(JSON, 'parse');
+    try {
+      for (const title of ['초', '초안', '초안 수정']) {
+        expect(guard.writeIssue()).toBeNull();
+        disk = data(3, { title });
+        guard.observedWrite(disk);
+      }
+      expect(parse).not.toHaveBeenCalled();
+      disk = data(3, { title: '다른 탭' });
+      expect(guard.writeIssue()?.code).toBe('storage_changed');
+      expect(parse).toHaveBeenCalledTimes(2);
+      expect(guard.writeIssue()?.code).toBe('storage_changed');
+      expect(parse).toHaveBeenCalledTimes(2);
+    } finally {
+      parse.mockRestore();
+    }
+  });
 
   it('never promotes an external value by checking repeatedly or supplying its token', () => {
     let disk = data();
@@ -111,7 +133,9 @@ describe('recovery-only disk observation', () => {
     guard.observedWrite(disk);
     disk = null;
     expect(guard.check()).toMatchObject({ ok: false, code: 'storage_changed' });
+    expect(guard.writeIssue()?.code).toBe('storage_changed');
     guard.observedWrite(null);
+    expect(guard.writeIssue()).toBeNull();
     expect(guard.check().ok).toBe(true);
   });
 

@@ -8,6 +8,7 @@ import { useCloudSession } from '../lib/cloudSync';
 import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria, SavedSequence, SequenceStep } from '../types/pilates';
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import { syntheticPlanningExercise } from './planningFixtures';
 
 const originalStore = usePilatesStore.getState();
@@ -118,6 +119,115 @@ describe('Quota failure honest save labels, RAM/disk safety, retry & single-plan
     useCloudSession.setState(originalCloud, true);
     await settleStorage();
     localStorage.clear();
+  });
+
+  it.each(['빠른 요약', '정밀 편집'])(
+    '%s 리허설에서 저장 실패를 알리고 같은 사본을 한 번만 재시도한다',
+    async (editor) => {
+      const handlers = {
+        onOpenYouTubePreview: vi.fn(),
+        onOpenClipper: vi.fn(),
+        onOpenLogModal: vi.fn(),
+      };
+      if (editor === '빠른 요약') {
+        render(
+          <SequenceStudioWorkbench
+            {...handlers}
+            onOpenInventory={vi.fn()}
+            onStartClass={vi.fn()}
+          />,
+        );
+        fireEvent.click(screen.getByTestId('flow-open-quick-rehearsal-btn'));
+      } else {
+        render(<SequenceWorkbench {...handlers} />);
+        fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
+      }
+      const dialog = within(
+        await screen.findByRole('dialog', { name: '전체 수업 계획 미리보기' }, { timeout: 8000 }),
+      );
+      const before = usePilatesStore.getState();
+      const disk = localStorage.getItem(RECOVERY_STORAGE_KEY);
+      const quota = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('용량 초과', 'QuotaExceededError');
+      });
+      const save = dialog.getByRole('button', { name: '사본 저장' });
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(dialog.getByRole('alert')).toHaveTextContent('브라우저 저장 공간'),
+      );
+      expect(save).toBeEnabled();
+      expect(dialog.queryByText('사본 저장됨')).not.toBeInTheDocument();
+      expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
+      expect(usePilatesStore.getState().activeSequenceId).toBe(before.activeSequenceId);
+      expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(disk);
+      quota.mockRestore();
+      fireEvent.click(save);
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(dialog.getByRole('button', { name: '사본 저장됨' })).toBeDisabled(),
+      );
+      const after = usePilatesStore.getState();
+      expect(after.savedSequences).toHaveLength(before.savedSequences.length + 1);
+      expect(after.savedSequences[0].steps).toEqual(before.activeSteps);
+      expect(
+        JSON.parse(localStorage.getItem(RECOVERY_STORAGE_KEY)!).state.savedSequences[0].id,
+      ).toBe(after.activeSequenceId);
+    },
+  );
+
+  it('다른 탭의 편집은 기본 저장이나 JSON 백업으로 덮어쓰지 않고 명시한 덮어쓰기에서만 교체한다', async () => {
+    const localTitle = '현재 탭의 편집 초안';
+    usePilatesStore.setState({ activeTitle: localTitle });
+    render(
+      <SequenceStudioWorkbench
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+        onOpenLogModal={vi.fn()}
+        onOpenInventory={vi.fn()}
+        onStartClass={vi.fn()}
+      />,
+    );
+    const beforeRaw = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
+    const remote = JSON.parse(beforeRaw);
+    remote.state.activeTitle = '다른 탭에서 계속 편집 중인 초안';
+    const externalRaw = JSON.stringify(remote);
+    localStorage.setItem(RECOVERY_STORAGE_KEY, externalRaw);
+    // Also protects a click delivered before its corresponding storage event.
+    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+    const banner = within(await screen.findByTestId('flow-cross-tab-conflict-banner'));
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(externalRaw);
+    const createUrl = vi.fn<typeof URL.createObjectURL>(() => 'blob:local-backup');
+    const originalCreateUrl = URL.createObjectURL;
+    const originalRevokeUrl = URL.revokeObjectURL;
+    URL.createObjectURL = createUrl;
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    try {
+      vi.useFakeTimers();
+      fireEvent.click(banner.getByRole('button', { name: '현재 작업 JSON 백업' }));
+      vi.advanceTimersByTime(1000);
+      vi.useRealTimers();
+      expect(createUrl).toHaveBeenCalledOnce();
+      const payload = createUrl.mock.calls[0][0] as Blob;
+      const json = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(payload);
+      });
+      expect(JSON.parse(json).data.activeDraft.title).toContain(localTitle);
+      expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(externalRaw);
+      fireEvent.click(banner.getByRole('button', { name: '현재 내용으로 덮어쓰기' }));
+      await waitFor(() =>
+        expect(JSON.parse(localStorage.getItem(RECOVERY_STORAGE_KEY)!).state.activeTitle).toBe(
+          localTitle,
+        ),
+      );
+    } finally {
+      vi.useRealTimers();
+      URL.createObjectURL = originalCreateUrl;
+      URL.revokeObjectURL = originalRevokeUrl;
+    }
   });
 
   it.each([

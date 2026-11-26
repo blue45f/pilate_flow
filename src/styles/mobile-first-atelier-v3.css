@@ -1263,6 +1263,35 @@
   color: #26483d;
 }
 
+.pf-qr-print-sheet {
+  display: none;
+}
+
+@media print {
+  body:has(> .pf-qr-print-sheet) > :not(.pf-qr-print-sheet),
+  body:has(> .pf-qr-print-sheet) dialog[open] {
+    display: none !important;
+  }
+  .pf-qr-print-sheet,
+  .pf-qr-print-sheet * {
+    visibility: visible !important;
+  }
+  .pf-qr-print-sheet {
+    display: block;
+    color: black;
+    background: white;
+    break-inside: avoid;
+    text-align: center;
+    word-break: keep-all;
+    font-variant-numeric: tabular-nums;
+  }
+  .pf-qr-print-sheet svg {
+    width: 85mm;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
 .pf-qr-share-modal {
   display: flex;
   flex-direction: column;
