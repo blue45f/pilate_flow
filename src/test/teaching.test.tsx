@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiveStageView } from '../components/LiveStageView';
 import { LogSessionModal } from '../components/LogSessionModal';
@@ -139,6 +139,102 @@ describe('teaching timer and honest session records', () => {
       if (descriptor) Object.defineProperty(navigator, 'wakeLock', descriptor);
       else Reflect.deleteProperty(navigator, 'wakeLock');
     }
+  });
+  it('keeps one screen lock across foreground, mid-class settings and pending requests', async () => {
+    const originalWakeLock = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');
+    const originalVisibility = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+    const createLock = () => Object.assign(new EventTarget(), { release: vi.fn(async () => {}) });
+    const staleLock = createLock();
+    const activeLock = createLock();
+    const resumedLock = createLock();
+    let finishFirst!: (lock: typeof staleLock) => void;
+    const request = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<typeof staleLock>((resolve) => {
+            finishFirst = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(activeLock)
+      .mockResolvedValueOnce(resumedLock);
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request } });
+    const changeVisibility = (value: DocumentVisibilityState) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value });
+      fireEvent(document, new Event('visibilitychange'));
+    };
+    try {
+      changeVisibility('visible');
+      render(<LiveStageView onOpenLogModal={vi.fn()} />);
+      const setting = screen.getByLabelText('수업 중 화면 켜 두기');
+      fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+      changeVisibility('visible');
+      expect(request).toHaveBeenCalledTimes(1);
+      fireEvent.click(setting);
+      expect(screen.getByText('화면 유지 꺼짐')).toBeVisible();
+      await act(async () => {
+        fireEvent.click(setting);
+      });
+      expect(screen.getByText('화면 유지 중')).toBeVisible();
+      await act(async () => {
+        finishFirst(staleLock);
+      });
+      expect(staleLock.release).toHaveBeenCalledOnce();
+      expect(activeLock.release).not.toHaveBeenCalled();
+      changeVisibility('hidden');
+      expect(activeLock.release).toHaveBeenCalledOnce();
+      await act(async () => {
+        changeVisibility('visible');
+      });
+      expect(request).toHaveBeenCalledTimes(3);
+      fireEvent.click(screen.getByRole('button', { name: '일시정지' }));
+      expect(resumedLock.release).toHaveBeenCalledOnce();
+      changeVisibility('hidden');
+      changeVisibility('visible');
+      expect(request).toHaveBeenCalledTimes(3);
+    } finally {
+      if (originalWakeLock) Object.defineProperty(navigator, 'wakeLock', originalWakeLock);
+      else Reflect.deleteProperty(navigator, 'wakeLock');
+      if (originalVisibility)
+        Object.defineProperty(document, 'visibilityState', originalVisibility);
+      else Reflect.deleteProperty(document, 'visibilityState');
+    }
+  });
+  it('counts timed and manually confirmed steps without completing skipped movements', () => {
+    const onLog = vi.fn();
+    const { unmount } = render(<LiveStageView onOpenLogModal={onLog} />);
+    fireEvent.click(screen.getByTestId('live-stage-checklist-toggle'));
+    fireEvent.click(screen.getByRole('button', { name: '다음 동작' }));
+    const drawer = within(screen.getByTestId('live-stage-checklist-drawer'));
+    const [skipped, current] = drawer.getAllByRole('checkbox');
+    expect(skipped).not.toBeChecked();
+    expect(current).not.toBeChecked();
+    expect(drawer.getByRole('button', { name: '현재 진행 중' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+    jumpWallClock(120);
+    expect(current).toBeChecked();
+    fireEvent.click(current);
+    expect(current).not.toBeChecked();
+    fireEvent.click(skipped);
+    expect(screen.getByTestId('live-stage-checklist-toggle')).toHaveTextContent('1/2');
+    fireEvent.click(screen.getByRole('button', { name: '종료 / 기록' }));
+    fireEvent.click(screen.getByRole('button', { name: '검토하고 기록하기' }));
+    expect(onLog).toHaveBeenCalledWith(
+      'teaching-draft',
+      expect.objectContaining({
+        actualDurationSec: 120,
+        taughtStepIds: steps.map((step) => step.stepId),
+      }),
+    );
+    unmount();
+    render(<LiveStageView onOpenLogModal={onLog} />);
+    fireEvent.click(screen.getByRole('button', { name: '중단 지점 복구' }));
+    fireEvent.click(screen.getByTestId('live-stage-checklist-toggle'));
+    const restored = within(screen.getByTestId('live-stage-checklist-drawer')).getAllByRole(
+      'checkbox',
+    );
+    expect(restored[0]).toBeChecked();
+    expect(restored[1]).not.toBeChecked();
   });
   it('uses absolute elapsed time after delayed ticks and excludes pauses', () => {
     const onLog = vi.fn();

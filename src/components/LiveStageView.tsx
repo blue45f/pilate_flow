@@ -4,6 +4,8 @@ import { getActiveWorkspaceOwner } from '../lib/accountStorage';
 import {
   clearTeachingRecovery,
   readTeachingRecovery,
+  readCompletionOverrides,
+  type RecoverableTeachingClock,
   teachingDraftFingerprint,
   teachingRecoveryKey,
   writeTeachingRecovery,
@@ -57,7 +59,7 @@ import {
 } from '../utils/instructorUxHelpers';
 import { getStudioTrackAdapters, type PlanBConstraint } from '../utils/studioTrackSlots';
 import { ensureWorldExercisesInStore } from '../utils/registerAllStudioAdapters';
-import { triggerSubtleHapticPulse } from '../hooks/useScreenWakeLock';
+import { triggerSubtleHapticPulse, useScreenWakeLock } from '../hooks/useScreenWakeLock';
 import { MobilePoseCameraGuide } from './MobilePoseCameraGuide';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
 import { MemberFeedbackCardModal } from './MemberFeedbackCardModal';
@@ -102,15 +104,11 @@ import {
 
 export const LIVE_STAGE_CHECKPOINT_KEY = 'pf_live_stage_checkpoint_v1';
 
-interface LiveStageSessionCheckpoint {
+interface LiveStageSessionCheckpoint extends RecoverableTeachingClock {
   readonly owner?: string | null;
   readonly sequenceId: string;
   readonly sourceSignature: string;
   readonly steps: SequenceStep[];
-  readonly index: number;
-  readonly remainingMs: number;
-  readonly elapsedMs: number;
-  readonly elapsedByStep: Record<number, number>;
 }
 
 export interface LiveStageNavigationHandle {
@@ -128,13 +126,9 @@ interface LiveStageViewProps {
   onNavigationCancelled?: () => void;
 }
 
-interface TeachingClock {
-  index: number;
-  remainingMs: number;
-  elapsedMs: number;
+interface TeachingClock extends RecoverableTeachingClock {
   running: boolean;
   sampledAt: number;
-  elapsedByStep: Record<number, number>;
 }
 
 type StageUndoState =
@@ -216,6 +210,7 @@ function sampleClock(
     delta -= remaining;
     if (!autoAdvance || index >= durations.length - 1)
       return {
+        ...clock,
         index,
         remainingMs: 0,
         elapsedMs: clock.elapsedMs + consumed,
@@ -228,6 +223,7 @@ function sampleClock(
   }
   elapsedByStep[index] = (elapsedByStep[index] ?? 0) + delta;
   return {
+    ...clock,
     index,
     remainingMs: remaining - delta,
     elapsedMs: clock.elapsedMs + consumed + delta,
@@ -318,9 +314,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       ) {
         return null;
       }
-      if ((parsed.elapsedMs ?? 0) <= 0 && parsed.index === 0) return null;
+      const completionOverrides = readCompletionOverrides(parsed.completionOverrides, parsed.steps);
+      if ((parsed.elapsedMs ?? 0) <= 0 && parsed.index === 0 && !completionOverrides) return null;
       window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
-      return parsed;
+      return { ...parsed, completionOverrides };
     } catch {
       return null;
     }
@@ -356,6 +353,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [clock, setClock] = useState<TeachingClock>(() =>
     initialCheckpoint
       ? {
+          completionOverrides: initialCheckpoint.completionOverrides,
           index: initialCheckpoint.index,
           remainingMs: Math.max(0, initialCheckpoint.remainingMs),
           elapsedMs: Math.max(0, initialCheckpoint.elapsedMs),
@@ -376,7 +374,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [presentationMode, setPresentationMode] = useState<'focused' | 'reference'>('focused');
   const [highContrast, setHighContrast] = useState(false);
   const [screenOn, setScreenOn] = useState(true);
-  const [wakeStatus, setWakeStatus] = useState('시작 시 화면 유지 요청');
+  const screenLock = useScreenWakeLock(screenOn && clock.running);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [showAllCues, setShowAllCues] = useState(false);
@@ -391,6 +389,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const clockRef = useRef(clock);
   const autoAdvanceRef = useRef(autoAdvance);
   const undoRef = useRef<StageUndoState | null>(undoState);
+  const wroteCheckpoint = useRef(false);
 
   useEffect(() => {
     stepsRef.current = steps;
@@ -399,10 +398,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     autoAdvanceRef.current = autoAdvance;
     undoRef.current = undoState;
     try {
-      if (
-        (clock.elapsedMs > 0 || clock.index > 0) &&
-        recoveryIdentity.owner === getActiveWorkspaceOwner()
-      ) {
+      if (recoveryIdentity.owner !== getActiveWorkspaceOwner()) return;
+      if (clock.elapsedMs > 0 || clock.index > 0 || clock.completionOverrides) {
         const checkpoint: LiveStageSessionCheckpoint = {
           owner: recoveryIdentity.owner,
           sequenceId: session.id,
@@ -412,8 +409,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           remainingMs: clock.remainingMs,
           elapsedMs: clock.elapsedMs,
           elapsedByStep: clock.elapsedByStep,
+          completionOverrides: clock.completionOverrides,
         };
         window.sessionStorage.setItem(LIVE_STAGE_CHECKPOINT_KEY, JSON.stringify(checkpoint));
+        wroteCheckpoint.current = true;
+      } else if (wroteCheckpoint.current) {
+        window.sessionStorage.removeItem(LIVE_STAGE_CHECKPOINT_KEY);
+        wroteCheckpoint.current = false;
       }
     } catch {
       // Ignore sessionStorage restrictions
@@ -479,7 +481,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         autoAdvanceRef.current,
       );
       const modified = JSON.stringify(stepsRef.current) !== recoveryIdentity.originalSteps;
-      if (!sampled.running && sampled.elapsedMs === 0 && sampled.index === 0 && !modified) return;
+      if (
+        !sampled.running &&
+        sampled.elapsedMs === 0 &&
+        sampled.index === 0 &&
+        !modified &&
+        !sampled.completionOverrides
+      ) {
+        if (lastRecoveryWrite.current) clearTeachingRecovery(recoveryIdentity.key);
+        lastRecoveryWrite.current = 0;
+        return;
+      }
       if (!force && now - lastRecoveryWrite.current < 1000) return;
       lastRecoveryWrite.current = now;
       const { index, remainingMs, elapsedMs, elapsedByStep } = sampled;
@@ -488,7 +500,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         fingerprint: recoveryIdentity.fingerprint,
         savedAt: now,
         steps: stepsRef.current.map((step) => ({ ...step })),
-        clock: { index, remainingMs, elapsedMs, elapsedByStep: { ...elapsedByStep } },
+        clock: {
+          index,
+          remainingMs,
+          elapsedMs,
+          elapsedByStep: { ...elapsedByStep },
+          completionOverrides: sampled.completionOverrides,
+        },
       });
       if (!saved && active)
         setRecoveryStatus(
@@ -527,10 +545,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     // Identity is captured once per mounted teaching session; refs hold the current clock.
   }, [recoveryIdentity, session.id]);
 
-  const wakeRef = useRef<WakeLockSentinel | null>(null);
-  const mounted = useRef(true);
-  const runningIntent = useRef(false);
-  const screenEnabled = useRef(true);
   const boardRef = useRef<HTMLDivElement>(null);
   const applyPresentationMode = (mode: 'focused' | 'reference') => {
     setPresentationMode(mode);
@@ -637,20 +651,20 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     );
   };
   const [checklistOpen, setChecklistOpen] = useState(false);
-  const [manualCheckedStepIds, setManualCheckedStepIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
   const checkedStepIds = useMemo(() => {
-    const merged = new Set(manualCheckedStepIds);
-    for (let i = 0; i < clock.index; i += 1) {
-      const st = steps[i];
-      if (st) merged.add(st.stepId);
-    }
-    return merged;
-  }, [manualCheckedStepIds, clock.index, steps]);
+    const checked = new Set<string>();
+    steps.forEach((step, index) => {
+      const manuallyChecked = clock.completionOverrides?.[step.stepId];
+      const timedToEnd = (clock.elapsedByStep[index] ?? 0) >= durations[index];
+      if (typeof manuallyChecked === 'boolean' ? manuallyChecked : timedToEnd) {
+        checked.add(step.stepId);
+      }
+    });
+    return checked;
+  }, [clock.completionOverrides, clock.elapsedByStep, durations, steps]);
   const stageSectionSummaries = useMemo(
-    () => summarizeStageSections(steps, checkedStepIds, clock.index),
-    [steps, checkedStepIds, clock.index],
+    () => summarizeStageSections(steps, checkedStepIds),
+    [steps, checkedStepIds],
   );
   const bilateralProgress = useMemo(
     () =>
@@ -677,65 +691,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     };
   }, [clock.running, durations, autoAdvance]);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      void wakeRef.current?.release().catch(() => undefined);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!clock.running) {
-      runningIntent.current = false;
-      void wakeRef.current?.release().catch(() => undefined);
-    }
-  }, [clock.running]);
-
-  const requestScreenLock = async () => {
-    if (!screenEnabled.current || (wakeRef.current && !wakeRef.current.released)) return;
-    if (!('wakeLock' in navigator)) {
-      setWakeStatus('화면 유지 미지원 · 기기 설정을 확인해 주세요');
-      return;
-    }
-    try {
-      const lock = await navigator.wakeLock.request('screen');
-      if (!mounted.current || !runningIntent.current || !screenEnabled.current) {
-        await lock.release();
-        return;
-      }
-      wakeRef.current = lock;
-      setWakeStatus('화면 유지 중');
-      lock.addEventListener('release', () => {
-        if (mounted.current) setWakeStatus('화면 유지 해제됨');
-      });
-    } catch {
-      if (mounted.current) setWakeStatus('화면 유지 요청을 사용할 수 없어요');
-    }
-  };
-
   const timerSwipeRef = useRef<{ active: boolean; startX: number; startY: number }>({
     active: false,
     startX: 0,
     startY: 0,
   });
-
-  useEffect(() => {
-    const reacquireWakeLockOnVisible = () => {
-      if (
-        document.visibilityState === 'visible' &&
-        !document.hidden &&
-        runningIntent.current &&
-        screenEnabled.current
-      ) {
-        void requestScreenLock();
-      }
-    };
-    document.addEventListener('visibilitychange', reacquireWakeLockOnVisible);
-    return () => {
-      document.removeEventListener('visibilitychange', reacquireWakeLockOnVisible);
-    };
-  }, []);
 
   const requiresRecoveryChoice = () => {
     if (!pendingRecoveryRef.current || !sameRecoveryOwner) return false;
@@ -747,18 +707,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const liveClock = clockRef.current;
     const liveDurations = durationsRef.current;
     if (liveClock.running) {
-      runningIntent.current = false;
       classVoice.pause();
       applyClock((value) => ({
         ...sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
         running: false,
       }));
-      void wakeRef.current?.release().catch(() => undefined);
     } else {
       const activeStep = stepsRef.current[liveClock.index];
       const activeEx = activeStep ? exerciseMap.get(activeStep.exerciseId) : undefined;
       const startRemainingMs = liveClock.remainingMs || liveDurations[liveClock.index] || 0;
-      runningIntent.current = true;
       classVoice.start(
         startRemainingMs / 1000,
         liveClock.remainingMs > 0 ? phase : resolveInitialStepPhase(activeStep, activeEx),
@@ -769,7 +726,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         running: true,
         sampledAt: Date.now(),
       }));
-      void requestScreenLock();
     }
   };
 
@@ -849,7 +805,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       targetElapsedBaselineMs: sampled.elapsedByStep[nextIndex] ?? 0,
     });
 
-    runningIntent.current = true;
     applyClock((value) => ({
       ...value,
       index: nextIndex,
@@ -857,7 +812,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       running: true,
     }));
     setShowAllCues(false);
-    void requestScreenLock();
   };
 
   const extendStepBySeconds = (deltaSeconds: 15 | 30 | 60) => {
@@ -1038,20 +992,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const shouldRun = undo.wasRunning && restoredRemainingMs > 0;
 
       if (!shouldRun) {
-        runningIntent.current = false;
         classVoice.pause();
-        void wakeRef.current?.release().catch(() => undefined);
-      } else {
-        runningIntent.current = true;
-        if (sampled.index === undo.fromIndex && !sampled.running) {
-          const restoredStep = stepsRef.current[undo.fromIndex];
-          const restoredEx = restoredStep ? exerciseMap.get(restoredStep.exerciseId) : undefined;
-          classVoice.start(
-            restoredRemainingMs / 1000,
-            resolveInitialStepPhase(restoredStep, restoredEx),
-          );
-        }
-        void requestScreenLock();
+      } else if (sampled.index === undo.fromIndex && !sampled.running) {
+        const restoredStep = stepsRef.current[undo.fromIndex];
+        const restoredEx = restoredStep ? exerciseMap.get(restoredStep.exerciseId) : undefined;
+        classVoice.start(
+          restoredRemainingMs / 1000,
+          resolveInitialStepPhase(restoredStep, restoredEx),
+        );
       }
 
       applyClock((value) => ({
@@ -1174,9 +1122,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const shouldKeepRunning =
         nextRemainingMs === 0 && !autoAdvanceRef.current ? false : sampled.running;
       if (sampled.running && !shouldKeepRunning) {
-        runningIntent.current = false;
         classVoice.pause();
-        void wakeRef.current?.release().catch(() => undefined);
       }
       applyClock((value) => ({
         ...value,
@@ -1197,7 +1143,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   const pauseForReview = () => {
     if (requiresRecoveryChoice()) return;
-    runningIntent.current = false;
     classVoice.pause();
     setReviewTarget(null);
     applyClock((value) => ({
@@ -1213,9 +1158,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const hasSessionData =
       liveClock.running ||
       liveClock.elapsedMs > 0 ||
+      liveClock.completionOverrides ||
       liveClock.index > 0 ||
       JSON.stringify(liveSteps) !== JSON.stringify(activeSteps);
-    runningIntent.current = false;
     classVoice.pause();
     if (!hasSessionData) {
       navigate('workbench');
@@ -1631,12 +1576,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const hasSessionData =
         liveClock.running ||
         liveClock.elapsedMs > 0 ||
+        liveClock.completionOverrides ||
         JSON.stringify(liveSteps) !== JSON.stringify(activeSteps);
       if (!hasSessionData) return false;
       if (reviewOpen) {
         closeReview();
       }
-      runningIntent.current = false;
       classVoice.pause();
       setExitTarget(destination);
       setRequestedDestinationLabel(label ?? null);
@@ -1661,15 +1606,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     (sum, step, index) => sum + (isRestStep(step) ? (clock.elapsedByStep[index] ?? 0) / 1000 : 0),
     0,
   );
-  const elapsedTaughtStepIds = steps
-    .filter((_, index) => (clock.elapsedByStep[index] ?? 0) > 0)
+  const taughtStepIds = steps
+    .filter((step, index) => (clock.elapsedByStep[index] ?? 0) > 0 || checkedStepIds.has(step.stepId))
     .map((step) => step.stepId);
   const logContext: TeachingLogContext = {
     actualDurationSec: Math.round(clock.elapsedMs / 1000),
     actualRestDurationSec: Math.round(trackedRestSec),
     stepsSnapshot: steps.map((step) => ({ ...step })),
     sequenceTitle: session.title,
-    taughtStepIds: elapsedTaughtStepIds,
+    taughtStepIds,
   };
 
   useEffect(() => {
@@ -1929,7 +1874,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   return;
                 }
                 classVoice.pause();
-                runningIntent.current = false;
                 applySteps(() => recovered.steps.map((step) => ({ ...step })));
                 applyClock(() => ({
                   ...recovered.clock,
@@ -2031,6 +1975,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   const freshSteps = activeSteps.map((st) => ({ ...st }));
                   const freshDurations = computeStepDurationsMs(freshSteps);
                   clearSessionRecovery();
+                  recoveryFinished.current = false;
                   setRestoredFromReload(false);
                   applyUndo(null);
                   applySteps(() => freshSteps);
@@ -2097,6 +2042,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             className="btn-secondary"
             data-testid="live-stage-checklist-toggle"
             aria-expanded={checklistOpen}
+            aria-controls={checklistOpen ? 'live-stage-checklist' : undefined}
             onClick={() => setChecklistOpen((value) => !value)}
           >
             진행 체크표 ({checkedStepIds.size}/{steps.length})
@@ -2245,6 +2191,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         <section
           className="pf-stage-checklist-drawer"
           data-testid="live-stage-checklist-drawer"
+          id="live-stage-checklist"
           aria-label="실시간 수업 진행 체크표"
         >
           <div
@@ -2256,13 +2203,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               gap: '8px',
             }}
           >
-            <strong>실시간 진행 체크표 (타이머는 계속 유지됩니다)</strong>
+            <strong>동작별 완료 확인</strong>
             <div className="pf-stage-checklist-sections">
               {stageSectionSummaries.map((sec) => (
                 <button
                   key={sec.role}
                   type="button"
                   className="pf-routine-tag-chip pf-routine-tag-chip--compact"
+                  aria-label={`${sec.labelKo} 구간으로 이동 · ${sec.stepCount}개 중 ${sec.completedCount}개 완료`}
+                  disabled={clock.index === sec.firstStepIndex}
                   onClick={() => selectStep(sec.firstStepIndex)}
                 >
                   {sec.labelKo} {sec.completedCount}/{sec.stepCount}
@@ -2291,7 +2240,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       alignItems: 'center',
                       gap: '8px',
                       cursor: 'pointer',
-                      minHeight: '36px',
+                      minHeight: '44px',
                     }}
                   >
                     <input
@@ -2299,12 +2248,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       checked={isChecked}
                       aria-label={`${idx + 1}번 ${titleKo} 완료 표시`}
                       onChange={(e) => {
+                        if (requiresRecoveryChoice()) return;
                         const checked = e.target.checked;
-                        setManualCheckedStepIds((prev) => {
-                          const nextSet = new Set(prev);
-                          if (checked) nextSet.add(stepItem.stepId);
-                          else nextSet.delete(stepItem.stepId);
-                          return nextSet;
+                        applyClock((value) => {
+                          const overrides = { ...value.completionOverrides };
+                          const timedToEnd = (value.elapsedByStep[idx] ?? 0) >= durations[idx];
+                          if (timedToEnd === checked) delete overrides[stepItem.stepId];
+                          else overrides[stepItem.stepId] = checked;
+                          return {
+                            ...value,
+                            completionOverrides: Object.keys(overrides).length ? overrides : undefined,
+                          };
                         });
                       }}
                     />
@@ -2315,6 +2269,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   <button
                     type="button"
                     className="flow-text-button"
+                    disabled={isCurrent}
                     onClick={() => selectStep(idx)}
                   >
                     {isCurrent ? '현재 진행 중' : '이 순서로 이동'}
@@ -3854,17 +3809,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         <label className="teaching-switch">
           <input
             type="checkbox"
-            checked={screenOn}
-            onChange={(event) => {
-              screenEnabled.current = event.target.checked;
-              setScreenOn(event.target.checked);
-              if (!event.target.checked) void wakeRef.current?.release().catch(() => undefined);
-            }}
+            checked={screenOn && screenLock.supported}
+            disabled={!screenLock.supported}
+            onChange={(event) => setScreenOn(event.target.checked)}
           />
           <Sun size={15} />
-          <span>시작 시 화면 유지</span>
+          <span>수업 중 화면 켜 두기</span>
         </label>
-        <span className="muted">{wakeStatus}</span>
+        <span className="muted" role="status">
+          {screenOn ? screenLock.message : '화면 유지 꺼짐'}
+        </span>
         <span className="muted">추가 시간은 이번 진행에만 적용됩니다.</span>
       </div>
       {poseMirrorOpen && (

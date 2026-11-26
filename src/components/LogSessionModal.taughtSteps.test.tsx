@@ -184,7 +184,7 @@ describe('LogSessionModal taughtStepIds selection & draft recovery contracts', (
     expect(stepDetails).toHaveAttribute('open');
     expect(stepDetails).toHaveTextContent('실제로 진행한 동작 확인 · 1 / 2개');
     expect(
-      dialog.getByText('진행한 동작만 선택해 주세요. 타이머를 사용한 동작을 먼저 선택해 두었습니다.'),
+      dialog.getByText('타이머를 사용했거나 진행 체크표에서 완료한 동작이 선택되어 있어요. 실제 수업에 맞게 조정해 주세요.'),
     ).toBeInTheDocument();
 
     expect(dialog.getByRole('checkbox', { name: warmupEx.nameKo })).not.toBeChecked();

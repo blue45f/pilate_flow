@@ -172,7 +172,6 @@ const SECTION_LABELS_KO: Record<ClassSectionRole, string> = {
 export function summarizeStageSections(
   steps: readonly SequenceStep[],
   checkedStepIds: ReadonlySet<string>,
-  currentIndex: number,
 ): readonly StageSectionSummary[] {
   const roles: ClassSectionRole[] = ['preparation', 'main', 'cooldown'];
   return roles
@@ -185,7 +184,7 @@ export function summarizeStageSections(
         if (stepRole !== role) return;
         if (firstStepIndex < 0) firstStepIndex = idx;
         stepCount += 1;
-        if (checkedStepIds.has(step.stepId) || idx < currentIndex) {
+        if (checkedStepIds.has(step.stepId)) {
           completedCount += 1;
         }
       });

@@ -1,86 +1,81 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-interface WakeLockSentinelLike {
-  readonly released?: boolean;
-  release: () => Promise<void>;
-  addEventListener?: (type: string, listener: () => void) => void;
-  removeEventListener?: (type: string, listener: () => void) => void;
-}
+type WakeStatus = 'requesting' | 'locked' | 'released' | 'denied';
 
-interface WakeLockApiLike {
-  readonly request?: (type: 'screen') => Promise<WakeLockSentinelLike>;
-}
+const statusText: Record<WakeStatus, string> = {
+  requesting: '화면 유지 요청 중',
+  locked: '화면 유지 중',
+  released: '화면 유지 해제됨',
+  denied: '화면 유지 요청을 사용할 수 없어요',
+};
 
-function getWakeLockApi(): WakeLockApiLike | undefined {
-  if (typeof navigator === 'undefined') return undefined;
-  return (navigator as unknown as { wakeLock?: WakeLockApiLike }).wakeLock;
-}
-
-/**
- * Keeps the smartphone/tablet screen awake automatically while teaching a 50-minute class.
- * Gracefully degrades to no-op in browsers/environments without Screen Wake Lock support.
- */
-export function useScreenWakeLock(active: boolean): {
-  readonly supported: boolean;
-  readonly locked: boolean;
-} {
-  const supported = typeof getWakeLockApi()?.request === 'function';
-  const [hasSentinel, setHasSentinel] = useState(false);
-  const sentinelRef = useRef<WakeLockSentinelLike | null>(null);
+export function useScreenWakeLock(active: boolean) {
+  const api = typeof navigator === 'undefined' ? undefined : navigator.wakeLock;
+  const supported = typeof api?.request === 'function';
+  const [status, setStatus] = useState<WakeStatus>('requesting');
 
   useEffect(() => {
-    if (!supported || !active) {
-      const current = sentinelRef.current;
-      sentinelRef.current = null;
-      if (current) {
-        void current.release().catch(() => undefined);
+    if (!active || !supported) return;
+    let generation = 0;
+    let pending = false;
+    let held: WakeLockSentinel | null = null;
+
+    const onSystemRelease = (event: Event) => {
+      if (event.target !== held) return;
+      held = null;
+      setStatus('released');
+    };
+    const release = () => {
+      generation++;
+      pending = false;
+      if (!held) return;
+      held.removeEventListener?.('release', onSystemRelease);
+      if (!held.released) void held.release().catch(() => undefined);
+      held = null;
+    };
+    const syncVisibility = async () => {
+      if (document.visibilityState !== 'visible') {
+        release();
+        setStatus('released');
+        return;
       }
-      return;
-    }
-
-    let cancelled = false;
-
-    const acquire = async () => {
+      if (pending || (held && !held.released)) return;
+      const current = generation;
+      pending = true;
+      setStatus('requesting');
       try {
-        const wakeLock = getWakeLockApi();
-        if (!wakeLock?.request || cancelled) return;
-        const sentinel = await wakeLock.request('screen');
-        if (cancelled) {
-          void sentinel.release().catch(() => undefined);
+        const lock = await api.request('screen');
+        if (current !== generation) {
+          await lock.release();
           return;
         }
-        sentinelRef.current = sentinel;
-        setHasSentinel(true);
-        const onRelease = () => {
-          if (!cancelled) setHasSentinel(false);
-        };
-        sentinel.addEventListener?.('release', onRelease);
+        held = lock;
+        lock.addEventListener('release', onSystemRelease, { once: true });
+        setStatus(lock.released ? 'released' : 'locked');
       } catch {
-        if (!cancelled) setHasSentinel(false);
+        if (current === generation) setStatus('denied');
+      } finally {
+        if (current === generation) pending = false;
       }
     };
 
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !cancelled) {
-        void acquire();
-      }
-    };
-
-    void acquire();
-    document.addEventListener('visibilitychange', handleVisibility);
-
+    void syncVisibility();
+    document.addEventListener('visibilitychange', syncVisibility);
     return () => {
-      cancelled = true;
-      document.removeEventListener('visibilitychange', handleVisibility);
-      const current = sentinelRef.current;
-      sentinelRef.current = null;
-      if (current) {
-        void current.release().catch(() => undefined);
-      }
+      document.removeEventListener('visibilitychange', syncVisibility);
+      release();
     };
-  }, [active, supported]);
+  }, [active, api, supported]);
 
-  return { supported, locked: supported && active && hasSentinel };
+  return {
+    supported,
+    locked: active && supported && status === 'locked',
+    message: !supported
+      ? '화면 유지 미지원 · 기기 설정을 확인해 주세요'
+      : active
+        ? statusText[status]
+        : '시작 시 화면 유지 요청',
+  };
 }
 
 /**

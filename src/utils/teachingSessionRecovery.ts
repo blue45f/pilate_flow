@@ -8,6 +8,7 @@ const MAX_AGE_MS = 12 * 60 * 60 * 1000;
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000;
 
 export interface RecoverableTeachingClock {
+  completionOverrides?: Record<string, boolean>;
   index: number;
   remainingMs: number;
   elapsedMs: number;
@@ -19,6 +20,17 @@ export interface TeachingRecoverySnapshot {
   savedAt: number;
   steps: SequenceStep[];
   clock: RecoverableTeachingClock;
+}
+
+export function readCompletionOverrides(value: unknown, steps: SequenceStep[]) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const knownIds = new Set(steps.map((step) => step.stepId));
+  const overrides = Object.fromEntries(
+    Object.entries(value).filter(
+      ([id, checked]) => knownIds.has(id) && typeof checked === 'boolean',
+    ),
+  ) as Record<string, boolean>;
+  return Object.keys(overrides).length ? overrides : undefined;
 }
 
 /** Tab-scoped, account-scoped recovery only. Never part of cloud backups or completed history. */
@@ -100,6 +112,7 @@ export function readTeachingRecovery(
       savedAt: value.savedAt,
       steps: structuredClone(value.steps),
       clock: {
+        completionOverrides: readCompletionOverrides(c.completionOverrides, value.steps),
         index: c.index,
         remainingMs: c.remainingMs,
         elapsedMs: c.elapsedMs,
