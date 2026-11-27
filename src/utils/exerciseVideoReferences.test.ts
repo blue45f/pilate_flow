@@ -93,7 +93,8 @@ describe('per-exercise video reference selection', () => {
     expect(references.length).toBeGreaterThan(2);
     const elephant = references.find((video) => video.videoId === '6onkc1noAi8')!;
     expect(elephant.relation).toBe('flow-component');
-    expect(elephant.matchReasonKo).toContain('전체 흐름');
+    expect(elephant.matchReasonKo).toContain('전체 순서가 같은지');
+    expect(elephant.matchReasonKo).toContain('이 동작이 몇 분에 나오는지는 아직 확인하지 못했어요');
   });
 
   it('connects new creator sources while distinguishing variants, components and different movement tasks', () => {
