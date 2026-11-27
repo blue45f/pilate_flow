@@ -94,7 +94,7 @@
 .practice-guide-instructions li::before {
   content: counter(practice-step, decimal-leading-zero);
   color: #44644c;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -110,7 +110,7 @@
 
 .practice-guide-instructions dt {
   margin-bottom: 2px;
-  font-size: 0.81rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #3f5d47;
 }
