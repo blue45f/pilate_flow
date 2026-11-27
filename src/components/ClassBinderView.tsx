@@ -1233,10 +1233,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     >
       <MovementWorkspaceCover
         notebook
-        title={view === 'saved' ? '저장한 수업' : '수업 기록'}
+        title={
+          <>
+            {view === 'saved' ? '저장한 수업' : '수업 기록'}{' '}
+            <PfBadge tone="neutral" shape="rect" className="teaching-count" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {view === 'saved' ? savedSequences.length : totalActualLogsCount}
+            </PfBadge>
+          </>
+        }
         description={view === 'saved'
-          ? (savedSequences.length ? `저장해 둔 수업 ${savedSequences.length}개 중 다시 쓸 수업을 골라 보세요.` : '수업을 만들어 저장하면 여기서 다시 열 수 있어요.')
-          : `지금까지 진행한 수업 ${totalActualLogsCount}건을 돌아보고 다음 수업을 준비하세요.`}
+          ? (savedSequences.length ? '다시 쓰고 싶은 수업을 골라 보세요.' : '수업을 만들어 저장하면 여기서 다시 열 수 있어요.')
+          : '지난 수업의 메모와 구성을 보면서 다음 수업을 준비하세요.'}
       >
         <PfButton
           className="cover-primary-action"

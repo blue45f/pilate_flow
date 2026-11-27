@@ -46,7 +46,7 @@ export function MovementWorkspaceCover({
 }: {
   apparatus?: ApparatusType | 'mixed';
   notebook?: boolean;
-  title: string;
+  title: ReactNode;
   description: string;
   children: ReactNode;
 }) {
