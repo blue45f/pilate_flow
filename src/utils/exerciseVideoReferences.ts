@@ -165,7 +165,7 @@ function relationFor(exercise: PilatesExercise, video: Candidate, currentIdentit
     return {
       relation: 'flow-component' as const,
       score,
-      reason: '여러 동작 중 한 가지를 비교할 수 있어요. 전체 흐름과 순서는 다를 수 있어요.',
+      reason: '여러 동작 중 한 가지를 비교할 수 있어요. 전체 순서가 같은지, 이 동작이 몇 분에 나오는지는 아직 확인하지 못했어요.',
     };
   if (VIDEO_REFERENCE_SCOPE[video.videoId] === 'flow-component')
     return {
