@@ -557,9 +557,8 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
       order: taughtLog.exerciseIds.indexOf(pending.id) + 1,
     });
     expect(usePilatesStore.getState().activeSteps).toEqual(plan);
-    expect(
-      await screen.findByText('합성 QA 직접 등록에서 기록까지 · 실제 수업 아님'),
-    ).toBeInTheDocument();
+    await screen.findByRole('heading', { level: 1, name: /수업 기록/ }, { timeout: 10_000 });
+    expect(screen.getByText('합성 QA 직접 등록에서 기록까지 · 실제 수업 아님')).toBeInTheDocument();
     const backup = usePilatesStore.getState().exportBackup();
     act(() => {
       usePilatesStore.setState((current) => ({
