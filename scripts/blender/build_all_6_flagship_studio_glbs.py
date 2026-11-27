@@ -29,6 +29,7 @@ ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
+from studio_surface_maps import finish_studio_glb
 from pilates_3d_modeling_kernel import (
     MeshCollector,
     add_cylinder_rod,
@@ -429,6 +430,7 @@ def build_flagship_glbs(only_keys: list[str] | None = None, poses_path: str | No
             tris, verts = verify_strict_hygiene(fname, final_objs)
             out_glb = os.path.join(out_dir, fname)
             export_selected_glb(final_objs, out_glb)
+            finish_studio_glb(out_glb)
             with open(out_glb, "rb") as gf:
                 glb_bytes = gf.read()
             results[app_key] = {

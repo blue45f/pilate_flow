@@ -281,7 +281,7 @@ fn fsMain(in: VertexOutput) -> @location(0) vec4<f32> {
   let zPos = max(0.0, in.worldPos.z);
   let floorAo = mix(0.76, 1.0, smoothstep(0.0, 0.28, zPos));
   let hemiAo = mix(0.84, 1.0, clamp(N.z * 0.5 + 0.5, 0.0, 1.0));
-  let underContact = 1.0 - smoothstep(0.32, 0.0, zPos) * max(0.0, -N.z) * 0.22;
+  let underContact = 1.0 - (1.0 - smoothstep(0.0, 0.32, zPos)) * max(0.0, -N.z) * 0.22;
   let ao = clamp(floorAo * hemiAo * underContact, 0.62, 1.0);
 
   let H = normalize(keyDir + V);
