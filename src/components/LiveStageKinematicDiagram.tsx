@@ -8,7 +8,11 @@ import {
 import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
 import type { PilatesExercise } from '../types/pilates';
 import { renderRealtimeStudio3DFrame } from '../utils/realtimeStudio3dEngine';
-import { sampleStudioMotionCycle, STUDIO_MOTION_CYCLE_MS } from '../utils/studioMotionPlayback';
+import {
+  getStudioMotionDuration,
+  getStudioMotionTiming,
+  sampleStudioMotionCycle,
+} from '../utils/studioMotionPlayback';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 
 export interface LiveStageKinematicDiagramProps {
@@ -43,6 +47,8 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
   const rafRef = useRef<number | null>(null);
   const [canvasReady, setCanvasReady] = useState(false);
 
+  const timing = getStudioMotionTiming(exercise.id);
+  const cycleDuration = getStudioMotionDuration(timing);
   const isDualStaticMode = reducedMotion || manualStaticCompare;
 
   useEffect(() => {
@@ -56,7 +62,7 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
       const elapsed = lastTimestamp === null ? 0 : Math.max(0, now - lastTimestamp);
       lastTimestamp = now;
       clockRef.current.progress =
-        (clockRef.current.progress + elapsed / STUDIO_MOTION_CYCLE_MS) % 1;
+        (clockRef.current.progress + elapsed / cycleDuration) % 1;
       setCycleFrame({ exerciseId: exercise.id, progress: clockRef.current.progress });
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -68,7 +74,7 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
         rafRef.current = null;
       }
     };
-  }, [running, isDualStaticMode, canAnimate, exercise.id]);
+  }, [running, isDualStaticMode, canAnimate, exercise.id, cycleDuration]);
 
   const effectiveSampleRatio =
     cycleFrame.exerciseId === exercise.id
@@ -77,7 +83,7 @@ const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps>
         ? stepProgressRatio
         : 0.5;
 
-  const cycle = sampleStudioMotionCycle(effectiveSampleRatio);
+  const cycle = sampleStudioMotionCycle(effectiveSampleRatio, timing);
   const visualPhaseId: VisualPhaseId =
     cycle.id === 'setup' || cycle.id === 'finish'
       ? 'start'

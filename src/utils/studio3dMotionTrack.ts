@@ -44,7 +44,7 @@ type BendFrame = { axis: Vec3; bend: Vec3; distance: number };
 
 function jointRoot(rig: Universal3DPoseRig, right: Vec3, limb: Limb): Vec3 {
   const parent = limb[2];
-  const axis = parent === 'pelvis' ? rig.pelvisRight ?? right : right;
+  const axis = parent === 'pelvis' ? (rig.pelvisRight ?? right) : right;
   return add(rig[parent], scale(axis, limb[3]));
 }
 
@@ -106,7 +106,12 @@ function interval(t: number, beforeReturn: number, afterReturn: number) {
   const index = Math.min(count - 1, Math.floor(((t - low) / (high - low)) * count));
   const start = index === 0 ? low : low + ((high - low) * index) / count;
   const end = index + 1 === count ? high : low + ((high - low) * (index + 1)) / count;
-  return { start, end, u: (t - start) / (end - start) };
+  return {
+    start,
+    end,
+    index: low === 0 ? index : beforeReturn + index,
+    u: (t - start) / (end - start),
+  };
 }
 
 function arcDirection(first: BendFrame, last: BendFrame, t: number): Vec3 {
@@ -129,6 +134,49 @@ const bodyLandmarks = [
   'rHand',
 ] as const;
 
+// The time spacing changes at the cached return pose. Construct one shared
+// tangent at each landmark, using its real time offset on both sides.
+const beforeReturn = 10;
+const afterReturn = 14;
+const bodyKnots = Array.from({ length: beforeReturn + afterReturn + 1 }, (_, index) =>
+  index < beforeReturn
+    ? (PHASE_3D_RAW_T.end * index) / beforeReturn
+    : PHASE_3D_RAW_T.end + ((1 - PHASE_3D_RAW_T.end) * (index - beforeReturn)) / afterReturn,
+);
+
+function monotoneSlope(left: number, right: number): number {
+  return left * right > 0 ? (2 * left * right) / (left + right) : 0;
+}
+
+function interpolateLandmark(
+  before: Vec3,
+  start: Vec3,
+  end: Vec3,
+  after: Vec3,
+  priorScale: number,
+  nextScale: number,
+  u: number,
+): Vec3 {
+  // Cubic Hermite with slope-limited tangents keeps a planted hand stationary
+  // and prevents a curved ankle path from overshooting the authored range.
+  const ease = u * u * (3 - 2 * u);
+  const outWeight = u * (1 - u) ** 2;
+  const inWeight = -u * u * (1 - u);
+  const coordinate = (i: number) => {
+    const delta = end[i] - start[i];
+    if (!delta) return start[i];
+    const previous = priorScale ? (start[i] - before[i]) * priorScale : delta;
+    const next = nextScale ? (after[i] - end[i]) * nextScale : delta;
+    return (
+      start[i] +
+      delta * ease +
+      monotoneSlope(previous, delta) * outWeight +
+      monotoneSlope(delta, next) * inWeight
+    );
+  };
+  return [coordinate(0), coordinate(1), coordinate(2)];
+}
+
 /** Sample the same deterministic limb bend during playback, reverse playback, and arbitrary seeks. */
 export function sampleStudio3DMotionRig(
   exercise: PilatesExercise,
@@ -136,11 +184,30 @@ export function sampleStudio3DMotionRig(
 ): Universal3DPoseRig {
   const t = Math.max(0, Math.min(1, Number.isFinite(rawT) ? rawT : 0));
   if (t === 0 || t === PHASE_3D_RAW_T.end || t === 1) return knotAt(exercise, t).rig;
-  const body = interval(t, 10, 14);
-  const a = knotAt(exercise, body.start);
-  const b = knotAt(exercise, body.end);
+  const body = interval(t, beforeReturn, afterReturn);
+  const startTime = bodyKnots[body.index];
+  const endTime = bodyKnots[body.index + 1];
+  const prevTime = bodyKnots[Math.max(0, body.index - 1)];
+  const nextTime = bodyKnots[Math.min(bodyKnots.length - 1, body.index + 2)];
+  const duration = endTime - startTime;
+  const priorScale = startTime > prevTime ? duration / (startTime - prevTime) : 0;
+  const nextScale = nextTime > endTime ? duration / (nextTime - endTime) : 0;
+  const previous = knotAt(exercise, prevTime).rig;
+  const a = knotAt(exercise, startTime).rig;
+  const b = knotAt(exercise, endTime).rig;
+  const next = knotAt(exercise, nextTime).rig;
   const result = { ...sampleUniversal3DExerciseRig(exercise, t) };
-  for (const key of bodyLandmarks) result[key] = mix(a.rig[key], b.rig[key], body.u);
+  for (const key of bodyLandmarks) {
+    result[key] = interpolateLandmark(
+      previous[key],
+      a[key],
+      b[key],
+      next[key],
+      priorScale,
+      nextScale,
+      body.u,
+    );
+  }
   const right = rightVector(result);
   const bend = interval(t, 5, 7);
   const first = knotAt(exercise, bend.start);

@@ -1,3 +1,4 @@
+import { WORLD_PILATES_BY_ID } from './worldPilatesRepertoire1000';
 import type { ApparatusType, BodyPosition, PilatesExercise } from '../types/pilates';
 
 export type Vec3 = readonly [number, number, number];
@@ -1925,6 +1926,36 @@ function sampleArchetype3DRig(
         activeZones: ['core', 'quads'],
       };
     }
+    case 'mat-open-leg-rocker': {
+      // BASI's Open Leg Rocker, 28–34 s: balance with the legs open, then roll
+      // toward the shoulder blades. The hands travel with the lower legs.
+      const angle = ts * 1.35;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const pelvis: Vec3 = [lerp(-0.02, -0.27, ts), 0, lerp(0.108, 0.272, ts ** 3)];
+      const rock = (x: number, y: number, z: number): Vec3 => [
+        pelvis[0] + cos * x - sin * z,
+        y,
+        pelvis[2] + sin * x + cos * z,
+      ];
+      return {
+        poseFeatureKo: '발목을 잡고 두 다리를 V자로 편 채 균형을 잡았다가 등으로 굴러요.',
+        trajectoryFocus: 'pelvis',
+        pelvis,
+        spineMid: rock(-0.165, 0, 0.17),
+        chest: rock(-0.19, 0, 0.374),
+        antHint: [cos, 0, sin],
+        lFoot: rock(0.295, -0.245, 0.698),
+        rFoot: rock(0.295, 0.245, 0.698),
+        lKneePole: [cos, -0.1, sin],
+        rKneePole: [cos, 0.1, sin],
+        lHand: rock(0.251, -0.22, 0.612),
+        rHand: rock(0.251, 0.22, 0.612),
+        lElbowPole: [0, -0.9, -0.25],
+        rElbowPole: [0, 0.9, -0.25],
+        activeZones: ['core', 'adductors'],
+      };
+    }
     case 'mat-rolling-ball': {
       const roll = smoothstep(rawT);
       const pelLift = roll * roll * roll;
@@ -2252,15 +2283,21 @@ function sampleArchetype3DRig(
       };
     }
     case 'mat-roll-over': {
+      // Sweep the ankles overhead about the hips. A straight line between the
+      // endpoints collapses the legs through the pelvis halfway up.
+      const pelvis = vlerp([0.04, 0, 0.135], [-0.28, 0, 0.48], ts);
+      const angle = lerp(0.61, Math.PI + 0.35, ts);
+      const x = pelvis[0] + 0.745 * Math.cos(angle);
+      const z = pelvis[2] + 0.745 * Math.sin(angle);
       return {
         poseFeatureKo: '수파인 양팔 매트 지지에서 복부 분절로 양다리를 머리 너머 수평 롤오버',
         trajectoryFocus: 'rFoot',
-        pelvis: vlerp([0.04, 0, 0.135], [-0.28, 0, 0.48], ts),
+        pelvis,
         spineMid: vlerp([-0.18, 0, 0.145], [-0.36, 0, 0.31], ts),
         chest: [-0.42, 0, 0.16],
         antHint: vlerp([0, 0, 1], [-0.62, 0, 0.78], ts),
-        lFoot: vlerp([0.62, -0.08, 0.54], [-0.94, -0.12, 0.24], ts),
-        rFoot: vlerp([0.62, 0.08, 0.54], [-0.94, 0.12, 0.24], ts),
+        lFoot: [x, -lerp(0.08, 0.12, ts), z],
+        rFoot: [x, lerp(0.08, 0.12, ts), z],
         lKneePole: vlerp([0.1, -0.08, 0.98], [-0.2, -0.1, 0.96], ts),
         rKneePole: vlerp([0.1, 0.08, 0.98], [-0.2, 0.1, 0.96], ts),
         lHand: [0.06, -0.24, 0.078],
@@ -2934,6 +2971,29 @@ function sampleArchetype3DRig(
         activeZones: ['glutes', 'adductors', 'core'],
       };
     }
+    case 'reformer-supine-breath': {
+      const angle = lerp(0.22, 1.02, ts);
+      const handX = 0.045 + 0.5 * Math.cos(angle);
+      const handZ = 0.53 + 0.5 * Math.sin(angle);
+      return {
+        poseFeatureKo: '캐리지를 멈춰 두고 발을 받쳐요. 숨을 쉬며 빈손으로 작은 원호를 그려요.',
+        trajectoryFocus: 'rHand',
+        carriageX: 0.19,
+        pelvis: [0.44, 0, 0.51],
+        spineMid: [0.23, 0, 0.52 + ts * 0.004],
+        chest: [0.045, 0, 0.53 + ts * 0.007],
+        antHint: [0, 0, 1],
+        lFoot: [0.82, -0.095, 0.57],
+        rFoot: [0.82, 0.095, 0.57],
+        lKneePole: [0.18, -0.055, 0.97],
+        rKneePole: [0.18, 0.055, 0.97],
+        lHand: [handX, -0.22, handZ],
+        rHand: [handX, 0.22, handZ],
+        lElbowPole: [0.14, -0.35, -0.88],
+        rElbowPole: [0.14, 0.35, -0.88],
+        activeZones: ['core', 'shoulders'],
+      };
+    }
     case 'reformer-supine-arms': {
       const cx = lerp(0.22, -0.12, ts);
       const ct = 0.41;
@@ -3174,6 +3234,40 @@ function sampleArchetype3DRig(
         lElbowPole: [-0.26, -0.78, 0.28],
         rElbowPole: [-0.26, 0.78, 0.28],
         activeZones: ['core', 'adductors', 'shoulders'],
+      };
+    }
+    case 'reformer-pulling-straps-plow':
+    case 'reformer-pulling-straps-t': {
+      // Pulling Straps 1 (BASI, 10–24 s) starts below the box. The T-pull
+      // starts at shoulder height. Both finish with the hands beside the hips.
+      const wide = archetype === 'reformer-pulling-straps-t';
+      const cx = lerp(0.1, -0.105, ts);
+      const chest: Vec3 = [cx - 0.29, 0, lerp(0.755, 0.905, ts)];
+      const angle = lerp(wide ? 0 : -0.14, 1.36, ts);
+      const handX = chest[0] + 0.47 * Math.sin(angle);
+      const handWidth = 0.185 + (wide ? 0.455 * Math.cos(angle) : 0);
+      const handZ = chest[2] - (wide ? 0.055 + ts * 0.055 : 0.475 * Math.cos(angle));
+      return {
+        poseFeatureKo: wide
+          ? '양팔을 어깨 높이로 벌린 뒤 넓은 원을 그리며 손을 엉덩이 옆으로 가져와요.'
+          : '늘어뜨린 팔로 스트랩을 당겨요. 손이 엉덩이 옆으로 오면서 가슴이 살짝 들려요.',
+        trajectoryFocus: 'rHand',
+        carriageX: cx,
+        withLongbox: true,
+        ropeToHands: true,
+        pelvis: [cx + 0.105, 0, 0.72],
+        spineMid: [cx - 0.095, 0, lerp(0.735, 0.772, ts)],
+        chest,
+        antHint: [-lerp(0.08, 0.45, ts), 0, -1],
+        lFoot: [cx + 0.86, 0.08, 0.725],
+        rFoot: [cx + 0.86, -0.08, 0.725],
+        lKneePole: [0.08, 0.08, -1],
+        rKneePole: [0.08, -0.08, -1],
+        lHand: [handX, handWidth, handZ],
+        rHand: [handX, -handWidth, handZ],
+        lElbowPole: [0.38, 0.6, 0.35],
+        rElbowPole: [0.38, -0.6, 0.35],
+        activeZones: ['back', 'shoulders'],
       };
     }
     case 'reformer-longbox-swan': {
@@ -3934,6 +4028,38 @@ function sampleArchetype3DRig(
     }
 
     // --- CHAIR ARCHETYPES ---
+    case 'chair-frog-in':
+    case 'chair-frog-out': {
+      // The low seat supports both hands. The spring raises the pedal under
+      // both forefeet as the elbows extend; the knees stay open and bent.
+      const facingIn = archetype === 'chair-frog-in';
+      const forward = facingIn ? -1 : 1;
+      const pedalDeg = lerp(11, 30, ts);
+      const [pedalX, pedalZ] = chairPedalPos(pedalDeg);
+      const pelvisZ = pedalZ + 0.29;
+      const hipX = pedalX + (facingIn ? 0.18 : 0.065);
+      const chestX = hipX + (facingIn ? -0.13 : -0.035);
+      return {
+        poseFeatureKo: facingIn
+          ? '좌판을 바라보고 모서리를 짚어요. 두 발을 페달에 올리고 무릎을 벌린 채 몸과 페달을 함께 올려요.'
+          : '좌판을 등지고 손을 뒤로 짚어요. 두 발을 페달에 둔 채 팔꿈치를 펴며 몸과 페달을 함께 올려요.',
+        trajectoryFocus: 'pelvis',
+        pedalDeg,
+        pelvis: [hipX, 0, pelvisZ],
+        spineMid: [(hipX + chestX) / 2, 0, pelvisZ + 0.18],
+        chest: [chestX, 0, pelvisZ + 0.365],
+        antHint: [forward, 0, 0.1],
+        lFoot: [pedalX - forward * 0.045, -forward * 0.048, pedalZ + 0.065],
+        rFoot: [pedalX - forward * 0.045, forward * 0.048, pedalZ + 0.065],
+        lKneePole: [forward * 0.48, -forward * 0.91, 0.14],
+        rKneePole: [forward * 0.48, forward * 0.91, 0.14],
+        lHand: [0.134, -forward * 0.218, 0.627],
+        rHand: [0.134, forward * 0.218, 0.627],
+        lElbowPole: [-forward * 0.75, -forward * 0.52, -0.16],
+        rElbowPole: [-forward * 0.75, forward * 0.52, -0.16],
+        activeZones: ['adductors', 'core', 'shoulders'],
+      };
+    }
     case 'chair-pedal-press': {
       const isAlt = /alternating|교대/.test(`${exercise.id} ${exercise.nameKo}`);
       const pdeg = lerp(32, 8, ts);
@@ -5354,7 +5480,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'original-reformer-supine-breath': {
     apparatus: 'reformer',
     bodyPosition: 'supine',
-    archetype: 'reformer-supine-arms',
+    archetype: 'reformer-supine-breath',
   },
   'original-mat-rib-breath': {
     apparatus: 'mat',
@@ -5815,7 +5941,7 @@ const CATALOG_AND_CRAWLED_ARCHETYPE_MAP: Readonly<
   'crawled-mat-open-leg-rocker': {
     apparatus: 'mat',
     bodyPosition: 'seated',
-    archetype: 'mat-rolling-ball',
+    archetype: 'mat-open-leg-rocker',
   },
   'crawled-mat-corkscrew': { apparatus: 'mat', bodyPosition: 'supine', archetype: 'mat-inversion' },
   'crawled-mat-saw': { apparatus: 'mat', bodyPosition: 'seated', archetype: 'mat-seated-twist' },
@@ -6199,6 +6325,11 @@ function selectProceduralArchetype(
     if (hasJumpboard && bodyPosition === 'supine') return 'reformer-jumpboard';
     if (bodyPosition === 'prone') {
       if (hasLongBox) {
+        if (/pulling[\s-]*straps/.test(text)) {
+          return /straps[\s-]*t(?:[\s-]|$)/.test(text)
+            ? 'reformer-pulling-straps-t'
+            : 'reformer-pulling-straps-plow';
+        }
         if (/hamstring|햄스트링|curl|컬|kick|킥/.test(text))
           return 'expanded-reformer-hamstring-curl';
         if (/swim|스위밍/.test(text)) return 'reformer-longbox-swimming';
@@ -6364,6 +6495,8 @@ function selectProceduralArchetype(
         : 'expanded-chair-kneeling-push-down';
     }
     if (bodyPosition === 'standing') {
+      if (/frog[\s-]+facing[\s-]+(?:front|in)\b/.test(text)) return 'chair-frog-in';
+      if (/frog[\s-]+facing[\s-]+(?:back|out)\b/.test(text)) return 'chair-frog-out';
       if (/side[\s-]?pull[\s-]?up|사이드\s*풀업/.test(text)) return 'expanded-chair-side-pull-up';
       if (blockCategory === 'plank' || /pike|pull[\s-]?up|tendon|파이크|풀업|텐던/.test(text))
         return 'chair-pike';
@@ -6866,6 +6999,24 @@ function applyVariationPoseChoreography(
     };
   }
 
+  // A ball held between the knees keeps the working legs parallel even as the
+  // straps travel. The frog variation retains its authored turned-out stance.
+  if (
+    id.endsWith('--var-miniball') &&
+    next.ropeToFeet &&
+    !id.includes('frog') &&
+    exercise.apparatus === 'reformer' &&
+    exercise.bodyPosition === 'supine'
+  ) {
+    next = {
+      ...next,
+      lFoot: [next.lFoot[0], -0.1, next.lFoot[2]],
+      rFoot: [next.rFoot[0], 0.1, next.rFoot[2]],
+      lKneePole: [next.lKneePole[0] - 0.55, -0.035, next.lKneePole[2]],
+      rKneePole: [next.rKneePole[0] - 0.55, 0.035, next.rKneePole[2]],
+    };
+  }
+
   // Unilateral single-leg progression: smoothly elevate right leg without breaking straps/chair/barrel clearance
   if (
     id.endsWith('--var-single-leg') &&
@@ -6927,13 +7078,31 @@ function applyVariationPoseChoreography(
     !next.withChairHandles &&
     exercise.apparatus !== 'chair'
   ) {
-    const yaw = lerp(0.08, 0.36, ts);
+    const grounded =
+      exercise.bodyPosition === 'kneeling' &&
+      (exercise.apparatus === 'barrel' || next.lHand[2] < 0.15);
+    const yaw = ts * (grounded ? 0.1 : 0.28);
     const cosY = Math.cos(yaw);
     const sinY = Math.sin(yaw);
-    const ah = next.antHint;
+    const { spUp, bodyRight } = computeBodyRight(next.pelvis, next.chest, next.antHint);
+    const rotate = (v: Vec3): Vec3 =>
+      vAdd(
+        vAdd(vMul(v, cosY), vMul(vCross(spUp, v), sinY)),
+        vMul(spUp, vDot(spUp, v) * (1 - cosY)),
+      );
+    const turnHand = (hand: Vec3): Vec3 => vAdd(next.chest, rotate(vSub(hand, next.chest)));
+    const bendBias: Vec3 =
+      next.withDumbbells || exercise.props.includes('dumbbell') ? [0, 0, -0.75 * ts] : [0, 0, 0];
     next = {
       ...next,
-      antHint: [ah[0] * cosY - ah[1] * sinY, ah[0] * sinY + ah[1] * cosY, ah[2]],
+      pelvisRight: next.pelvisRight ?? bodyRight,
+      antHint: rotate(next.antHint),
+      lHand: grounded ? next.lHand : turnHand(next.lHand),
+      rHand: grounded ? next.rHand : turnHand(next.rHand),
+      lKneePole: grounded ? vAdd(next.lKneePole, [0, 0, 0.32 * ts]) : next.lKneePole,
+      rKneePole: grounded ? vAdd(next.rKneePole, [0, 0, 0.32 * ts]) : next.rKneePole,
+      lElbowPole: vAdd(rotate(next.lElbowPole), bendBias),
+      rElbowPole: vAdd(rotate(next.rElbowPole), bendBias),
     };
   }
 
@@ -7010,7 +7179,21 @@ export function sampleUniversal3DExerciseRig(
     }
   }
 
-  const proceduralKey = selectProceduralArchetype(exercise);
+  // A prop or progression in a variation's title must not replace the underlying
+  // movement (e.g. barrel layout with a ring becoming supine leg circles).
+  const parent =
+    variationParentId && variationParentId !== exercise.id
+      ? WORLD_PILATES_BY_ID.get(variationParentId)
+      : undefined;
+  const basis =
+    parent &&
+    parent.apparatus === exercise.apparatus &&
+    parent.bodyPosition === exercise.bodyPosition &&
+    parent.box === exercise.box &&
+    parent.blockCategory === exercise.blockCategory
+      ? parent
+      : exercise;
+  const proceduralKey = selectProceduralArchetype(basis);
   const delegatedExpanded = Object.hasOwn(EXPANDED_DEDICATED_3D_RIGS, proceduralKey)
     ? EXPANDED_DEDICATED_3D_RIGS[proceduralKey]
     : undefined;

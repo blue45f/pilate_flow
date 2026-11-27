@@ -222,27 +222,22 @@ describe('100% 3D Motion Conversion & Full 218-Exercise + Procedural 3D Reconstr
     ).toBe('right');
   });
 
-  it('synthesizes collision-free procedural 3D scenes across all 5 apparatuses x 7 body positions for custom & edited exercises', () => {
-    const apparatuses: readonly ApparatusType[] = [
-      'mat',
-      'reformer',
-      'cadillac',
-      'chair',
-      'barrel',
-    ];
-    const positions: readonly BodyPosition[] = [
-      'supine',
-      'prone',
-      'side-lying',
-      'seated',
-      'kneeling',
-      'quadruped',
-      'standing',
-    ];
-    const base = INITIAL_EXERCISES[0]!;
-    const ctx = createMock2DContext();
+  const apparatuses: readonly ApparatusType[] = ['mat', 'reformer', 'cadillac', 'chair', 'barrel'];
+  it.each(apparatuses)(
+    'synthesizes collision-free procedural 3D scenes across all seven %s body positions for custom and edited exercises',
+    (apparatus) => {
+      const positions: readonly BodyPosition[] = [
+        'supine',
+        'prone',
+        'side-lying',
+        'seated',
+        'kneeling',
+        'quadruped',
+        'standing',
+      ];
+      const base = INITIAL_EXERCISES[0]!;
+      const ctx = createMock2DContext();
 
-    for (const apparatus of apparatuses) {
       for (const bodyPosition of positions) {
         const custom: PilatesExercise = {
           ...base,
@@ -278,8 +273,8 @@ describe('100% 3D Motion Conversion & Full 218-Exercise + Procedural 3D Reconstr
         expect(svgMarkup).toContain('data-3d-projected="true"');
         expect(svgMarkup).not.toMatch(/NaN|Infinity/);
       }
-    }
-  });
+    },
+  );
 
   it('renders interactive 360° 3D motion & 3D posture strips across expanded and crawled movements in Studio3DMotionHeroCard & LiveStageKinematicDiagram', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
