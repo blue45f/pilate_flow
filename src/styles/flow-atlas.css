@@ -541,6 +541,10 @@
   overflow-wrap: anywhere;
   word-break: keep-all;
 }
+/* 누르는 순간 버튼이 축소되면 사진을 덮는 클릭 영역도 제목 크기로 줄어든다. */
+html body #root .flow-app .flow-atlas__preview .flow-atlas__preview-button {
+  transform: none !important;
+}
 .flow-atlas__preview-button::after {
   position: absolute;
   z-index: 1;
