@@ -218,12 +218,12 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
     expect(matCard.getByText('현재 계획 열림')).toBeVisible();
 
     // Whitespace-only query does NOT falsely show empty state, while exposing inline clear & Escape clear
-    const searchInput = screen.getByRole('textbox', { name: '저장한 시퀀스 검색' });
+    const searchInput = screen.getByRole('textbox', { name: '저장한 수업 검색' });
     searchInput.focus();
     fireEvent.change(searchInput, { target: { value: '    ' } });
-    expect(screen.queryByText('검색한 시퀀스가 없어요')).not.toBeInTheDocument();
+    expect(screen.queryByText('조건에 맞는 수업이 없어요')).not.toBeInTheDocument();
     expect(screen.getAllByRole('article')).toHaveLength(3);
-    expect(screen.getByRole('button', { name: '저장 시퀀스 검색어 지우기' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '저장한 수업 검색어 지우기' })).toBeVisible();
 
     fireEvent.keyDown(searchInput, { key: 'Escape' });
     expect(searchInput).toHaveValue('');
@@ -231,8 +231,8 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
 
     // Search by included movement name with extra leading/trailing spaces & compact spacing
     fireEvent.change(searchInput, { target: { value: '  페달스텝업  ' } });
-    expect(screen.getByRole('status', { name: '저장 시퀀스 검색 결과' })).toHaveTextContent(
-      '조건에 맞는 시퀀스 1개',
+    expect(screen.getByRole('status', { name: '저장한 수업 검색 결과' })).toHaveTextContent(
+      '조건에 맞는 수업 1개',
     );
     expect(screen.getByRole('heading', { name: seqChair.title })).toBeVisible();
 
@@ -243,14 +243,14 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
 
     // Zero-result search -> '검색 지우기' restores all items and returns focus to the search input
     fireEvent.change(searchInput, { target: { value: '존재하지않는합성검색어_ZZZ' } });
-    expect(screen.getByText('검색한 시퀀스가 없어요')).toBeVisible();
+    expect(screen.getByText('조건에 맞는 수업이 없어요')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: '검색 지우기' }));
     expect(searchInput).toHaveValue('');
     expect(searchInput).toHaveFocus();
     expect(screen.getAllByRole('article')).toHaveLength(3);
 
     // Quick-filter chips with roving ArrowRight / End / Home keyboard navigation
-    const quickFilterGroup = screen.getByRole('group', { name: '저장 시퀀스 빠른 필터' });
+    const quickFilterGroup = screen.getByRole('group', { name: '저장한 수업 빠른 필터' });
     const allPill = within(quickFilterGroup).getByRole('button', { name: /^전체/ });
     const reformerPill = within(quickFilterGroup).getByRole('button', { name: /^리포머/ });
     const taughtPill = within(quickFilterGroup).getByRole('button', { name: /^최근 수업 있음/ });

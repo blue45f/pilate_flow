@@ -16,6 +16,7 @@
    - 관절 도달 거리 초과(과도한 IK 클램핑), 극단 팔꿈치/무릎 역꺾임
    - 시작/중간/종료 3자세 구분 델타 검증
    - 소도구(미니볼·써클링·폼롤러) 배치 충돌 검증
+   `--world-poses PATH`를 지정하면 화면에 노출되는 모든 기본 동작과 변형을 검사한다.
 3. 전수 감사 리포트를 `docs/3d-pose-form-audit-report.json`에 저장하고 결함이 남아 있으면 종료 코드 1을 반환한다.
 """
 from __future__ import annotations
@@ -122,6 +123,7 @@ def sync_poses_from_ts(
     poses_path: str,
     all_atomics_path: str | None = None,
     all_620_path: str | None = None,
+    world_poses_path: str | None = None,
 ) -> tuple[int, int, int]:
     """Exports core 218 exercises (plus 524 atomics and optional 620 atomics+featured variations) × 3 phases."""
     node_script = r"""
@@ -131,6 +133,7 @@ import { createServer } from 'vite';
 const outPath218 = process.argv[1];
 const outPath524 = process.argv[2] || '';
 const outPath620 = process.argv[3] || '';
+const worldPath = process.argv[4] || '';
 const server = await createServer({
   root: process.cwd(),
   configFile: false,
@@ -177,6 +180,10 @@ try {
     count620 = exported620.length;
   }
 
+  if (worldPath) {
+    await writeFile(worldPath, JSON.stringify(exportList(WORLD_PILATES_EXERCISES)), 'utf8');
+  }
+
   console.log(JSON.stringify({ synced218: exported218.length, synced524: count524, synced620: count620 }));
 } finally {
   await server.close();
@@ -191,6 +198,7 @@ try {
             poses_path,
             all_atomics_path or "",
             all_620_path or "",
+            world_poses_path or "",
         ],
         cwd=ROOT_DIR,
         capture_output=True,
@@ -592,13 +600,17 @@ def main():
         action="store_true",
         help="Sync and audit ALL 620 exercises (524 atomics + 96 featured variations = 1,860 poses) to poses_studio_canonical_620.json",
     )
+    parser.add_argument(
+        "--world-poses", metavar="PATH",
+        help="전체 라이브러리의 기본 동작과 변형을 지정한 JSON 파일로 내보내고 세 자세를 검사합니다.",
+    )
     parser.add_argument("--poses", default=DEFAULT_POSES_PATH)
     parser.add_argument("--poses-524", default=DEFAULT_POSES_524_PATH)
     parser.add_argument("--poses-620", default=DEFAULT_POSES_620_PATH)
     parser.add_argument("--report", default=DEFAULT_REPORT_PATH)
     args = parser.parse_args()
 
-    audit_target_path = (
+    audit_target_path = args.world_poses or (
         args.poses_620
         if args.all_620
         else (args.poses_524 if args.all_atomics else args.poses)
@@ -609,6 +621,7 @@ def main():
             args.poses,
             args.poses_524 if (args.all_atomics or args.all_620) else None,
             args.poses_620 if args.all_620 else None,
+            args.world_poses,
         )
         print(f"[audit_and_fix_all_poses] Synced {synced218} core exercises -> {os.path.relpath(args.poses, ROOT_DIR)}")
         if args.all_atomics or args.all_620:

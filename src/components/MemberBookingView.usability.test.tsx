@@ -59,7 +59,7 @@ describe('MemberBookingView usability improvements (discovery, quick-spot, chang
     expect(barrelChip).toHaveAttribute('aria-pressed', 'true');
 
     const emptyCard = screen.getByTestId('member-empty-slots-card');
-    expect(emptyCard).toHaveTextContent('선택한 기구·포커스·예약 가능 필터에 맞는 수업이 없어요');
+    expect(emptyCard).toHaveTextContent('이날은 선택한 조건에 맞는 수업이 없어요');
 
     const resetBtn = screen.getByTestId('reset-member-filters-btn');
     fireEvent.click(resetBtn);

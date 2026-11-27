@@ -1,3 +1,4 @@
+import { videoReferenceSubject } from './videoSemanticMatching';
 import {
   WORLD_PILATES_BY_ID,
   WORLD_PILATES_EXERCISES,
@@ -439,7 +440,13 @@ export function remixExerciseVariation(
     blockCategory: baseExercise.blockCategory,
     bodyPosition: baseExercise.bodyPosition,
     props: nextProps,
-    youtube: apparatusChanged ? undefined : baseExercise.youtube,
+    youtube: apparatusChanged || !baseExercise.youtube.videoId
+      ? undefined
+      : {
+          ...baseExercise.youtube,
+          referenceScope: 'base-movement',
+          referenceSubject: videoReferenceSubject(baseForInsight, baseExercise.youtube.videoId),
+        },
   });
 
   return {

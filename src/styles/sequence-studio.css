@@ -1464,10 +1464,6 @@
   }
 }
 
-.flow-mobile-brief-toggle {
-  display: none;
-}
-
 dialog .pf-smart-tools-rail {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
@@ -1482,54 +1478,52 @@ dialog .pf-smart-tools-rail .pf-smart-tool-pill {
   white-space: normal;
 }
 
-@media (max-width: 767px) {
-  #root .flow-studio .flow-class-brief[data-expanded='false'] {
-    display: none !important;
-  }
+#root .flow-studio .flow-class-brief[data-expanded='false'] {
+  display: none !important;
+}
 
-  .flow-mobile-brief-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    min-height: 60px;
-    margin: 0 0 10px;
-    padding: 10px 14px;
-    border: 1px solid rgba(31, 27, 22, 0.12);
-    border-radius: 12px;
-    background: white;
-    color: #355441;
-    text-align: start;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
-  }
+.flow-mobile-brief-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(31, 27, 22, 0.12);
+  border-radius: 12px;
+  background: white;
+  color: #355441;
+  text-align: start;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
 
-  .flow-mobile-brief-toggle strong,
-  .flow-mobile-brief-toggle small {
-    display: block;
-  }
+.flow-mobile-brief-toggle strong,
+.flow-mobile-brief-toggle small {
+  display: block;
+}
 
-  .flow-mobile-brief-toggle strong {
-    color: #1f1b16;
-    font-size: 1rem;
-    font-weight: 600;
-  }
+.flow-mobile-brief-toggle strong {
+  color: #1f1b16;
+  font-size: 1rem;
+  font-weight: 600;
+}
 
-  .flow-mobile-brief-toggle small {
-    margin-top: 3px;
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
+.flow-mobile-brief-toggle small {
+  margin-top: 3px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
 
-  .flow-mobile-brief-toggle__action {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 4px;
-  }
+.flow-mobile-brief-toggle__action {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
 
-  .flow-mobile-brief-toggle[aria-expanded='true'] svg {
-    transform: rotate(180deg);
-  }
+.flow-mobile-brief-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
 }

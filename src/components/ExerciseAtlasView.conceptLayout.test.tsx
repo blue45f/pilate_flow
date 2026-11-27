@@ -67,7 +67,7 @@ describe('library supplied concept layout', () => {
     expect(inspector).toHaveTextContent('개인 검토 전 · 직접 추가 가능 (자동 추천·AI 초안 제외)');
     expect(inspector).not.toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
     expect(inspector).toHaveTextContent(movement.precautions);
-    fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
+    fireEvent.click(within(inspector).getByRole('button', { name: '동작 따라 하기' }));
     expect(openDetails).toHaveBeenCalledWith(movement);
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);

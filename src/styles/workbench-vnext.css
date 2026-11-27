@@ -972,6 +972,14 @@
   display: block;
 }
 
+.pf-rig-preview__files > summary {
+  cursor: pointer;
+  padding-block: 12px;
+  min-height: 44px;
+  color: #355441;
+  font-weight: 500;
+}
+
 .pf-rig-preview__slider-row {
   display: flex;
   flex-wrap: wrap;

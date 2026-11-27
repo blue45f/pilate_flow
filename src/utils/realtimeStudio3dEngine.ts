@@ -1,6 +1,5 @@
 import type { ApparatusType, FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
 import {
-  hasDedicated3DExerciseRig,
   type ActiveMuscleZone3D,
   type Universal3DPoseRig,
 } from '../data/universal3dExerciseRigs';
@@ -20,6 +19,7 @@ import {
 import { getSharedStudio3DWebGPURenderer } from './studio3dWebgpuRenderer';
 import {
   getCachedSkinnedHumanoidAsset,
+  resolveStudioFootFrame,
   skinHumanoidToStudioQuads,
 } from './skinnedHumanoidRetargeter';
 import {
@@ -2725,21 +2725,7 @@ function makeSculptedGripFootQuads(
   }
   const antTib = norm3(antTibRaw);
 
-  let footFwd: Vec3;
-  let footUp: Vec3;
-  if (ankle[2] <= 0.145 && shinUp[2] > 0.45) {
-    const horizFwd: Vec3 = [antTib[0], antTib[1], 0];
-    footFwd = len3(horizFwd) > 1e-4 ? norm3(horizFwd) : antTib;
-    footUp = [0, 0, 1];
-  } else if (antTib[2] < -0.25 && ankle[2] < 0.36) {
-    const pointAng = (68 * Math.PI) / 180;
-    footFwd = norm3(add3(mul3(antTib, Math.cos(pointAng)), mul3(shinDown, Math.sin(pointAng))));
-    footUp = norm3(add3(mul3(shinUp, Math.cos(pointAng)), mul3(antTib, Math.sin(pointAng))));
-  } else {
-    const pointAng = ((ankle[2] > 0.24 ? 24 : 10) * Math.PI) / 180;
-    footFwd = norm3(add3(mul3(antTib, Math.cos(pointAng)), mul3(shinDown, Math.sin(pointAng))));
-    footUp = norm3(add3(mul3(shinUp, Math.cos(pointAng)), mul3(antTib, Math.sin(pointAng))));
-  }
+  const { forward: footFwd, up: footUp } = resolveStudioFootFrame(ankle[2], shinDown, antTib);
   const footLat = norm3(cross3(footFwd, footUp));
 
   // 1) Slender Ribbed Ivory Crew Grip-Sock Cuff (matches slim Achilles ankle seamlessly)
@@ -3365,7 +3351,8 @@ function buildStudio3DScene(options: {
   footbarOverride?: 'default' | FootbarState;
   headrestOverride?: 'default' | HeadrestState;
   propOverride?: Studio3DPropOverride;
-  svgFastMode?: boolean;
+  projectedOnly?: boolean;
+  compactGeometry?: boolean;
 }): Built3DScene {
   const {
     exercise,
@@ -3378,7 +3365,8 @@ function buildStudio3DScene(options: {
     footbarOverride = 'default',
     headrestOverride = 'default',
     propOverride = 'default',
-    svgFastMode = false,
+    projectedOnly = false,
+    compactGeometry = projectedOnly,
   } = options;
 
   const spec = resolveStudio3DMotionForExercise(exercise);
@@ -3394,6 +3382,7 @@ function buildStudio3DScene(options: {
         spineMid: mirrorVec(rawRig.spineMid),
         chest: mirrorVec(rawRig.chest),
         antHint: mirrorVec(rawRig.antHint),
+        pelvisRight: rawRig.pelvisRight ? mul3(mirrorVec(rawRig.pelvisRight), -1) : undefined,
         lFoot: mirrorVec(rawRig.rFoot),
         rFoot: mirrorVec(rawRig.lFoot),
         lKneePole: mirrorVec(rawRig.rKneePole),
@@ -3420,19 +3409,19 @@ function buildStudio3DScene(options: {
   const shadowAnchors: { pos: Vec3; rx: number; ry: number }[] = [];
 
   const mirrorSign = mirrored ? -1 : 1;
-  const segTorso = svgFastMode ? 14 : 34;
-  const segLimb = svgFastMode ? 12 : 28;
-  const segHead = svgFastMode ? 14 : 36;
-  const ringsHead = svgFastMode ? 9 : 24;
-  const segCyl = svgFastMode ? 8 : 22;
-  const segBolt = svgFastMode ? 6 : 14;
-  const ringsBolt = svgFastMode ? 5 : 8;
-  const segSphere = svgFastMode ? 10 : 26;
-  const ringsSphere = svgFastMode ? 6 : 16;
-  const segTorus = svgFastMode ? 12 : 28;
-  const tubeSegTorus = svgFastMode ? 5 : 10;
-  const segVault = svgFastMode ? 18 : 36;
-  const segStrap = svgFastMode ? 6 : 16;
+  const segTorso = compactGeometry ? 14 : 34;
+  const segLimb = compactGeometry ? 12 : 28;
+  const segHead = compactGeometry ? 14 : 36;
+  const ringsHead = compactGeometry ? 9 : 24;
+  const segCyl = compactGeometry ? 8 : 22;
+  const segBolt = compactGeometry ? 6 : 14;
+  const ringsBolt = compactGeometry ? 5 : 8;
+  const segSphere = compactGeometry ? 10 : 26;
+  const ringsSphere = compactGeometry ? 6 : 16;
+  const segTorus = compactGeometry ? 12 : 28;
+  const tubeSegTorus = compactGeometry ? 5 : 10;
+  const segVault = compactGeometry ? 18 : 36;
+  const segStrap = compactGeometry ? 6 : 16;
 
   const isClay = shader === 'clay-wire';
   const oakRgb: Rgb = isClay
@@ -3495,7 +3484,7 @@ function buildStudio3DScene(options: {
   let springStretchPct = Math.round(smoothstep(phaseT) * 100);
 
   // 1. Flagship Industrial Studio Apparatus Geometry (High-Density Dynamic GLB Parts when loaded, seamless procedural fallback otherwise)
-  const dynamicApparatusAsset = !svgFastMode ? getCachedApparatusDynamicAsset() : null;
+  const dynamicApparatusAsset = !projectedOnly ? getCachedApparatusDynamicAsset() : null;
   const apparatusPipeline: Studio3DApparatusPipeline = dynamicApparatusAsset
     ? 'dynamic-glb'
     : 'procedural';
@@ -3761,7 +3750,7 @@ function buildStudio3DScene(options: {
           'leather',
         ),
       );
-      if (!svgFastMode) {
+      if (!compactGeometry) {
         for (const wx of [cx - 0.22, cx + 0.38]) {
           quads.push(
             ...makeCylinder3D(
@@ -3798,7 +3787,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...carriageCush.quads);
     lines.push(carriageCush.piping);
@@ -3810,7 +3799,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...headrestCush.quads);
     lines.push(headrestCush.piping);
@@ -3846,7 +3835,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...sb.quads);
       lines.push(sb.piping);
@@ -3861,7 +3850,7 @@ function buildStudio3DScene(options: {
         charcoalRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...box.quads);
       lines.push(box.piping);
@@ -3917,7 +3906,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...jb.quads);
       lines.push(jb.piping);
@@ -4138,7 +4127,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...bed.quads);
     lines.push(bed.piping);
@@ -4153,7 +4142,7 @@ function buildStudio3DScene(options: {
         charcoalRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...box.quads);
       lines.push(box.piping);
@@ -4346,7 +4335,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...jbCad.quads);
       lines.push(jbCad.piping);
@@ -4498,7 +4487,7 @@ function buildStudio3DScene(options: {
           [ex, -0.26, ez],
           0.005,
           [64, 72, 68],
-          svgFastMode ? 6 : 10,
+          compactGeometry ? 6 : 10,
           appAlpha,
           0.05,
           16,
@@ -4686,7 +4675,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...seat.quads);
     lines.push(seat.piping);
@@ -4842,7 +4831,7 @@ function buildStudio3DScene(options: {
         leatherRgb,
         pipingHex,
         appAlpha,
-        svgFastMode,
+        compactGeometry,
       );
       quads.push(...stepSeat.quads);
       lines.push(stepSeat.piping);
@@ -5009,7 +4998,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...matCush.quads);
     lines.push(matCush.piping);
@@ -5079,7 +5068,7 @@ function buildStudio3DScene(options: {
       charcoalRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...floorBox.quads);
     lines.push(floorBox.piping);
@@ -5141,7 +5130,7 @@ function buildStudio3DScene(options: {
       leatherRgb,
       pipingHex,
       appAlpha,
-      svgFastMode,
+      compactGeometry,
     );
     quads.push(...jbStandPad.quads);
     lines.push(jbStandPad.piping);
@@ -5177,7 +5166,7 @@ function buildStudio3DScene(options: {
           charcoalRgb,
           brassRgb,
           appAlpha,
-          svgFastMode,
+          compactGeometry,
         ),
       );
     } else if (
@@ -5198,7 +5187,7 @@ function buildStudio3DScene(options: {
           charcoalRgb,
           brassRgb,
           appAlpha,
-          svgFastMode,
+          compactGeometry,
         ),
       );
     } else if (
@@ -5217,7 +5206,7 @@ function buildStudio3DScene(options: {
           charcoalRgb,
           brassRgb,
           appAlpha,
-          svgFastMode,
+          compactGeometry,
         ),
       );
     } else {
@@ -5231,7 +5220,7 @@ function buildStudio3DScene(options: {
           charcoalRgb,
           brassRgb,
           appAlpha,
-          svgFastMode,
+          compactGeometry,
         ),
       );
       shadowAnchors.push({
@@ -5263,7 +5252,7 @@ function buildStudio3DScene(options: {
           [rollerRadius, rollerRadius],
         ],
         rollerRgb,
-        svgFastMode ? 12 : 20,
+        compactGeometry ? 12 : 20,
         appAlpha,
         0.18,
         0,
@@ -5279,7 +5268,7 @@ function buildStudio3DScene(options: {
         0.054,
         0.054,
         [235, 230, 220],
-        svgFastMode ? 10 : 16,
+        compactGeometry ? 10 : 16,
         6,
         appAlpha,
         0.18,
@@ -5293,7 +5282,7 @@ function buildStudio3DScene(options: {
         0.054,
         0.054,
         [235, 230, 220],
-        svgFastMode ? 10 : 16,
+        compactGeometry ? 10 : 16,
         6,
         appAlpha,
         0.18,
@@ -5507,7 +5496,7 @@ function buildStudio3DScene(options: {
 
   // Prefer real 21-bone Blender skinned humanoid GLB when loaded in browser (non-SVG mode);
   // gracefully fall back to the seamless 28-station procedural body in SSR/jsdom or before load.
-  const skinnedHumanoidAsset = !svgFastMode ? getCachedSkinnedHumanoidAsset() : null;
+  const skinnedHumanoidAsset = !projectedOnly ? getCachedSkinnedHumanoidAsset() : null;
   const characterPipeline: Studio3DCharacterPipeline = skinnedHumanoidAsset
     ? 'skinned-glb'
     : 'procedural';
@@ -6003,7 +5992,7 @@ function buildStudio3DScene(options: {
         sockCol,
         leggingRgb,
         bodyAlpha,
-        svgFastMode,
+        compactGeometry,
       ),
     );
   }
@@ -6097,7 +6086,7 @@ function buildStudio3DScene(options: {
         antN,
         skinRgb,
         bodyAlpha,
-        svgFastMode,
+        compactGeometry,
       ),
     );
   }
@@ -6137,13 +6126,13 @@ function buildStudio3DScene(options: {
 
     // Active Muscle Zone Korean Highlights + Spring Assist/Resist Force Vector Arrows
     const zoneLabelMap: Record<ActiveMuscleZone3D, string> = {
-      core: '코어',
-      glutes: '둔근',
-      quads: '대퇴사두',
-      obliques: '복사근',
-      back: '척추기립근',
-      adductors: '내전근',
-      shoulders: '삼각근·견갑',
+      core: '배',
+      glutes: '엉덩이',
+      quads: '허벅지 앞쪽',
+      obliques: '옆구리',
+      back: '등',
+      adductors: '허벅지 안쪽',
+      shoulders: '어깨',
     };
     const activeMuscleSummary = rig.activeZones
       .slice(0, 3)
@@ -6152,7 +6141,7 @@ function buildStudio3DScene(options: {
     if (activeMuscleSummary) {
       callouts.push({
         pos: add3(rig.chest, [0, 0.04, 0.22]),
-        text: `활성근: ${activeMuscleSummary}`,
+        text: `힘이 들어가는 곳 · ${activeMuscleSummary}`,
         bg: 'rgba(182, 68, 46, 0.92)',
         fg: '#FFFDF8',
       });
@@ -6245,7 +6234,7 @@ function buildStudio3DScene(options: {
       },
       {
         pos: [com3D[0], com3D[1], 0.04],
-        text: `CoM ${comHeightCm}cm`,
+        text: `무게중심 높이 ${comHeightCm}cm`,
         bg: 'rgba(191, 90, 65, 0.92)',
         fg: '#FFFDF8',
       },
@@ -6253,13 +6242,15 @@ function buildStudio3DScene(options: {
   }
 
   const route = studioMotionRoute(exercise, spec.signatureId);
-  lines.push({
-    pts: mirrored ? route.mirrorPoints : route.points,
-    stroke: shader === 'studio-pbr' || isClay ? '#C9822B' : '#FBBF24',
-    width: 2.3,
-    dash: [5, 4],
-    overlay: true,
-  });
+  if (showBiomechOverlay) {
+    lines.push({
+      pts: mirrored ? route.mirrorPoints : route.points,
+      stroke: shader === 'studio-pbr' || isClay ? '#C9822B' : '#FBBF24',
+      width: 2.3,
+      dash: [5, 4],
+      overlay: true,
+    });
+  }
   const target = route.target;
 
   const apparatusAnchor: Vec3 =
@@ -6277,7 +6268,7 @@ function buildStudio3DScene(options: {
     {
       id: 'spine',
       labelKo: '척추·코어 중심',
-      metricKo: `분절 ${spineArticulationDeg}° · CoM ${comHeightCm}cm`,
+      metricKo: `모델의 척추 각도 ${spineArticulationDeg}° · 무게중심 높이 ${comHeightCm}cm`,
       cueKo:
         exercise.cues[0] ??
         '갈비뼈와 골반 사이의 길이를 길게 유지하며 호흡으로 코어를 감싸 주세요.',
@@ -6300,7 +6291,7 @@ function buildStudio3DScene(options: {
     {
       id: 'shoulder',
       labelKo: '어깨·견갑 안정화',
-      metricKo: `견관절 ${shoulderAngleDeg}°`,
+      metricKo: `어깨 각도 ${shoulderAngleDeg}°`,
       cueKo:
         exercise.cues[1] ?? '귀와 어깨 사이 공간을 넓게 유지하며 상부 승모근 긴장을 내려놓으세요.',
       pos3d: rSh,
@@ -6546,6 +6537,42 @@ function studioCamera(
   return { baseCamPos, camFwd, camRight, camUp, focal };
 }
 
+interface StudioShadowProjection {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  angle: number;
+}
+
+// Project both axes of the footprint onto the camera plane. This keeps the long
+// shadow of the reformer under its rails even as the camera orbits to the end.
+function projectStudioShadow(
+  center: { x: number; y: number; zCam: number },
+  radiusX: number,
+  radiusY: number,
+  camRight: Vec3,
+  camUp: Vec3,
+  focal: number,
+): StudioShadowProjection {
+  const scale = focal / center.zCam;
+  const ax = radiusX * scale * camRight[0];
+  const ay = -radiusX * scale * camUp[0];
+  const bx = radiusY * scale * camRight[1];
+  const by = -radiusY * scale * camUp[1];
+  const xx = ax * ax + bx * bx;
+  const yy = ay * ay + by * by;
+  const xy = ax * ay + bx * by;
+  const difference = Math.hypot(xx - yy, 2 * xy);
+  return {
+    cx: center.x,
+    cy: center.y,
+    rx: Math.max(1, Math.sqrt((xx + yy + difference) / 2)),
+    ry: Math.max(1, Math.sqrt(Math.max(0, (xx + yy - difference) / 2))),
+    angle: Math.atan2(2 * xy, xx - yy) / 2,
+  };
+}
+
 function drawSceneRegion(params: {
   ctx: CanvasRenderingContext2D;
   scene: Built3DScene;
@@ -6672,29 +6699,26 @@ function drawSceneRegion(params: {
     ctx.restore();
   }
 
-  // Multi-Ring Feathered Contact Shadows on Studio Cyclorama Floor
-  for (const sh of scene.shadowAnchors) {
-    const sc = project(sh.pos);
-    if (!sc.valid) continue;
-    const scalePx = focal / sc.zCam;
-    const baseRx = Math.max(18, sh.rx * scalePx * 0.72);
-    const baseRy = Math.max(7, sh.ry * scalePx * 0.42);
+  const darkFloor = shader === 'game-arena' || shader === 'biomech-xray';
+  for (const anchor of scene.shadowAnchors) {
+    const center = project(anchor.pos);
+    if (!center.valid) continue;
+    const shadow = projectStudioShadow(center, anchor.rx, anchor.ry, camRight, camUp, focal);
     ctx.save();
-    const layers =
-      shader === 'studio-pbr' || shader === 'clay-wire'
-        ? ([
-            [1.26, 'rgba(24, 44, 36, 0.032)'],
-            [1.0, 'rgba(24, 44, 36, 0.048)'],
-            [0.68, 'rgba(24, 44, 36, 0.056)'],
-          ] as const)
-        : ([
-            [1.18, 'rgba(0, 0, 0, 0.14)'],
-            [0.85, 'rgba(0, 0, 0, 0.2)'],
-          ] as const);
-    for (const [mul, fill] of layers) {
-      ctx.fillStyle = fill;
+    if (typeof ctx.createRadialGradient === 'function' && typeof ctx.transform === 'function') {
+      const cos = Math.cos(shadow.angle);
+      const sin = Math.sin(shadow.angle);
+      ctx.transform(shadow.rx * cos, shadow.rx * sin, -shadow.ry * sin, shadow.ry * cos, shadow.cx, shadow.cy);
+      const fade = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      fade.addColorStop(0, darkFloor ? 'rgba(0,0,0,0.35)' : 'rgba(35,43,32,0.20)');
+      fade.addColorStop(0.48, darkFloor ? 'rgba(0,0,0,0.18)' : 'rgba(35,43,32,0.10)');
+      fade.addColorStop(1, 'rgba(35,43,32,0)');
+      ctx.fillStyle = fade;
+      ctx.fillRect(-1, -1, 2, 2);
+    } else {
+      ctx.fillStyle = darkFloor ? 'rgba(0,0,0,0.18)' : 'rgba(35,43,32,0.09)';
       ctx.beginPath();
-      ctx.ellipse(sc.x, sc.y, baseRx * mul, baseRy * mul, 0, 0, Math.PI * 2);
+      ctx.ellipse(shadow.cx, shadow.cy, shadow.rx, shadow.ry, shadow.angle, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -6716,16 +6740,9 @@ function drawSceneRegion(params: {
 
   // Priority-1 WebGPU -> Priority-2 WebGL2 -> Priority-3 Canvas2D hardware rendering cascade
   let activeBackend: Studio3DRenderBackend = 'canvas2d';
-  const candidateGpu: Studio3DGpuRenderer | null =
-    gpuRenderer !== undefined
-      ? gpuRenderer && gpuRenderer.isAvailable()
-        ? gpuRenderer
-        : null
-      : (getSharedStudio3DWebGPURenderer() ?? getSharedStudio3DWebGL2Renderer());
-
   let renderedOnGpu = false;
-  if (candidateGpu && candidateGpu.isAvailable() && typeof ctx.drawImage === 'function') {
-    const gpuResult = candidateGpu.render({
+  if (gpuRenderer && gpuRenderer.isAvailable() && typeof ctx.drawImage === 'function') {
+    const gpuResult = gpuRenderer.render({
       quads: scene.quads,
       physicalLines,
       camera: {
@@ -6743,8 +6760,8 @@ function drawSceneRegion(params: {
       shader,
     });
     if (gpuResult.ok) {
-      ctx.drawImage(candidateGpu.canvas, rx, ry, rw, rh);
-      activeBackend = candidateGpu.backend;
+      ctx.drawImage(gpuRenderer.canvas, rx, ry, rw, rh);
+      activeBackend = gpuRenderer.backend;
       renderedOnGpu = true;
     }
   }
@@ -7047,31 +7064,33 @@ function drawSceneRegion(params: {
     ctx.restore();
   }
 
-  // XYZ Orientation Axis Gizmo in Bottom-Right of Region
-  const gizmoCx = rx + rw - 36;
-  const gizmoCy = ry + rh - 36;
-  ctx.save();
-  ctx.fillStyle =
-    shader === 'studio-pbr' || shader === 'clay-wire'
-      ? 'rgba(255,255,255,0.84)'
-      : 'rgba(15,30,25,0.78)';
-  ctx.beginPath();
-  ctx.arc(gizmoCx, gizmoCy, 24, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.font = '600 8.5px system-ui, -apple-system, sans-serif';
-  for (const ax of STUDIO_GIZMO_AXES) {
-    const sx = dot3(ax.vec, camRight) * 16;
-    const sy = -dot3(ax.vec, camUp) * 16;
-    ctx.strokeStyle = ax.col;
-    ctx.lineWidth = 1.9;
+  if (shader !== 'studio-pbr' || scene.callouts.length > 0) {
+    // XYZ Orientation Axis Gizmo in Bottom-Right of Region
+    const gizmoCx = rx + rw - 36;
+    const gizmoCy = ry + rh - 36;
+    ctx.save();
+    ctx.fillStyle =
+      shader === 'studio-pbr' || shader === 'clay-wire'
+        ? 'rgba(255,255,255,0.84)'
+        : 'rgba(15,30,25,0.78)';
     ctx.beginPath();
-    ctx.moveTo(gizmoCx, gizmoCy);
-    ctx.lineTo(gizmoCx + sx, gizmoCy + sy);
-    ctx.stroke();
-    ctx.fillStyle = ax.col;
-    ctx.fillText(ax.lbl, gizmoCx + sx * 1.24 - 3, gizmoCy + sy * 1.24 + 3);
+    ctx.arc(gizmoCx, gizmoCy, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = '600 8.5px system-ui, -apple-system, sans-serif';
+    for (const ax of STUDIO_GIZMO_AXES) {
+      const sx = dot3(ax.vec, camRight) * 16;
+      const sy = -dot3(ax.vec, camUp) * 16;
+      ctx.strokeStyle = ax.col;
+      ctx.lineWidth = 1.9;
+      ctx.beginPath();
+      ctx.moveTo(gizmoCx, gizmoCy);
+      ctx.lineTo(gizmoCx + sx, gizmoCy + sy);
+      ctx.stroke();
+      ctx.fillStyle = ax.col;
+      ctx.fillText(ax.lbl, gizmoCx + sx * 1.24 - 3, gizmoCy + sy * 1.24 + 3);
+    }
+    ctx.restore();
   }
-  ctx.restore();
 
   ctx.restore();
   return activeBackend;
@@ -7111,6 +7130,12 @@ export function renderRealtimeStudio3DFrame({
   readonly characterPipeline: Studio3DCharacterPipeline;
   readonly apparatusPipeline: Studio3DApparatusPipeline;
 } {
+  const preferredRenderer = gpuRenderer === undefined
+    ? getSharedStudio3DWebGPURenderer() ?? getSharedStudio3DWebGL2Renderer()
+    : gpuRenderer;
+  // At normal scale on a software canvas, subpixel bolts and fingers need fewer
+  // facets. Zooming in restores their detailed geometry; loaded GLBs stay intact.
+  const compactGeometry = !preferredRenderer?.isAvailable() && width < 900 && zoom < 1.4;
   const scene = buildStudio3DScene({
     exercise,
     phaseT,
@@ -7118,6 +7143,7 @@ export function renderRealtimeStudio3DFrame({
     mirrored,
     showBiomechOverlay,
     showMuscleHeatmap,
+    compactGeometry,
     springOverride,
     footbarOverride,
     headrestOverride,
@@ -7137,7 +7163,7 @@ export function renderRealtimeStudio3DFrame({
       rw: leftW,
       rh: height,
       dpr,
-      gpuRenderer,
+      gpuRenderer: preferredRenderer,
       yawDeg,
       pitchDeg,
       zoom,
@@ -7156,7 +7182,7 @@ export function renderRealtimeStudio3DFrame({
       rw: rightW,
       rh: height,
       dpr,
-      gpuRenderer,
+      gpuRenderer: preferredRenderer,
       yawDeg: 0,
       pitchDeg: 10,
       zoom: Math.max(0.95, zoom * 0.96),
@@ -7184,7 +7210,7 @@ export function renderRealtimeStudio3DFrame({
       rw: width,
       rh: height,
       dpr,
-      gpuRenderer,
+      gpuRenderer: preferredRenderer,
       yawDeg,
       pitchDeg,
       zoom,
@@ -7223,7 +7249,7 @@ export interface Projected3DSvgElement {
 }
 
 interface Projected3DSvgResult {
-  readonly shadows: readonly { cx: number; cy: number; rx: number; ry: number }[];
+  readonly shadows: readonly StudioShadowProjection[];
   readonly elements: readonly Projected3DSvgElement[];
 }
 
@@ -7241,8 +7267,14 @@ export function projectStudio3DSceneForSvg(
   width = 640,
   height = 400,
 ): Projected3DSvgResult {
-  const dedicatedKey = hasDedicated3DExerciseRig(exercise) ? exercise.id : 'proc';
-  const cacheKey = `${dedicatedKey}|${exercise.apparatus}|${exercise.bodyPosition}|${exercise.blockCategory}|${exercise.box ?? ''}|${(exercise.props ?? []).join(',')}|${phaseT.toFixed(3)}|${width}x${height}`;
+  // A custom exercise's name selects its representative movement; footbar, headrest
+  // and springs can also change without changing its library id.
+  const cacheKey = JSON.stringify([
+    exercise.id, exercise.nameKo, exercise.nameEn, exercise.movementFamily, exercise.apparatus,
+    exercise.bodyPosition, exercise.blockCategory, exercise.box, exercise.props, exercise.footbar,
+    exercise.headrest, exercise.springs, 'parentArchetypeId' in exercise ? exercise.parentArchetypeId : null,
+    phaseT, width, height,
+  ]);
   const cached = PROJECTED_SVG_LRU.get(cacheKey);
   if (cached) {
     return cached;
@@ -7254,7 +7286,7 @@ export function projectStudio3DSceneForSvg(
     shader: 'studio-pbr',
     mirrored: false,
     showBiomechOverlay: false,
-    svgFastMode: true,
+    projectedOnly: true,
   });
 
   const {
@@ -7278,17 +7310,10 @@ export function projectStudio3DSceneForSvg(
     };
   };
 
-  const shadows: { cx: number; cy: number; rx: number; ry: number }[] = [];
-  for (const sh of scene.shadowAnchors) {
-    const sc = project(sh.pos);
-    if (!sc) continue;
-    const scalePx = focal / sc.zCam;
-    shadows.push({
-      cx: sc.x,
-      cy: sc.y,
-      rx: Math.round(Math.max(18, sh.rx * scalePx * 0.72) * 10) / 10,
-      ry: Math.round(Math.max(7, sh.ry * scalePx * 0.42) * 10) / 10,
-    });
+  const shadows: StudioShadowProjection[] = [];
+  for (const anchor of scene.shadowAnchors) {
+    const center = project(anchor.pos);
+    if (center) shadows.push(projectStudioShadow(center, anchor.rx, anchor.ry, camRight, camUp, focal));
   }
 
   const keyDir = STUDIO_KEY_DIR;

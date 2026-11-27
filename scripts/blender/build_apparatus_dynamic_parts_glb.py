@@ -57,6 +57,7 @@ ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
+from studio_surface_maps import finish_studio_glb
 from pilates_3d_modeling_kernel import (  # noqa: E402
     MeshCollector,
     add_barrel_arch_assembly,
@@ -1273,6 +1274,7 @@ def build_apparatus_dynamic_parts_glb(out_glb_path: str | None = None) -> dict:
     hygiene = verify_strict_hygiene(final_nodes)
     packed_obj = pack_into_single_draw_call_mesh(final_nodes, micro_img)
     export_multi_node_glb([packed_obj], out_glb_path)
+    finish_studio_glb(out_glb_path)
     glb_report = patch_and_verify_glb_extras(out_glb_path)
 
     return {

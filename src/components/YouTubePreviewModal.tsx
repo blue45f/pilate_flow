@@ -42,6 +42,7 @@ import { LightDismissDialog } from './LightDismissDialog';
 import type { DialogCloseRequest } from './LightDismissDialog';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import { ExerciseVideoGallery } from './ExerciseVideoGallery';
+import { ExercisePracticeGuide } from './ExercisePracticeGuide';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
 import { MovementMediaGuidancePanel } from './MovementMediaGuidancePanel';
 import '../styles/library.css';
@@ -884,17 +885,19 @@ const MovementDetails: React.FC<{
     reviewDraftStatus?.baseRevision === currentRevision && reviewDraftStatus.dirty;
   const navigatePreviewStep = (nextStep: 1 | 2) => {
     setPreviewStep(nextStep);
-    if (nextStep === 2) {
-      if (step2Ref.current) {
-        step2Ref.current.open = true;
-      }
-      setReviewEditorOpen(true);
-    }
+    if (step2Ref.current) step2Ref.current.open = nextStep === 2;
+    setReviewEditorOpen(nextStep === 2);
     scheduleRaf(() => {
       if (nextStep === 1) {
-        step1Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
+        step1Ref.current?.scrollIntoView?.({
+          behavior: getAccessibleScrollBehavior(),
+          block: 'nearest',
+        });
       } else {
-        step2Ref.current?.scrollIntoView?.({ behavior: getAccessibleScrollBehavior(), block: 'nearest' });
+        step2Ref.current?.scrollIntoView?.({
+          behavior: getAccessibleScrollBehavior(),
+          block: 'nearest',
+        });
       }
     });
   };
@@ -905,12 +908,6 @@ const MovementDetails: React.FC<{
     setDraftResetVersion((version) => version + 1);
     onDraftStatusChange({ baseRevision: currentRevision, dirty: false });
   };
-  const previewStepGuidance =
-    previewStep === 1
-      ? '지금 할 일 (1/2): 3D 동작과 핵심 큐를 살펴보세요.'
-      : hasUnsavedReview || draftRestoredNotice
-        ? '지금 할 일 (2/2): 수정한 메모를 저장하거나 초기화하세요.'
-        : '지금 할 일 (2/2): 필요할 때만 영상 구간과 내 메모를 다듬으세요.';
   const source = getMovementProvenance(exercise);
   const primarySourceResult = sourceReferenceSchema.safeParse(exercise.sourceReference);
   const primarySource = primarySourceResult.success ? primarySourceResult.data : null;
@@ -931,55 +928,24 @@ const MovementDetails: React.FC<{
   return (
     <div className="movement-detail pf-p07-clean-detail" data-preview-step={previewStep}>
       <nav
-        className="pf-step-guide-bar yt-preview-step-guide pf-p07-top-tabs"
-        aria-label="영상 구간 확인 및 메모 수정 단계 안내"
+        className="practice-guide-nav"
+        aria-label="동작 상세 메뉴"
         data-testid="yt-preview-step-guide"
       >
-        <ol className="pf-step-guide-list">
-          <li>
-            <button
-              type="button"
-              aria-current={previewStep === 1 ? 'step' : undefined}
-              className={`pf-step-guide-chip ${previewStep === 1 ? 'is-active' : ''}`}
-              onClick={() => navigatePreviewStep(1)}
-            >
-              <span>1</span> 구간 재생·큐 확인
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              aria-current={previewStep === 2 ? 'step' : undefined}
-              className={`pf-step-guide-chip ${previewStep === 2 ? 'is-active' : ''}`}
-              onClick={() => navigatePreviewStep(2)}
-            >
-              <span>2</span> 시작·종료 시각 및 큐 메모 수정
-            </button>
-          </li>
-        </ol>
-        <div className="pf-step-guide-Subrow">
-          <p className="pf-step-guide-focus" data-testid="yt-preview-step-guidance">
-            {previewStepGuidance}
-          </p>
-          <div className="pf-step-guide-nav">
-            <button
-              type="button"
-              className="btn-secondary pf-step-nav-btn"
-              disabled={previewStep === 1}
-              onClick={() => navigatePreviewStep(1)}
-            >
-              이전 단계
-            </button>
-            <button
-              type="button"
-              className="btn-secondary pf-step-nav-btn"
-              disabled={previewStep === 2}
-              onClick={() => navigatePreviewStep(2)}
-            >
-              다음 단계
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          aria-current={previewStep === 1 ? 'page' : undefined}
+          onClick={() => navigatePreviewStep(1)}
+        >
+          동작 따라 하기
+        </button>
+        <button
+          type="button"
+          aria-current={previewStep === 2 ? 'page' : undefined}
+          onClick={() => navigatePreviewStep(2)}
+        >
+          수업 메모 편집
+        </button>
       </nav>
       {(draftRestoredNotice || hasUnsavedReview) && (
         <div className="yt-preview-draft-recovery-banner" data-testid="yt-preview-draft-restored">
@@ -1005,18 +971,42 @@ const MovementDetails: React.FC<{
       )}
       {previewStep === 1 && (
         <div ref={step1Ref} data-detail-step1-section className="pf-detail-step1-stack">
-          <Studio3DMotionHeroCard exercise={exercise} />
-          <IntuitiveAnatomyGuideCard exercise={exercise} />
-          <ProgressionTreeCard
-            exercise={exercise}
-            onAddExercise={(target) => {
-              ensureWorldExercisesInStore([target]);
-              usePilatesStore.getState().appendExerciseToSequence(target.id, target.blockCategory);
-            }}
-          />
+          <ExercisePracticeGuide exercise={exercise}>
+            <Studio3DMotionHeroCard exercise={exercise} practiceView />
+          </ExercisePracticeGuide>
         </div>
       )}
+      <details
+        ref={step2Ref}
+        className="optional-review-details pf-detail-progressive-drawer"
+        open={previewStep === 2 ? true : undefined}
+      >
+        <summary>내 검토 기록 (선택)</summary>
+        <LocalInstructorReview
+          key={`${currentRevision}-${draftResetVersion}`}
+          exercise={exercise}
+          initialRestoredDraft={restoredDraft}
+          reviewerAlias={reviewerAlias}
+          onReviewerAliasChange={setReviewerAlias}
+          editorOpen={previewStep === 2 || reviewEditorOpen}
+          onEditorOpenChange={(open) => {
+            setReviewEditorOpen(open);
+            if (open) {
+              setPreviewStep(2);
+            }
+          }}
+          canAddToSequence={
+            Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
+          }
+          onDraftStatusChange={onDraftStatusChange}
+          onDraftSaved={() => {
+            setRestoredDraft(null);
+            setDraftRestoredNotice(false);
+          }}
+        />
+      </details>
       <ExerciseVideoGallery
+        initialVisible={3}
         exercise={exercise}
         onUseForNoteDraft={(video) => {
           const base = restoredDraft ?? makeInitialDraft(exercise);
@@ -1032,7 +1022,8 @@ const MovementDetails: React.FC<{
               ...(video.endSec !== undefined ? { endSec: video.endSec } : { endSec: undefined }),
             },
           };
-          const isDirty = exerciseRevision(nextDraft) !== exerciseRevision(makeInitialDraft(exercise));
+          const isDirty =
+            exerciseRevision(nextDraft) !== exerciseRevision(makeInitialDraft(exercise));
           if (isDirty) {
             writePreviewEditDraft(exercise.id, currentRevision, nextDraft);
           } else {
@@ -1045,11 +1036,6 @@ const MovementDetails: React.FC<{
           navigatePreviewStep(2);
         }}
       />
-      {previewStep === 2 && (
-        <div ref={step1Ref} data-detail-step1-section className="pf-p08-compact-3d-ref">
-          <Studio3DMotionHeroCard exercise={exercise} compact />
-        </div>
-      )}
       <div className="pf-preview-secondary-group" aria-label="보조 학습 및 출처 자료">
         <p className="pf-preview-secondary-group__heading pf-shift-left-audit-only">
           상세 가이드 · 내 검토 기록 (필요할 때 펼쳐보기)
@@ -1059,7 +1045,7 @@ const MovementDetails: React.FC<{
           data-testid="detail-clinical-diagram-drawer"
         >
           <summary>
-            <span>단계별 자세 도해 · 상세 메모 보기</span>
+            <span>기구 준비와 수업 지도 팁</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
           <div style={{ display: 'grid', gap: '10px', paddingTop: '8px' }}>
@@ -1095,11 +1081,21 @@ const MovementDetails: React.FC<{
           data-testid="detail-posture-anatomy-drawer"
         >
           <summary>
-            <span>자세 정렬 · 타겟 근육 가이드</span>
+            <span>움직이는 부위와 비슷한 동작</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
           <div style={{ display: 'grid', gap: '10px', paddingTop: '8px' }}>
+            <IntuitiveAnatomyGuideCard exercise={exercise} />
             <PostureAnatomyGuide exercise={exercise} />
+            <ProgressionTreeCard
+              exercise={exercise}
+              onAddExercise={(target) => {
+                ensureWorldExercisesInStore([target]);
+                usePilatesStore
+                  .getState()
+                  .appendExerciseToSequence(target.id, target.blockCategory);
+              }}
+            />
           </div>
         </details>
         <details
@@ -1108,7 +1104,7 @@ const MovementDetails: React.FC<{
           onToggle={(event) => setVoiceGuideOpen(event.currentTarget.open)}
         >
           <summary>
-            <span>음성 안내 · 연속 모션 레퍼런스</span>
+            <span>소리로 동작 듣기</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
           {voiceGuideOpen && (
@@ -1123,35 +1119,6 @@ const MovementDetails: React.FC<{
           )}
         </details>
         <details
-          ref={step2Ref}
-          className="optional-review-details pf-detail-progressive-drawer pf-shift-left-audit-only"
-          open={previewStep === 2 || restoredDraft !== null ? true : undefined}
-        >
-          <summary>내 검토 기록 (선택)</summary>
-          <LocalInstructorReview
-            key={`${currentRevision}-${draftResetVersion}`}
-            exercise={exercise}
-            initialRestoredDraft={restoredDraft}
-            reviewerAlias={reviewerAlias}
-            onReviewerAliasChange={setReviewerAlias}
-            editorOpen={previewStep === 2 || reviewEditorOpen}
-            onEditorOpenChange={(open) => {
-              setReviewEditorOpen(open);
-              if (open) {
-                setPreviewStep(2);
-              }
-            }}
-            canAddToSequence={
-              Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
-            }
-            onDraftStatusChange={onDraftStatusChange}
-            onDraftSaved={() => {
-              setRestoredDraft(null);
-              setDraftRestoredNotice(false);
-            }}
-          />
-        </details>
-        <details
           className="pending-instruction-notes pf-detail-progressive-drawer pf-shift-left-audit-only"
           onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
         >
@@ -1164,7 +1131,7 @@ const MovementDetails: React.FC<{
           </summary>
           <MotionReferencePlayer mode="prototype-lab" active={motionLabOpen} />
         </details>
-        <details className="optional-source-details pf-detail-progressive-drawer pf-shift-left-audit-only">
+        <details className="optional-source-details pf-detail-progressive-drawer">
           <summary>출처·검토 상태 자세히 보기</summary>
           <ExerciseEvidencePanel exercise={exercise} />
           <section className="movement-source-panel">
@@ -1274,12 +1241,6 @@ const MovementDetails: React.FC<{
           </section>
         </details>
       </div>
-      <p className="pf-p07-honest-footnote">
-        <Info size={14} aria-hidden="true" />
-        <span>
-          수업 전 스프링과 회원 컨디션에 맞춰 가볍게 조절해 진행해 주세요.
-        </span>
-      </p>
       {onAddToSequence && (
         <div className="library-modal-footer">
           {hasUnsavedReview && (
@@ -1292,7 +1253,7 @@ const MovementDetails: React.FC<{
             <p className="movement-add-feedback muted" role="status">
               {approved
                 ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
-                : '현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'}
+                : '이미 수업안에 담았어요. 필요하면 수업 메모를 남겨 두세요.'}
             </p>
           )}
           {additionError && (
@@ -1382,7 +1343,8 @@ const MovementDetailDialog: React.FC<
       onBeforeClose={beforeClose}
       title={exercise.nameKo}
       subtitle={exercise.nameEn || '내가 등록한 참고 동작'}
-      maxWidth="900px"
+      className="exercise-practice-dialog"
+      maxWidth="1000px"
     >
       <div
         ref={contentRef}

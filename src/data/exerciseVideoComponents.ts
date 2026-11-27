@@ -71,6 +71,7 @@ export const EXERCISE_VIDEO_COMPONENTS: Readonly<
 /** Creator titles/descriptions identify these as variants or multi-movement videos. */
 export const VIDEO_REFERENCE_SCOPE: Readonly<Record<string, 'related-variant' | 'flow-component'>> =
   {
+    M2Y9FWJYO0k: 'flow-component',
     QFv_Fex3Mko: 'related-variant',
     '4mbKSdGz3us': 'flow-component',
     XnFBJBQpYEY: 'flow-component',

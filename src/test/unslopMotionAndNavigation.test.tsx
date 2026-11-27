@@ -24,7 +24,7 @@ describe('Unslop v7 UI/UX, reorganized studio IA & page-specific motion choreogr
 
     const sidebar = screen.getByLabelText('스튜디오 탐색');
     expect(within(sidebar).getByText('수업 설계')).toBeInTheDocument();
-    expect(within(sidebar).getByText('운영 · 아카이브')).toBeInTheDocument();
+    expect(within(sidebar).getByText('일정과 기록')).toBeInTheDocument();
 
     const primaryNav = within(screen.getByRole('navigation', { name: '주 메뉴' }));
     expect(primaryNav.getByRole('button', { name: '수업 만들기' })).toHaveAttribute(
@@ -71,7 +71,7 @@ describe('Unslop v7 UI/UX, reorganized studio IA & page-specific motion choreogr
       { timeout: 10000 },
     );
     expect(dock).toHaveTextContent('동작 1개 담김');
-    fireEvent.click(within(dock).getByRole('button', { name: /시퀀스 조율하러 가기/ }));
+    fireEvent.click(within(dock).getByRole('button', { name: /내 수업 순서 보기/ }));
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
   }, 15000);
 

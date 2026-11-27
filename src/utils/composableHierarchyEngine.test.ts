@@ -68,7 +68,13 @@ describe('World Pilates 1,000+ Repertoire Encyclopedia', () => {
       expect(ex.anatomyInsight.benefitsKo.length).toBeLessThanOrEqual(3);
       expect(ex.anatomyInsight.commonFaultsKo).toHaveLength(2);
       expect(ex.anatomyInsight.springMechanicsKo.length).toBeGreaterThan(10);
-      expect(VERIFIED_REPERTOIRE_VIDEO_ID_SET.has(ex.youtube.videoId)).toBe(true);
+      if (ex.youtube.videoId) {
+        expect(VERIFIED_REPERTOIRE_VIDEO_ID_SET.has(ex.youtube.videoId)).toBe(true);
+        expect(ex.youtube.url).toContain(ex.youtube.videoId);
+        if (ex.tier === 'variation') expect(ex.youtube.referenceScope).toBe('base-movement');
+      } else {
+        expect(ex.youtube.url).toBe('');
+      }
 
       const combinedText = [
         ex.nameKo,
@@ -139,7 +145,7 @@ describe('World Pilates 1,000+ Repertoire Encyclopedia', () => {
 });
 
 describe('4-Tier Composable Hierarchy Engine', () => {
-  it('Tier 1: remixes any exercise with prop, modifier, and apparatus switch while keeping verified video & anatomy', () => {
+  it('Tier 1: remixes with a prop and apparatus change without borrowing an unrelated video', () => {
     const base = WORLD_PILATES_BY_ID.get('world-mat-dead-bug-core')!;
     const remixed = remixExerciseVariation(base, {
       prop: 'mini-ball',
@@ -155,7 +161,8 @@ describe('4-Tier Composable Hierarchy Engine', () => {
     expect(remixed.level).toBe('1.5');
     expect(remixed.springs).toBe('1R 1B');
     expect(remixed.cues).toHaveLength(3);
-    expect(VERIFIED_REPERTOIRE_VIDEO_ID_SET.has(remixed.youtube.videoId)).toBe(true);
+    expect(remixed.youtube.videoId).toBe('');
+    expect(remixed.youtube.url).toBe('');
 
     // Light-spring remix on Reformer accurately shifts spring lighter and updates springMechanicsKo
     const plank = WORLD_PILATES_BY_ID.get('expanded-reformer-long-stretch')!;

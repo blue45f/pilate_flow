@@ -1,3 +1,4 @@
+import { MovementWorkspaceCover } from './EditorialApparatusCard';
 import { StudioMotionImage } from './StudioMotionImage';
 import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { useManagedRaf } from '../hooks/useManagedRaf';
@@ -1230,29 +1231,22 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     <div
       className={`teaching-collection flow-binder ${view === 'history' ? 'teaching-collection--history' : 'teaching-collection--saved'}`}
     >
-      <header className="teaching-page-header atelier-cover atelier-cover--notebook">
-        <div>
-          <span className="eyebrow">
-            {view === 'saved' ? '수업 라이브러리' : '다음 수업을 위한 기억'}
-          </span>
-          <h1 id="workspace-main-heading" tabIndex={-1}>
-            {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
-            <PfBadge
-              tone="neutral"
-              shape="rect"
-              className="teaching-count"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+      <MovementWorkspaceCover
+        notebook
+        title={
+          <>
+            {view === 'saved' ? '저장한 수업' : '수업 기록'}{' '}
+            <PfBadge tone="neutral" shape="rect" className="teaching-count" style={{ fontVariantNumeric: 'tabular-nums' }}>
               {view === 'saved' ? savedSequences.length : totalActualLogsCount}
             </PfBadge>
-          </h1>
-          <p className="muted">
-            {view === 'saved'
-              ? '필요한 수업을 찾아 수정하거나, 바로 수업을 시작하세요.'
-              : '지난 수업을 다음 계획으로 이어가세요.'}
-          </p>
-        </div>
+          </>
+        }
+        description={view === 'saved'
+          ? (savedSequences.length ? '다시 쓰고 싶은 수업을 골라 보세요.' : '수업을 만들어 저장하면 여기서 다시 열 수 있어요.')
+          : '지난 수업의 메모와 구성을 보면서 다음 수업을 준비하세요.'}
+      >
         <PfButton
+          className="cover-primary-action"
           variant={view === 'saved' ? 'primary' : 'secondary'}
           aria-expanded={view === 'history' ? showGroupForm : undefined}
           onClick={() => {
@@ -1265,7 +1259,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         >
           {view === 'saved' ? (
             <>
-              <Plus size={17} /> 새 시퀀스 계획
+              <Plus size={17} /> 수업 만들기
             </>
           ) : (
             <>
@@ -1273,7 +1267,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             </>
           )}
         </PfButton>
-      </header>
+      </MovementWorkspaceCover>
       {view === 'history' || persistenceError || !storageStatus.ok ? (
         <div
           className="teaching-separation-banner"
@@ -1348,13 +1342,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       {view === 'saved' ? (
         <>
           <MobileSubPageBar
-            ariaLabel="저장 시퀀스와 모듈 블록 전환"
+            ariaLabel="수업과 동작 묶음 전환"
             activeId={p12SavedSection}
             options={[
-              { id: 'sequences', label: '전체 시퀀스', badge: savedSequences.length },
+              { id: 'sequences', label: '전체 수업', badge: savedSequences.length },
               {
                 id: 'blocks',
-                label: '모듈 블록 묶음',
+                label: '동작 묶음',
                 badge: reusableBlocks.length + OFFLINE_BLOCK_PRESETS.slice(0, 6).length,
               },
             ]}
@@ -1368,7 +1362,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <div className="teaching-search-row">
                 <PfSearchField
                   ref={savedSearchInputRef}
-                  label="저장한 시퀀스 검색"
+                  label="저장한 수업 검색"
                   wrapperClassName="teaching-search"
                   placeholder="제목, 기구, 포함 동작, 최근 반 이름으로 찾기"
                   value={query}
@@ -1386,7 +1380,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   <button
                     type="button"
                     className="teaching-search-clear"
-                    aria-label="저장 시퀀스 검색어 지우기"
+                    aria-label="저장한 수업 검색어 지우기"
                     onClick={() => {
                       setQuery('');
                       savedSearchInputRef.current?.focus();
@@ -1495,7 +1489,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <div
                 className="pf-tabs pf-tabs--pills teaching-saved-quick-filters"
                 role="group"
-                aria-label="저장 시퀀스 빠른 필터"
+                aria-label="저장한 수업 빠른 필터"
                 onKeyDown={(e) =>
                   handleRovingKeyDown(
                     e,
@@ -1628,11 +1622,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 <p
                   className="muted"
                   role="status"
-                  aria-label="저장 시퀀스 검색 결과"
+                  aria-label="저장한 수업 검색 결과"
                   aria-live="polite"
                   aria-atomic="true"
                 >
-                  <strong>조건에 맞는 시퀀스 {sequences.length}개</strong>
+                  <strong>조건에 맞는 수업 {sequences.length}개</strong>
                   <span> / 전체 {savedSequences.length}개</span>
                 </p>
                 <PfButton variant="secondary" onClick={() => resetSavedFilters(true)}>
@@ -1644,12 +1638,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <PfEmptyState
                 icon={<FolderHeart size={28} />}
                 title={
-                  hasActiveSavedFilter ? '검색한 시퀀스가 없어요' : '첫 수업의 흐름을 저장해 보세요'
+                  hasActiveSavedFilter ? '조건에 맞는 수업이 없어요' : '첫 수업의 흐름을 저장해 보세요'
                 }
                 description={
                   hasActiveSavedFilter
                     ? '다른 이름·동작·기구로 검색하거나 적용된 조건을 지워 전체 목록을 확인해 보세요.'
-                    : '계획에서 시퀀스를 만들고 저장하면 이곳에 모입니다.'
+                    : '수업 만들기에서 동작을 골라 저장하면 여기서 다시 열 수 있어요.'
                 }
                 action={
                   <PfButton
@@ -2140,13 +2134,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             className="pf-binder-blocks-shelf"
             data-testid="binder-reusable-blocks-shelf"
             data-subpage-hidden={p12SavedSection === 'sequences' ? 'true' : undefined}
-            aria-label="재사용 모듈 블록 보관함"
+            aria-label="다시 쓸 동작 묶음"
           >
             <div className="pf-binder-blocks-shelf__head">
               <div>
                 <span className="eyebrow">반복해서 쓰는 흐름</span>
                 <h2 className="section-heading">
-                  재사용 모듈 블록 묶음{' '}
+                  다시 쓸 동작 묶음{' '}
                   <PfBadge
                     tone="neutral"
                     shape="rect"

@@ -298,6 +298,8 @@ export function triangulateAndWeldQuads(
   // Pass 1: Accumulate area-weighted smooth normals per spatial vertex bucket & material group
   for (let qi = 0; qi < quadCount; qi++) {
     const q = quads[qi]!;
+    // Imported split normals and analytic loft normals already encode intentional creases.
+    if (q.vNormals) continue;
     const v0 = q.verts[0];
     const v1 = q.verts[1];
     const v2 = q.verts[2];
@@ -310,31 +312,16 @@ export function triangulateAndWeldQuads(
     const e2x = v2[0] - v0[0];
     const e2y = v2[1] - v0[1];
     const e2z = v2[2] - v0[2];
-    let cAx = e1y * e2z - e1z * e2y;
-    let cAy = e1z * e2x - e1x * e2z;
-    let cAz = e1x * e2y - e1y * e2x;
+    const cAx = e1y * e2z - e1z * e2y;
+    const cAy = e1z * e2x - e1x * e2z;
+    const cAz = e1x * e2y - e1y * e2x;
 
     const e4x = v3[0] - v0[0];
     const e4y = v3[1] - v0[1];
     const e4z = v3[2] - v0[2];
-    let cBx = e2y * e4z - e2z * e4y;
-    let cBy = e2z * e4x - e2x * e4z;
-    let cBz = e2x * e4y - e2y * e4x;
-
-    if (q.vNormals) {
-      const vn = q.vNormals;
-      const avgX = vn[0][0] + vn[1][0] + vn[2][0] + vn[3][0];
-      const avgY = vn[0][1] + vn[1][1] + vn[2][1] + vn[3][1];
-      const avgZ = vn[0][2] + vn[1][2] + vn[2][2] + vn[3][2];
-      if ((cAx + cBx) * avgX + (cAy + cBy) * avgY + (cAz + cBz) * avgZ < 0) {
-        cAx = -cAx;
-        cAy = -cAy;
-        cAz = -cAz;
-        cBx = -cBx;
-        cBy = -cBy;
-        cBz = -cBz;
-      }
-    }
+    const cBx = e2y * e4z - e2z * e4y;
+    const cBy = e2z * e4x - e2x * e4z;
+    const cBz = e2x * e4y - e2y * e4x;
 
     const qNx = cAx + cBx;
     const qNy = cAy + cBy;
@@ -462,53 +449,29 @@ export function triangulateAndWeldQuads(
 
     for (let ci = 0; ci < 4; ci++) {
       const v = q.verts[ci]!;
-      let ox = fnX;
-      let oy = fnY;
-      let oz = fnZ;
-      if (q.vNormals) {
-        const vn = q.vNormals[ci]!;
-        const vl = Math.hypot(vn[0], vn[1], vn[2]);
-        if (vl > 1e-7) {
-          ox = vn[0] / vl;
-          oy = vn[1] / vl;
-          oz = vn[2] / vl;
+      const authored = q.vNormals?.[ci];
+      if (authored) {
+        const length = Math.hypot(...authored);
+        if (length > 1e-7) {
+          cNx[ci] = authored[0] / length;
+          cNy[ci] = authored[1] / length;
+          cNz[ci] = authored[2] / length;
+          continue;
         }
       }
-      const key = spatialWeldKey(v[0], v[1], v[2], roleId);
-      const slot = scratch.findSlot(key);
-      const ax = slot >= 0 ? scratch.getNx(slot) : 0;
-      const ay = slot >= 0 ? scratch.getNy(slot) : 0;
-      const az = slot >= 0 ? scratch.getNz(slot) : 0;
-      const al = Math.hypot(ax, ay, az);
-      if (al > 1e-9) {
-        const wx = ax / al;
-        const wy = ay / al;
-        const wz = az / al;
-        const align = ox * wx + oy * wy + oz * wz;
-        if (align >= creaseDot) {
-          if (q.vNormals) {
-            // Blend analytic smooth normal with position-welded seam normal
-            const bx = ox * 0.48 + wx * 0.52;
-            const by = oy * 0.48 + wy * 0.52;
-            const bz = oz * 0.48 + wz * 0.52;
-            const bl = Math.hypot(bx, by, bz) || 1;
-            cNx[ci] = bx / bl;
-            cNy[ci] = by / bl;
-            cNz[ci] = bz / bl;
-          } else {
-            cNx[ci] = wx;
-            cNy[ci] = wy;
-            cNz[ci] = wz;
-          }
-        } else {
-          cNx[ci] = ox;
-          cNy[ci] = oy;
-          cNz[ci] = oz;
-        }
-      } else {
-        cNx[ci] = ox;
-        cNy[ci] = oy;
-        cNz[ci] = oz;
+      cNx[ci] = fnX;
+      cNy[ci] = fnY;
+      cNz[ci] = fnZ;
+      const slot = scratch.findSlot(spatialWeldKey(v[0], v[1], v[2], roleId));
+      if (slot < 0) continue;
+      const ax = scratch.getNx(slot);
+      const ay = scratch.getNy(slot);
+      const az = scratch.getNz(slot);
+      const length = Math.hypot(ax, ay, az);
+      if (length > 1e-9 && fnX * ax + fnY * ay + fnZ * az >= creaseDot * length) {
+        cNx[ci] = ax / length;
+        cNy[ci] = ay / length;
+        cNz[ci] = az / length;
       }
     }
 
@@ -762,7 +725,7 @@ void main() {
   float zPos = max(0.0, vWorldPos.z);
   float floorAo = mix(0.76, 1.0, smoothstep(0.0, 0.28, zPos));
   float hemiAo = mix(0.84, 1.0, clamp(N.z * 0.5 + 0.5, 0.0, 1.0));
-  float underContact = 1.0 - smoothstep(0.32, 0.0, zPos) * max(0.0, -N.z) * 0.22;
+  float underContact = 1.0 - (1.0 - smoothstep(0.0, 0.32, zPos)) * max(0.0, -N.z) * 0.22;
   float ao = clamp(floorAo * hemiAo * underContact, 0.62, 1.0);
 
   vec3 H = normalize(keyDir + V);

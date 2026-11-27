@@ -221,6 +221,18 @@ describe('Studio3DWebGL2Renderer (Priority-2 Hardware Fallback & Smooth Normal W
     expect(xrayPacked.translucentVertexCount).toBe(6);
   });
 
+  it('맞닿은 모서리에서도 모델에 기록된 표면 방향을 보존한다', () => {
+    const normal = [0, 0.6, 0.8] as const;
+    const face: StudioQuadFace = {
+      verts: [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+      vNormals: [normal, normal, normal, normal],
+      baseRgb: [100, 120, 100], alpha: 1, spec: 0.1, materialRole: 'fabric',
+    };
+    const { opaqueData } = triangulateAndWeldQuads([face]);
+    expect(opaqueData[4]).toBeCloseTo(0.6, 5);
+    expect(opaqueData[5]).toBeCloseTo(0.8, 5);
+  });
+
   it('converts physical 3D spring/rope lines into camera-facing Z-buffered ribbons and parses CSS colors cleanly', () => {
     expect(parseCssColorToRgb01('#355441')).toEqual([0x35 / 255, 0x54 / 255, 0x41 / 255, 1]);
     expect(parseCssColorToRgb01('rgba(238, 232, 220, 0.9)')).toEqual([

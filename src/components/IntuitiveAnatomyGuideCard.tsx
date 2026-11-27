@@ -138,7 +138,7 @@ export const PilatesFundamentalsDrawer: React.FC<{
         <span className="pf-fundamentals-drawer__summary-left">
           <BookOpen size={16} strokeWidth={1.5} aria-hidden="true" />
           <span>필라테스 기초 지식 한눈에</span>
-          <small>호흡 · 중립 골반 · 스프링 · 척추 4평면</small>
+          <small>호흡 · 골반 · 스프링 · 등 움직임</small>
         </span>
         <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
       </summary>
@@ -184,9 +184,9 @@ export const IntuitiveAnatomyGuideCard: React.FC<IntuitiveAnatomyGuideCardProps>
       <header className="pf-anatomy-guide__header">
         <div className="pf-anatomy-guide__title-row">
           <div>
-            <h3>한눈에 보는 해부학 · 티칭 포인트</h3>
+            <h3>몸의 어디를 쓰나요?</h3>
             <p className="pf-anatomy-guide__subtitle">
-              수업 전 10초 만에 효과·근육·스프링 원리·교정 큐를 확인하세요
+              힘이 들어가는 곳과 자세를 편하게 잡는 방법을 살펴보세요.
             </p>
           </div>
           <div className="pf-anatomy-guide__header-meta">
@@ -235,7 +235,7 @@ export const IntuitiveAnatomyGuideCard: React.FC<IntuitiveAnatomyGuideCardProps>
             </figure>
             <div className="pf-anatomy-muscle-groups">
               <div className="pf-anatomy-muscle-group">
-                <span className="pf-anatomy-muscle-label is-agonist">주동근 (힘을 내는 근육)</span>
+                <span className="pf-anatomy-muscle-label is-agonist">움직일 때 힘을 내는 근육</span>
                 <div className="pf-anatomy-chip-list">
                   {insight.agonistsKo.map((muscle) => (
                     <span key={muscle} className="pf-anatomy-chip is-agonist">
@@ -245,7 +245,7 @@ export const IntuitiveAnatomyGuideCard: React.FC<IntuitiveAnatomyGuideCardProps>
                 </div>
               </div>
               <div className="pf-anatomy-muscle-group">
-                <span className="pf-anatomy-muscle-label is-stabilizer">안정근 (몸을 받치는 근육)</span>
+                <span className="pf-anatomy-muscle-label is-stabilizer">자세를 받쳐 주는 근육</span>
                 <div className="pf-anatomy-chip-list">
                   {insight.stabilizersKo.map((muscle) => (
                     <span key={muscle} className="pf-anatomy-chip is-stabilizer">
@@ -262,7 +262,7 @@ export const IntuitiveAnatomyGuideCard: React.FC<IntuitiveAnatomyGuideCardProps>
         <article className="pf-anatomy-tile" data-testid="anatomy-tile-mechanics">
           <div className="pf-anatomy-tile__head">
             <Compass size={16} strokeWidth={1.5} aria-hidden="true" />
-            <h4>기초 원리 &amp; 스프링 역학</h4>
+            <h4>몸을 받쳐 주는 곳</h4>
           </div>
           <div className="pf-anatomy-mechanics-body">
             {exercise.springs && exercise.springs !== 'Bodyweight' && (
@@ -285,16 +285,16 @@ export const IntuitiveAnatomyGuideCard: React.FC<IntuitiveAnatomyGuideCardProps>
         <article className="pf-anatomy-tile" data-testid="anatomy-tile-faults">
           <div className="pf-anatomy-tile__head">
             <MessageCircleHeart size={16} strokeWidth={1.5} aria-hidden="true" />
-            <h4>회원님 단골 실수 &amp; 바로 고치는 큐</h4>
+            <h4>이럴 땐 이렇게 해 보세요</h4>
           </div>
           <div className="pf-anatomy-fault-list">
             {insight.commonFaultsKo.slice(0, 2).map((item, idx) => (
               <div key={idx} className="pf-anatomy-fault-item">
                 <p className="pf-anatomy-fault-text">
-                  <span>자주 나오는 실수</span> {item.fault}
+                  <span>이럴 때</span> {item.fault}
                 </p>
                 <p className="pf-anatomy-fix-text">
-                  <span>바로 한 마디</span> “{item.fixCue}”
+                  <span>이렇게 해 보세요</span> “{item.fixCue}”
                 </p>
                 {onInsertCue && (
                   <button

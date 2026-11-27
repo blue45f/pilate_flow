@@ -1,8 +1,9 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { getStudioApparatusGlbAsset } from '../data/blenderStudioGlbManifest';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { PfButton } from '../design-system';
-import type { ApparatusType, BodyPosition } from '../types/pilates';
+import type { ApparatusType, BodyPosition, PilatesExercise } from '../types/pilates';
 import {
   PHASE_CARRIAGE_RATIOS,
   type RigCameraPreset,
@@ -20,19 +21,21 @@ export interface Apparatus3dRigPreviewCardProps {
   readonly bodyPosition: BodyPosition;
   readonly springsLabel?: string;
   readonly exerciseTitleKo?: string;
+  readonly exercise?: PilatesExercise;
+  readonly onOpenExercise?: (exercise: PilatesExercise) => void;
 }
 
 const CAMERA_PRESETS: ReadonlyArray<{ id: RigCameraPreset; labelKo: string }> = [
-  { id: 'isometric', labelKo: '3D 등각(Iso)' },
-  { id: 'sagittal', labelKo: '시상면(Side)' },
-  { id: 'coronal', labelKo: '관상면(Front)' },
-  { id: 'transverse', labelKo: '수평면(Top)' },
+  { id: 'isometric', labelKo: '비스듬히' },
+  { id: 'sagittal', labelKo: '옆에서' },
+  { id: 'coronal', labelKo: '앞에서' },
+  { id: 'transverse', labelKo: '위에서' },
 ];
 
 const MOTION_PHASES: ReadonlyArray<{ id: RigMotionPhase; labelKo: string }> = [
-  { id: 'setup', labelKo: '1 시작(Setup)' },
-  { id: 'peak', labelKo: '2 정점(Peak)' },
-  { id: 'return', labelKo: '3 복귀(Return)' },
+  { id: 'setup', labelKo: '시작 자세' },
+  { id: 'peak', labelKo: '움직인 자세' },
+  { id: 'return', labelKo: '돌아오기' },
 ];
 
 function prefersReducedMotionNow(): boolean {
@@ -47,7 +50,10 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   bodyPosition,
   springsLabel,
   exerciseTitleKo,
+  exercise,
+  onOpenExercise,
 }) => {
+  const showCarriageDiagram = !exercise && apparatus === 'reformer';
   const [cameraPreset, setCameraPreset] = useState<RigCameraPreset>('isometric');
   const [phase, setPhase] = useState<RigMotionPhase>('setup');
   const [carriageOffset, setCarriageOffset] = useState<number>(PHASE_CARRIAGE_RATIOS.setup);
@@ -155,88 +161,243 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   return (
     <section
       className="pf-card pf-rig-preview"
-      aria-label="3D 기구·스프링·무게중심(CoM) 뷰포트 시뮬레이터"
+      aria-label="기구와 자세 보기"
       data-testid="apparatus-3d-rig-preview"
     >
       <div className="pf-rig-preview__header">
         <div className="pf-rig-preview__copy">
           <strong className="pf-rig-preview__title">
-            3D 기구·관절 체인·무게중심(CoM) 투영 뷰포트
+            기구와 자세 보기
             {exerciseTitleKo ? ` · ${exerciseTitleKo}` : ''}
           </strong>
           <p className="pf-rig-preview__meta">
             {APPARATUS_LABELS[apparatus].ko} · {POSITION_LABELS[bodyPosition].ko} ·{' '}
-            {scene.springVector2D.tensionLabel}
+            {apparatus === 'mat' || apparatus === 'barrel'
+              ? '몸무게로 하는 동작'
+              : scene.springVector2D.tensionLabel}
           </p>
-          <p
-            className="pf-rig-preview__motion-note"
-            data-testid="rig-3d-motion-safe-note"
-            style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#355441', fontWeight: 600 }}
-          >
-            {reducedMotion
-              ? '모션 감소 설정 적용됨 · 자동 재생 없이 정적 단계별로 확인합니다.'
-              : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교하거나 도해를 좌우로 드래그해 보세요.'}
-          </p>
+          {(exercise || showCarriageDiagram) && (
+            <p className="pf-rig-preview__motion-note" data-testid="rig-3d-motion-safe-note">
+              {exercise
+                ? '시작, 움직임, 돌아오는 자세를 차례로 살펴보세요.'
+                : reducedMotion
+                  ? '다음 자세를 누르면 동작을 한 단계씩 볼 수 있어요.'
+                  : '그림을 좌우로 밀어 리포머 발판이 움직이는 모습을 볼 수 있어요.'}
+            </p>
+          )}
         </div>
-        <div role="group" aria-label="3D 카메라 시점 전환" className="pf-rig-preview__camera-group">
-          {CAMERA_PRESETS.map((preset) => (
-            <PfButton
-              key={preset.id}
-              variant="secondary"
-              className="pf-rig-preview__btn"
-              pressed={cameraPreset === preset.id}
-              onClick={() => setCameraPreset(preset.id)}
-            >
-              {preset.labelKo}
-            </PfButton>
-          ))}
-        </div>
+        {showCarriageDiagram && (
+          <div role="group" aria-label="보는 방향" className="pf-rig-preview__camera-group">
+            {CAMERA_PRESETS.map((preset) => (
+              <PfButton
+                key={preset.id}
+                variant="secondary"
+                className="pf-rig-preview__btn"
+                pressed={cameraPreset === preset.id}
+                onClick={() => setCameraPreset(preset.id)}
+              >
+                {preset.labelKo}
+              </PfButton>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div role="group" aria-label="3페이즈 키프레임 전환" className="pf-rig-preview__phase-bar">
-        <div className="pf-rig-preview__phase-group">
-          {MOTION_PHASES.map((item) => (
+      {(exercise || showCarriageDiagram) && (
+        <div role="group" aria-label="동작 단계" className="pf-rig-preview__phase-bar">
+          <div className="pf-rig-preview__phase-group">
+            {MOTION_PHASES.map((item) => (
+              <PfButton
+                key={item.id}
+                variant="secondary"
+                className="pf-rig-preview__btn"
+                pressed={phase === item.id}
+                onClick={() => {
+                  setAutoPlay(false);
+                  setPhase(item.id);
+                  setCarriageOffset(PHASE_CARRIAGE_RATIOS[item.id]);
+                }}
+              >
+                {item.labelKo}
+              </PfButton>
+            ))}
+          </div>
+          <div className="pf-rig-preview__utility-group">
+            {showCarriageDiagram && (
+              <PfButton
+                variant="secondary"
+                className="pf-rig-preview__btn"
+                pressed={showStudio3dRender}
+                onClick={() => setShowStudio3dRender((v) => !v)}
+              >
+                {showStudio3dRender ? '기구 이미지 숨기기' : '기구 이미지 보기'}
+              </PfButton>
+            )}
             <PfButton
-              key={item.id}
               variant="secondary"
               className="pf-rig-preview__btn"
-              pressed={phase === item.id}
+              pressed={autoPlay && !reducedMotion}
               onClick={() => {
-                setAutoPlay(false);
-                setPhase(item.id);
-                setCarriageOffset(PHASE_CARRIAGE_RATIOS[item.id]);
+                if (reducedMotion) {
+                  const order: RigMotionPhase[] = ['setup', 'peak', 'return'];
+                  const next = order[(order.indexOf(phase) + 1) % order.length]!;
+                  setPhase(next);
+                  setCarriageOffset(PHASE_CARRIAGE_RATIOS[next]);
+                  return;
+                }
+                setAutoPlay((v) => !v);
               }}
             >
-              {item.labelKo}
+              {reducedMotion ? '다음 자세' : autoPlay ? '재생 멈추기' : '이어서 보기'}
             </PfButton>
-          ))}
+            {exercise && onOpenExercise && (
+              <PfButton
+                variant="secondary"
+                className="pf-rig-preview__btn"
+                onClick={() => onOpenExercise(exercise)}
+              >
+                자세히 보기
+              </PfButton>
+            )}
+          </div>
         </div>
-        <div className="pf-rig-preview__utility-group">
-          <PfButton
-            variant="secondary"
-            className="pf-rig-preview__btn"
-            pressed={showStudio3dRender}
-            onClick={() => setShowStudio3dRender((v) => !v)}
-          >
-            {showStudio3dRender ? '3D 스튜디오 렌더 숨기기' : '3D 스튜디오 렌더 보기'}
-          </PfButton>
-          <PfButton
-            variant="secondary"
-            className="pf-rig-preview__btn"
-            pressed={autoPlay && !reducedMotion}
-            onClick={() => {
-              if (reducedMotion) {
-                const order: RigMotionPhase[] = ['setup', 'peak', 'return'];
-                const next = order[(order.indexOf(phase) + 1) % order.length]!;
-                setPhase(next);
-                setCarriageOffset(PHASE_CARRIAGE_RATIOS[next]);
-                return;
-              }
-              setAutoPlay((v) => !v);
+      )}
+
+      {exercise ? (
+        <ExerciseMotionArtwork
+          exercise={exercise}
+          phase={phase === 'setup' ? 'start' : phase === 'peak' ? 'middle' : 'end'}
+          decorative={false}
+        />
+      ) : (
+        showStudio3dRender && (
+          <div className="pf-rig-3d-render-frame" data-testid="blender-studio-3d-render">
+            <img
+              src={getApparatusStudio3dImage(apparatus)}
+              alt={`${APPARATUS_LABELS[apparatus].ko} Blender 3D 스튜디오 렌더링`}
+              loading="lazy"
+            />
+          </div>
+        )
+      )}
+
+      {showCarriageDiagram && (
+        <>
+          <svg
+            viewBox="0 0 320 180"
+            role="img"
+            aria-label={`${APPARATUS_LABELS[apparatus].ko} 자세 그림 · ${CAMERA_PRESETS.find((preset) => preset.id === cameraPreset)?.labelKo}`}
+            className="pf-rig-preview__svg"
+            style={{ touchAction: 'pan-y', cursor: 'ew-resize' }}
+            onPointerDown={(event) => {
+              svgScrubRef.current = true;
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+              scrubFromSvgPointer(event);
+            }}
+            onPointerMove={(event) => {
+              if (!svgScrubRef.current) return;
+              scrubFromSvgPointer(event);
+            }}
+            onPointerUp={() => {
+              svgScrubRef.current = false;
+            }}
+            onPointerCancel={() => {
+              svgScrubRef.current = false;
             }}
           >
-            {autoPlay && !reducedMotion ? '3페이즈 자동 재생 중지' : '3페이즈 연속 재생'}
-          </PfButton>
+            <defs>
+              <marker
+                id="spring-arrow-head"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M0,0 L8,4 L0,8 Z" fill="#d97706" />
+              </marker>
+            </defs>
+            <polygon
+              points={framePolygon}
+              fill="rgba(23, 61, 52, 0.06)"
+              stroke="#173d34"
+              strokeWidth="2"
+            />
+            <polygon
+              points={carriagePolygon}
+              fill="rgba(20, 102, 94, 0.18)"
+              stroke="#14665e"
+              strokeWidth="2"
+            />
+            <line
+              x1={scene.springVector2D.origin.u}
+              y1={scene.springVector2D.origin.v}
+              x2={scene.springVector2D.target.u}
+              y2={scene.springVector2D.target.v}
+              stroke="#d97706"
+              strokeWidth="2.5"
+              strokeDasharray="4 2"
+              markerEnd="url(#spring-arrow-head)"
+            />
+            <polyline
+              points={skeletonPolyline}
+              fill="none"
+              stroke="#0f5132"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              cx={scene.jointChain2D.head.u}
+              cy={scene.jointChain2D.head.v}
+              r="5"
+              fill="#ffffff"
+              stroke="#0f5132"
+              strokeWidth="2"
+            />
+            <circle
+              cx={scene.centerOfMass2D.u}
+              cy={scene.centerOfMass2D.v}
+              r="6.5"
+              fill="#173d34"
+              stroke="#ffffff"
+              strokeWidth="2"
+            />
+            <text
+              x={scene.centerOfMass2D.u + 10}
+              y={scene.centerOfMass2D.v + 4}
+              fontSize="11"
+              fontWeight="600"
+              fill="#173d34"
+            >
+              무게중심
+            </text>
+          </svg>
+
+          <div className="pf-rig-preview__slider-row">
+            <label htmlFor={carriageSliderId} className="pf-rig-preview__slider-label">
+              동작 진행 {Math.round(carriageOffset * 100)}%
+            </label>
+            <input
+              id={carriageSliderId}
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={carriageOffset}
+              onChange={(e) => {
+                setAutoPlay(false);
+                setCarriageOffset(Number(e.target.value));
+              }}
+              aria-label="동작 진행 위치"
+              className="pf-rig-preview__slider-input"
+            />
+          </div>
+        </>
+      )}
+      <details className="pf-rig-preview__files">
+        <summary>3D 파일과 Blender 코드</summary>
+        <div className="pf-rig-preview__utility-group">
           <PfButton
             variant="secondary"
             className="pf-rig-preview__btn"
@@ -244,7 +405,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             aria-controls={blenderScriptId}
             onClick={() => setShowBlenderScript((v) => !v)}
           >
-            {showBlenderScript ? 'Blender 스크립트 닫기' : 'Blender 3D 스크립트(.py)'}
+            {showBlenderScript ? 'Blender 코드 닫기' : 'Blender 코드 보기'}
           </PfButton>
           <PfButton
             variant="secondary"
@@ -278,166 +439,44 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             {glbAsset.labelKo} ({Math.round(glbAsset.fileBytes / 1024)}KB)
           </a>
         </div>
-      </div>
-
-      {copyStatus && (
-        <p
-          role="status"
-          aria-live="polite"
-          data-testid="rig-script-copy-status"
-          style={{ margin: '0 0 6px', fontSize: '0.78rem', color: '#355441', fontWeight: 500 }}
-        >
-          {copyStatus}
-        </p>
-      )}
-
-      <p
-        className="pf-rig-preview__glb-badge"
-        data-testid="rig-glb-verified-meta"
-        style={{
-          margin: '0 0 6px',
-          fontSize: '0.8125rem',
-          color: '#476253',
-          fontWeight: 600,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {glbAsset.generator} · 삼각형 {glbAsset.triangles.toLocaleString('ko-KR')}개
-      </p>
-
-      {showStudio3dRender && (
-        <div className="pf-rig-3d-render-frame" data-testid="blender-studio-3d-render">
-          <img
-            src={getApparatusStudio3dImage(apparatus)}
-            alt={`${APPARATUS_LABELS[apparatus].ko} Blender 3D 스튜디오 렌더링`}
-            loading="lazy"
-          />
-        </div>
-      )}
-
-      <svg
-        viewBox="0 0 320 180"
-        role="img"
-        aria-label={`${APPARATUS_LABELS[apparatus].ko} ${cameraPreset} 투영 도해`}
-        className="pf-rig-preview__svg"
-        style={{ touchAction: 'pan-y', cursor: 'ew-resize' }}
-        onPointerDown={(event) => {
-          svgScrubRef.current = true;
-          event.currentTarget.setPointerCapture?.(event.pointerId);
-          scrubFromSvgPointer(event);
-        }}
-        onPointerMove={(event) => {
-          if (!svgScrubRef.current) return;
-          scrubFromSvgPointer(event);
-        }}
-        onPointerUp={() => {
-          svgScrubRef.current = false;
-        }}
-        onPointerCancel={() => {
-          svgScrubRef.current = false;
-        }}
-      >
-        <defs>
-          <marker
-            id="spring-arrow-head"
-            markerWidth="8"
-            markerHeight="8"
-            refX="6"
-            refY="4"
-            orient="auto"
+        {copyStatus && (
+          <p
+            role="status"
+            aria-live="polite"
+            data-testid="rig-script-copy-status"
+            style={{ margin: '0 0 6px', fontSize: '0.78rem', color: '#355441', fontWeight: 500 }}
           >
-            <path d="M0,0 L8,4 L0,8 Z" fill="#d97706" />
-          </marker>
-        </defs>
-        <polygon
-          points={framePolygon}
-          fill="rgba(23, 61, 52, 0.06)"
-          stroke="#173d34"
-          strokeWidth="2"
-        />
-        <polygon
-          points={carriagePolygon}
-          fill="rgba(20, 102, 94, 0.18)"
-          stroke="#14665e"
-          strokeWidth="2"
-        />
-        <line
-          x1={scene.springVector2D.origin.u}
-          y1={scene.springVector2D.origin.v}
-          x2={scene.springVector2D.target.u}
-          y2={scene.springVector2D.target.v}
-          stroke="#d97706"
-          strokeWidth="2.5"
-          strokeDasharray="4 2"
-          markerEnd="url(#spring-arrow-head)"
-        />
-        <polyline
-          points={skeletonPolyline}
-          fill="none"
-          stroke="#0f5132"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle
-          cx={scene.jointChain2D.head.u}
-          cy={scene.jointChain2D.head.v}
-          r="5"
-          fill="#ffffff"
-          stroke="#0f5132"
-          strokeWidth="2"
-        />
-        <circle
-          cx={scene.centerOfMass2D.u}
-          cy={scene.centerOfMass2D.v}
-          r="6.5"
-          fill="#173d34"
-          stroke="#ffffff"
-          strokeWidth="2"
-        />
-        <text
-          x={scene.centerOfMass2D.u + 10}
-          y={scene.centerOfMass2D.v + 4}
-          fontSize="11"
-          fontWeight="600"
-          fill="#173d34"
-        >
-          CoM ({POSITION_LABELS[bodyPosition].ko})
-        </text>
-      </svg>
+            {copyStatus}
+          </p>
+        )}
 
-      {showBlenderScript && (
-        <pre
-          id={blenderScriptId}
-          role="region"
-          aria-label="Blender 4.x Python 3D 씬 스크립트"
-          tabIndex={0}
-          data-testid="blender-scene-script-preview"
-          className="pf-rig-preview__script-pre"
-        >
-          {blenderScript}
-        </pre>
-      )}
-
-      <div className="pf-rig-preview__slider-row">
-        <label htmlFor={carriageSliderId} className="pf-rig-preview__slider-label">
-          캐리지·가동 범위 위치 ({Math.round(carriageOffset * 100)}%)
-        </label>
-        <input
-          id={carriageSliderId}
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={carriageOffset}
-          onChange={(e) => {
-            setAutoPlay(false);
-            setCarriageOffset(Number(e.target.value));
+        <p
+          className="pf-rig-preview__glb-badge"
+          data-testid="rig-glb-verified-meta"
+          style={{
+            margin: '0 0 6px',
+            fontSize: '0.8125rem',
+            color: '#476253',
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
           }}
-          aria-label="캐리지 가동 범위 위치 조절"
-          className="pf-rig-preview__slider-input"
-        />
-      </div>
+        >
+          {glbAsset.generator} · 삼각형 {glbAsset.triangles.toLocaleString('ko-KR')}개
+        </p>
+
+        {showBlenderScript && (
+          <pre
+            id={blenderScriptId}
+            role="region"
+            aria-label="Blender 4.x Python 3D 씬 스크립트"
+            tabIndex={0}
+            data-testid="blender-scene-script-preview"
+            className="pf-rig-preview__script-pre"
+          >
+            {blenderScript}
+          </pre>
+        )}
+      </details>
     </section>
   );
 };

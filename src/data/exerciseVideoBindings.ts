@@ -1,5 +1,6 @@
 import existingCatalog from './verifiedPilatesYouTubeCatalog.json';
 import expandedCatalog from './expandedPilatesVideoCatalog.json';
+import additionalCatalog from './additionalPilatesVideoCatalog.json';
 import type {
   ApparatusType,
   BodyPosition,
@@ -24,9 +25,10 @@ export const EXERCISE_VIDEO_BINDING_PLANS: readonly BindingPlan[] = [
     nameEn: 'Pelvic Clock',
     apparatus: 'mat',
     bodyPosition: 'supine',
-    videoId: '0dhzD6d1ru0',
+    videoId: '3GBwBBt63Xw',
     relation: 'named-movement-reference',
-    relationshipNoteKo: '골반 시계라는 제목과 매트 분류가 일치합니다.',
+    relationshipNoteKo:
+      '제작자는 41초부터 골반을 앞뒤로, 2분 27초부터 좌우로 기울이고 4분 3초부터 한 바퀴 이어 가는 순서로 설명해요.',
   },
   {
     exerciseId: 'original-mat-bridge',
@@ -145,6 +147,16 @@ export const EXERCISE_VIDEO_BINDING_PLANS: readonly BindingPlan[] = [
       '34개 동작 전체 수업 대신 Double Leg Stretch 제목의 개별 제작자 자료를 연결했습니다.',
   },
   {
+    exerciseId: 'crawled-mat-scissors-high',
+    nameEn: 'High Scissors',
+    apparatus: 'mat',
+    bodyPosition: 'supine',
+    videoId: 'Rrf4ORXQINU',
+    relation: 'named-movement-reference',
+    relationshipNoteKo:
+      '강사는 매트 하이 시저스를 소개하고 아직 어려울 때 어떻게 준비할지 설명해요.',
+  },
+  {
     exerciseId: 'crawled-mat-neck-pull',
     nameEn: 'Neck Pull',
     apparatus: 'mat',
@@ -185,7 +197,10 @@ export const EXERCISE_VIDEO_BINDING_PLANS: readonly BindingPlan[] = [
 ];
 
 const videoById = new Map(
-  [...existingCatalog, ...expandedCatalog].map((item) => [item.videoId, item]),
+  [...existingCatalog, ...expandedCatalog, ...additionalCatalog].map((item) => [
+    item.videoId,
+    item,
+  ]),
 );
 const planById = new Map(EXERCISE_VIDEO_BINDING_PLANS.map((plan) => [plan.exerciseId, plan]));
 
@@ -198,7 +213,7 @@ export interface ExerciseVideoEvidence {
   readonly relationshipNoteKo: string;
   readonly metadataStatus: 'existing-catalog-metadata' | 'creator-page-and-oembed';
   readonly metadataCheckedAt: string | null;
-  readonly mappingReviewedAt: '2026-11-13';
+  readonly mappingReviewedAt: string;
   readonly playbackVerified: false;
   readonly segmentVerified: false;
   readonly exactDemonstrationVerified: false;
@@ -246,7 +261,9 @@ export function getExerciseVideoEvidence(
     metadataStatus: hasSource ? 'creator-page-and-oembed' : 'existing-catalog-metadata',
     metadataCheckedAt:
       'verifiedAt' in video && typeof video.verifiedAt === 'string' ? video.verifiedAt : null,
-    mappingReviewedAt: '2026-11-13',
+    mappingReviewedAt: ['3GBwBBt63Xw', 'Rrf4ORXQINU'].includes(plan.videoId)
+      ? '2026-11-27'
+      : '2026-11-13',
     playbackVerified: false,
     segmentVerified: false,
     exactDemonstrationVerified: false,
@@ -268,6 +285,37 @@ export function attachExistingVideoReference(exercise: PilatesExercise): Pilates
     note: `${plan.relationshipNoteKo} 기존 제목·출처 메타데이터 대조 · 실제 영상 재생·동일 시범·시작/종료 구간 미검수 · 0초는 검증된 동작 시작점이 아닙니다.`,
   };
   return { ...exercise, youtube };
+}
+
+// Update only the untouched catalogue clip from earlier releases. A saved
+// instructor interval, annotation or independently recorded source stays intact.
+export function refreshCatalogVideoReference(exercise: PilatesExercise): PilatesExercise {
+  const clip = exercise.youtube;
+  if (
+    exercise.review ||
+    exercise.sourceReference ||
+    clip.startSec !== 0 ||
+    clip.endSec !== undefined ||
+    clip.url !== `https://www.youtube.com/watch?v=${clip.videoId}`
+  )
+    return exercise;
+  const oldClock =
+    exercise.id === 'original-mat-pelvic-clock' &&
+    !exercise.isCustom &&
+    clip.videoId === '0dhzD6d1ru0' &&
+    clip.videoTitle === 'Pilates Pelvic Clocking + Neutral Spine | Beginner' &&
+    clip.channelName === 'HolisticMovementPilates' &&
+    clip.note ===
+      '골반 시계라는 제목과 매트 분류가 일치합니다. 기존 제목·출처 메타데이터 대조 · 실제 영상 재생·동일 시범·시작/종료 구간 미검수 · 0초는 검증된 동작 시작점이 아닙니다.';
+  const oldScissors =
+    exercise.id === 'crawled-mat-scissors-high' &&
+    clip.videoId === '0O_Tay-g3NY' &&
+    clip.videoTitle === 'Joseph Pilates Classical High Scissors' &&
+    clip.channelName === 'Classical Mat Repertoire' &&
+    clip.note ===
+      '수집 카탈로그의 제목·기구 분류 기반 참조 · 실제 영상 재생·정확한 동작 구간 미검수 · 0초는 검증된 동작 시작점이 아닙니다.';
+  if (!oldClock && !oldScissors) return exercise;
+  return attachExistingVideoReference(exercise);
 }
 
 export interface ExerciseSourcePageReference {

@@ -8,7 +8,12 @@ import {
 } from '../data/universal3dExerciseRigs';
 import { projectStudio3DSceneForSvg, resolveStudio3DBody } from './realtimeStudio3dEngine';
 import { sampleStudio3DMotionRig } from './studio3dMotionTrack';
-import { sampleStudioMotionCycle } from './studioMotionPlayback';
+import {
+  getStudioMotionDuration,
+  getStudioMotionTiming,
+  sampleStudioMotionCycle,
+} from './studioMotionPlayback';
+import { WORLD_PILATES_BY_ID, WORLD_PILATES_EXERCISES } from '../data/worldPilatesRepertoire1000';
 
 const catalog = [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
 const distance = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
@@ -30,6 +35,126 @@ describe('3D motion interpolation', () => {
     }
   });
 
+  it('follows the hold, pulse and shortened-range instructions in saved variations', () => {
+    const poseAtMs = (variation: string, ms: number) => {
+      const timing = getStudioMotionTiming('original-mat-bridge--var-' + variation);
+      return sampleStudioMotionCycle(ms / getStudioMotionDuration(timing), timing).pose;
+    };
+    // At normal speed the five-second hold is surrounded by movement on both sides.
+    expect(poseAtMs('hold', 3300)).toBeLessThan(1);
+    expect(poseAtMs('hold', 3360)).toBe(1);
+    expect(poseAtMs('hold', 8360)).toBe(1);
+    expect(poseAtMs('hold', 8420)).toBeLessThan(1);
+    for (let pulse = 0; pulse < 3; pulse++) {
+      const beat = 3360 + 1000 * pulse;
+      expect(poseAtMs('pulse', beat)).toBeCloseTo(1);
+      expect(poseAtMs('pulse', beat + 500)).toBeCloseTo(0.82);
+      expect(poseAtMs('pulse', beat + 1000)).toBeCloseTo(1);
+    }
+    expect(poseAtMs('prep', 4000)).toBeCloseTo(0.65);
+    expect(poseAtMs('light-spring', 2460)).toBeCloseTo(0.5);
+  });
+
+  it('keeps a variation on its base movement when its prop and movement share a search term', () => {
+    for (const id of [
+      'world-mat-toe-taps--var-roller',
+      'world-mat-theraband-leg-circles--var-circle',
+      'world-barrel-barrel-layout-extension--var-circle',
+      'world-chair-chair-footwork-heels--var-single-leg',
+    ]) {
+      const variation = WORLD_PILATES_BY_ID.get(id)!;
+      const base = WORLD_PILATES_BY_ID.get(variation.parentArchetypeId)!;
+      expect(sampleStudio3DMotionRig(variation, 0.35).rigId).toBe(
+        sampleStudio3DMotionRig(base, 0.35).rigId,
+      );
+    }
+  });
+
+  it('keeps the roll-over legs long throughout the arc and joins track knots without sudden ankle acceleration', () => {
+    const exercise = WORLD_PILATES_BY_ID.get('world-mat-roll-over')!;
+    for (let i = 0; i <= 100; i++) {
+      const pose = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, i / 100));
+      expect(distance(pose.rHip, pose.rAnkle)).toBeGreaterThan(0.72);
+    }
+    const t = PHASE_3D_RAW_T.end / 2;
+    const dt = 1e-5;
+    const [before, at, after] = [t - dt, t, t + dt].map(
+      (progress) => sampleStudio3DMotionRig(exercise, progress).rFoot,
+    );
+    for (let axis = 0; axis < 3; axis++) {
+      const incoming = (at[axis] - before[axis]) / dt;
+      const outgoing = (after[axis] - at[axis]) / dt;
+      expect(Math.abs(incoming - outgoing)).toBeLessThan(0.001);
+    }
+  });
+
+  it('keeps the carriage, feet and shoulders supported during the unstrapped breathing exercise', () => {
+    const breath = WORLD_PILATES_BY_ID.get('original-reformer-supine-breath')!;
+    const start = sampleStudio3DMotionRig(breath, 0);
+    for (let i = 0; i <= 40; i++) {
+      const rig = sampleStudio3DMotionRig(breath, i / 40);
+      expect(rig.ropeToHands).toBeFalsy();
+      expect(rig.carriageX).toBe(start.carriageX);
+      expect(rig.lFoot).toEqual(start.lFoot);
+      expect(rig.rFoot).toEqual(start.rFoot);
+    }
+    expect(sampleStudio3DMotionRig(breath, 1).rHand[2] - start.rHand[2]).toBeGreaterThan(0.25);
+  });
+
+  it('keeps the legs close enough to hold a mini-ball between the knees during strap work', () => {
+    for (const id of [
+      'ex-straps-01--var-miniball',
+      'world-reformer-reformer-long-spine-massage--var-miniball',
+    ]) {
+      const exercise = WORLD_PILATES_BY_ID.get(id)!;
+      for (let index = 0; index <= 50; index++) {
+        const pose = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, index / 50));
+        expect(distance(pose.lKnee, pose.rKnee)).toBeLessThan(0.28);
+        expect(distance(pose.lKnee, pose.rKnee)).toBeGreaterThan(0.13);
+      }
+    }
+  });
+
+  it.each(['front', 'back'])(
+    'keeps both feet on the pedal and both hands on the seat for chair frog facing %s',
+    (side) => {
+      const exercise = WORLD_PILATES_BY_ID.get('world-chair-chair-frog-facing-' + side)!;
+      const start = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, 0));
+      for (let index = 0; index <= 50; index++) {
+        const rig = sampleStudio3DMotionRig(exercise, index / 50);
+        const pose = resolveStudio3DBody(rig);
+        const rad = (rig.pedalDeg! * Math.PI) / 180;
+        const treadZ = 0.088 + 0.54 * Math.sin(rad) + 0.036 * Math.cos(rad);
+        expect(Math.sign(pose.antN[0])).toBe(side === 'front' ? -1 : 1);
+        expect(rig.withChairHandles).toBeFalsy();
+        for (const key of ['lWr', 'rWr'] as const)
+          expect(distance(pose[key], start[key])).toBeLessThan(0.001);
+        for (const key of ['lAnkle', 'rAnkle'] as const)
+          expect(pose[key][2] - treadZ).toBeCloseTo(0.065, 3);
+        expect(Math.abs(pose.rKnee[1] - pose.lKnee[1])).toBeGreaterThan(0.46);
+      }
+    },
+  );
+
+  it('keeps the rocker grip on the lower legs and distinguishes the two long-box strap paths', () => {
+    const rocker = WORLD_PILATES_BY_ID.get('crawled-mat-open-leg-rocker')!;
+    for (let i = 0; i <= 40; i++) {
+      const pose = resolveStudio3DBody(sampleStudio3DMotionRig(rocker, i / 40));
+      expect(distance(pose.rAnkle, pose.rWr)).toBeLessThan(0.13);
+      expect(distance(pose.rHip, pose.rAnkle)).toBeGreaterThan(0.74);
+      expect(distance(pose.rAnkle, pose.lAnkle)).toBeGreaterThan(0.44);
+    }
+    const plow = WORLD_PILATES_BY_ID.get('world-reformer-longbox-pulling-straps-plow')!;
+    const tPull = WORLD_PILATES_BY_ID.get('world-reformer-longbox-pulling-straps-t')!;
+    const armsDown = sampleStudio3DMotionRig(plow, 0);
+    const armsWide = sampleStudio3DMotionRig(tPull, 0);
+    const peak = sampleStudio3DMotionRig(plow, 1);
+    expect(armsDown.chest[2] - armsDown.rHand[2]).toBeGreaterThan(0.4);
+    expect(distance(armsWide.lHand, armsWide.rHand)).toBeGreaterThan(1.1);
+    expect(peak.chest[2] - armsDown.chest[2]).toBeGreaterThan(0.12);
+    expect(Math.abs(peak.rHand[0] - peak.pelvis[0])).toBeLessThan(0.1);
+  });
+
   it('retains the rendered Blender posture anchors and is independent of seeking direction', () => {
     for (const exercise of catalog) {
       for (const t of Object.values(PHASE_3D_RAW_T)) {
@@ -43,23 +168,26 @@ describe('3D motion interpolation', () => {
     }
   });
 
-  it.each(['reformer', 'cadillac', 'chair', 'barrel', 'mat'] as const)(
-    'keeps every %s limb chain continuous through the repetition',
-    (apparatus) => {
-      expect(catalog).toHaveLength(218);
-      for (const exercise of catalog.filter((item) => item.apparatus === apparatus)) {
-        let last = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, 0));
-        let maxTravel = 0;
-        for (let index = 1; index <= 250; index++) {
-          const next = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, index / 250));
-          for (const key of joints) maxTravel = Math.max(maxTravel, distance(last[key], next[key]));
-          last = next;
-        }
-        // A pole flipping through a folded arm used to move its elbow 30 cm in 0.1% of the path.
-        expect(maxTravel, exercise.id).toBeLessThan(0.04);
-      }
-    },
+  const batchSize = 40;
+  const batches = Array.from(
+    { length: Math.ceil(WORLD_PILATES_EXERCISES.length / batchSize) },
+    (_, batch) => batch * batchSize,
   );
+  it.each(batches)('keeps every limb continuous in the catalog batch starting at %i', (start) => {
+    for (const exercise of WORLD_PILATES_EXERCISES.slice(start, start + batchSize)) {
+      let previous = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, 0));
+      let maxTravel = 0;
+      for (let index = 1; index <= 250; index++) {
+        const next = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, index / 250));
+        for (const key of joints)
+          maxTravel = Math.max(maxTravel, distance(previous[key], next[key]));
+        previous = next;
+      }
+      // A flipping pole used to move a folded elbow 30 cm in 0.1% of a repetition.
+      expect(maxTravel, exercise.id).toBeLessThan(0.04);
+    }
+  });
+
   it('slides one hand on the Cadillac table with both knees and the support hand planted', () => {
     const exercise = catalog.find((item) => item.id === 'original-cadillac-quadruped-slide')!;
     const start = resolveStudio3DBody(sampleStudio3DMotionRig(exercise, 0));

@@ -676,16 +676,32 @@ export function parseApparatusDynamicGlb(buffer: ArrayBuffer): ApparatusDynamicA
         const triIdxList = partBuckets[ri]!;
         if (triIdxList.length === 0) continue;
         const role = roleOrder[ri]!;
-        const subIndices = Uint32Array.from(triIdxList);
-        const subTriCount = Math.floor(subIndices.length / 3);
+        // Local indices keep a moving pedal or carriage from transforming vertices
+        // belonging to the other four apparatuses every time it moves.
+        const sourceVertices = [...new Set(triIdxList)];
+        const localIndex = new Map(sourceVertices.map((source, local) => [source, local]));
+        const localPositions = new Float32Array(sourceVertices.length * 3);
+        const localNormals = new Float32Array(localPositions.length);
+        const localColors = new Uint8Array(localPositions.length);
+        for (let vi = 0; vi < sourceVertices.length; vi++) {
+          const source = sourceVertices[vi]! * 3;
+          for (let axis = 0; axis < 3; axis++) {
+            const destination = vi * 3 + axis;
+            localPositions[destination] = positionsZup[source + axis]!;
+            localNormals[destination] = normalsZup[source + axis]!;
+            localColors[destination] = colorsSrgb[source + axis]!;
+          }
+        }
+        const subIndices = Uint32Array.from(triIdxList, (index) => localIndex.get(index)!);
+        const subTriCount = subIndices.length / 3;
         primitives.push({
           materialName: `MAT_Apparatus_${role}`,
           materialRole: role,
-          vertexCount,
+          vertexCount: sourceVertices.length,
           triangleCount: subTriCount,
-          positionsZup,
-          normalsZup,
-          colorsSrgb,
+          positionsZup: localPositions,
+          normalsZup: localNormals,
+          colorsSrgb: localColors,
           indices: subIndices,
         });
         partTris += subTriCount;
@@ -699,7 +715,7 @@ export function parseApparatusDynamicGlb(buffer: ArrayBuffer): ApparatusDynamicA
       nodesMap.set(name, {
         name,
         primitives,
-        vertexCount,
+        vertexCount: primitives.reduce((sum, primitive) => sum + primitive.vertexCount, 0),
         triangleCount: partTris,
         translationZup: [0, 0, 0],
         pivotMeta,
@@ -1034,6 +1050,8 @@ function calibrateStudioPbrApparatusRgb(
   return [r, g, b];
 }
 
+const calibratedVertexColors = new WeakMap<ApparatusMeshPrimitive, Rgb[]>();
+
 function buildVertexColorTable(
   prim: ApparatusMeshPrimitive,
   shader: StudioWebGLShaderMode,
@@ -1048,6 +1066,8 @@ function buildVertexColorTable(
   if (shader === 'game-arena') {
     return { uniformColor: ARENA_PALETTE[role], vertexColors: null, alpha: 1.0 };
   }
+  const cached = calibratedVertexColors.get(prim);
+  if (cached) return { uniformColor: null, vertexColors: cached, alpha: 1 };
   const vc = prim.vertexCount;
   const cols = prim.colorsSrgb;
   const table: Rgb[] = new Array(vc);
@@ -1055,6 +1075,7 @@ function buildVertexColorTable(
     const o = vi * 3;
     table[vi] = calibrateStudioPbrApparatusRgb(role, cols[o]!, cols[o + 1]!, cols[o + 2]!);
   }
+  calibratedVertexColors.set(prim, table);
   return { uniformColor: null, vertexColors: table, alpha: 1.0 };
 }
 

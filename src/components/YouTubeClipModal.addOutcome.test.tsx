@@ -51,11 +51,12 @@ describe('movement addition reports the actual result without losing the current
     render(<YouTubePreviewModal exercise={flow} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
     const gallery = screen.getByTestId('exercise-video-gallery');
     expect(gallery).toBeVisible();
-    expect(within(gallery).getAllByText(/구성 동작/).length).toBeGreaterThan(0);
-    const componentReference = gallery.querySelector('[data-video-relation="flow-component"]');
-    expect(componentReference).toBeInTheDocument();
+    const componentReference = within(gallery).getAllByRole('button', { name: /영상 선택$/ })
+      .find((button) => button.dataset.videoRelation === 'flow-component');
+    expect(componentReference).toHaveTextContent('수업 중 한 동작');
     fireEvent.click(componentReference!);
-    expect(within(gallery).getByText(/전체 흐름과 구간은 미확인/)).toBeVisible();
+    expect(componentReference).toHaveAttribute('aria-pressed', 'true');
+    expect(within(gallery).getByText(/전체 순서가 같은지, 이 동작이 몇 분에 나오는지는 아직 확인하지 못했어요/)).toBeVisible();
     expect(gallery.querySelector('iframe')).toBeNull();
     expect(within(gallery).queryByText(/공식 시범|해외 공식 채널/)).not.toBeInTheDocument();
   });

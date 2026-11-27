@@ -1,0 +1,414 @@
+/* The movement workspaces share one studio photograph. Controls live on a
+   solid surface so their contrast stays predictable as the apparatus changes. */
+#root .movement-workspace-cover {
+  --cover-surface: #294635;
+  --cover-ink: #fffdf6;
+  --cover-secondary: #e1e9db;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  align-items: stretch;
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: var(--cover-surface);
+  border-radius: 16px;
+  color: var(--cover-ink);
+}
+
+#root .flow-studio > .movement-workspace-cover {
+  margin-bottom: 20px;
+}
+
+#root .movement-workspace-cover__body {
+  align-self: center;
+  min-width: 0;
+  padding: clamp(22px, 2.7vw, 42px);
+}
+
+html body #root .movement-workspace-cover__body h1 {
+  margin: 0;
+  color: var(--cover-ink) !important;
+  font-size: clamp(1.8rem, 3vw, 2.65rem) !important;
+  font-weight: 600;
+  line-height: 1.17 !important;
+  letter-spacing: -0.045em;
+}
+
+html body #root .movement-workspace-cover__body p {
+  max-width: 30rem;
+  margin: 10px 0 0;
+  color: var(--cover-secondary) !important;
+  font-size: 15px !important;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+#root .movement-workspace-cover__photo {
+  position: relative;
+  min-width: 0;
+  background: #ddd5c3;
+  border-radius: 0 16px 16px 0;
+  overflow: hidden;
+}
+
+#root .movement-workspace-cover__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 57%;
+}
+
+#root .movement-workspace-cover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+html body #root .flow-app .movement-workspace-cover__actions > button,
+html body #root .flow-app .movement-workspace-cover__actions > details > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #77907c !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--cover-ink) !important;
+  font: 500 0.875rem/1.4 var(--pf-font-sans), sans-serif;
+  word-break: keep-all;
+  list-style: none;
+  cursor: pointer;
+}
+
+html body #root .flow-app .movement-workspace-cover__actions > button:hover,
+html body #root .flow-app .movement-workspace-cover__actions > details > summary:hover {
+  background: #395944 !important;
+}
+
+html body #root .flow-app .movement-workspace-cover__actions > .cover-primary-action {
+  background: #faf8ef !important;
+  border-color: #faf8ef !important;
+  color: #294635 !important;
+}
+
+html body #root .flow-app .movement-workspace-cover__actions > .cover-primary-action:hover {
+  background: #e3eada !important;
+}
+
+#root .movement-workspace-cover :is(button, summary):focus-visible {
+  outline: 3px solid #aece98;
+  outline-offset: 2px;
+}
+
+#root .atlas-resource-menu {
+  position: relative;
+}
+
+#root .atlas-resource-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+#root .atlas-resource-menu[open] summary svg {
+  transform: rotate(180deg);
+}
+
+#root .atlas-resource-menu .pf-atlas-quick-hub {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 4;
+  display: grid;
+  width: max-content;
+  max-width: 260px;
+  padding: 6px;
+  gap: 2px;
+  border: 1px solid #d8ded6;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(30, 44, 33, 0.12);
+}
+
+#root .atlas-resource-menu .pf-smart-tool-pill {
+  justify-content: flex-start;
+  min-height: 44px;
+  background: #fff;
+  color: #294635;
+  border: 0;
+}
+
+#root .atlas-resource-menu .pf-smart-tool-pill:hover {
+  background: #f3f5ee;
+}
+
+#root .flow-atlas.flow-atlas--unslop {
+  gap: 16px;
+}
+
+#root .flow-atlas--unslop .flow-atlas__search-panel {
+  gap: 8px;
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid #d9ddd4;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#root .flow-atlas--unslop .flow-atlas__search {
+  min-height: 48px;
+  border-color: #c8d0c6;
+  background: #fff;
+}
+
+#root .flow-atlas--unslop .flow-atlas__toolbar-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#root .flow-atlas--unslop .flow-atlas__browse-row {
+  justify-content: space-between;
+}
+
+#root .flow-atlas--unslop .flow-atlas__chips {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+#root .flow-atlas--unslop .flow-atlas__scope-row {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+#root .flow-atlas--unslop .flow-atlas__card h2 button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: clamp(1.125rem, 1.45vw, 1.375rem);
+  line-height: 1.4;
+}
+
+#root .flow-atlas--unslop .flow-atlas__card h2 button svg {
+  flex: none;
+  align-self: center;
+  color: #42634c;
+}
+
+#root .flow-atlas--unslop .flow-atlas__quiet-caption {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  white-space: normal;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #4d574c;
+}
+
+#root .flow-atlas--unslop .flow-atlas__art-wrap {
+  background: #f1eee7;
+}
+
+#root .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add {
+  justify-content: flex-start;
+  padding: 10px 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+  color: #355441;
+  font-size: 0.875rem;
+}
+
+#root .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add:hover,
+#root .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add:focus-visible {
+  background: #f3f5ee;
+  color: #294635;
+}
+
+html body #root .flow-app .brand > span {
+  font-family: 'Instrument Serif', Georgia, serif !important;
+  font-size: 32px !important;
+  line-height: 1 !important;
+  font-weight: 400 !important;
+}
+
+html body #root .flow-app .brand small.brand-tagline-deco {
+  color: #45644c !important;
+}
+
+html body #root .flow-app .pf-sidebar-quick-stage {
+  margin: 16px 0 8px !important;
+}
+
+html body #root .flow-app .flow-time-overview .pf-studio-spring-meter {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+@media (min-width: 1200px) {
+  #root .flow-atlas--unslop .flow-atlas__toolbar-top {
+    grid-template-columns: minmax(240px, 1fr) auto;
+  }
+}
+
+@media (max-width: 767px) {
+  #root .movement-workspace-cover {
+    grid-template-columns: minmax(0, 1fr) minmax(74px, 30%);
+    grid-template-areas: 'title image' 'intro image' 'actions actions';
+    align-content: start;
+  }
+
+  #root .movement-workspace-cover__body {
+    display: contents;
+  }
+
+  html body #root .movement-workspace-cover__body h1 {
+    grid-area: title;
+    padding: 16px 0 0 16px;
+    font-size: 1.625rem !important;
+  }
+
+  html body #root .movement-workspace-cover__body p {
+    grid-area: intro;
+    padding: 0 12px 0 16px;
+    margin-top: 6px;
+    font-size: 0.875rem !important;
+  }
+
+  #root .movement-workspace-cover__actions {
+    grid-area: actions;
+    gap: 6px;
+    padding: 12px 10px 12px 12px;
+    margin: 0;
+  }
+
+  #root .movement-workspace-cover__photo {
+    grid-area: image;
+    border-radius: 0 16px 0 12px;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__toolbar-top {
+    gap: 8px;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__chips {
+    flex-wrap: nowrap;
+  }
+
+  #root .flow-studio > .movement-workspace-cover {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 399px) {
+  html body #root .flow-app .movement-workspace-cover__actions > button {
+    padding-inline: 8px;
+  }
+
+  #root .movement-workspace-cover .flow-button > svg {
+    display: none;
+  }
+}
+
+@media print {
+  #root .movement-workspace-cover {
+    display: block;
+    background: white;
+  }
+
+  #root .movement-workspace-cover__body {
+    padding: 0;
+  }
+
+  html body #root .movement-workspace-cover__body h1 {
+    color: black !important;
+  }
+
+  #root .movement-workspace-cover__body > p,
+  #root .movement-workspace-cover__actions,
+  #root .movement-workspace-cover__photo {
+    display: none;
+  }
+}
+
+#root .flow-studio .flow-time-overview[data-empty='true'] :is(.flow-text-button, .flow-time-bar, p) {
+  display: none;
+}
+
+#root .flow-atlas--unslop .flow-atlas__card {
+  position: relative;
+}
+
+@media (max-width: 767px) {
+  html body #root .flow-app .topbar .vnext-wordmark {
+    gap: 6px !important;
+    font: 400 1.3rem/1 'Instrument Serif', Georgia, serif !important;
+  }
+
+  /* The difficulty select in the filter panel replaces the desktop shortcuts. */
+  html body #root .flow-app .flow-atlas--unslop .pf-atlas-difficulty-row {
+    display: none !important;
+  }
+
+}
+
+@media (max-width: 1023px) {
+  #root .flow-atlas--unslop .flow-atlas__card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 0 10px 6px;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__card-actions {
+    margin: 0;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__card-actions .flow-atlas__button--add {
+    border: 0;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 599px) {
+  html body #root .flow-app .flow-atlas--unslop .flow-atlas__preview {
+    display: grid;
+    grid-template-columns: minmax(105px, 37%) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px 4px;
+  }
+
+  html body #root .flow-app .flow-atlas--unslop .flow-atlas__art-wrap {
+    align-self: start;
+    border: 0;
+    border-radius: 10px;
+    aspect-ratio: auto;
+    background: transparent;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__art {
+    aspect-ratio: 8 / 5;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__card-content {
+    gap: 4px;
+    padding: 0;
+  }
+
+  #root .flow-atlas--unslop .flow-atlas__quiet-caption {
+    font-size: 0.875rem;
+  }
+}

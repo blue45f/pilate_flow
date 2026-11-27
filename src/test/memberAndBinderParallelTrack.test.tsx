@@ -10,6 +10,6 @@ describe('Parallel Track 3 — MemberBookingView & ClassBinderView UX', () => {
     unmount();
 
     render(<ClassBinderView view="saved" onOpenLogModal={() => undefined} />);
-    expect(screen.getByRole('heading', { name: /저장한 시퀀스/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /저장한 수업/ })).toBeInTheDocument();
   });
 });

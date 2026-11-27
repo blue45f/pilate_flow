@@ -156,7 +156,7 @@ const desktopNavigationGroups = [
     ],
   },
   {
-    groupLabel: '운영 · 아카이브',
+    groupLabel: '일정과 기록',
     items: [
       { id: 'schedule' as const, detail: '수업 일정', icon: CalendarRange },
       { id: 'binder' as const, detail: '저장한 수업', icon: Bookmark },
@@ -688,7 +688,7 @@ export function App() {
           <span>
             Pilates Flow
             <small className="brand-tagline-deco" aria-hidden="true">
-              수업 설계 · 3D 스튜디오
+              Atelier
             </small>
           </span>
         </a>
@@ -740,28 +740,6 @@ export function App() {
           </>
         ) : (
           <>
-            <button
-              type="button"
-              className={`pf-sidebar-quick-stage ${
-                state.activeTab === 'stage' ? 'is-active' : ''
-              } ${canStartLiveStage ? 'is-ready' : ''}`.trim()}
-              data-testid="sidebar-quick-stage-btn"
-              aria-current={state.activeTab === 'stage' ? 'page' : undefined}
-              onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
-            >
-              <span className="pf-sidebar-quick-stage__row">
-                <Play size={16} strokeWidth={1.5} aria-hidden="true" />
-                <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
-                <small>
-                  {canStartLiveStage
-                    ? `${plannedClassMinutes}분 · ${nonRestStepCount}동작`
-                    : '동작 추가'}
-                </small>
-              </span>
-              <span className="pf-sidebar-quick-stage__track" aria-hidden="true">
-                <i style={{ transform: `scaleX(${stageReadinessRatio})` }} />
-              </span>
-            </button>
             <nav className="desktop-nav" aria-label="주 메뉴">
               {desktopNavigationGroups.map((group) => (
                 <div key={group.groupLabel} className="pf-nav-group">
@@ -816,6 +794,28 @@ export function App() {
                 </div>
               ))}
             </nav>
+            <button
+              type="button"
+              className={`pf-sidebar-quick-stage ${
+                state.activeTab === 'stage' ? 'is-active' : ''
+              } ${canStartLiveStage ? 'is-ready' : ''}`.trim()}
+              data-testid="sidebar-quick-stage-btn"
+              aria-current={state.activeTab === 'stage' ? 'page' : undefined}
+              onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
+            >
+              <span className="pf-sidebar-quick-stage__row">
+                <Play size={16} strokeWidth={1.5} aria-hidden="true" />
+                <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
+                <small>
+                  {canStartLiveStage
+                    ? `${plannedClassMinutes}분 · ${nonRestStepCount}동작`
+                    : '동작 추가'}
+                </small>
+              </span>
+              <span className="pf-sidebar-quick-stage__track" aria-hidden="true">
+                <i style={{ transform: `scaleX(${stageReadinessRatio})` }} />
+              </span>
+            </button>
             {upcoming[0] && (
               <button
                 type="button"
@@ -953,7 +953,7 @@ export function App() {
             </button>
             <span className="vnext-wordmark">
               <StudioBrandMark size={18} />
-              Pilates Flow<small aria-hidden="true">수업 설계 · 3D 스튜디오</small>
+              Pilates Flow<small aria-hidden="true">Atelier</small>
             </span>
           </div>
           <div className="breadcrumb">
@@ -1118,6 +1118,7 @@ export function App() {
               {state.activeTab === 'workbench' && (
                 <SequenceStudioWorkbench
                   onStartClass={() => changeTab('stage')}
+                  onOpenLibrary={() => changeTab('atlas')}
                   sourceDetailOpen={!!preview || ideaSheetState.open}
                   onRegisterDetailAddHandler={(handler) => {
                     workbenchDetailAddRef.current = handler;

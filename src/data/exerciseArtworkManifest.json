@@ -45,31 +45,31 @@
     "original-reformer-supine-breath": {
       "apparatus": "reformer",
       "bodyPosition": "supine",
-      "archetypeId": "reformer-supine-arms",
+      "archetypeId": "reformer-supine-breath",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath.start.aa0ba75177ed.webp",
-          "sha256": "aa0ba75177edb4d5342ec5eb03072d474f9e04a313c01b0a91aa2e790fbf2e0b",
-          "bytes": 27988,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.start.0cbb210c30fc.webp",
+          "sha256": "0cbb210c30fc298a013a6409ebdfa4b9bc2c2870433a6a872f76058e8f5e7fbf",
+          "bytes": 26902,
           "labelKo": "시작 자세",
-          "svgSha256": "baadcf45c1fad01468298ce569b87b440a95e49a19e668a8d84ce39f0efabd0f",
-          "inputSha256": "bc51f5d3aaf4d0ed07d93b24483219149156e099f4fdb5a45c217a4640b19998"
+          "svgSha256": "1b1661e5f200ad717bd5be3207cd9454b30ccb601d59399c2f4b48d9a456aff0",
+          "inputSha256": "714a35fc5651e6d4295a8009522fa22ce4be02b82fa618eb347546fe2106fa3e"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath.middle.c3f623c9368f.webp",
-          "sha256": "c3f623c9368fda9229a470d3e509395381f17b4c7be503f7bfdc062b5b2eef8c",
-          "bytes": 29576,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.middle.95a3ec281cf6.webp",
+          "sha256": "95a3ec281cf61badc4af82a54abeb8c3d6bad9e70004611db4daa4bee7b85933",
+          "bytes": 26998,
           "labelKo": "정점 자세",
-          "svgSha256": "39baf7361f1c4af2e6d26f9573a499ea8195d73e291fe781ab15de120c26e017",
-          "inputSha256": "c5e29254620ca5933dfc6b39e4abb53c89373490f5cb192b5489132c1c647c9b"
+          "svgSha256": "1e404a3bd2c5637eef3fc21c4cc5fcb794d716b718e81dc45c2f5f2826aaafa5",
+          "inputSha256": "93e69af922645a559b320191104f6bcfabf7e1f2338da2c8a402e1dfb8bf76f4"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath.end.66492f9314d7.webp",
-          "sha256": "66492f9314d761612524c457fdceeb2b301fefdd6dce2ca2e8a085ff1ee89f26",
-          "bytes": 28646,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.end.d817d9f09aa8.webp",
+          "sha256": "d817d9f09aa89dc28fa2a827ec42ce31e60f93b2f9b8331a074b93efd06a0067",
+          "bytes": 26632,
           "labelKo": "마무리 자세",
-          "svgSha256": "9c66429b7aa924b80569c48ca671ebd030f51144d7b82c8cb61b20e44f96bff6",
-          "inputSha256": "75d891c9b00fcef2ad2c8a7f67d4ca3806ee90c425b5a6a6b496ed4a53714d8c"
+          "svgSha256": "ea5ba4e3d69e73189af418d747acf922e357434f843677c2285d7d38df662c19",
+          "inputSha256": "effccba3cdd97ff91b76c02b0a96bffb27affff05941c68d1f7be70e600db9d9"
         }
       }
     },
@@ -5036,31 +5036,31 @@
     "crawled-mat-open-leg-rocker": {
       "apparatus": "mat",
       "bodyPosition": "seated",
-      "archetypeId": "mat-rolling-ball",
+      "archetypeId": "mat-open-leg-rocker",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.start.948f706c5198.webp",
-          "sha256": "948f706c519867e392437634c7d19ed0a46a3af566fff93d6238fc1f51fc2835",
-          "bytes": 17086,
+          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.start.4b788fec4716.webp",
+          "sha256": "4b788fec47167e1e74afaf73b98c6dc1d40a747cef6f461a107a28139627d050",
+          "bytes": 15480,
           "labelKo": "시작 자세",
-          "svgSha256": "8221ac6b316dfea6c9208168679d1d94f7e736b952b9717ae3034ba3c80c09f8",
-          "inputSha256": "87f758e9959b3c16cbebbfe9daf7760c6f40c73db0bad99169c57bde77edec1c"
+          "svgSha256": "27ba89c6fdb023544197b19170b168e5bd248776dc8e527cd839ad2ae592725d",
+          "inputSha256": "5026db23b85c3ced60cf666ef7c85e867f135e64c7528d7812a17123e30daca2"
         },
         "middle": {
-          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.middle.707900ed0a2f.webp",
-          "sha256": "707900ed0a2fb8960ec56b8b3e9b465e009e25a227e56a65f3a7b4147efe8e5c",
-          "bytes": 16202,
+          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.middle.463f0153dc7c.webp",
+          "sha256": "463f0153dc7c81b2a0aa34cac48dd001a8c6230774e762b36bf6c2876e631b7a",
+          "bytes": 14448,
           "labelKo": "정점 자세",
-          "svgSha256": "e3ab060e978326263041d3c396eeaf9045fee6b2f985710562f60a3b5e41b6e5",
-          "inputSha256": "2348591b16d9a75a70dcba72b2058fad73aa2001a0576b63c2193c71879281b2"
+          "svgSha256": "19d30d17a3a0fce88c530a51aa8e737ac30849b1f3f38292aa47a6259b268f26",
+          "inputSha256": "508168cf975112371fbeb6364f78584e80fbc1591231d58994dba81a3053bcc4"
         },
         "end": {
-          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.end.b2d23e7abd1d.webp",
-          "sha256": "b2d23e7abd1d10faec4db04c159d7073515384ebab392809817d29927385d320",
-          "bytes": 17134,
+          "src": "/motion-artwork-v2/crawled-mat-open-leg-rocker.end.2ec4399c1440.webp",
+          "sha256": "2ec4399c1440a6f43f9a149eba3632817199267938c12c221020946232d965e4",
+          "bytes": 15372,
           "labelKo": "종료 자세",
-          "svgSha256": "48c4afeb51fcd1e135436f62179ed7bd27acf336bc9f28d8d48ca0d619ac15f1",
-          "inputSha256": "83591cde0fbfc068389bef8e9df94b6d7a30249e9798a4d779fb9580d295d80b"
+          "svgSha256": "b0d0e7e8860d55414a3e274d59974d95eb7d7f9123ac196981cf0c8f8f867d5d",
+          "inputSha256": "548b2954102ac429b702a152e70d87d4cb8aa5c2acf11eb0dcc6eebe8d2513eb"
         }
       }
     },
@@ -6806,28 +6806,28 @@
       "archetypeId": "procedural:mat:supine:mat-roll-over",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/world-mat-roll-over.start.fdad664e28a5.webp",
-          "sha256": "fdad664e28a52bcc25ee89005ce9efb36fa5a11221ade513477abaca624f03ae",
-          "bytes": 16890,
+          "src": "/motion-artwork-v2/world-mat-roll-over.start.cbeb98d60234.webp",
+          "sha256": "cbeb98d60234ea6cf2a182949eb9a80e3267b996401e66a46b10f15cee7d7250",
+          "bytes": 13490,
           "labelKo": "시작 자세",
-          "svgSha256": "769c888a7ce5e462acda6f447464645a280f055e92414bff837123a0352a608a",
-          "inputSha256": "3a8a83059b7654d1a89a86f0dbc6d3874aebf13ccc4f34d68768b81e7e2cc195"
+          "svgSha256": "c96997daddbee4bbfa6f0d2ca59754de1f1c50073ceafcb1fa89d167264e085f",
+          "inputSha256": "c75751bc325b8a512c9a74973b54605d2016713ac3e5c08dc6af0ddf1c04266b"
         },
         "middle": {
-          "src": "/motion-artwork-v2/world-mat-roll-over.middle.c25e777695ca.webp",
-          "sha256": "c25e777695cac9124116fd38b5785899f328505a42cdef9962100ad85f0427ed",
-          "bytes": 16980,
+          "src": "/motion-artwork-v2/world-mat-roll-over.middle.1f38ff7ddcbc.webp",
+          "sha256": "1f38ff7ddcbc34a3c4b2bb3dffd3b0d3b05c64ec4fa4e5de8dd564a747beaa2f",
+          "bytes": 13850,
           "labelKo": "정점 자세",
-          "svgSha256": "301cf6d750ae4a7ebf271046badd64e00eb2e7d965ce18bd6cbf6f93a43e5e65",
-          "inputSha256": "b2581deb64f09fd14a6a94ebf5b57f60a29e224619bc2a0fbb4f5e2cfdf2a277"
+          "svgSha256": "f835e2fa33a357c44fafcccc38e0d634e3ec1b6676f1c237e4043fa5264ba62c",
+          "inputSha256": "52d82c6daa1bbc7643d01b3f6ad1345832681876fbc8038c33cf3373325c5789"
         },
         "end": {
-          "src": "/motion-artwork-v2/world-mat-roll-over.end.1ed6612813a9.webp",
-          "sha256": "1ed6612813a9fd5cfab566b3b8b2e0480f9b893820526584b970b370997d7c50",
-          "bytes": 16996,
+          "src": "/motion-artwork-v2/world-mat-roll-over.end.273c2e63b5f3.webp",
+          "sha256": "273c2e63b5f3d7abff7dbede5802694d673728233afd650db0b4b65d1109259f",
+          "bytes": 13774,
           "labelKo": "종료 자세",
-          "svgSha256": "c2c2085b458944fd863020420c28860977afd101320c80af25f23f4a059e3cc8",
-          "inputSha256": "e2ecc96f87163d6c6b05dff74039d8fc1b9fa4c7b8d332350d21536e82144954"
+          "svgSha256": "0fdd3d8f8e0c83598457620452cde34eddb2c4b71897b1028677414bf225f37d",
+          "inputSha256": "20906e11c5de020c2c6bd210f335d43fae9463079e0b798b75828e2396154bb3"
         }
       }
     },
@@ -9500,62 +9500,62 @@
     "world-reformer-longbox-pulling-straps-plow": {
       "apparatus": "reformer",
       "bodyPosition": "prone",
-      "archetypeId": "procedural:reformer:prone:reformer-longbox-swan",
+      "archetypeId": "procedural:reformer:prone:reformer-pulling-straps-plow",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.start.9ce5b64c1279.webp",
-          "sha256": "9ce5b64c12799cf540938b73ceb31e867f7ec5473413ca5ee96a71e79b721bb0",
-          "bytes": 25704,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.start.9217750c99ae.webp",
+          "sha256": "9217750c99ae82998a6cbf47f2d41655b7e01a4f209d41dec01e3d55d036de6c",
+          "bytes": 26254,
           "labelKo": "시작 자세",
-          "svgSha256": "5130d62efe85e2f0c612bc1ef51cf96b30da81a3c208b49b0bd977d1a0febb40",
-          "inputSha256": "d94145b9288d1600e02a1c6c4c4b8ef5f164dde8fd5b0f10506aea70f5e174a9"
+          "svgSha256": "055d983238d73276bf961ab54bd47e06d19ff1a2edac78b1af1e5190957596ba",
+          "inputSha256": "0a8d802ae0cb31f65234c0a73831fe1f83143a30e278ef28c2b23e88c89f5509"
         },
         "middle": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.middle.25d49fd409ad.webp",
-          "sha256": "25d49fd409ad0c5b13087dc210e3d9114499a60849317e8df64eeb658322d2af",
-          "bytes": 26938,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.middle.a08c865e203a.webp",
+          "sha256": "a08c865e203af422dc736a0da6694b6a8770d2df3780f2a09f76b3c0e7923220",
+          "bytes": 27422,
           "labelKo": "정점 자세",
-          "svgSha256": "71e3028676be4dbbac68d368c617fd549783dd6faaa62938e2b7adf22edec5ec",
-          "inputSha256": "ad40011d4e5ba55235b3a47cd33e701afd58a48b2756b0893d29b5e758f91f74"
+          "svgSha256": "3454b7796a9e3d67b586c114077fac579885da342b8a8126aa6bcd3cc857b617",
+          "inputSha256": "3049a0fbf8fb372b6d10290ffd86b99c9d6ade928929c0a69812d38ac0eabfd6"
         },
         "end": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.end.24e597119d19.webp",
-          "sha256": "24e597119d19d96c01bc2e900067546e6a1ea9093778fa662b062d541f4f7ed0",
-          "bytes": 26392,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-plow.end.3a016665f817.webp",
+          "sha256": "3a016665f8172f6257203bfbdf1826b072f699e51e9bfd7a4f281800660fade9",
+          "bytes": 26716,
           "labelKo": "종료 자세",
-          "svgSha256": "98f6f1428b3cf981be50de07c0e2aab5a14757add1dbddd7bda24b4000c29675",
-          "inputSha256": "babded7eb6613f6afb979fb7afaffb0c68b4417361a1abbb000d8d0c64ebcbfc"
+          "svgSha256": "98b293b5166f3fe9c1340378b831b467450cb5e2c722c3eb6e15eca43d036ea0",
+          "inputSha256": "ceefa5acddea652da61f8a2856caf2e2393b404aa149fa485fade33717e4ec78"
         }
       }
     },
     "world-reformer-longbox-pulling-straps-t": {
       "apparatus": "reformer",
       "bodyPosition": "prone",
-      "archetypeId": "procedural:reformer:prone:reformer-longbox-swan",
+      "archetypeId": "procedural:reformer:prone:reformer-pulling-straps-t",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.start.9ce5b64c1279.webp",
-          "sha256": "9ce5b64c12799cf540938b73ceb31e867f7ec5473413ca5ee96a71e79b721bb0",
-          "bytes": 25704,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.start.38097a5e1412.webp",
+          "sha256": "38097a5e1412445ddd3546d9254a86677cd766bbca7da9dece789ec131bc8389",
+          "bytes": 21562,
           "labelKo": "시작 자세",
-          "svgSha256": "d627a2119c454cac27f7e1b3455585f20ca7b139eebbdb0e3c23ebe1cb62a946",
-          "inputSha256": "8425a88c309081f9ea04340314ee5b5f1cc171cec3222b75860953f7c74cb25a"
+          "svgSha256": "dc6ffaf41356e1e93b291fdb9bdd049cdea83c1c05793d77ecb290f03d8a7ef6",
+          "inputSha256": "d23de87204b2a4f18815d32546ca5a380cd69e0f45b0de4d2d860a9b0bb62f55"
         },
         "middle": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.middle.25d49fd409ad.webp",
-          "sha256": "25d49fd409ad0c5b13087dc210e3d9114499a60849317e8df64eeb658322d2af",
-          "bytes": 26938,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.middle.ede6006fbc26.webp",
+          "sha256": "ede6006fbc262157fbc3a849a3f357cdb3ab5a3e3262c6aeee05381d97fa421b",
+          "bytes": 22274,
           "labelKo": "정점 자세",
-          "svgSha256": "11ed73a68b93dd4160be825e575ea44cf10828f997160ad3b0b3112360b3c760",
-          "inputSha256": "22afbf6f882a3526fe32b278cf406c07a50f127fb572ed574642291b8dee4e4f"
+          "svgSha256": "ce99d4d1ef1b7023d22100b636b3b8381fafe88ca8b76e542639abe48c7aeec8",
+          "inputSha256": "95de285f50339035d398d6411eb02ec53e31a3e73e01a1f2217169682055da26"
         },
         "end": {
-          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.end.24e597119d19.webp",
-          "sha256": "24e597119d19d96c01bc2e900067546e6a1ea9093778fa662b062d541f4f7ed0",
-          "bytes": 26392,
+          "src": "/motion-artwork-v2/world-reformer-longbox-pulling-straps-t.end.95484211954a.webp",
+          "sha256": "95484211954a855a6e334e3c9bb5f54096d432039c13cac178b065c9c975186a",
+          "bytes": 22022,
           "labelKo": "종료 자세",
-          "svgSha256": "c05c6257da44d0e7fe081d819bd45417bcd4f87ee1f1b1bf5a6aa4b18f20e567",
-          "inputSha256": "1586c38c0d920d8619cde46a531546e81d3d904ef6d798fcc0f89b5f7aac9a92"
+          "svgSha256": "1df10acb08877bc4cbdd1a54a0d2f6bbbdf431f5a6f846edf511fd20e350485f",
+          "inputSha256": "a93e5051a6f53243950ff403d1665f076d20bfd50d09363773dbbd53a99aca6b"
         }
       }
     },
@@ -12259,31 +12259,31 @@
     "world-chair-chair-frog-facing-front": {
       "apparatus": "chair",
       "bodyPosition": "standing",
-      "archetypeId": "procedural:chair:standing:chair-standing-plie-squat",
+      "archetypeId": "procedural:chair:standing:chair-frog-in",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.start.566ed561b102.webp",
-          "sha256": "566ed561b102459070ad6202ee7026a1bc483012abe74a470fc6e8c240d38981",
-          "bytes": 16274,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.start.6b3dca5912fe.webp",
+          "sha256": "6b3dca5912fe61700172c1dfaed251c7c53c4723d2474bc0c6f1cf4b144b4646",
+          "bytes": 16066,
           "labelKo": "시작 자세",
-          "svgSha256": "9d02d4946411d169486296f04bb2ae81bd7616a322f3a980de5007ff0400a9af",
-          "inputSha256": "bd82d04489dfd7f23baefa507a63d5100a64a0b28f7212457c4d2392e0d28915"
+          "svgSha256": "efab224a5412becc76809b774ca7bfdaab82d2781532443d4ec4de66edf66731",
+          "inputSha256": "c8498b3c80684a49d87633c607b8885d0d8d238c8d2de5fb2c9b4ff51f571847"
         },
         "middle": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.middle.d2aefaeee973.webp",
-          "sha256": "d2aefaeee973f7a1eb86e3a577065645d46f8d2b06b15c3524a1b84db258d226",
-          "bytes": 16008,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.middle.aa59fd945a57.webp",
+          "sha256": "aa59fd945a57d6fc4ab8a7051b3001963f3406e2ec1bdbe258c25235761a45be",
+          "bytes": 16142,
           "labelKo": "정점 자세",
-          "svgSha256": "c1323f1163f422bf7e07749e0d8d64625463affd830dd468c3b25898640e51da",
-          "inputSha256": "a8ae175b95c9717f6bded2c1cc3958eb473a93eab1c7fdca4b1af9bd2753412e"
+          "svgSha256": "9fc428249fcbca8adbc7c4202aca95ee83835e8c48ddf073b2aeda10526bb1b7",
+          "inputSha256": "79d6ca3c5ebaf30e1e801fdd848a73ad3282717293e4ddd0090b318e927e662c"
         },
         "end": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.end.a97f1843461f.webp",
-          "sha256": "a97f1843461f4f1930531b8d68e2de35707c0cef68a748a49d9ae51a82e78655",
-          "bytes": 15986,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-front.end.64138c9a187f.webp",
+          "sha256": "64138c9a187f30a7e516abef5c3f87767095dc7bfbd7985ec1130701693097e4",
+          "bytes": 16150,
           "labelKo": "종료 자세",
-          "svgSha256": "d7fb6e1ba5cd1932808ba3f85c06bfac73abac169ab40e483a7650052adf1957",
-          "inputSha256": "a414aed0f0a995739c7f3e2e1a9d6848c4f8b36e68e52c99a50fb6357538fcf4"
+          "svgSha256": "8800462b74fc19e358b28c59d8f37ca163c5ffb9b4ea6d59fda93bfd2fde25a3",
+          "inputSha256": "f087b398a7e678bad1a9f700d6b420ce688ac42255c825da2a3eba9406cb9c11"
         }
       }
     },
@@ -14646,31 +14646,31 @@
     "world-chair-chair-frog-facing-back": {
       "apparatus": "chair",
       "bodyPosition": "standing",
-      "archetypeId": "procedural:chair:standing:chair-standing-plie-squat",
+      "archetypeId": "procedural:chair:standing:chair-frog-out",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.start.566ed561b102.webp",
-          "sha256": "566ed561b102459070ad6202ee7026a1bc483012abe74a470fc6e8c240d38981",
-          "bytes": 16274,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.start.806965c42bc6.webp",
+          "sha256": "806965c42bc6a39b5aa5afdd5e9837553b013c5764b7fe5f5eed16ff69b3721a",
+          "bytes": 16718,
           "labelKo": "시작 자세",
-          "svgSha256": "8600e68263b6e18a6afbce818f40a60d3d18546fc45e69ed4b8370762e16b9fa",
-          "inputSha256": "61c7b2699daed8c0e389c61f02232c653ddb924bea01113a776f633b0e89ee2e"
+          "svgSha256": "39b039a178458afe6ad6a5e1bd07b960940a33139b6d219c894ac106ecc6dce7",
+          "inputSha256": "6ade1deddaad6e529c9e0e3adfceb8526404eb5f3ba2d96ab08144fcf8d62867"
         },
         "middle": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.middle.d2aefaeee973.webp",
-          "sha256": "d2aefaeee973f7a1eb86e3a577065645d46f8d2b06b15c3524a1b84db258d226",
-          "bytes": 16008,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.middle.2379fb58030d.webp",
+          "sha256": "2379fb58030d36a496a4db98d9e98ca3565d9d9a6dc01fbfaf3c5157579b1f6c",
+          "bytes": 16580,
           "labelKo": "정점 자세",
-          "svgSha256": "29e0cac97abcec68ccf7d1bb55310785f4675de36b81419f0b3fba06c013be4f",
-          "inputSha256": "24a5a97be86b00fa8582da71ef94fc49c30e1bb89953e2579d3cc59589cc5e4f"
+          "svgSha256": "a35b8c0e30946c718d3ff633f1b2e1adacbc452d59f4912428f694a0be377653",
+          "inputSha256": "e10c122fe1e70307bed839f48c4590497b79bbc4e047f76433b80ed543131266"
         },
         "end": {
-          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.end.a97f1843461f.webp",
-          "sha256": "a97f1843461f4f1930531b8d68e2de35707c0cef68a748a49d9ae51a82e78655",
-          "bytes": 15986,
+          "src": "/motion-artwork-v2/world-chair-chair-frog-facing-back.end.105538a8cff5.webp",
+          "sha256": "105538a8cff5e17a100e802ffc5612228ec86df0387188cd9c7825b7d354b71f",
+          "bytes": 16678,
           "labelKo": "종료 자세",
-          "svgSha256": "eeb20a69e7379d8652694eb27bc109bea52a32e690cb52efbb09bf36804455fa",
-          "inputSha256": "ca17b079d0869be844ab4bfe2ae83e1ad7dd60a070998a438d03d647a15a07f1"
+          "svgSha256": "426458e1822a21f7707d12e47eb982deac3cc684df37fbd825858459e9d6d473",
+          "inputSha256": "2a05984b5fe3a27d07545ec05d1d6df09e9cae6cb16f3276eda683afe097c3c3"
         }
       }
     },
@@ -17188,31 +17188,31 @@
     "original-reformer-supine-breath--var-miniball": {
       "apparatus": "reformer",
       "bodyPosition": "supine",
-      "archetypeId": "reformer-supine-arms:var",
+      "archetypeId": "reformer-supine-breath:var",
       "phases": {
         "start": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.start.2a78162c96ab.webp",
-          "sha256": "2a78162c96abfc2b2b414d1a40fa259ee7525d1d848d3fe155609d7a679dffb5",
-          "bytes": 28458,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.start.66ed916a49d4.webp",
+          "sha256": "66ed916a49d4c954c0dc09435e665d2798092493aa00afa7b2307904f032fffc",
+          "bytes": 26912,
           "labelKo": "시작 자세",
-          "svgSha256": "06bb7b907cfcc7455599fab266c19524b1cd555a14841444ec635f7e4d4bc943",
-          "inputSha256": "09a4c2b27598dc6dbd98f541dc1e34970a0eb67d06f565b2d6711eaf72b872a0"
+          "svgSha256": "da78156d5a49d7cd7b6886860eaf3c032de1bbb08702382121f9294ce2e8ee94",
+          "inputSha256": "9dc2de8a6f8f5536726d70e340fdde101032f49ab5614ad8c91f8a9a58c63e0b"
         },
         "middle": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.middle.6982c3a22fd9.webp",
-          "sha256": "6982c3a22fd9fcd9db80e875467430975014d4b2c04929edc87447ae7218caff",
-          "bytes": 29640,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.middle.f4511f042d6c.webp",
+          "sha256": "f4511f042d6c9af93e9bb993674b53f2fe004107d52009649e5407264cbbcb8a",
+          "bytes": 27206,
           "labelKo": "정점 자세",
-          "svgSha256": "1c25cf750d63b565d41612d81ba7e9adff036e5e1da920f038e19f9a41733a85",
-          "inputSha256": "e7c173d47d058912326a805f39bade2c2a16299fd05198a8bec7d9cb6bcbfdae"
+          "svgSha256": "a6bc7487b94fcfc91ef263232218f631b5956031ed735996fc31c8e7e146989d",
+          "inputSha256": "5a0adb32c975983bf2f391e5f4d3e1e82af33ad78c8580c476a8dc03489d50a2"
         },
         "end": {
-          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.end.64617826f3f8.webp",
-          "sha256": "64617826f3f8bb6904dd3d46efdb02575880bc7a6b61ada4f8687cffc3e71cfd",
-          "bytes": 28914,
+          "src": "/motion-artwork-v2/original-reformer-supine-breath--var-miniball.end.097cec604346.webp",
+          "sha256": "097cec604346cbc84569825ec6cc50b59e8b492ee1ea2cc0f6d72855f4950703",
+          "bytes": 26738,
           "labelKo": "마무리 자세",
-          "svgSha256": "53dbfed1aa6814f32876a914d83d6b79cc2e0449051ac7ef9c4a6d4ad13a2688",
-          "inputSha256": "3d848316050acdf029fbe904429f47f62b515bedb269c84d2aa989a945e58754"
+          "svgSha256": "9a6abe4311ebe58fd6f5a410da56078a53f2896a6fe854f9f02c1b2e98fa3748",
+          "inputSha256": "1577709b5150739ae0369fdd6a39ef132e363b80130de9a53a52c2c19c365938"
         }
       }
     },

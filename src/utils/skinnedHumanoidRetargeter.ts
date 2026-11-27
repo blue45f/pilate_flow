@@ -523,7 +523,11 @@ function buildCanonicalBoneBasis(dir: Vec3, hint: Vec3): readonly [Vec3, Vec3, V
 }
 
 /** Inverts a column-major 4x4 affine matrix (`m[3]=m[7]=m[11]=0, m[15]=1`). */
-function invertAffine4x4(m: Float32Array, offset: number): Float32Array {
+function invertAffine4x4(
+  m: Float32Array,
+  offset: number,
+  out = new Float32Array(16),
+): Float32Array {
   const a00 = m[offset]!;
   const a10 = m[offset + 1]!;
   const a20 = m[offset + 2]!;
@@ -553,7 +557,6 @@ function invertAffine4x4(m: Float32Array, offset: number): Float32Array {
   const r21 = (a01 * a20 - a00 * a21) * invDet;
   const r22 = (a00 * a11 - a01 * a10) * invDet;
 
-  const out = new Float32Array(16);
   out[0] = r00;
   out[1] = r10;
   out[2] = r20;
@@ -664,6 +667,28 @@ function smoothstepRange(edge0: number, edge1: number, x: number): number {
   if (Math.abs(denom) < 1e-8) return x >= edge1 ? 1 : 0;
   const t = clamp01((x - edge0) / denom);
   return t * t * (3 - 2 * t);
+}
+
+/** 발바닥이 바닥을 떠날 때 발목을 연속적으로 펴고, 착지하며 다시 수평을 맞춘다. */
+export function resolveStudioFootFrame(ankleHeight: number, shinDown: Vec3, shinFront: Vec3) {
+  const shinUp = vScale(shinDown, -1);
+  const lift = smoothstepRange(0.17, 0.31, ankleHeight);
+  const tucked = (1 - smoothstepRange(-0.42, -0.08, shinFront[2]))
+    * (1 - smoothstepRange(0.28, 0.44, ankleHeight));
+  const relaxedDegrees = 10 + 16 * lift;
+  const angle = (relaxedDegrees + (62 - relaxedDegrees) * tucked) * Math.PI / 180;
+  const pointed = vAdd(vScale(shinFront, Math.cos(angle)), vScale(shinDown, Math.sin(angle)));
+  const instep = vAdd(vScale(shinUp, Math.cos(angle)), vScale(shinFront, Math.sin(angle)));
+  const contact = (1 - smoothstepRange(0.095, 0.19, ankleHeight))
+    * smoothstepRange(0.32, 0.6, shinUp[2]);
+  const horizontal = vNorm([shinFront[0], shinFront[1], 0], [1, 0, 0]);
+  const alignment = Math.max(-1, Math.min(1, vDot(pointed, horizontal)));
+  const tangent = vNorm(vSub(horizontal, vScale(pointed, alignment)), instep);
+  const turn = Math.acos(alignment) * contact;
+  const forward = vNorm(vAdd(vScale(pointed, Math.cos(turn)), vScale(tangent, Math.sin(turn))));
+  const upHint = vLerp(instep, [0, 0, 1], contact);
+  const lateral = vNorm(vCross(forward, upHint), [0, 1, 0]);
+  return { forward, up: vNorm(vCross(lateral, forward)) };
 }
 
 function gaussianWeight(delta: number, sigma: number): number {
@@ -1558,37 +1583,16 @@ export function computeRetargetedBoneMatrices(
     const shHint = parallelTransport(thHint, thDir, shDir);
 
     // Sculpted Pilates foot grounding vs graceful plantarflexed dancer point
-    const shinUp = vScale(shDir, -1);
     let antTib = vSub(shHint, vScale(shDir, vDot(shHint, shDir)));
     if (vLen(antTib) < 1e-4) antTib = pelvisAnt;
-    antTib = vNorm(antTib);
-
-    let footFwd: Vec3;
-    let footUp: Vec3;
-    if (leg.ankle[2] <= 0.145 && shinUp[2] > 0.45) {
-      const flat = vNorm([antTib[0], antTib[1], 0], antTib);
-      footFwd = flat;
-      footUp = [0, 0, 1];
-    } else if (antTib[2] < -0.25 && leg.ankle[2] < 0.36) {
-      const pointRad = (62 * Math.PI) / 180;
-      const cp = Math.cos(pointRad);
-      const sp = Math.sin(pointRad);
-      footFwd = vNorm(vAdd(vScale(antTib, cp), vScale(shDir, sp)));
-      footUp = vNorm(vAdd(vScale(shinUp, cp), vScale(antTib, sp)));
-    } else {
-      const pointRad = ((leg.ankle[2] > 0.24 ? 26 : 10) * Math.PI) / 180;
-      const cp = Math.cos(pointRad);
-      const sp = Math.sin(pointRad);
-      footFwd = vNorm(vAdd(vScale(antTib, cp), vScale(shDir, sp)));
-      footUp = vNorm(vAdd(vScale(shinUp, cp), vScale(antTib, sp)));
-    }
+    const foot = resolveStudioFootFrame(leg.ankle[2], shDir, vNorm(antTib));
 
     targets.set(thName, makeSegmentSpec(thName, leg.hip, leg.knee, thHint, 1.0));
     targets.set(shName, makeSegmentSpec(shName, leg.knee, leg.ankle, shHint, 1.0));
     targets.set(ftName, {
       head: leg.ankle,
-      dir: footFwd,
-      hint: footUp,
+      dir: foot.forward,
+      hint: foot.up,
       scaleY: 1.0,
       scaleXZ: 1.0,
     });
@@ -1726,6 +1730,8 @@ export function computeRetargetedBoneMatrices(
 
 class SkinningScratch {
   boneMats = new Float32Array(32 * 16);
+  inverseBoneMats = new Float32Array(32 * 16);
+  inverse = new Float32Array(16);
   boneQuats = new Float32Array(32 * 4);
   skinnedPos = new Float32Array(12288 * 3);
   skinnedNorm = new Float32Array(12288 * 3);
@@ -1735,6 +1741,7 @@ class SkinningScratch {
   ensure(jointCount: number, vertexCount: number): void {
     if (this.boneMats.length < jointCount * 16) {
       this.boneMats = new Float32Array(jointCount * 16);
+      this.inverseBoneMats = new Float32Array(jointCount * 16);
       this.boneQuats = new Float32Array(jointCount * 4);
     }
     if (this.skinnedPos.length < vertexCount * 3) {
@@ -1805,6 +1812,13 @@ export function skinHumanoidToStudioQuads(
     SHARED_SCRATCH.boneMats,
     SHARED_SCRATCH.boneQuats,
   );
+  // Inverse-transpose normals follow the sculpt when breathing expands the chest or a
+  // limb stretches along one axis. Position matrices would tilt its highlight sideways.
+  const inverse = SHARED_SCRATCH.inverseBoneMats;
+  for (let joint = 0; joint < jc; joint++) {
+    const offset = joint * 16;
+    inverse.set(invertAffine4x4(mats, offset, SHARED_SCRATCH.inverse), offset);
+  }
   const quats = SHARED_SCRATCH.boneQuats;
   const outPos = SHARED_SCRATCH.skinnedPos;
   const outNorm = SHARED_SCRATCH.skinnedNorm;
@@ -1833,9 +1847,9 @@ export function skinHumanoidToStudioQuads(
     let sy = (mats[m0 + 1]! * px + mats[m0 + 5]! * py + mats[m0 + 9]! * pz + mats[m0 + 13]!) * w0;
     let sz = (mats[m0 + 2]! * px + mats[m0 + 6]! * py + mats[m0 + 10]! * pz + mats[m0 + 14]!) * w0;
 
-    let snx = (mats[m0]! * nx + mats[m0 + 4]! * ny + mats[m0 + 8]! * nz) * w0;
-    let sny = (mats[m0 + 1]! * nx + mats[m0 + 5]! * ny + mats[m0 + 9]! * nz) * w0;
-    let snz = (mats[m0 + 2]! * nx + mats[m0 + 6]! * ny + mats[m0 + 10]! * nz) * w0;
+    let snx = (inverse[m0]! * nx + inverse[m0 + 1]! * ny + inverse[m0 + 2]! * nz) * w0;
+    let sny = (inverse[m0 + 4]! * nx + inverse[m0 + 5]! * ny + inverse[m0 + 6]! * nz) * w0;
+    let snz = (inverse[m0 + 8]! * nx + inverse[m0 + 9]! * ny + inverse[m0 + 10]! * nz) * w0;
 
     let volBoost = 0;
     if (w0 < 0.999) {
@@ -1857,9 +1871,9 @@ export function skinHumanoidToStudioQuads(
         sx += (mats[mk]! * px + mats[mk + 4]! * py + mats[mk + 8]! * pz + mats[mk + 12]!) * wk;
         sy += (mats[mk + 1]! * px + mats[mk + 5]! * py + mats[mk + 9]! * pz + mats[mk + 13]!) * wk;
         sz += (mats[mk + 2]! * px + mats[mk + 6]! * py + mats[mk + 10]! * pz + mats[mk + 14]!) * wk;
-        snx += (mats[mk]! * nx + mats[mk + 4]! * ny + mats[mk + 8]! * nz) * wk;
-        sny += (mats[mk + 1]! * nx + mats[mk + 5]! * ny + mats[mk + 9]! * nz) * wk;
-        snz += (mats[mk + 2]! * nx + mats[mk + 6]! * ny + mats[mk + 10]! * nz) * wk;
+        snx += (inverse[mk]! * nx + inverse[mk + 1]! * ny + inverse[mk + 2]! * nz) * wk;
+        sny += (inverse[mk + 4]! * nx + inverse[mk + 5]! * ny + inverse[mk + 6]! * nz) * wk;
+        snz += (inverse[mk + 8]! * nx + inverse[mk + 9]! * ny + inverse[mk + 10]! * nz) * wk;
 
         const qkOff = jk * 4;
         const qkx = quats[qkOff]!;

@@ -319,7 +319,7 @@ describe('single-canvas sequence studio journeys', () => {
     showStudio();
     const anchor = usePilatesStore.getState().activeSteps[0].stepId;
     const chooser = screen.getByLabelText('추가 위치');
-    expect(within(chooser).getByRole('option', { name: '시퀀스 맨 앞' })).toBeDisabled();
+    expect(within(chooser).getByRole('option', { name: '수업 맨 앞' })).toBeDisabled();
     expect(
       within(chooser).getByRole('option', { name: '1번 ' + first.nameKo + ' 뒤' }),
     ).toBeEnabled();
@@ -534,7 +534,7 @@ describe('single-canvas sequence studio journeys', () => {
     const remove = screen.getByRole('button', { name: `1번 ${first.nameKo} 삭제` });
     remove.focus();
     fireEvent.click(remove);
-    const heading = screen.getByRole('heading', { name: '내 시퀀스' });
+    const heading = screen.getByRole('heading', { name: '내 수업 순서' });
     await waitFor(() => expect(heading).toHaveFocus());
     expect(screen.getByTestId('sequence-studio')).toHaveAttribute('data-mobile-pane', 'plan');
     expect(screen.getByRole('textbox', { name: '수업 동작 검색' })).not.toHaveFocus();

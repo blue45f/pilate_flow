@@ -160,7 +160,7 @@ describe('compact saved sequence disclosure', () => {
     fireEvent.click(last.getByRole('button', { name: 'second 계획 삭제' }));
     fireEvent.click(last.getByRole('button', { name: '삭제 확인' }));
     await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' })).toHaveFocus(),
+      expect(screen.getByRole('textbox', { name: '저장한 수업 검색' })).toHaveFocus(),
     );
   });
 
@@ -264,7 +264,7 @@ describe('compact saved sequence disclosure', () => {
       'true',
     );
     expect(screen.getAllByRole('button', { name: /접기$/ })).toHaveLength(1);
-    fireEvent.change(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: '저장한 수업 검색' }), {
       target: { value: 'second' },
     });
     expect(card('second 계획').getByRole('button', { name: 'second 계획 더보기' })).toHaveAttribute(

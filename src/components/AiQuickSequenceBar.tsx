@@ -106,7 +106,7 @@ export const AiQuickSequenceBar: React.FC<AiQuickSequenceBarProps> = ({
             <input
               type="text"
               className="pf-ai-quick-bar__input"
-              aria-label="AI 수업 자동 구성 프롬프트"
+              aria-label="원하는 수업 내용"
               data-testid="ai-quick-prompt-input"
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}

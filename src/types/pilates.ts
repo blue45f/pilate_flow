@@ -62,6 +62,9 @@ export interface YouTubeClipRef {
   endSec?: number;
   url: string;
   note?: string;
+  /** A catalogue family reference can differ in equipment setup or progression. */
+  referenceScope?: 'movement-family' | 'base-movement';
+  referenceSubject?: string;
   region?: VideoRegion;
 }
 

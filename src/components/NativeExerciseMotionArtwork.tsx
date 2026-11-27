@@ -65,6 +65,11 @@ export default function NativeExerciseMotionArtwork({
         data-3d-rig-scope={rigSample.rigScope}
       >
         <defs>
+          <radialGradient id={`pf-shadow-${exercise.id}-${phase}`}>
+            <stop offset="0" stopColor="#232b20" stopOpacity="0.20" />
+            <stop offset="0.48" stopColor="#232b20" stopOpacity="0.10" />
+            <stop offset="1" stopColor="#232b20" stopOpacity="0" />
+          </radialGradient>
           <linearGradient id={`pf-3d-bg-${exercise.id}-${phase}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#F7F4EC" />
             <stop offset="62%" stopColor={MOTION_STUDIO_MATERIALS.horizon} />
@@ -80,7 +85,8 @@ export default function NativeExerciseMotionArtwork({
               cy={sh.cy}
               rx={sh.rx}
               ry={sh.ry}
-              fill="rgba(24, 44, 36, 0.08)"
+              transform={`rotate(${sh.angle * 180 / Math.PI} ${sh.cx} ${sh.cy})`}
+              fill={`url(#pf-shadow-${exercise.id}-${phase})`}
             />
           ))}
         </g>

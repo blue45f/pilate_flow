@@ -87,6 +87,7 @@ import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisual
 import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
+import { getExercisePracticeGuide } from '../utils/exercisePracticeGuide';
 import { PilatesVideoLibrary } from './PilatesVideoLibrary';
 import { VERIFIED_YOUTUBE_VIDEO_POOL } from '../data/exerciseYouTubeCatalog';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
@@ -132,7 +133,7 @@ import {
   DIFFICULTY_FILTER_OPTIONS,
   formatDifficultyMeta,
 } from '../utils/instructorUxHelpers';
-import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
+import { MovementWorkspaceCover } from './EditorialApparatusCard';
 import { PilatesFundamentalsDrawer } from './IntuitiveAnatomyGuideCard';
 import { LightDismissDialog } from './LightDismissDialog';
 import { DualScreenNfcPanel } from './DualScreenNfcPanel';
@@ -943,14 +944,6 @@ function isFusionExercise(exercise: PilatesExercise): boolean {
   return Boolean(WORLD_PILATES_BY_ID.get(exercise.id)?.schoolTag.startsWith('fusion-'));
 }
 
-function getExerciseOriginTag(
-  exercise: PilatesExercise,
-): { readonly label: string; readonly kind: 'fusion' | '3d' } | null {
-  if (isFusionExercise(exercise)) return { label: '퓨전', kind: 'fusion' };
-  if (isPrecision3dExercise(exercise)) return { label: '3D 정밀', kind: '3d' };
-  return null;
-}
-
 interface AtlasCatalogCardState {
   inSequence: boolean;
   orderNumber?: number;
@@ -960,7 +953,6 @@ interface AtlasCatalogCardState {
 interface AtlasEverydayCatalogProps {
   exercises: readonly PilatesExercise[];
   allUnifiedExercises: readonly PilatesExercise[];
-  isUnifiedCatalogMode: boolean;
   unifiedScope: UnifiedAtlasScope;
   precision3dCount: number;
   atomicCount: number;
@@ -1664,7 +1656,6 @@ const ATLAS_UNSLOP_CSS = `
 const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
   exercises,
   allUnifiedExercises,
-  isUnifiedCatalogMode,
   unifiedScope,
   precision3dCount,
   atomicCount,
@@ -1753,7 +1744,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
     {
       id: '3d-precision',
       testId: 'atlas-scope-3d',
-      label: `3D 정밀 도해 ${precision3dCount.toLocaleString('ko-KR')}`,
+      label: `그림 있는 동작 ${precision3dCount.toLocaleString('ko-KR')}`,
     },
     {
       id: 'atomic',
@@ -1763,7 +1754,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
     {
       id: 'fusion',
       testId: 'atlas-scope-fusion',
-      label: fusionCount > 0 ? '퓨전 (바레·기능성)' : '퓨전 (바레·기능성)',
+      label: `바레·기능성 운동 ${fusionCount.toLocaleString('ko-KR')}`,
     },
     {
       id: 'programs',
@@ -1772,25 +1763,17 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
     },
   ];
 
-  const heroCountLabel =
-    unifiedScope === 'programs'
-      ? `${filteredPrograms.length}개 프로그램`
-      : `${resultCount.toLocaleString('ko-KR')}개 동작`;
+  const scopeLabel = scopeOptions.find((option) => option.id === unifiedScope)?.label;
+  const activeCount = filterCount + Number(ownedOnly) + Number(unifiedScope !== 'all');
 
   return (
     <section className="flow-atlas flow-atlas--unslop" aria-labelledby="workspace-main-heading">
       <style>{ATLAS_UNSLOP_CSS}</style>
-      <header className="flow-atlas__heading atelier-cover atelier-cover--apparatus">
-        <div className="flow-atlas__intro">
-          <h1 id="workspace-main-heading" tabIndex={-1}>
-            동작 라이브러리
-          </h1>
-          <span className="flow-atlas__subcopy">
-            {isUnifiedCatalogMode
-              ? `통합 ${totalCount.toLocaleString('ko-KR')}종 동작과 4·8주 프로그램을 한곳에서 찾아 수업에 담으세요`
-              : '기구와 부위로 동작을 찾아 수업에 담으세요'}
-          </span>
-        </div>
+      <MovementWorkspaceCover
+        title="동작 라이브러리"
+        description="어디에 좋은 동작인지 살펴보고, 그림과 설명을 따라 해 보세요."
+        apparatus={selectedApparatus?.apparatus ?? 'mat'}
+      >
         <button
           className="flow-atlas__button flow-atlas__button--quiet"
           type="button"
@@ -1798,7 +1781,66 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         >
           <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 자료와 고급 도구
         </button>
-      </header>
+        <details
+          className="atlas-resource-menu"
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.currentTarget.open = false;
+            event.currentTarget.querySelector('summary')?.focus();
+          }}
+        >
+          <summary>연습·프로그램 <ChevronDown size={15} aria-hidden="true" /></summary>
+          <nav
+            className="pf-smart-tools-rail pf-atlas-quick-hub"
+            aria-label="프로그램·숙지 훈련·기초 원리·기구 태그 빠른 열기"
+            data-testid="atlas-quick-hub"
+          >
+            <button
+              type="button"
+              className={`pf-smart-tool-pill ${unifiedScope === 'programs' ? 'is-accent' : ''}`}
+              data-testid="atlas-open-programs-btn"
+              aria-pressed={unifiedScope === 'programs'}
+              onClick={(event) => {
+                const menu = event.currentTarget.closest('details');
+                if (menu) menu.open = false;
+                onSelectUnifiedScope(unifiedScope === 'programs' ? 'all' : 'programs');
+                searchRef.current?.focus();
+              }}
+            >
+              <CalendarDays size={15} strokeWidth={1.6} aria-hidden="true" />
+              <span>4·8주 프로그램 {programCount}종</span>
+            </button>
+            <button
+              type="button"
+              className="pf-smart-tool-pill"
+              data-testid="atlas-open-mastery-btn"
+              onClick={() => setQuickModal('mastery')}
+            >
+              <GraduationCap size={15} strokeWidth={1.6} aria-hidden="true" />
+              <span>동작 연습</span>
+            </button>
+            <button
+              type="button"
+              className="pf-smart-tool-pill"
+              data-testid="atlas-open-fundamentals-btn"
+              onClick={() => setQuickModal('fundamentals')}
+            >
+              <BookOpen size={15} strokeWidth={1.6} aria-hidden="true" />
+              <span>필라테스 기초 원리</span>
+            </button>
+            <button
+              type="button"
+              className="pf-smart-tool-pill"
+              data-testid="atlas-open-nfc-tags-btn"
+              onClick={() => setQuickModal('nfc')}
+            >
+              <Nfc size={15} strokeWidth={1.6} aria-hidden="true" />
+              <span>기구 NFC · QR</span>
+            </button>
+          </nav>
+        </details>
+      </MovementWorkspaceCover>
 
       <section className="flow-atlas__search-panel" aria-label="동작 검색과 필터">
         <div className="flow-atlas__toolbar-main">
@@ -1816,7 +1858,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                   autoComplete="off"
                   value={search}
                   onChange={(event) => onSearch(event.target.value)}
-                  placeholder="동작 이름·초성·부위·소도구 검색"
+                  placeholder="예: 엉덩이, 옆구리, 브리지"
                 />
                 {search ? (
                   <button
@@ -1838,8 +1880,8 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                 onClick={() => setFiltersOpen((open) => !open)}
               >
                 <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" /> 필터
-                {filterCount > 0 || ownedOnly ? (
-                  <span className="flow-atlas__count">{filterCount + Number(ownedOnly)}</span>
+                {activeCount > 0 ? (
+                  <span className="flow-atlas__count">{activeCount}</span>
                 ) : null}
                 <ChevronDown size={15} strokeWidth={1.5} aria-hidden="true" />
               </button>
@@ -1885,26 +1927,6 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
           </div>
 
           <div
-            className="flow-atlas__scope-row"
-            role="group"
-            aria-label="동작 범위 선택"
-            data-testid="atlas-unified-scope-row"
-          >
-            {scopeOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="flow-atlas__scope-chip"
-                data-testid={option.testId}
-                aria-pressed={unifiedScope === option.id}
-                onClick={() => onSelectUnifiedScope(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          <div
             className="pf-difficulty-filter-row pf-atlas-difficulty-row"
             role="group"
             aria-label="난이도 빠른 선택"
@@ -1923,13 +1945,6 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
             ))}
           </div>
         </div>
-        <div className="pf-atlas-editorial-banner-wrap">
-          <ApparatusEditorialHeroBanner
-            apparatus={selectedApparatus?.apparatus ?? 'mixed'}
-            countLabel={heroCountLabel}
-            compact
-          />
-        </div>
         <div
           id="flow-atlas-filters"
           className="flow-atlas__inline-filters"
@@ -1943,6 +1958,25 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
             closeFilters();
           }}
         >
+          <div
+            className="flow-atlas__scope-row"
+            role="group"
+            aria-label="동작 범위 선택"
+            data-testid="atlas-unified-scope-row"
+          >
+            {scopeOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="flow-atlas__scope-chip"
+                data-testid={option.testId}
+                aria-pressed={unifiedScope === option.id}
+                onClick={() => onSelectUnifiedScope(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className="flow-atlas__filter-fields">
             <label>
               난이도
@@ -1987,8 +2021,13 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
             </button>
           </div>
         </div>
-        {activeFilters.length > 0 || ownedOnly ? (
+        {activeFilters.length > 0 || ownedOnly || unifiedScope !== 'all' ? (
           <div className="flow-atlas__active-filters" role="group" aria-label="적용된 검색·필터">
+            {unifiedScope !== 'all' && (
+              <button type="button" onClick={() => onSelectUnifiedScope('all')} aria-label={`${scopeLabel} 필터 해제`}>
+                {scopeLabel} <X size={12} aria-hidden="true" />
+              </button>
+            )}
             {ownedOnly && !filtersOpen ? (
               <button
                 type="button"
@@ -2024,72 +2063,16 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
         ) : null}
       </section>
 
-      <nav
-        className="pf-smart-tools-rail pf-atlas-quick-hub"
-        aria-label="프로그램·숙지 훈련·기초 원리·기구 태그 빠른 열기"
-        data-testid="atlas-quick-hub"
-      >
-        <button
-          type="button"
-          className={`pf-smart-tool-pill ${unifiedScope === 'programs' ? 'is-accent' : ''}`}
-          data-testid="atlas-open-programs-btn"
-          aria-pressed={unifiedScope === 'programs'}
-          onClick={() => onSelectUnifiedScope(unifiedScope === 'programs' ? 'all' : 'programs')}
-        >
-          <CalendarDays size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>4·8주 프로그램 {programCount}종</span>
-        </button>
-        <button
-          type="button"
-          className="pf-smart-tool-pill"
-          data-testid="atlas-open-mastery-btn"
-          onClick={() => setQuickModal('mastery')}
-        >
-          <GraduationCap size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>동작 숙지 훈련</span>
-        </button>
-        <button
-          type="button"
-          className="pf-smart-tool-pill"
-          data-testid="atlas-open-fundamentals-btn"
-          onClick={() => setQuickModal('fundamentals')}
-        >
-          <BookOpen size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>필라테스 기초 원리</span>
-        </button>
-        <button
-          type="button"
-          className="pf-smart-tool-pill"
-          data-testid="atlas-open-nfc-tags-btn"
-          onClick={() => setQuickModal('nfc')}
-        >
-          <Nfc size={15} strokeWidth={1.6} aria-hidden="true" />
-          <span>기구 NFC · QR</span>
-        </button>
-      </nav>
+
 
       <div className="flow-atlas__results-bar" data-testid="atlas-results-summary">
         <p aria-live="polite">
           {unifiedScope === 'programs' ? (
-            <>
-              <strong>{filteredPrograms.length}</strong>개 프로그램{' '}
-              <span>
-                4·8주 커리큘럼 {programCount}종 · 통합 동작 {totalCount.toLocaleString('ko-KR')}종
-              </span>
-            </>
-          ) : isUnifiedCatalogMode ? (
-            <>
-              <strong>{resultCount.toLocaleString('ko-KR')}</strong>개 동작{' '}
-              <span>
-                {resultCount !== totalCount
-                  ? `전체 ${totalCount.toLocaleString('ko-KR')} · `
-                  : '· '}
-                3D 정밀 {precision3dCount.toLocaleString('ko-KR')} · 4·8주 프로그램 {programCount}
-              </span>
-            </>
+            <><strong>{filteredPrograms.length}</strong>개 프로그램</>
           ) : (
             <>
-              <strong>{resultCount}</strong>개 동작 <span>전체 {totalCount}개</span>
+              <strong>{resultCount.toLocaleString('ko-KR')}</strong>개 동작
+              {resultCount !== totalCount && <span>전체 {totalCount.toLocaleString('ko-KR')}개</span>}
             </>
           )}
         </p>
@@ -2195,11 +2178,9 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                 ? '계획용 동작 도해'
                 : '3D 동작 설명';
             const previewHintId = `flow-atlas-preview-${exercise.id}`;
-            const originTag = idea ? null : getExerciseOriginTag(exercise);
             const quietSummary = idea
               ? previewLabel
-              : exercise.targetMuscles.slice(0, 2).join(' · ') ||
-                POSITION_LABELS[exercise.bodyPosition].ko;
+              : getExercisePracticeGuide(exercise).benefit;
             return (
               <article
                 className={`flow-atlas__card ${state.inSequence ? 'is-in-sequence' : ''}`}
@@ -2235,18 +2216,14 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                           className={`pf-difficulty-badge is-${formatDifficultyMeta(exercise.level).tone}`}
                           aria-label={formatDifficultyMeta(exercise.level).ariaLabel}
                         >
-                          {formatDifficultyMeta(exercise.level).fullLabel}
+                          {formatDifficultyMeta(exercise.level).labelKo}
                         </span>
                         <span>{exercise.defaultDurationMin}분</span>
-                        {originTag ? (
-                          <span className={`flow-atlas__origin-tag is-${originTag.kind}`}>
-                            {originTag.label}
-                          </span>
-                        ) : null}
+                        {!idea && isFusionExercise(exercise) && (
+                          <span className="flow-atlas__origin-tag is-fusion">퓨전</span>
+                        )}
                       </p>
-                      <span className="flow-atlas__preview-affordance" aria-hidden="true">
-                        미리보기
-                      </span>
+
                     </div>
                     <h2>
                       <button
@@ -2257,6 +2234,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                         aria-describedby={previewHintId}
                       >
                         {exercise.nameKo}
+                        <ArrowUpRight size={17} aria-hidden="true" />
                       </button>
                     </h2>
                     <p className="flow-atlas__quiet-caption">
@@ -2269,6 +2247,8 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                       ) : null}
                     </p>
                   </div>
+                </div>
+                <div className="flow-atlas__card-footer">
                   <button
                     type="button"
                     className="flow-atlas__favorite-button"
@@ -2286,8 +2266,6 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
                       fill={favorite ? 'currentColor' : 'none'}
                     />
                   </button>
-                </div>
-                <div className="flow-atlas__card-footer">
                   <div className="flow-atlas__card-actions">
                     <button
                       type="button"
@@ -2380,7 +2358,7 @@ const AtlasEverydayCatalog: React.FC<AtlasEverydayCatalogProps> = ({
             className="pf-atlas-sequence-dock__cta"
             onClick={onReturnToClass}
           >
-            <span>시퀀스 조율하러 가기</span>
+            <span>내 수업 순서 보기</span>
             <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
@@ -2897,7 +2875,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       <AtlasEverydayCatalog
         exercises={scopedFiltered.slice(0, notesVisibleCount)}
         allUnifiedExercises={unifiedExercises}
-        isUnifiedCatalogMode={isUnifiedCatalogMode}
         unifiedScope={unifiedScope}
         precision3dCount={unifiedCatalogMetrics.precision3dCount}
         atomicCount={unifiedCatalogMetrics.atomicCount}

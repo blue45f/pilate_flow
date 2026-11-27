@@ -38,7 +38,11 @@ import {
   STUDIO_PRACTITIONER_GLB_META,
 } from '../data/blenderStudioGlbManifest';
 import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
-import { sampleStudioMotionCycle, STUDIO_MOTION_CYCLE_MS } from '../utils/studioMotionPlayback';
+import {
+  getStudioMotionDuration,
+  getStudioMotionTiming,
+  sampleStudioMotionCycle,
+} from '../utils/studioMotionPlayback';
 import { downloadBlenderSceneScript } from '../utils/blenderSceneScriptExporter';
 import {
   renderRealtimeStudio3DFrame,
@@ -81,6 +85,7 @@ export interface Studio3DSetupDraftPatch {
 export interface StudioInteractive3DViewportProps {
   readonly exercise: PilatesExercise;
   readonly compact?: boolean;
+  readonly practiceView?: boolean;
   readonly active?: boolean;
   readonly initialSpringOverride?: string;
   readonly initialFootbarOverride?: FootbarState;
@@ -231,6 +236,7 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
 const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportProps> = ({
   exercise,
   compact = false,
+  practiceView = false,
   initialSpringOverride,
   initialFootbarOverride,
   initialHeadrestOverride,
@@ -360,8 +366,13 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(viewportRef, suspend);
   const [visualProgress, setVisualProgress] = useState<number>(0);
   const visualProgressRef = useRef<number>(0);
-  const phase = sampleStudioMotionCycle(progress);
-  const visualPhase = sampleStudioMotionCycle(playing ? progress : visualProgress);
+  const timing = getStudioMotionTiming(exercise.id);
+  const cycleDuration = getStudioMotionDuration(timing);
+  const peakProgress = timing.pulses
+    ? (timing.settleMs + timing.travelMs + timing.peakMs / timing.pulses) / cycleDuration
+    : 0.5;
+  const phase = sampleStudioMotionCycle(progress, timing);
+  const visualPhase = sampleStudioMotionCycle(playing ? progress : visualProgress, timing);
   const frameBudget = useMemo(
     () => resolveAdaptive3dFrameBudget(readAmbientDevice3dSignals()),
     [],
@@ -649,7 +660,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     let lastTs: number | null = null;
     let lastCommitTs: number | null = null;
     let lastCommittedPct = Math.round(progressRef.current * 100);
-    let lastCommittedPhaseId = sampleStudioMotionCycle(progressRef.current).id;
+    let lastCommittedPhaseId = sampleStudioMotionCycle(progressRef.current, timing).id;
     let lastCommittedYaw = Math.round(yawRef.current);
 
     const step = (now: number) => {
@@ -663,7 +674,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       lastCommitTs = now;
       if (playing) {
         progressRef.current =
-          (progressRef.current + (elapsedMs * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
+          (progressRef.current + (elapsedMs * speed) / cycleDuration) % 1;
         visualProgressRef.current = progressRef.current;
       }
       if (turntable && !dragRef.current.active) {
@@ -671,7 +682,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       }
 
       // Draw directly onto GPU/canvas at locked 60fps without waiting for React tree reconciliation
-      const liveCycle = sampleStudioMotionCycle(progressRef.current);
+      const liveCycle = sampleStudioMotionCycle(progressRef.current, timing);
       paintFrameRef.current(liveCycle.pose, yawRef.current);
 
       // Sync React HUD & slider state whenever displayed percentage/phase/degree changes
@@ -695,7 +706,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     };
     rafId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(rafId);
-  }, [playing, turntable, speed, canAnimate, frameBudget.frameIntervalMs]);
+  }, [playing, turntable, speed, canAnimate, frameBudget.frameIntervalMs, cycleDuration, timing]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -944,6 +955,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     (p) => p.id === 'top' || p.id === 'rear',
   );
 
+  const ViewOptions = practiceView ? 'details' : React.Fragment;
   return (
     <div
       ref={viewportRef}
@@ -1243,7 +1255,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
               className={`pf-orbit3d-pose-snap-btn ${isActive ? 'is-active' : ''}`.trim()}
               aria-pressed={isActive}
               data-pose-snap={stage.id}
-              onClick={() => jumpToProgress(stage.progress)}
+              onClick={() => jumpToProgress(stage.id === 'peak' ? peakProgress : stage.progress)}
             >
               <span className="pf-orbit3d-pose-snap-btn__index" aria-hidden="true">
                 {stage.stepKo}
@@ -1256,7 +1268,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
 
       {/* Unobstructed Visual Stage: HUD & hotspot info live cleanly outside the 3D canvas */}
       <div className="pf-orbit3d-stage-bar">
-        <div className="pf-orbit3d-hud-top">
+        {!practiceView && <div className="pf-orbit3d-hud-top">
           <span className="pf-orbit3d-badge is-emerald">
             <Orbit size={12} aria-hidden="true" />
             <span className="pf-orbit3d-badge__hint">드래그·핀치 · </span>
@@ -1309,7 +1321,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 </span>
               );
             })()}
-        </div>
+        </div>}
         {selectedHotspot && (
           <div
             className="pf-orbit3d-hotspot-card"
@@ -1348,7 +1360,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             ) : (
               <Play size={14} aria-hidden="true" />
             )}
-            <span>{playing ? '일시정지' : '모션 재생'}</span>
+            <span>{playing ? '일시정지' : '동작 재생'}</span>
           </button>
           <input
             type="range"
@@ -1380,10 +1392,12 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             aria-label="모션 재생 배속 전환"
             onClick={() => setSpeed((s) => (s === 1 ? 0.5 : 1))}
           >
-            {speed === 1 ? '1.0x' : '0.5x 슬로우'}
+            {speed === 1 ? '1배속' : '0.5배속'}
           </button>
         </div>
 
+        <ViewOptions>
+          {practiceView && <summary>화면 회전과 보기 설정</summary>}
         <details className="pf-orbit3d-camera-settings">
           <summary>
             <Camera size={16} aria-hidden="true" /> 시점·확대
@@ -1519,9 +1533,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                     key={pj.id}
                     type="button"
                     className={`pf-orbit3d-preset-chip ${
-                      Math.abs(progress - pj.progress) < 0.06 ? 'is-active' : ''
+                      Math.abs(progress - (pj.id === 'peak' ? peakProgress : pj.progress)) < 0.06 ? 'is-active' : ''
                     }`}
-                    onClick={() => jumpToProgress(pj.progress)}
+                    onClick={() => jumpToProgress(pj.id === 'peak' ? peakProgress : pj.progress)}
                   >
                     {pj.labelKo}
                   </button>
@@ -1736,6 +1750,7 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             )}
           </div>
         )}
+        </ViewOptions>
       </div>
       {hasCustomSetup && (
         <p
@@ -1747,9 +1762,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
         </p>
       )}
       <p className="pf-orbit3d-provenance-note" data-testid="studio-3d-provenance-note">
-        {dedicated3d ? '3D 동작 자세 가이드' : '대표 자세 3D 참고 가이드'} · 회원 체형과 컨디션에
-        맞게 가동범위와 스프링을 조절해 주세요. 개인별 생체역학 측정이나 의료적 교정·치료 효과를
-        주장하지 않습니다.
+        {practiceView ? (rigMeta.rigId === exercise.id ? '움직임의 방향을 살펴보는 3D 그림이에요.' : '비슷한 자세를 보여주는 3D 그림이에요. 실제 동작 순서는 설명을 함께 보세요.') : (
+          <>{dedicated3d ? '3D 동작 자세 가이드' : '대표 자세 3D 참고 가이드'} · 회원 체형과 컨디션에 맞게 가동범위와 스프링을 조절해 주세요. 개인별 생체역학 측정이나 의료적 교정·치료 효과를 주장하지 않습니다.</>
+        )}
       </p>
       {binding?.sourceUrl && (
         <div className="pf-orbit3d-source-row">

@@ -44,43 +44,43 @@ export interface StudioVerifiedGuidance {
 export const VERIFIED_LITERATURE_BY_APPARATUS: Record<ApparatusType, ClinicalLiteratureReference> = {
   mat: {
     id: 'pmc-3445206-mat',
-    titleKo: '필라테스 중립 척추·골반 안정화 및 심부 코어 선행 수축(Feed-forward) 임상 가이드',
-    citation: 'Wells C, Kolt GS, Bialocerkowski A. Sports Health (NIH/PMC3445206) & Return to Life Through Contrology',
+    titleKo: '필라테스 운동의 원리와 재활 분야의 활용',
+    citation: 'Sports Health, 2011 · PMID 23016028',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3445206/',
     clinicalSummaryKo:
-      '사지 움직임 약 100ms 전 복횡근(TrA)·다열근 선행 활성과 흉곽-골반 중립 정렬을 통해 요추 과신전 및 경추 보상 긴장을 예방합니다.',
+      '필라테스가 어떤 운동인지, 재활 분야에서는 어떻게 활용해 왔는지 살펴보는 문헌이에요.',
   },
   reformer: {
     id: 'balanced-body-reformer-manual',
-    titleKo: '리포머 스프링 저항 역학·슬개골-제2족지 정렬 및 원심성 감속 프로토콜',
-    citation: 'Balanced Body Movement Principles & Positive Action Reformer Level 1 Manual (PMC11944116)',
+    titleKo: '리포머 입문 수업 교재',
+    citation: 'Positive Action Pilates · Reformer Level 1 Student Manual, 2024',
     url: 'https://positiveactionpilates.com.au/wp-content/uploads/2024/11/2024-Reformer-Level-1-Student-Manual.pdf',
     clinicalSummaryKo:
-      '스토퍼에서 고관절 45~90° 굴곡 시작 각도를 확보하고, 슬개골 중심과 제2족지를 일직선으로 정렬해 무릎 과신전(Hyperextension) 없이 햄스트링·내전근 연결로 캐리지 복귀를 제어합니다.',
+      '리포머를 다루는 입문 과정의 교재예요. 사용하는 기구의 바와 스프링은 해당 제조사의 안내를 함께 확인하세요.',
   },
   cadillac: {
     id: 'polestar-cadillac-rehab',
-    titleKo: '캐딜락·타워 스프링 벡터 보조 및 척추 분절·견갑 안정화 프로토콜',
-    citation: 'Polestar Pilates Rehabilitation Framework (PMC8615180) & Balanced Body Tower Guidelines',
+    titleKo: '허리 통증 관련 임상 필라테스 문헌 고찰',
+    citation: 'Biology, 2021 · PMID 34827088',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8615180/',
     clinicalSummaryKo:
-      '고정된 테이블 지지면과 스프링 장력 벡터(레그 스프링 퍼플/중간, 암 스프링 옐로우~그레이, 하단 푸시쓰루 바 안전 체인 필수)를 활용해 요추 부담 없이 중심부-사지 협응을 유도합니다.',
+      '만성 허리 통증이 있는 사람에게 운동을 개별적으로 적용하는 방법을 검토한 문헌이에요. 캐딜락의 스프링 색상이나 강도는 사용하는 기구의 안내를 확인하세요.',
   },
   chair: {
     id: 'basi-chair-biomechanics',
-    titleKo: '원다 체어 좁은 지지면 코어 제어 및 페달 스프링 등척·원심성 협응 가이드',
-    citation: 'BASI Pilates Comprehensive Apparatus & Scapular Stabilization RCT (PMC4301231)',
+    titleKo: '어깨를 움직일 때 날개뼈를 받쳐 주는 운동에 관한 연구',
+    citation: 'Medical Journal of the Islamic Republic of Iran, 2014 · PMID 25664288',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4301231/',
     clinicalSummaryKo:
-      '좁은 좌면 위에서 전거근·하부승모근으로 견갑대를 광배근에 연결하고, 척추 분절 움직임이 멈추면 페달 누르기를 멈춰 요추 압박 없이 투웨이 스트레치(Two-Way Stretch)를 유지합니다.',
+      '어깨 충돌 증후군이 있는 참가자를 대상으로 운동치료와 물리치료를 비교한 연구예요. 체어 수업에서는 어깨 주변 움직임을 이해하는 배경자료로 읽을 수 있어요.',
   },
   barrel: {
     id: 'ladder-barrel-lumbo-pelvic',
-    titleKo: '래더 바렐 곡면 지지 척추 신전·측굴 및 골반-대퇴 전자부 정렬 프로토콜',
-    citation: 'Lumbo-Pelvic Stability & Flexibility Clinical Trial (PMC3289190) & Coreva Barrel Glossary',
+    titleKo: '필라테스 수업과 유연성·골반 움직임 연구',
+    citation: 'Asian Journal of Sports Medicine, 2011 · PMID 22375213',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3289190/',
     clinicalSummaryKo:
-      '바렐 곡면에 대전자(Greater Trochanter) 또는 복부를 안정적으로 밀착하고 래더 렁(Rung)에 발뒤꿈치·발볼을 고정해, 반동 없이 긴 지렛대(Long Lever) 코어·둔근·내전근 힘으로 움직입니다.',
+      '건강한 성인 40명을 대상으로 8주간 매트 필라테스를 한 그룹과 비교 그룹의 유연성, 허리와 골반의 움직임 조절을 살펴본 연구예요.',
   },
 };
 
@@ -90,72 +90,72 @@ export const VERIFIED_VIDEOS_BY_APPARATUS: Record<
 > = {
   mat: {
     primary: {
-      titleKo: '조셉 필라테스 Return to Life 클래식 매트 34개 전 동작 정석 가이드',
-      channelName: 'Pilates Original 34 Contrology Archive',
+      titleKo: '클래식 매트 34개 동작 이어 보기',
+      channelName: 'Idit Spiro Pilates',
       url: 'https://www.youtube.com/watch?v=qkdhm5r8NoQ',
-      keyTakeawayKo: '척추를 구슬 실처럼 한 분절씩 매트에 내려놓고 호흡과 복부 중심(Powerhouse)으로 사지를 뻗습니다.',
+      keyTakeawayKo: '매트 동작 34개를 원래 순서대로 이어 가는 수업이에요. 익숙한 동작이 다음 자세로 어떻게 이어지는지 살펴보세요.',
     },
     secondary: {
-      titleKo: '클래식 매트 필라테스 34 시퀀스 호흡·분절 큐잉 아카이브',
-      channelName: 'Contrology Classical Mat',
+      titleKo: '클래식 매트 동작을 잇는 수업',
+      channelName: 'Quiet Bodies - Pilates with Kala Loek (Fletcher)',
       url: 'https://www.youtube.com/watch?v=H3D_RnGYYss',
-      keyTakeawayKo: '목과 어깨 긴장을 덜고 흉곽 호흡과 골반 중립·후방경사 전환을 정교하게 연결합니다.',
+      keyTakeawayKo: '여러 동작이 이어지는 수업이에요. 확인하고 싶은 동작의 이름과 시작 자세를 먼저 찾아보세요.',
     },
   },
   reformer: {
     primary: {
-      titleKo: 'Pilates Anytime — 리포머 풋워크(Footwork) 정렬·햄스트링·무릎 과신전 방지 정석',
+      titleKo: '리포머에서 풋바 밀고 돌아오기',
       channelName: 'Pilates Anytime',
       url: 'https://www.youtube.com/watch?v=QDBzjlhKsco',
-      keyTakeawayKo: '양 숄더레스트 중앙에 머리와 골반 수평을 맞추고, 2번 발가락-무릎 중앙 정렬과 뒤허벅지(햄스트링) 힘으로 무릎 잠김 없이 3카운트 컨트롤로 복귀합니다.',
+      keyTakeawayKo: '발을 바에 대고 캐리지를 밀 때와 다시 돌아올 때, 무릎이 발끝과 같은 방향을 향하는지 봐요.',
     },
     secondary: {
-      titleKo: 'Pilates Anytime — 리포머 헌드레드(The Hundred) 스프링 세팅·견갑 연결 가이드',
+      titleKo: '리포머에서 하는 헌드레드',
       channelName: 'Pilates Anytime',
       url: 'https://www.youtube.com/watch?v=vx4DdBWY6kQ',
-      keyTakeawayKo: '핸들을 과하게 쥐지 않고 스트랩 장력을 손→어깨→등 하부로 연결해 목 긴장 없이 5초 들숨·5초 날숨 10세트를 수행합니다.',
+      keyTakeawayKo: '손에 스트랩을 쥐고 팔을 작게 움직이는 동작이에요. 팔의 리듬과 숨을 이어 가는 방법을 들어보세요.',
     },
   },
   cadillac: {
     primary: {
-      titleKo: 'Online Pilates Classes — 캐딜락 & 타워 스프링 선택·클립·안전 체인 완벽 가이드',
+      titleKo: '캐딜락·타워 스프링의 종류와 쓰임',
       channelName: 'Online Pilates Classes by Lesley Logan',
       url: 'https://www.youtube.com/watch?v=R00X3brvFl0',
-      keyTakeawayKo: '레그 스프링(보라)·암 스프링(그레이/옐로우)·롤백 바(레드) 장력 기준과 하단 스프링 사용 시 안전 체인 선(先)체결 원칙을 준수합니다.',
+      keyTakeawayKo: '기구에 달린 스프링을 언제 쓰는지 소개해요. 내 기구의 연결 위치와 장력은 스튜디오에서 확인하세요.',
     },
     secondary: {
-      titleKo: 'Online Pilates Classes — 캐딜락 푸시쓰루 바(Push Thru Bar) 타워·숄더 롤다운 정석',
+      titleKo: '캐딜락에서 푸시스루 바로 하는 타워',
       channelName: 'Online Pilates Classes by Lesley Logan',
       url: 'https://www.youtube.com/watch?v=tV3l-LkhHtc',
-      keyTakeawayKo: '스프링이 몸을 흔들지 않도록 중심부에서 저항을 받아내며 척추 분절과 흉추 신전을 안전하게 이끌어냅니다.',
+      keyTakeawayKo: '타워 동작에서 발로 바를 받친 채 몸통을 움직이는 방법을 설명해요. 발을 올리는 준비 자세부터 들어보세요.',
     },
   },
   chair: {
     primary: {
-      titleKo: 'Online Pilates Classes — 원다 체어(Wunda Chair) 단계별 스완·페달 제어 가이드',
+      titleKo: '체어 스완을 단계별로 익히기',
       channelName: 'Online Pilates Classes by Lesley Logan',
       url: 'https://www.youtube.com/watch?v=deQhPLrHz2k',
-      keyTakeawayKo: '1 미들 스프링 기준 손꿈치(Heel of hand)로 페달을 누르되 팔을 등에 연결하고, 척추가 멈추면 페달도 멈춰 허리 꺾임을 방지합니다.',
+      keyTakeawayKo: '체어에서 할 수 있는 여러 스완 동작을 비교해요. 어떤 자세부터 연습하는지 살펴보세요.',
     },
     secondary: {
-      titleKo: 'Authentic Pilates — 원다 체어 호스백(Horseback) 및 페달 코어 컨트롤',
+      titleKo: '체어에서 하는 호스백',
       channelName: 'Authentic Pilates Learning Center',
       url: 'https://www.youtube.com/watch?v=-Scg195T8Yw',
-      keyTakeawayKo: '좁은 좌면에서 허벅지 안쪽과 복부 중심을 끌어올려 페달 복귀 구간까지 흔들림 없는 정렬을 유지합니다.',
+      keyTakeawayKo: '좌석에 앉을 때 몸의 위치를 어떻게 잡는지, 강사가 곁에서 어떻게 돕는지 설명해요.',
     },
   },
   barrel: {
     primary: {
-      titleKo: 'Balanced Body — 래더 바렐 호스백(Horseback) 및 골반·내전근 리프트 튜토리얼',
+      titleKo: '래더 바렐에서 하는 호스백',
       channelName: 'Balanced Body',
       url: 'https://www.youtube.com/watch?v=k-dcF4uF5E8',
-      keyTakeawayKo: '안장처럼 바렐 곡면을 감싸며 허벅지 안쪽·햄스트링·후면 사슬 힘으로 골반을 들어 올리고 컨트롤하며 내려옵니다.',
+      keyTakeawayKo: '바렐에 걸터앉은 자세에서 다리로 몸을 받치는 동작이에요. 골반이 들릴 때 다리의 위치를 살펴보세요.',
     },
     secondary: {
-      titleKo: 'Posture Pilates — 래더 바렐 사이드 싯업(Side Sit Up) 초·중·고급 정석 가이드',
+      titleKo: '래더 바렐에서 옆으로 상체 들기',
       channelName: 'Posture Pilates',
       url: 'https://www.youtube.com/watch?v=5rt5LLYiZ3U',
-      keyTakeawayKo: '대전자(Greater Trochanter)를 바렐 정점에 두고 위쪽 다리는 뒤·아래쪽 다리는 앞으로 래더에 고정해 흉곽 들림과 반동 없이 측굴합니다.',
+      keyTakeawayKo: '초급부터 고급까지 여러 자세를 다뤄요. 옆으로 몸을 움직이기 전에 다리를 사다리 어디에 두는지 살펴보세요.',
     },
   },
 };

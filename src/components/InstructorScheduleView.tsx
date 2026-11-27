@@ -1,3 +1,4 @@
+import { MovementWorkspaceCover } from './EditorialApparatusCard';
 import { ClassMotionArtwork } from './ClassMotionArtwork';
 import { useManagedTimeouts } from '../hooks/useManagedTimeouts';
 import { useManagedRaf } from '../hooks/useManagedRaf';
@@ -1026,16 +1027,12 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       aria-label="강사 일정"
       style={{ minWidth: 0, paddingBottom: '24px' }}
     >
-      <header className="schedule-page-header atelier-cover atelier-cover--reformer">
-        <div>
-          <span className="eyebrow">오늘부터 다음 수업까지</span>
-          <h1 id="workspace-main-heading" tabIndex={-1}>
-            강사 일정
-          </h1>
-          <p className="muted">날짜별 수업과 장소를 한눈에 확인하고, 다음 수업을 준비하세요.</p>
-        </div>
-        <div className="schedule-actions">
-          <button type="button" className="btn-primary" onClick={() => openClass()}>
+      <MovementWorkspaceCover
+        apparatus="reformer"
+        title="강사 일정"
+        description="수업 날짜와 장소를 확인하고, 시간표에 새 수업을 추가하세요."
+      >
+          <button type="button" className="cover-primary-action" onClick={() => openClass()}>
             <Plus size={16} strokeWidth={1.5} /> 수업 추가
           </button>
           <details
@@ -1060,8 +1057,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               </button>
             </div>
           </details>
-        </div>
-      </header>
+      </MovementWorkspaceCover>
       <div className="flow-schedule-overview">
         <section
           className="flow-schedule-next"

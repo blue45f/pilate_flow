@@ -972,6 +972,13 @@ describe('apparatusDynamicGlbLoader', () => {
       expect(asset.nodes.get(nodeName)!.triangleCount).toBeGreaterThan(0);
     }
 
+    for (const node of asset.nodes.values()) {
+      for (const primitive of node.primitives) {
+        expect(new Set(primitive.indices).size).toBe(primitive.vertexCount);
+        expect(primitive.positionsZup.length).toBe(primitive.vertexCount * 3);
+      }
+    }
+
     // Verify carriage translation on real Reformer GLB
     const ref0 = buildDynamicApparatusQuads(asset, { apparatus: 'reformer', carriageX: 0 });
     const refMoved = buildDynamicApparatusQuads(asset, { apparatus: 'reformer', carriageX: -0.35 });

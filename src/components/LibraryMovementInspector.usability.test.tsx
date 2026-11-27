@@ -386,7 +386,7 @@ describe('LibraryMovementInspector & StudioClinicalBriefCard honest review, sour
     );
 
     // Open full details / personal review without mutating review or activeSteps
-    fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
+    fireEvent.click(within(inspector).getByRole('button', { name: '동작 따라 하기' }));
     expect(onOpenDetails).toHaveBeenCalledWith(pendingExercise);
     expect(usePilatesStore.getState().activeSteps).toHaveLength(0);
 

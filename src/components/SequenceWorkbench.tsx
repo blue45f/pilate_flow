@@ -4509,6 +4509,8 @@ export function SequenceWorkbench({
                               bodyPosition={focusEx?.bodyPosition ?? 'supine'}
                               springsLabel={focusStep?.customSpringOverride || focusEx?.springs}
                               exerciseTitleKo={focusEx?.nameKo}
+                              exercise={focusEx}
+                              onOpenExercise={onOpenYouTubePreview}
                             />
                           );
                         })()}

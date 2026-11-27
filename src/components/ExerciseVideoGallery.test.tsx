@@ -106,7 +106,7 @@ describe('ExerciseVideoGallery', () => {
     expect(oldFrame.isConnected).toBe(false);
     expect(document.querySelector('iframe')).toBeNull();
     expect(cards()[2]).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: '내 노트 참조 URL로 반영' }));
+    fireEvent.click(screen.getByRole('button', { name: '이 영상을 수업 메모에 담기' }));
     expect(onUseForNoteDraft).toHaveBeenCalledExactlyOnceWith(videos[2]);
     expect(exercise.youtube.videoId).not.toBe(videos[2].videoId);
     load();

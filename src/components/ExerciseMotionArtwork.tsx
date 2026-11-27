@@ -100,11 +100,12 @@ export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
   }
 
   if (cachedFrame && cachedFrame.src !== failedFrameSrc) {
-    const dedicated = hasDedicated3DExerciseRig(exercise) || hasDirectExerciseArtwork(exercise);
+    const direct = hasDirectExerciseArtwork(exercise);
+    const dedicated = direct || hasDedicated3DExerciseRig(exercise);
     const phaseLabel =
       cachedFrame.labelKo ??
       (phase === 'start' ? '시작 자세' : phase === 'middle' ? '정점 자세' : '종료 자세');
-    const frameLabel = label ?? `${exercise.nameKo} · ${phaseLabel} · 3D 동작 도해`;
+    const frameLabel = label ?? `${exercise.nameKo} · ${phaseLabel} · ${direct ? '3D 동작 도해' : '기본 동작 정지 그림'}`;
     return (
       <ExerciseMotionArtworkSurface
         {...artworkProps}

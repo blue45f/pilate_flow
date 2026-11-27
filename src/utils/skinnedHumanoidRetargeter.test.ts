@@ -22,6 +22,7 @@ import {
   loadSharedSkinnedHumanoidAsset,
   MUSCLE_ZONE_LABELS_KO,
   parseSkinnedHumanoidGlb,
+  resolveStudioFootFrame,
   setCachedSkinnedHumanoidAsset,
   skinHumanoidToStudioQuads,
   type AnatomicalMuscleZone,
@@ -162,6 +163,20 @@ afterEach(() => {
 });
 
 describe('skinnedHumanoidRetargeter (real Blender 5.3 instructor-skinned-v5.glb)', () => {
+  it('발을 바닥에서 들어 올릴 때 접지와 발끝 방향이 끊기지 않는다', () => {
+    const shin = [0, 0.6, -0.8] as const;
+    const front = [0, -0.8, -0.6] as const;
+    let previous = resolveStudioFootFrame(0.07, shin, front);
+    expect(previous.up[2]).toBeCloseTo(1);
+    for (let mm = 71; mm <= 445; mm++) {
+      const next = resolveStudioFootFrame(mm / 1000, shin, front);
+      const dot = previous.forward.reduce((sum, value, axis) => sum + value * next.forward[axis]!, 0);
+      expect(dot).toBeGreaterThan(Math.cos(2 * Math.PI / 180));
+      expect(next.up.reduce((sum, value, axis) => sum + value * next.forward[axis]!, 0)).toBeCloseTo(0);
+      previous = next;
+    }
+  });
+
   it('parses real instructor-skinned-v5.glb with <= 1.2MB high-density budget, 20k..40k tris, 21 bones, IBM & normalized weights', () => {
     const { bytes, asset } = loadRealGlbAsset();
 

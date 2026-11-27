@@ -13,6 +13,7 @@ import type { BoxState, FootbarState, HeadrestState, PilatesExercise } from '../
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import { getExerciseArtworkFrame, hasDirectExerciseArtwork } from '../utils/exerciseArtworkCache';
 import { formatDifficultyMeta } from '../utils/instructorUxHelpers';
 import '../styles/studio-motion-study.css';
 
@@ -21,6 +22,7 @@ export type Studio3DViewMode = 'motion' | 'compare' | VisualPhaseId;
 export interface Studio3DMotionHeroCardProps {
   readonly exercise: PilatesExercise;
   readonly compact?: boolean;
+  readonly practiceView?: boolean;
   readonly active?: boolean;
 }
 
@@ -421,6 +423,7 @@ const STUDIO_3D_HERO_UNSLOP_CSS = `
 const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   exercise,
   compact = false,
+  practiceView = false,
   active = true,
 }) => {
   const motionAsset = useMemo(() => getCatalogContinuousMotionAsset(exercise), [exercise]);
@@ -435,8 +438,10 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   const prefersReduced = useReducedMotion();
   const useAnimatedPill =
     !prefersReduced && !(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent));
+  const TeachingNotes = practiceView ? 'details' : React.Fragment;
   const postureMode = mode !== 'motion';
   const activePhase: VisualPhaseId = mode === 'start' ? 'start' : mode === 'end' ? 'end' : 'middle';
+  const inheritedStill = Boolean(getExerciseArtworkFrame(exercise)) && !hasDirectExerciseArtwork(exercise);
   const muscleLabel = exercise.targetMuscles.slice(0, 2).join(' · ') || '동작별 안내 확인';
   const topCues = exercise.cues.filter((cue) => cue.trim().length > 0).slice(0, 2);
   const setupSummaryKo = useMemo(() => formatExerciseSetupSummaryKo(exercise), [exercise]);
@@ -474,7 +479,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
           <span className="pf-studio3d-honest-pill pf-shift-left-audit-only">
             {rigDescription} · {dedicated3d ? '실제 자세와 범위는 강사가 확인하세요.' : '동작 설명과 함께 확인하세요.'}
           </span>
-          {binding?.sourceUrl && (
+          {!practiceView && binding?.sourceUrl && (
             <a
               href={binding.sourceUrl}
               target="_blank"
@@ -507,7 +512,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               ) : (
                 <span className="pf-seg-pill" aria-hidden="true" />
               ))}
-            <Box size={15} strokeWidth={1.5} aria-hidden="true" /> <span>3D 모션</span>
+            <Box size={15} strokeWidth={1.5} aria-hidden="true" /> <span>{practiceView ? '움직임 보기' : '3D 모션'}</span>
           </button>
           <button
             type="button"
@@ -526,7 +531,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               ) : (
                 <span className="pf-seg-pill" aria-hidden="true" />
               ))}
-            <Image size={15} strokeWidth={1.5} aria-hidden="true" /> <span>3D 자세 프레임</span>
+            <Image size={15} strokeWidth={1.5} aria-hidden="true" /> <span>{practiceView ? '자세별로 보기' : '3D 자세 프레임'}</span>
           </button>
         </div>
       </div>
@@ -540,21 +545,21 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
           <h4 style={{ margin: 0, fontSize: '0.84rem', fontWeight: 500 }}>
             {rigSample.poseFeatureKo}
           </h4>
-          <span>절차적 3D 재구성 · 이 동작의 세부 수행은 연결 영상에서 확인하세요.</span>
+          <span>{practiceView ? '비슷한 시작 자세를 보여주는 그림이에요. 세부 동작은 설명을 함께 보세요.' : '절차적 3D 재구성 · 이 동작의 세부 수행은 연결 영상에서 확인하세요.'}</span>
         </div>
       )}
 
       {mode === 'motion' && (
         <div className="pf-hero-3d-modeler-panel" data-testid="interactive-3d-modeler-panel">
-          <StudioInteractive3DViewport exercise={exercise} compact={compact} active={active} />
+          <StudioInteractive3DViewport exercise={exercise} compact={compact} active={active} practiceView={practiceView} />
         </div>
       )}
 
       {postureMode && (
         <div className="pf-motion-illustration-view">
           <p className="pf-motion-illustration-note">
-            <strong>{dedicated3d ? exercise.nameKo : rigSample.poseFeatureKo}</strong>
-            <span>{rigSample.poseFeatureKo} · 3D 시작·정점·종료 자세</span>
+            <strong>{inheritedStill ? '기본 동작 정지 그림' : exercise.nameKo}</strong>
+            <span>{inheritedStill ? '이 변형 동작과 기구·시작 자세가 같은 기본 동작을 그렸어요.' : '동작을 나눠서 한 자세씩 살펴보세요.'}</span>
           </p>
           <div
             className={`pf-native-posture-stage ${mode === 'compare' ? 'is-comparing' : ''}`}
@@ -568,6 +573,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                     exercise={exercise}
                     phase={item.phase}
                     decorative={false}
+                    label={inheritedStill ? `${exercise.nameKo}의 기본 동작 정지 그림 · ${item.label}` : undefined}
                   />
                   <figcaption>
                     {item.stepNo} · {item.label}
@@ -609,7 +615,8 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
       )}
 
       {!compact && (
-        <>
+        <TeachingNotes>
+          {practiceView && <summary>기구 설정과 강도 조절</summary>}
           <div
             className="pf-detail-essential-3-strip"
             data-testid="detail-essential-3-strip"
@@ -711,7 +718,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               )}
             </div>
           )}
-        </>
+        </TeachingNotes>
       )}
     </section>
   );

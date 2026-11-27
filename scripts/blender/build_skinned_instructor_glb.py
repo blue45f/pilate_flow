@@ -42,6 +42,7 @@ ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
+from studio_surface_maps import finish_studio_glb
 from pilates_3d_modeling_kernel import (
     _extrude_seamless_limb_from_hole,
     atlas_tile_bounds,
@@ -2030,6 +2031,7 @@ def export_skinned_glb(arm_obj: bpy.types.Object, mesh_obj: bpy.types.Object, ou
         export_kwargs["export_colors"] = True
 
     bpy.ops.export_scene.gltf(**export_kwargs)
+    finish_studio_glb(out_path)
     return os.path.getsize(out_path)
 
 

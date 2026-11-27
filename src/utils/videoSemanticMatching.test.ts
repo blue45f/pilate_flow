@@ -139,6 +139,22 @@ describe('shared movement-video semantic filtering', () => {
     ).toContain('_QjVo_gNvAw');
   });
 
+  it('rejects apparatus and direction conflicts found during the video audit', () => {
+    for (const [apparatus, name, title] of [
+      ['barrel', 'Spine Corrector Leg Circles', 'Leg Circles on the Ladder Barrel'],
+      ['reformer', 'Jumpboard Frog Jump', 'Frogs and Circles on the Reformer'],
+      ['chair', 'Wunda Chair Frog Facing Back', 'Frog Facing In on the Wunda Chair'],
+    ] as const) {
+      const source = { ...exercise('original-mat-bridge'), id: 'audit-family', nameEn: name, apparatus };
+      expect(scoreVideoSemanticMatch(source, { apparatus: [apparatus], title })).toBe(0);
+    }
+    const matBreath = exercise('original-mat-rib-breath');
+    expect(getRelatedYouTubeVideosForExercise(matBreath).map(video => video.videoId)).toContain('M2Y9FWJYO0k');
+    const clock = exercise('original-mat-pelvic-clock');
+    expect(clock.youtube.videoId).toBe('3GBwBBt63Xw');
+    expect(getRelatedYouTubeVideosForExercise(clock).map(video => video.videoId)).not.toContain('0dhzD6d1ru0');
+  });
+
   it('does not generate empty-ID players or carry the removed Single Leg Kick mislink into discovery', () => {
     expect(
       CRAWLED_YOUTUBE_DISCOVERY_POOL.every((video) => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)),

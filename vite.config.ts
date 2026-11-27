@@ -256,6 +256,7 @@ export default defineConfig(({ mode }) => ({
           }
           if (
             id.includes('/src/data/expandedPilatesVideoCatalog.json') ||
+            id.includes('/src/data/additionalPilatesVideoCatalog.json') ||
             id.includes('/src/data/expandedPilatesVideoProvenance.json') ||
             id.includes('/src/data/verifiedPilatesYouTubeCatalog.json') ||
             id.includes('/src/data/exerciseVideoBindings.ts')
@@ -294,7 +295,6 @@ export default defineConfig(({ mode }) => ({
           if (
             id.includes('/src/data/worldPilatesRepertoire1000.ts') ||
             id.includes('/src/data/globalCrawledRepertoirePack.ts') ||
-            id.includes('/src/data/additionalPilatesVideoCatalog.json') ||
             id.includes('/src/data/creatorPilatesVideoCatalog.json') ||
             id.includes('/src/utils/videoSemanticMatching.ts')
           ) {
