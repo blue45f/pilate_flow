@@ -12,7 +12,19 @@ export type VideoSemanticExercise = Pick<
   PilatesExercise,
   'id' | 'nameKo' | 'nameEn' | 'apparatus'
 > &
-  Partial<Pick<PilatesExercise, 'bodyPosition' | 'props'>>;
+  Partial<Pick<PilatesExercise, 'bodyPosition' | 'props' | 'requiredEquipment'>>;
+
+export function videoReferenceSubject(exercise: VideoSemanticExercise, videoId: string): string {
+  return JSON.stringify([
+    videoId,
+    exercise.id,
+    exercise.nameEn,
+    exercise.apparatus,
+    exercise.bodyPosition,
+    [...(exercise.props ?? [])].sort(),
+    [...(exercise.requiredEquipment ?? [])].sort(),
+  ]);
+}
 
 export function normalizeVideoSearchText(value: string): string {
   return value
@@ -62,6 +74,7 @@ const TITLE_REQUIREMENTS: Readonly<Record<string, RegExp>> = {
   ...COMPOSITE_TITLE_REQUIREMENTS,
   'incline-support': /fixed[\s-]*(?:seat|support)|incline[\s-]*support|고정\s*(?:좌면|지지)/i,
   'seated-back-reach': /seated.*(?:chest|back).*reach|(?:앉|시티드).*(?:가슴|체스트).*리치/i,
+  'rib-breath': /흉곽\s*호흡.*골반\s*중립/i,
   'heel-slide': /heel[\s-]*slides?|힐\s*슬라이드/i,
   'chest-lift': /chest[\s-]*lift|체스트\s*리프트|상체\s*컬업/i,
   'band-row': /(?:band|밴드).*(?:row|로잉)|(?:row|로잉).*(?:band|밴드)/i,
@@ -106,7 +119,7 @@ const PROP_WORDS: readonly [readonly PropType[], RegExp][] = [
   [['foam-roller'], /foam[\s-]*roller|폼\s*롤러/i],
   [
     ['mini-ball', 'toning-ball', 'fitness-ball'],
-    /(?:mini|small|fitness|stability|toning)[\s-]*ball|미니볼|짐볼|토닝볼/i,
+    /(?:mini|small|fitness|stability|toning|purple)[\s-]*ball|미니볼|짐볼|토닝볼/i,
   ],
   [['dumbbell'], /dumbbell|hand[\s-]*weights?|덤벨/i],
   [['bosu'], /bosu|보수/i],
@@ -118,7 +131,7 @@ const SPECIFIC_PROP_WORDS: readonly [readonly PropType[], RegExp][] = [
   [['loop-band'], /loop[\s-]*band|mini[\s-]*band|booty[\s-]*band|루프\s*밴드/i],
   [['tube-band'], /tube[\s-]*band|튜빙\s*밴드|튜브\s*밴드/i],
   [['theraband', 'long-band'], /long[\s-]*band|thera[\s-]*band|세라\s*밴드|긴\s*밴드/i],
-  [['mini-ball'], /(?:mini|small)[\s-]*(?:stability[\s-]*)?ball|미니\s*볼/i],
+  [['mini-ball'], /(?:mini|small|purple)[\s-]*(?:stability[\s-]*)?ball|미니\s*볼/i],
   [['toning-ball'], /toning[\s-]*ball|토닝\s*볼/i],
   [['fitness-ball'], /fitness[\s-]*ball|swiss[\s-]*ball|짐\s*볼/i],
 ];
@@ -190,7 +203,7 @@ function meaningfulWords(text: string): string[] {
   ];
 }
 
-function withoutAttachmentNames(text: string): string {
+export function withoutAttachmentNames(text: string): string {
   // “Bicep Curls with Roll Back Bar” names a bar, not the Roll Back movement.
   return text.replace(/roll[\s-]*(?:back|down)[\s-]*bar|push[\s-]*through[\s-]*bar/gi, ' ');
 }
@@ -209,6 +222,33 @@ export function hasVideoSetupConflict(
   candidate: VideoSemanticCandidate,
 ): boolean {
   if (!candidate.apparatus.includes(exercise.apparatus)) return true;
+  const setup = [exercise.nameEn, exercise.nameKo, ...(exercise.requiredEquipment ?? [])].join(' ');
+  const ladder = /ladder[\s-]*barrel|래더\s*바렐/i;
+  const arc = /spine[\s-]*corrector|arc[\s-]*barrel|스파인\s*코렉터|아크\s*바렐/i;
+  if (
+    (ladder.test(setup) && arc.test(candidate.title)) ||
+    (arc.test(setup) && !ladder.test(setup) && ladder.test(candidate.title))
+  )
+    return true;
+  if (/jump[\s-]*board|점프\s*보드/i.test(setup) && !/jump|점프/i.test(candidate.title))
+    return true;
+  if (/side[\s-]*footwork|사이드\s*풋워크/i.test(candidate.title) && !/side|사이드/i.test(setup))
+    return true;
+  if (
+    exercise.bodyPosition === 'supine' &&
+    /front[\s-]*rowing|프론트\s*로잉/i.test(candidate.title)
+  )
+    return true;
+  if (
+    /frog.*facing (?:back|out)/i.test(setup) &&
+    /frog.*facing (?:in|front)/i.test(candidate.title)
+  )
+    return true;
+  if (
+    /frog.*facing (?:in|front)/i.test(setup) &&
+    /frog.*facing (?:back|out)/i.test(candidate.title)
+  )
+    return true;
   if (exercise.bodyPosition) {
     if (candidate.bodyPositions?.length && !candidate.bodyPositions.includes(exercise.bodyPosition))
       return true;
@@ -261,6 +301,33 @@ export function hasVideoSetupConflict(
   return false;
 }
 
+const candidateTitleWords = new WeakMap<
+  VideoSemanticCandidate,
+  { title: string; words: Set<string> }
+>();
+
+function titleWords(candidate: VideoSemanticCandidate): Set<string> {
+  const previous = candidateTitleWords.get(candidate);
+  if (previous?.title === candidate.title) return previous.words;
+  const words = new Set(
+    normalizeVideoSearchText(withoutAttachmentNames(candidate.title)).split(' '),
+  );
+  candidateTitleWords.set(candidate, { title: candidate.title, words });
+  return words;
+}
+
+function namesMovementWord(title: Set<string>, word: string) {
+  if (title.has(word)) return true;
+  if (word.length < 4) return false;
+  return (
+    title.has(word + 's') ||
+    (/s$/.test(word) && !/ss$/.test(word) && title.has(word.slice(0, -1))) ||
+    (/(?:ch|sh|x|z|ss)$/.test(word) && title.has(word + 'es')) ||
+    title.has(word + 'ing') ||
+    title.has((word + 'ing').replace(/eing$/, 'ing'))
+  );
+}
+
 /**
  * Both discovery pools use this gate. A category, posture, muscle, channel, or
  * manually assigned keyword is insufficient: the public title must name the task.
@@ -271,43 +338,31 @@ export function scoreVideoSemanticMatch(
   exercise: VideoSemanticExercise,
   candidate: VideoSemanticCandidate,
 ): number {
+  const guard = TITLE_REQUIREMENTS[movementSlug(exercise.id)];
+  let score = 100;
+  if (guard) {
+    if (!guard.test(candidate.title)) return 0;
+  } else {
+    const words = meaningfulWords(withoutAttachmentNames(exercise.nameEn));
+    if (
+      !words.length ||
+      (words.length === 1 &&
+        /^(?:arm|leg|core|back|reach|press|breath|rotation|stretch|twist|side|up|down)$/.test(
+          words[0],
+        ))
+    )
+      return 0;
+    const title = titleWords(candidate);
+    if (!words.every((word) => namesMovementWord(title, word))) return 0;
+    score = 60 + Math.min(30, words.length * 5);
+  }
   if (hasVideoSetupConflict(exercise, candidate)) return 0;
-  const slug = movementSlug(exercise.id);
-  const guard = TITLE_REQUIREMENTS[slug];
-  if (guard && !guard.test(candidate.title)) return 0;
   const requestedProps = (exercise.props ?? []).filter((prop) => prop !== 'none');
   for (const prop of requestedProps) {
     const group = PROP_WORDS.find(([props]) => props.includes(prop));
     if (!candidate.props?.includes(prop) && (!group || !group[1].test(candidate.title))) return 0;
   }
-  if (guard) return 100;
-
-  const title = normalizeVideoSearchText(withoutAttachmentNames(candidate.title));
-  const words = meaningfulWords(withoutAttachmentNames(exercise.nameEn));
-  if (!words.length) return 0;
-  const hits = words.filter((word) =>
-    title
-      .split(' ')
-      .some(
-        (part) =>
-          part === word ||
-          (word.length >= 4 &&
-            (part === `${word}s` ||
-              (/s$/.test(word) && !/ss$/.test(word) && `${part}s` === word) ||
-              (/(?:ch|sh|x|z|ss)$/.test(word) && part === `${word}es`) ||
-              part === `${word}ing` ||
-              part === `${word}ing`.replace(/eing$/, 'ing'))),
-      ),
-  );
-  // Single distinctive names (Mermaid, Swan, Corkscrew) are useful. Compound
-  // names need every movement word; "leg", "arm", "core" alone never qualify.
-  if (hits.length !== words.length) return 0;
-  if (
-    words.length === 1 &&
-    /^(?:arm|leg|core|back|reach|press|breath|rotation|stretch|twist|side|up|down)$/.test(words[0])
-  )
-    return 0;
-  return 60 + Math.min(30, hits.length * 5);
+  return score;
 }
 
 export function safeVideoDiscoveryLimit(value: number): number {

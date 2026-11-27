@@ -6,9 +6,10 @@ import {
   getExerciseVideoReferences,
   type ExerciseVideoReference,
 } from '../utils/exerciseVideoReferences';
+import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import { formatSecondsToMMSS } from '../utils/sequenceEngine';
-import { getExerciseReviewState } from '../utils/exerciseReview';
 import { isStrictNoAutoplayEmbedUrl } from '../features/referenceLinkPolicyCandidate/urlPolicyEngine';
+import { ExerciseVideoStudyMoments } from './ExerciseVideoStudyMoments';
 import '../styles/exercise-video-gallery.css';
 
 export interface ExerciseVideoGalleryProps {
@@ -68,6 +69,7 @@ function GalleryContent({
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const restoreFocus = useRef(false);
   const newCardFocusIndex = useRef<number | null>(null);
+  const hasNamedVideo = videos.some((video) => video.relation === 'named-movement');
   const filtered = region === 'all' ? videos : videos.filter((video) => video.region === region);
   const visible = filtered.slice(0, visibleCount);
   const selected = filtered.find((video) => video.videoId === selectedId) ?? filtered[0];
@@ -153,7 +155,7 @@ function GalleryContent({
           <h3>
             참고 영상 <span>{videos.length}</span>
           </h3>
-          {videos.length > 0 && <p>썸네일을 골라 여러 시범을 비교해 보세요.</p>}
+          {videos.length > 0 && <p>{hasNamedVideo ? '제목에 같은 동작이 나오는 영상이 있어요.' : '같은 동작으로 확인된 영상은 아직 없어요. 관련 영상만 모았어요.'}</p>}
         </div>
         {videos.some((video) => video.region === 'kr') &&
           videos.some((video) => video.region === 'global') && (
@@ -188,7 +190,7 @@ function GalleryContent({
           {exercise.youtube.url.trim() &&
           !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(exercise.youtube.url.trim())
             ? '등록된 영상 URL 형식을 확인하지 못해 재생할 수 없습니다. 영상 없이도 시퀀스 작성과 수업 진행은 계속할 수 있습니다.'
-            : '이 동작에 연결된 참고 영상이 아직 없어요. (출처 미확인 · 정적/3D 참조 도해만 제공)'}
+            : '이 동작에 연결된 참고 영상이 아직 없어요.'}
         </p>
       ) : (
         <>
@@ -257,18 +259,15 @@ function GalleryContent({
                 <p>{selected.authorName}</p>
                 <p className="evg-reason">{selected.matchReasonKo}</p>
                 {(() => {
-                  const reviewState = getExerciseReviewState(exercise);
                   const sourceRef = exercise.sourceReference;
-                  const exactMatchChecked = selected.isPrimary && reviewState === 'approved';
                   const playbackChecked =
-                    !exactMatchChecked &&
                     sourceRef?.verificationStatus === 'partial-playback-checked' &&
-                    sourceRef.url === selected.watchUrl;
-                  const verificationTierLabel = exactMatchChecked
-                    ? '해당 동작 일치 확인 (내 계획 검토 기록)'
-                    : playbackChecked
-                      ? '재생 확인 (원본 일부 재생 확인 · 전구간 일치 별도)'
-                      : 'URL 존재 (공개 링크·메타데이터 확인 · 재생/동작 일치 미검증)';
+                    normalizeReferenceUrlPolicy(sourceRef.url).youtubeVideoId === selected.videoId;
+                  const verificationTierLabel = playbackChecked
+                    ? '일부 구간을 재생해 확인했어요.'
+                    : selected.metadataStatus === 'creator-page-and-oembed'
+                      ? '제작자가 올린 제목과 채널을 확인했어요.'
+                      : '저장된 영상 주소가 있어요.';
                   const startSec = selected.startSec ?? 0;
                   const segmentLabel =
                     startSec > 0 || selected.endSec !== undefined
@@ -279,31 +278,34 @@ function GalleryContent({
                         }`
                       : '00:00 ~ 전체 (구간 미지정)';
                   const checkedDate =
-                    selected.verifiedAt ??
-                    (selected.isPrimary ? sourceRef?.verifiedAt : undefined) ??
-                    (exactMatchChecked ? exercise.review?.reviewedAt?.slice(0, 10) : undefined) ??
-                    '확인일 미기록';
+                    selected.verifiedAt ?? (playbackChecked ? sourceRef.verifiedAt : undefined);
                   return (
-                    <dl className="evg-provenance-meta" data-testid="evg-provenance-meta">
-                      <div>
-                        <dt>검증 수준</dt>
-                        <dd data-testid="evg-verification-tier">{verificationTierLabel}</dd>
-                      </div>
-                      <div>
-                        <dt>구간</dt>
-                        <dd>{segmentLabel}</dd>
-                      </div>
-                      <div>
-                        <dt>출처 · URL</dt>
-                        <dd>
-                          {selected.authorName} · <code>{selected.watchUrl}</code>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>확인일</dt>
-                        <dd>{checkedDate}</dd>
-                      </div>
-                    </dl>
+                    <details key={selected.videoId} className="evg-source-details">
+                      <summary>출처와 확인한 내용</summary>
+                      <dl className="evg-provenance-meta" data-testid="evg-provenance-meta">
+                        <ExerciseVideoStudyMoments videoId={selected.videoId} startSec={selected.startSec} endSec={selected.endSec} />
+                        <div>
+                          <dt>확인한 내용</dt>
+                          <dd data-testid="evg-verification-tier">{verificationTierLabel}</dd>
+                        </div>
+                        <div>
+                          <dt>구간</dt>
+                          <dd>{segmentLabel}</dd>
+                        </div>
+                        <div>
+                          <dt>출처 · URL</dt>
+                          <dd>
+                            {selected.authorName} · <code>{selected.watchUrl}</code>
+                          </dd>
+                        </div>
+                        {checkedDate && (
+                          <div>
+                            <dt>확인일</dt>
+                            <dd>{checkedDate}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </details>
                   );
                 })()}
               </div>
@@ -353,7 +355,7 @@ function GalleryContent({
                     }}
                   >
                     <Play size={16} aria-hidden="true" />
-                    선택 영상 재생
+                    영상 열기
                   </button>
                 )}
                 <a href={selected.watchUrl} target="_blank" rel="noopener noreferrer">
@@ -361,13 +363,12 @@ function GalleryContent({
                 </a>
                 {onUseForNoteDraft && (
                   <button type="button" onClick={() => onUseForNoteDraft(selected)}>
-                    내 노트 참조 URL로 반영
+                    이 영상을 수업 메모에 담기
                   </button>
                 )}
               </div>
               <p className="evg-review-note">
-                제목·기구를 기준으로 연결한 참고 자료입니다. 전체 시범과 구간의 일치는 직접 확인해
-                주세요.
+                제목과 기구를 보고 고른 영상이에요. 시작 자세와 동작 순서가 같은지 살펴보세요.
               </p>
             </div>
           )}

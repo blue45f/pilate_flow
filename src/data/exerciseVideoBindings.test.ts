@@ -4,6 +4,7 @@ import {
   EXERCISE_VIDEO_BINDING_PLANS,
   getExerciseSourcePageReferences,
   getExerciseVideoEvidence,
+  refreshCatalogVideoReference,
 } from './exerciseVideoBindings';
 import { getMovementProvenance } from './movementProvenance';
 import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from './globalCrawledRepertoirePack';
@@ -41,6 +42,20 @@ describe('existing candidate links and separated evidence states', () => {
     }
   });
 
+  it('updates the superseded default pelvic clock without replacing an instructor clip or note', () => {
+    const current = INITIAL_EXERCISES.find(exercise => exercise.id === 'original-mat-pelvic-clock')!;
+    const legacy = { ...current, youtube: {
+      videoId: '0dhzD6d1ru0', url: 'https://www.youtube.com/watch?v=0dhzD6d1ru0', startSec: 0,
+      videoTitle: 'Pilates Pelvic Clocking + Neutral Spine | Beginner', channelName: 'HolisticMovementPilates',
+      note: '골반 시계라는 제목과 매트 분류가 일치합니다. 기존 제목·출처 메타데이터 대조 · 실제 영상 재생·동일 시범·시작/종료 구간 미검수 · 0초는 검증된 동작 시작점이 아닙니다.',
+    }};
+    expect(refreshCatalogVideoReference(legacy).youtube.videoId).toBe('3GBwBBt63Xw');
+    for (const clip of [{ ...legacy.youtube, startSec: 12 }, { ...legacy.youtube, note: '수업 메모' }]) {
+      const edited = { ...legacy, youtube: clip };
+      expect(refreshCatalogVideoReference(edited)).toBe(edited);
+    }
+  });
+
   it('invalidates binding evidence after changes to identity, setup, title, link or segment', () => {
     const exercise = INITIAL_EXERCISES.find((entry) => entry.id === 'original-mat-heel-slide')!;
     expect(getExerciseVideoEvidence(exercise)).toBeDefined();
@@ -62,6 +77,7 @@ describe('existing candidate links and separated evidence states', () => {
 
   it('uses the existing individual candidates for four omnibus links and the corrected Going Up Side', () => {
     const expected = {
+      'crawled-mat-scissors-high': 'Rrf4ORXQINU',
       'crawled-mat-double-leg-stretch': 'SbAzXngP480',
       'crawled-mat-neck-pull': 'B6iIe9KjVTo',
       'crawled-mat-corkscrew': 'MZoj2FqYdDY',

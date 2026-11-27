@@ -96,8 +96,8 @@ export const VERIFIED_VIDEOS_BY_APPARATUS: Record<
       keyTakeawayKo: '매트 동작 34개를 원래 순서대로 이어 가는 수업이에요. 익숙한 동작이 다음 자세로 어떻게 이어지는지 살펴보세요.',
     },
     secondary: {
-      titleKo: '클래식 매트 동작 34개',
-      channelName: 'Contrology Classical Mat',
+      titleKo: '클래식 매트 동작을 잇는 수업',
+      channelName: 'Quiet Bodies - Pilates with Kala Loek (Fletcher)',
       url: 'https://www.youtube.com/watch?v=H3D_RnGYYss',
       keyTakeawayKo: '여러 동작이 이어지는 수업이에요. 확인하고 싶은 동작의 이름과 시작 자세를 먼저 찾아보세요.',
     },

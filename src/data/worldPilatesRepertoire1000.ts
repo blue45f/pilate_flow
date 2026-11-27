@@ -4,6 +4,13 @@ import additionalVideoCatalog from './additionalPilatesVideoCatalog.json';
 import creatorVideoCatalog from './creatorPilatesVideoCatalog.json';
 import { INITIAL_EXERCISES } from './pilatesCatalog';
 import {
+  hasVideoSetupConflict,
+  normalizeVideoSearchText,
+  scoreVideoSemanticMatch,
+  videoReferenceSubject,
+  withoutAttachmentNames,
+} from '../utils/videoSemanticMatching';
+import {
   CRAWLED_YOUTUBE_DISCOVERY_POOL,
   GLOBAL_CRAWLED_REPERTOIRE_EXERCISES,
 } from './globalCrawledRepertoirePack';
@@ -18,6 +25,7 @@ import {
 import { WORLD_FUSION_AND_ADVANCED_SEEDS } from './worldPilatesFusionAndAdvancedSeeds';
 import type {
   ApparatusType,
+  BodyPosition,
   ClassBlockCategory,
   DifficultyLevel,
   PilatesExercise,
@@ -67,6 +75,7 @@ export interface WorldRepertoireStats {
   readonly atomicCount: number;
   readonly variationCount: number;
   readonly existingCoreCount: number;
+  /** Exercises with a catalogue video ID, including variants that reference their base. */
   readonly verifiedVideoCount: number;
   readonly byApparatus: Readonly<Record<ApparatusType, number>>;
   readonly bySchool: Readonly<Record<PilatesSchoolTag, number>>;
@@ -136,7 +145,8 @@ interface VerifiedVideoPoolItem {
   readonly apparatus: readonly ApparatusType[];
   readonly blocks: readonly ClassBlockCategory[];
   readonly keywords: readonly string[];
-  readonly searchText: string;
+  readonly bodyPositions?: readonly BodyPosition[];
+  readonly props?: readonly PropType[];
 }
 
 interface RawJsonVideoItem {
@@ -147,14 +157,6 @@ interface RawJsonVideoItem {
   apparatus: ApparatusType[];
   blocks: ClassBlockCategory[];
   keywords: string[];
-}
-
-function normalizeTokenText(text: string): string {
-  return text
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
 }
 
 const VERIFIED_VIDEO_POOL: readonly VerifiedVideoPoolItem[] = (() => {
@@ -177,7 +179,6 @@ const VERIFIED_VIDEO_POOL: readonly VerifiedVideoPoolItem[] = (() => {
       apparatus: item.apparatus,
       blocks: item.blocks,
       keywords: item.keywords ?? [],
-      searchText: normalizeTokenText(`${item.title} ${(item.keywords ?? []).join(' ')}`),
     });
   }
 
@@ -192,7 +193,8 @@ const VERIFIED_VIDEO_POOL: readonly VerifiedVideoPoolItem[] = (() => {
       apparatus: item.apparatus,
       blocks: item.blocks,
       keywords: item.keywords,
-      searchText: normalizeTokenText(`${item.title} ${item.keywords.join(' ')}`),
+      bodyPositions: item.bodyPositions,
+      props: item.props,
     });
   }
 
@@ -203,113 +205,85 @@ export const VERIFIED_REPERTOIRE_VIDEO_ID_SET: ReadonlySet<string> = new Set(
   VERIFIED_VIDEO_POOL.map((item) => item.videoId),
 );
 
-const STOP_WORDS = new Set([
-  'the',
-  'and',
-  'for',
-  'with',
-  'from',
-  'into',
-  'mat',
-  'reformer',
-  'cadillac',
-  'chair',
-  'wunda',
-  'barrel',
-  'ladder',
-  'pilates',
-  'classical',
-  'fusion',
-  'barre',
-  'athletic',
-  'mobility',
-  'prep',
-  'preparation',
-  'supported',
-  'flow',
-  'series',
+// Only named Pilates movements can identify a family reference. Body parts,
+// equipment, posture and class categories cannot establish a movement match.
+const MOVEMENT_FAMILIES = new Set([
+  'airplane', 'arabesque', 'arm circles', 'back stretch', 'ballet stretch', 'bicycle', 'bird dog',
+  'boxing', 'breast stroke', 'bridge', 'calf raise', 'chest expansion', 'chest lift', 'clam',
+  'control balance', 'coordination', 'corkscrew', 'criss cross', 'dead bug', 'double leg kick',
+  'double straight leg stretch', 'elephant', 'eves lunge', 'footwork', 'frog', 'front splits',
+  'going up side', 'grasshopper', 'heel beats', 'hug a tree', 'hundred', 'knee fold', 'knee stretch',
+  'leg circles', 'leg pull', 'leg pump', 'long back stretch', 'long spine', 'long stretch',
+  'lunge', 'mermaid', 'mountain climber', 'open book', 'parakeet', 'pelvic lift', 'peter pan',
+  'pike', 'plank', 'pull up', 'pulling straps', 'push down', 'push up', 'rocking', 'roll back',
+  'roll down', 'roll over', 'roll up', 'rowing', 'running', 'russian splits', 'salute', 'scissors',
+  'scooter', 'seal', 'semi circle', 'serve a tray', 'shave', 'shell stretch', 'short spine',
+  'shoulder bridge', 'side bend', 'side kick', 'side plank', 'side pull up', 'side sit up',
+  'side splits', 'single straight leg stretch', 'skater', 'snake', 'spine twist', 'spread eagle',
+  'squat', 'standing leg pump', 'step up', 'stomach massage', 'swan', 'swan dive', 'swimming',
+  'teaser', 'tendon stretch', 'toe taps',
 ]);
 
 export function resolveVerifiedYouTubeForExercise(
   exercise: Pick<
     PilatesExercise,
     'nameKo' | 'nameEn' | 'apparatus' | 'blockCategory' | 'bodyPosition' | 'props'
-  > & { readonly youtube?: YouTubeClipRef },
+  > & Partial<Pick<PilatesExercise, 'id' | 'youtube' | 'requiredEquipment'>>,
   videoHints: readonly string[] = [],
 ): YouTubeClipRef {
   const existingId = exercise.youtube?.videoId?.trim() ?? '';
-  if (existingId && VERIFIED_REPERTOIRE_VIDEO_ID_SET.has(existingId) && exercise.youtube) {
+  if (exercise.youtube && VERIFIED_REPERTOIRE_VIDEO_ID_SET.has(existingId)) {
     return {
       ...exercise.youtube,
       url: exercise.youtube.url || `https://www.youtube.com/watch?v=${existingId}`,
     };
   }
 
-  const tokens = [
-    ...new Set(
-      normalizeTokenText(`${exercise.nameEn} ${exercise.nameKo} ${videoHints.join(' ')}`)
-        .split(' ')
-        .filter((t) => t.length >= 2 && !STOP_WORDS.has(t)),
-    ),
-  ];
-
-  const activeProps = exercise.props.filter((p) => p !== 'none');
-
-  let best: VerifiedVideoPoolItem | null = null;
-  let bestScore = -Infinity;
-
+  const query = { ...exercise, id: exercise.id ?? 'world-movement' };
+  const name = ` ${normalizeVideoSearchText(withoutAttachmentNames(exercise.nameEn))} `;
+  const families = videoHints.map(normalizeVideoSearchText).filter(
+    (hint) => MOVEMENT_FAMILIES.has(hint) && name.includes(` ${hint} `),
+  );
+  let best: VerifiedVideoPoolItem | undefined;
+  let bestScore = 0;
+  let familyMatch = false;
   for (const candidate of VERIFIED_VIDEO_POOL) {
-    let score = 0;
-    if (candidate.apparatus.includes(exercise.apparatus)) {
-      score += 50;
-    } else {
-      score -= 45;
+    if (hasVideoSetupConflict(query, candidate)) continue;
+    const direct = scoreVideoSemanticMatch(query, candidate);
+    let score = direct;
+    if (!direct && families.length) {
+      // Keep the original posture, apparatus and props while checking the family name.
+      const matchesFamily = families.some((family) =>
+        scoreVideoSemanticMatch({ ...query, id: 'world-family', nameEn: family }, candidate) > 0,
+      );
+      if (matchesFamily) score = 30;
     }
-
-    if (candidate.blocks.includes(exercise.blockCategory)) {
-      score += 20;
-    }
-
-    for (const hint of videoHints) {
-      const normHint = normalizeTokenText(hint);
-      if (normHint.length >= 3 && candidate.searchText.includes(normHint)) {
-        score += 32;
-      }
-    }
-
-    let tokenHits = 0;
-    for (const token of tokens) {
-      if (candidate.searchText.includes(token)) {
-        tokenHits += 1;
-        score += token.length >= 5 ? 16 : 10;
-      }
-    }
-    if (tokenHits >= 2) score += 14;
-
-    for (const prop of activeProps) {
-      const propKeyword = prop.replace('-', ' ');
-      if (candidate.searchText.includes(propKeyword) || candidate.searchText.includes(prop)) {
-        score += 18;
-      }
-    }
-
-    if (candidate.region === 'kr') score += 2;
-
-    if (score > bestScore || (score === bestScore && best && candidate.videoId < best.videoId)) {
-      bestScore = score;
+    if (!score) continue;
+    // Prefer a focused demonstration over an omnibus class naming a component.
+    const title = normalizeVideoSearchText(candidate.title);
+    if (families.some((family) => title.startsWith(family + ' '))) score += 3;
+    if (candidate.blocks.includes(exercise.blockCategory)) score += 2;
+    if (score > bestScore) {
       best = candidate;
+      bestScore = score;
+      familyMatch = !direct;
     }
   }
-
-  const chosen = best ?? VERIFIED_VIDEO_POOL[0]!;
+  if (!best) {
+    return { videoId: '', channelName: '', videoTitle: '', startSec: 0, url: '' };
+  }
   return {
-    videoId: chosen.videoId,
-    channelName: chosen.channelName,
-    videoTitle: chosen.title,
+    videoId: best.videoId,
+    channelName: best.channelName,
+    videoTitle: best.title,
     startSec: 0,
-    url: `https://www.youtube.com/watch?v=${chosen.videoId}`,
-    note: `저장소 검증 카탈로그 의미 매칭 (${chosen.channelName})`,
-    region: chosen.region,
+    url: `https://www.youtube.com/watch?v=${best.videoId}`,
+    referenceScope: familyMatch ? 'movement-family' : undefined,
+    referenceSubject: familyMatch ? videoReferenceSubject(query, best.videoId) : undefined,
+    note: familyMatch
+      ? '같은 계열의 동작을 볼 수 있어요. 시작 자세와 움직이는 범위가 다를 수 있어요.'
+      : '동작 이름과 기구를 영상 제목에서 확인했어요.',
+    region: best.region,
   };
 }
 
@@ -782,6 +756,8 @@ function buildNewAtomicExercise(seed: WorldAtomicSeed): WorldPilatesExercise {
     layers,
     youtube: resolveVerifiedYouTubeForExercise(
       {
+        id,
+        requiredEquipment: seed.requiredEquipment ? [...seed.requiredEquipment] : undefined,
         nameKo: seed.nameKo,
         nameEn: seed.nameEn,
         apparatus: seed.apparatus,
@@ -1714,7 +1690,15 @@ function buildAllWorldExercises(): readonly WorldPilatesExercise[] {
       seenIds.add(candidate.id);
       seenKo.add(koKey);
       seenEn.add(enKey);
-      variations.push(candidate);
+      const youtube: YouTubeClipRef = base.youtube.videoId
+        ? {
+            ...base.youtube,
+            referenceScope: 'base-movement',
+            referenceSubject: videoReferenceSubject(candidate, base.youtube.videoId),
+            note: '기본 동작에 연결된 영상이에요. 이 변형에서는 도구나 속도, 지지하는 쪽이 달라질 수 있어요.',
+          }
+        : base.youtube;
+      variations.push({ ...candidate, youtube });
     }
   }
 

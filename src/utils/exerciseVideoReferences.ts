@@ -3,7 +3,10 @@ import {
   type CuratedYouTubeVideoItem,
   type RawVerifiedYouTubeItem,
 } from '../data/exerciseYouTubeCatalog';
-import { getExerciseVideoEvidence } from '../data/exerciseVideoBindings';
+import {
+  getExerciseVideoEvidence,
+  refreshCatalogVideoReference,
+} from '../data/exerciseVideoBindings';
 import { EXERCISE_VIDEO_COMPONENTS, VIDEO_REFERENCE_SCOPE } from '../data/exerciseVideoComponents';
 import {
   CRAWLED_YOUTUBE_DISCOVERY_POOL,
@@ -11,16 +14,23 @@ import {
 } from '../data/globalCrawledRepertoirePack';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate/urlPolicyEngine';
-import type { BodyPosition, PilatesExercise, PropType, YouTubeClipRef } from '../types/pilates';
+import type {
+  ApparatusType,
+  BodyPosition,
+  PilatesExercise,
+  PropType,
+  YouTubeClipRef,
+} from '../types/pilates';
 import {
   getVideoReferenceScope,
   normalizeVideoSearchText,
   scoreVideoSemanticMatch,
+  videoReferenceSubject,
   type VideoSemanticExercise,
 } from './videoSemanticMatching';
 
 export type ExerciseVideoRelation =
-  'named-movement' | 'related-variant' | 'flow-component' | 'saved-reference';
+  'named-movement' | 'related-variant' | 'flow-component' | 'saved-reference' | 'base-reference';
 
 export interface ExerciseVideoReference extends CuratedYouTubeVideoItem {
   readonly relation: ExerciseVideoRelation;
@@ -67,11 +77,20 @@ const pool: readonly Candidate[] = (() => {
   return [...byId.values()];
 })();
 const byVideoId = new Map(pool.map((video) => [video.videoId, video]));
+const poolByApparatus = new Map<ApparatusType, Candidate[]>();
+for (const video of pool) {
+  for (const apparatus of video.apparatus) {
+    const candidates = poolByApparatus.get(apparatus) ?? [];
+    candidates.push(video);
+    poolByApparatus.set(apparatus, candidates);
+  }
+}
 const labels: Record<ExerciseVideoRelation, string> = {
-  'named-movement': '동작명 일치',
-  'related-variant': '관련 변형',
-  'flow-component': '구성 동작',
-  'saved-reference': '저장한 참조',
+  'named-movement': '같은 이름의 동작',
+  'related-variant': '비슷한 동작',
+  'flow-component': '수업 중 한 동작',
+  'saved-reference': '연결한 영상',
+  'base-reference': '기본 동작의 참고 영상',
 };
 const sameItems = (left: readonly string[], right: readonly string[]) =>
   [...new Set(left)].sort().join('|') === [...new Set(right)].sort().join('|');
@@ -91,16 +110,6 @@ function hasCurrentCatalogIdentity(exercise: PilatesExercise): boolean {
   );
 }
 
-function hasSpecificApparatusConflict(exercise: PilatesExercise, candidate: Candidate): boolean {
-  const required = exercise.requiredEquipment ?? [];
-  return (
-    (required.includes('ladder-barrel') &&
-      /spine[\s-]*corrector|스파인\s*코렉터/i.test(candidate.title)) ||
-    (required.includes('spine-corrector') &&
-      /ladder[\s-]*barrel|래더\s*바렐/i.test(candidate.title))
-  );
-}
-
 function scoreNamedReference(query: VideoSemanticExercise, video: Candidate) {
   // An unmodified Scissors component does not establish the High Scissors setup.
   if (/\bhigh[\s-]*scissors\b/i.test(video.title) && !/\bhigh[\s-]*scissors\b/i.test(query.nameEn))
@@ -115,7 +124,6 @@ function scoreNamedReference(query: VideoSemanticExercise, video: Candidate) {
 }
 
 function relationFor(exercise: PilatesExercise, video: Candidate, currentIdentity: boolean) {
-  if (hasSpecificApparatusConflict(exercise, video)) return null;
   // A changed exercise cannot inherit the audited alias of its old ID.
   const query = currentIdentity ? exercise : { ...exercise, id: 'custom-video-query' };
   const components = currentIdentity ? EXERCISE_VIDEO_COMPONENTS[exercise.id] : undefined;
@@ -157,13 +165,13 @@ function relationFor(exercise: PilatesExercise, video: Candidate, currentIdentit
     return {
       relation: 'flow-component' as const,
       score,
-      reason: '복합 흐름의 구성 동작 참고 · 전체 흐름과 구간은 미확인',
+      reason: '여러 동작 중 한 가지를 비교할 수 있어요. 전체 흐름과 순서는 다를 수 있어요.',
     };
   if (VIDEO_REFERENCE_SCOPE[video.videoId] === 'flow-component')
     return {
       relation: 'flow-component' as const,
       score,
-      reason: '여러 동작이 담긴 영상 중 해당 구성 동작 참고 · 전체 시범과 구간은 미확인',
+      reason: '여러 동작이 담긴 수업이에요. 이 동작이 나오는 부분을 찾아보세요.',
     };
   const name = normalizeVideoSearchText(exercise.nameEn);
   const title = normalizeVideoSearchText(video.title);
@@ -183,8 +191,8 @@ function relationFor(exercise: PilatesExercise, video: Candidate, currentIdentit
     reason: modified
       ? video.videoId === 'QFv_Fex3Mko'
         ? '한 다리 숄더 브리지 변형 참고 · 기본 브리지와 지지·범위가 다릅니다'
-        : '동작 계열이 같은 변형 참고 · 준비 자세·지지·범위는 별도 확인'
-      : '공개 제목의 동작명·기구가 대응합니다. 동일 시범·구간은 미확인입니다.',
+        : '비슷한 동작이에요. 시작 자세와 손발을 짚는 위치가 어떻게 다른지 살펴보세요.'
+      : '제목에 같은 동작과 기구가 나와요. 영상에서 시작 자세를 먼저 확인해 보세요.',
   };
 }
 
@@ -245,7 +253,8 @@ function toReference(
 }
 
 /** Deduplicated references without apparatus-only or regional filler. */
-export function getExerciseVideoReferences(exercise: PilatesExercise): ExerciseVideoReference[] {
+export function getExerciseVideoReferences(record: PilatesExercise): ExerciseVideoReference[] {
+  const exercise = refreshCatalogVideoReference(record);
   const currentIdentity = hasCurrentCatalogIdentity(exercise);
   const primaryPolicy = normalizeReferenceUrlPolicy(exercise.youtube?.url ?? '', {
     startSec: exercise.youtube?.startSec,
@@ -269,26 +278,39 @@ export function getExerciseVideoReferences(exercise: PilatesExercise): ExerciseV
     };
     const evidence = getExerciseVideoEvidence(exercise);
     const matched = metadata ? relationFor(exercise, metadata, currentIdentity) : null;
+    const familyScope =
+      primary.referenceSubject === videoReferenceSubject(exercise, video.videoId)
+        ? primary.referenceScope
+        : undefined;
+    const oldAutomaticLink = primary.note?.startsWith('저장소 검증 카탈로그 의미 매칭');
     const relation =
-      evidence?.relation === 'related-variant'
-        ? 'related-variant'
-        : evidence?.relation === 'named-movement-reference'
-          ? 'named-movement'
-          : (matched?.relation ?? 'saved-reference');
+      familyScope === 'base-movement'
+        ? 'base-reference'
+        : familyScope === 'movement-family'
+          ? 'related-variant'
+          : evidence?.relation === 'related-variant'
+            ? 'related-variant'
+            : evidence?.relation === 'named-movement-reference'
+              ? 'named-movement'
+              : (matched?.relation ?? 'saved-reference');
     const primaryRef = toReference(
       video,
       relation,
-      evidence?.relationshipNoteKo ??
+      (familyScope === 'base-movement'
+        ? '기본 동작에 연결된 영상이에요. 이 변형에서는 도구나 속도, 지지하는 쪽이 달라질 수 있어요.'
+        : familyScope === 'movement-family'
+          ? '같은 계열의 동작이에요. 시작 자세와 움직이는 범위를 비교해 보세요.'
+          : evidence?.relationshipNoteKo) ??
         matched?.reason ??
-        '저장한 원본 링크 · 현재 동작·기구와의 일치는 별도 확인',
+        '연결해 둔 영상이에요. 같은 동작과 기구인지 먼저 확인해 보세요.',
       primary,
     );
-    if (primaryRef) {
+    if (primaryRef && (!oldAutomaticLink || matched || familyScope)) {
       results.push(primaryRef);
       seen.add(primaryRef.videoId);
     }
   }
-  const eligible = pool
+  const eligible = (poolByApparatus.get(exercise.apparatus) ?? [])
     .flatMap((video) => {
       if (seen.has(video.videoId) || !/^[A-Za-z0-9_-]{11}$/.test(video.videoId)) return [];
       const match = relationFor(exercise, video, currentIdentity);
@@ -327,7 +349,9 @@ export function getExerciseVideoCoverage(exercises: readonly PilatesExercise[]) 
       nameKo: exercise.nameKo,
       apparatus: exercise.apparatus,
       count: references.length,
-      relatedCount: references.filter((video) => video.relation !== 'saved-reference').length,
+      relatedCount: references.filter(
+        (video) => video.relation !== 'saved-reference' && video.relation !== 'base-reference',
+      ).length,
       videoIds: references.map((video) => video.videoId),
     };
   });

@@ -1,3 +1,4 @@
+import { refreshCatalogVideoReference } from '../data/exerciseVideoBindings';
 import { matchingTeachingScheduleContext } from '../utils/teachingScheduleContext';
 import type { TeachingScheduleContext } from '../utils/teachingScheduleContext';
 import {
@@ -3503,7 +3504,12 @@ export const usePilatesStore = create<PilatesStudioState>()(
             ...new Set(oldCriteria.data.preferredProps.filter((prop) => prop !== 'none')),
           ];
         const exercises = z.array(exerciseSchema).safeParse(raw.exercises);
-        if (exercises.success) next.exercises = mergeById(exercises.data, INITIAL_EXERCISES);
+        if (exercises.success) {
+          next.exercises = mergeById<PilatesExercise>(
+            exercises.data.map(refreshCatalogVideoReference),
+            INITIAL_EXERCISES,
+          );
+        }
         const sequences = z.array(sequenceSchema).safeParse(raw.savedSequences);
         if (sequences.success) next.savedSequences = sequences.data;
         const trash = savedSequenceTrashSchema.safeParse(raw.deletedSavedSequences ?? []);

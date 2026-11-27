@@ -411,6 +411,8 @@ export const exerciseSchema = z.object({
     url: textSchema,
     note: textSchema.optional(),
     region: z.enum(['kr', 'global']).optional(),
+    referenceScope: z.enum(['movement-family', 'base-movement']).optional(),
+    referenceSubject: textSchema.optional(),
     historicalVideoLabel: textSchema.optional(),
   }).passthrough(),
   favoriteTag: z.enum(['none', 'signature', 'member-love', 'rehab-posture', 'burn-sculpt']),

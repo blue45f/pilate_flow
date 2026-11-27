@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from '../data/globalCrawledRepertoirePack';
+import { videoReferenceSubject } from './videoSemanticMatching';
 import { isStrictNoAutoplayEmbedUrl } from '../features/referenceLinkPolicyCandidate/urlPolicyEngine';
 import type { PilatesExercise } from '../types/pilates';
 import {
@@ -142,8 +143,28 @@ describe('per-exercise video reference selection', () => {
     const references = getExerciseVideoReferences(edited);
     expect(references).toHaveLength(1);
     expect(references[0].relation).toBe('saved-reference');
-    expect(references[0].matchReasonKo).toContain('일치는 별도 확인');
+    expect(references[0].matchReasonKo).toContain('같은 동작과 기구인지');
     expect(getExerciseVideoReferences(noSource(edited))).toEqual([]);
+  });
+
+  it('only labels inherited references for the original movement and drops obsolete automatic pairings', () => {
+    const base = findExercise('original-mat-bridge');
+    const variation = { ...base, id: 'original-mat-bridge--var-hold', nameEn: 'Mat Bridge with Hold' };
+    const inherited = {
+      ...variation,
+      youtube: {
+        ...variation.youtube, referenceScope: 'base-movement' as const,
+        referenceSubject: videoReferenceSubject(variation, variation.youtube.videoId),
+      },
+    };
+    expect(getExerciseVideoReferences(inherited)[0].relation).toBe('base-reference');
+    const edited = { ...inherited, nameEn: 'Different movement', apparatus: 'chair' as const };
+    expect(getExerciseVideoReferences(edited)[0].relation).toBe('saved-reference');
+    const historical = {
+      ...edited,
+      youtube: { ...base.youtube, note: '저장소 검증 카탈로그 의미 매칭 (기존 자료)' },
+    };
+    expect(getExerciseVideoReferences(historical)).toEqual([]);
   });
 
   it('does not trust an unsafe URL or a URL whose video ID differs from the saved ID', () => {
