@@ -1,0 +1,199 @@
+.exercise-practice-dialog .practice-guide-nav {
+  display: flex;
+  border-bottom: 1px solid #d9ddd3;
+  gap: 24px;
+  margin-bottom: 6px;
+}
+
+.exercise-practice-dialog .practice-guide-nav button {
+  flex: 0 1 auto;
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #5e665e;
+  font: inherit;
+  font-weight: 500;
+  word-break: keep-all;
+  cursor: pointer;
+}
+
+.exercise-practice-dialog .practice-guide-nav [aria-current] {
+  border-bottom-color: #355441;
+  color: #294733;
+  font-weight: 600;
+}
+
+.practice-guide {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+  padding: 8px 0 4px;
+  color: #232d25;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.practice-guide-benefit {
+  max-width: 64ch;
+  margin: 0;
+  color: #334d3b;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.practice-guide-skip {
+  display: none;
+}
+
+.practice-guide-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 36px);
+  align-items: start;
+}
+
+.practice-guide-figure,
+.practice-guide-instructions {
+  min-width: 0;
+}
+
+.practice-guide-instructions h3 {
+  margin: 0 0 10px;
+  font-size: 1.125rem;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  scroll-margin: 20px;
+}
+
+.practice-guide-instructions ol {
+  list-style: none;
+  counter-reset: practice-step;
+  margin: 0;
+  padding: 0;
+}
+
+.practice-guide-instructions li {
+  counter-increment: practice-step;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid #e3e5dd;
+  font-size: 0.9625rem;
+  line-height: 1.65;
+}
+
+.practice-guide-instructions li::before {
+  content: counter(practice-step, decimal-leading-zero);
+  color: #44644c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-guide-instructions dl {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  background: #f0f3eb;
+  border-radius: 8px;
+}
+
+.practice-guide-instructions dt {
+  margin-bottom: 2px;
+  font-size: 0.81rem;
+  font-weight: 600;
+  color: #3f5d47;
+}
+
+.practice-guide-instructions dd {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.exercise-practice-dialog .practice-guide-figure .pf-studio3d-hero-card.pf-unslop-hero3d {
+  min-width: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.exercise-practice-dialog .practice-guide-figure .pf-unslop-hero3d .pf-studio3d-hero-card__top {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.practice-guide-figure .pf-studio3d-hero-card > details,
+.practice-guide-figure .pf-orbit3d-toolbar > details,
+.library-movement-inspector .practice-inspector-more,
+.evg-selected .evg-source-details {
+  border-top: 1px solid #dde2d7;
+  margin: 8px 0 0;
+  padding: 0;
+  color: #3b5542;
+}
+
+.practice-guide-figure .pf-studio3d-hero-card > details > summary,
+.practice-guide-figure .pf-orbit3d-toolbar > details > summary,
+.library-movement-inspector .practice-inspector-more > summary,
+.evg-selected .evg-source-details > summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 500;
+  word-break: keep-all;
+}
+
+.practice-guide-figure .pf-orbit3d-stage-bar:empty {
+  display: none;
+}
+.practice-guide-figure .pf-orbit3d-source-row {
+  flex-wrap: wrap;
+}
+.exercise-practice-dialog .pf-preview-secondary-group {
+  margin-top: 12px;
+}
+.library-movement-inspector .practice-guide-benefit {
+  margin: 4px 0 8px;
+  font-size: 1.02rem;
+}
+
+@media (max-width: 780px) {
+  .practice-guide-skip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 44px;
+    padding: 0;
+    color: #355441;
+    background: transparent;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .practice-guide-intro {
+    margin-bottom: -8px;
+  }
+  .practice-guide-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .practice-guide {
+    gap: 16px;
+  }
+}

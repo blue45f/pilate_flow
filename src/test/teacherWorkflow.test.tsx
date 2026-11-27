@@ -615,7 +615,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
     expect(detail.getByRole('button', { name: '수업안에 추가됨' })).toBeDisabled();
     expect(
-      detail.getByText('현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'),
+      detail.getByText('이미 수업안에 담았어요. 필요하면 수업 메모를 남겨 두세요.'),
     ).toBeVisible();
     fireEvent.click(detail.getByText('검토 전 메모 수정 · 근거 미확인 입력값'));
     fireEvent.change(detail.getByLabelText('티칭 큐 · 줄마다 하나 · 직접 작성'), {

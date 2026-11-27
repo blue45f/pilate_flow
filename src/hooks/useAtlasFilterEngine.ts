@@ -17,6 +17,7 @@ import type {
   PilatesExercise,
   PropType,
 } from '../types/pilates';
+import { getExercisePracticeGuide } from '../utils/exercisePracticeGuide';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { getExerciseReviewState } from '../utils/exerciseReview';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
@@ -213,6 +214,7 @@ export function useAtlasFilterEngine({
       const blockMeta = CANONICAL_BLOCKS.find((item) => item.category === exercise.blockCategory);
       const ideaDraft = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
       const kinesiology = analyzeExerciseKinesiology(exercise);
+      const practice = getExercisePracticeGuide(exercise);
       const fields = [
         exercise.id,
         exercise.nameKo,
@@ -229,8 +231,10 @@ export function useAtlasFilterEngine({
         ...equipmentMeta.requiredEquipment.map(equipmentLabel),
         ...equipmentMeta.requiredProps.map(propLabel),
         ...exercise.targetMuscles,
+        practice.focus,
       ];
       const detailFields = [
+        practice.benefit,
         ...kinesiology.stabilizersKo,
         kinesiology.commonFaultKo,
         kinesiology.correctionCueKo,

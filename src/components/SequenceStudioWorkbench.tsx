@@ -69,6 +69,7 @@ import type {
   StepSideMode,
 } from '../types/pilates';
 import type { ClassSectionRole } from '../types/sequenceMotion';
+import { getExercisePracticeGuide } from '../utils/exercisePracticeGuide';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { isImeComposing } from '../utils/imeGuard';
 import {
@@ -114,7 +115,7 @@ import { IntuitiveAnatomyGuideCard } from './IntuitiveAnatomyGuideCard';
 import { ZeroTransitionNextStrip } from './ZeroTransitionNextStrip';
 import { QuickRemixSheet } from './QuickRemixSheet';
 import { MobileSimpleSequenceBar } from './MobileSimpleSequenceBar';
-import { ApparatusEditorialHeroBanner } from './EditorialApparatusCard';
+import { MovementWorkspaceCover } from './EditorialApparatusCard';
 import { RoutineTagInlineStrip, RoutineTagSheetDialog } from './RoutineTagManagerDialog';
 import {
   ACTIVE_DRAFT_TAG_TARGET_ID,
@@ -154,6 +155,7 @@ interface Props {
   onOpenYouTubePreview: (exercise: PilatesExercise) => void;
   onOpenIdeaSheet?: (exercise?: PilatesExercise | null) => void;
   onOpenClipper: () => void;
+  onOpenLibrary?: () => void;
   onOpenLogModal: (sequenceId: string) => void;
   onOpenInventory: () => void;
   onStartClass: () => void;
@@ -165,7 +167,7 @@ interface Props {
 
 const SECTIONS: { id: ClassSectionRole; label: string }[] = [
   { id: 'preparation', label: '준비' },
-  { id: 'main', label: '메인' },
+  { id: 'main', label: '본운동' },
   { id: 'cooldown', label: '마무리' },
 ];
 const CATEGORY_FILTERS = [
@@ -671,7 +673,7 @@ function StepEditor({
             </label>
             {exercise && (
               <details className="flow-step-3d-disclosure">
-                <summary>해부학 · 근육 지도 · 단골 실수 교정 큐 (메모에 바로 추가)</summary>
+                <summary>쓰는 근육과 자세를 알려 주는 말</summary>
                 <div className="flow-step-3d-disclosure__body">
                   <IntuitiveAnatomyGuideCard
                     exercise={exercise}
@@ -844,8 +846,8 @@ export function SequenceStudioWorkbench(props: Props) {
     label: string;
     placement: SequenceInsertionPlacement;
   }[] = [
-    { value: 'end', label: '시퀀스 맨 뒤', placement: { kind: 'end' } },
-    { value: 'start', label: '시퀀스 맨 앞', placement: { kind: 'start' } },
+    { value: 'end', label: '수업 맨 뒤', placement: { kind: 'end' } },
+    { value: 'start', label: '수업 맨 앞', placement: { kind: 'start' } },
     ...s.activeSteps.map((step, index) => ({
       value: `step:${step.stepId}`,
       label: `${index + 1}번 ${isRestStep(step) ? '휴식' : (byId.get(step.exerciseId)?.nameKo ?? '동작')} 뒤`,
@@ -897,6 +899,7 @@ export function SequenceStudioWorkbench(props: Props) {
           exercise.nameKo,
           exercise.nameEn,
           ...exercise.targetMuscles,
+          query.trim() ? getExercisePracticeGuide(exercise).focus : '',
           APPARATUS_LABELS[exercise.apparatus].ko,
         ],
         query,
@@ -1301,92 +1304,88 @@ export function SequenceStudioWorkbench(props: Props) {
 
   return (
     <section className="flow-studio" data-testid="sequence-studio" data-mobile-pane={mobilePane}>
-      <header className="flow-studio__heading atelier-cover atelier-cover--reformer">
-        <div className="flow-studio__title-group">
-          <h1 id="workspace-main-heading" tabIndex={-1}>
-            수업 만들기
-          </h1>
-          <span className="pf-studio-spring-meter" aria-hidden="true">
-            <StudioSpringHorizon ratio={target ? total / target : 0} />
-            <em>{target ? `${Math.min(100, Math.round((total / target) * 100))}%` : '0%'}</em>
-          </span>
-        </div>
-        <div className="flow-heading-actions">
-          <button className="flow-button" onClick={() => setPresetsOpen(true)}>
-            <LayoutTemplate size={16} strokeWidth={1.5} /> 템플릿
-          </button>
-          <button
-            className="flow-button"
-            onClick={() =>
-              s.activeSteps.length
-                ? setNewClassOpen(true)
-                : setNotice(s.startBlankSequence().message)
+      <MovementWorkspaceCover
+        apparatus={criteria.apparatus}
+        title="수업 만들기"
+        description="어떤 동작으로 시작할까요? 동작을 고른 뒤 수업 순서와 시간을 정해 보세요."
+      >
+        <button type="button" className="cover-primary-action" onClick={props.onOpenLibrary ?? showLibrary}>
+          동작 둘러보기 <ChevronRight size={17} aria-hidden="true" />
+        </button>
+        <button className="flow-button" onClick={() => setPresetsOpen(true)}>
+          <LayoutTemplate size={16} strokeWidth={1.5} /> 템플릿
+        </button>
+        <button
+          className="flow-button"
+          onClick={() =>
+            s.activeSteps.length
+              ? setNewClassOpen(true)
+              : setNotice(s.startBlankSequence().message)
+          }
+        >
+          <Plus size={16} strokeWidth={1.5} /> 새 수업
+        </button>
+        <details
+          className="flow-tools"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector('summary')?.focus();
             }
-          >
-            <Plus size={16} strokeWidth={1.5} /> 새 수업
-          </button>
-          <details
-            className="flow-tools"
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                event.preventDefault();
-                event.currentTarget.open = false;
-                event.currentTarget.querySelector('summary')?.focus();
-              }
-            }}
-          >
-            <summary ref={toolsSummaryRef} aria-label="수업 작성 도구 더보기">
-              <MoreHorizontal size={18} strokeWidth={1.5} />
-            </summary>
-            <div>
+          }}
+        >
+          <summary ref={toolsSummaryRef} aria-label="수업 작성 도구 더보기">
+            <MoreHorizontal size={18} strokeWidth={1.5} />
+          </summary>
+          <div>
+            <button
+              onClick={() => {
+                setAdvanced(true);
+                scheduleRaf(() => advancedReturnRef.current?.focus());
+              }}
+            >
+              자동 구성 · 고급 편집
+            </button>
+            <button
+              onClick={() => {
+                const menu = toolsSummaryRef.current?.closest('details');
+                if (menu) menu.open = false;
+                toolsSummaryRef.current?.focus();
+                setToolsOpen(true);
+              }}
+            >
+              강사 도구
+            </button>
+            <button onClick={props.onOpenClipper}>영상에서 동작 가져오기</button>
+            <button onClick={() => props.onOpenIdeaSheet?.()}>내 동작 만들기</button>
+            <button onClick={props.onOpenInventory}>기구 · 소도구 관리</button>
+            {exerciseCount > 0 && (
               <button
-                onClick={() => {
-                  setAdvanced(true);
-                  scheduleRaf(() => advancedReturnRef.current?.focus());
+                type="button"
+                data-testid="flow-copy-cuesheet-btn"
+                onClick={async () => {
+                  const sheet = formatSequenceAsStudioSheet(
+                    s.activeTitle || '수업 시퀀스',
+                    s.activeSubtitle || `목표 ${s.activeTargetMinutes}분 클래스`,
+                    s.activeSteps,
+                    new Map(s.exercises.map((ex) => [ex.id, ex])),
+                    s.reformerBrand,
+                  );
+                  try {
+                    await navigator.clipboard.writeText(sheet);
+                    setNotice('수업 진행 메모를 복사했어요.');
+                  } catch {
+                    setNotice('복사하지 못했어요. 저장한 수업에서 메모를 확인해 주세요.');
+                  }
                 }}
               >
-                자동 구성 · 고급 편집
+                수업 진행 메모 복사
               </button>
-              <button
-                onClick={() => {
-                  const menu = toolsSummaryRef.current?.closest('details');
-                  if (menu) menu.open = false;
-                  toolsSummaryRef.current?.focus();
-                  setToolsOpen(true);
-                }}
-              >
-                강사 도구
-              </button>
-              <button onClick={props.onOpenClipper}>영상에서 동작 가져오기</button>
-              <button onClick={() => props.onOpenIdeaSheet?.()}>내 동작 만들기</button>
-              <button onClick={props.onOpenInventory}>기구 · 소도구 관리</button>
-              {exerciseCount > 0 && (
-                <button
-                  type="button"
-                  data-testid="flow-copy-cuesheet-btn"
-                  onClick={async () => {
-                    const sheet = formatSequenceAsStudioSheet(
-                      s.activeTitle || '수업 시퀀스',
-                      s.activeSubtitle || `목표 ${s.activeTargetMinutes}분 클래스`,
-                      s.activeSteps,
-                      new Map(s.exercises.map((ex) => [ex.id, ex])),
-                      s.reformerBrand,
-                    );
-                    try {
-                      await navigator.clipboard.writeText(sheet);
-                      setNotice('티칭 큐시트 텍스트를 클립보드에 복사했습니다.');
-                    } catch {
-                      setNotice('큐시트 복사에 실패했습니다. 저장한 수업에서 확인해 주세요.');
-                    }
-                  }}
-                >
-                  티칭 큐시트 텍스트 복사
-                </button>
-              )}
-            </div>
-          </details>
-        </div>
-      </header>
+            )}
+          </div>
+        </details>
+      </MovementWorkspaceCover>
 
       {activeTabConflict && (
         <div
@@ -1561,7 +1560,7 @@ export function SequenceStudioWorkbench(props: Props) {
           </small>
         </span>
         <span className="flow-mobile-brief-toggle__action">
-          {briefExpanded ? '접기' : '편집'}
+          {briefExpanded ? '접기' : '수업 설정'}
           <ChevronDown size={16} aria-hidden="true" />
         </span>
       </button>
@@ -1598,7 +1597,7 @@ export function SequenceStudioWorkbench(props: Props) {
           </select>
         </label>
         <label className="flow-field">
-          최대 난이도
+          가장 어려운 단계
           <select
             aria-label="수업 최대 난이도"
             value={criteria.level}
@@ -1614,7 +1613,7 @@ export function SequenceStudioWorkbench(props: Props) {
           </select>
         </label>
         <label className="flow-field">
-          목표 · 분
+          수업 시간(분)
           <PlanningInput
             key={`minutes-${s.activeSequenceId}`}
             label="수업 목표 시간"
@@ -1689,7 +1688,7 @@ export function SequenceStudioWorkbench(props: Props) {
 
       <div className="flow-mobile-panes" role="group" aria-label="작성 화면 선택">
         <button aria-pressed={mobilePane === 'plan'} onClick={showPlan}>
-          내 시퀀스 <span>{exerciseCount}</span>
+          내 수업 순서 <span>{exerciseCount}</span>
         </button>
         <button aria-pressed={mobilePane === 'library'} onClick={showLibrary}>
           <Plus size={16} strokeWidth={1.5} /> 동작 찾기
@@ -1708,13 +1707,6 @@ export function SequenceStudioWorkbench(props: Props) {
             </div>
             <span className="flow-count">{results.length}개</span>
           </div>
-          <div className="pf-picker-editorial-wrap">
-            <ApparatusEditorialHeroBanner
-              apparatus={criteria.apparatus}
-              countLabel={`${results.length}개 동작`}
-              compact
-            />
-          </div>
           <label className="flow-search">
             <Search size={16} strokeWidth={1.5} aria-hidden="true" />
             <input
@@ -1729,7 +1721,7 @@ export function SequenceStudioWorkbench(props: Props) {
                   setQuery('');
                 }
               }}
-              placeholder="이름·초성·영어명·근육 검색"
+              placeholder="동작 이름이나 몸 부위 찾기"
             />
             {query && (
               <button onClick={() => setQuery('')} aria-label="동작 검색 지우기">
@@ -1953,7 +1945,7 @@ export function SequenceStudioWorkbench(props: Props) {
             <div className="flow-panel-heading">
               <div>
                 <h2 ref={planHeadingRef} tabIndex={-1}>
-                  내 시퀀스
+                  내 수업 순서
                 </h2>
                 <span className="flow-count">동작 {exerciseCount}개</span>
               </div>
@@ -1969,12 +1961,15 @@ export function SequenceStudioWorkbench(props: Props) {
                 <Undo2 size={17} strokeWidth={1.5} />
               </button>
             </div>
-            <div className="flow-time-overview">
+            <div className="flow-time-overview" data-empty={s.activeSteps.length === 0}>
               <div>
                 <strong className="pf-hero-duration">
                   <CountUp value={total} format={minutesTweened} />
                 </strong>
                 <span> / 목표 {s.activeTargetMinutes}분</span>
+                <span className="pf-studio-spring-meter" aria-hidden="true">
+                  <StudioSpringHorizon ratio={target ? total / target : 0} />
+                </span>
                 <button
                   className="flow-text-button"
                   disabled={!exerciseCount}
@@ -2046,7 +2041,7 @@ export function SequenceStudioWorkbench(props: Props) {
                     data-testid="flow-open-quick-rehearsal-btn"
                     onClick={() => setQuickRehearsalOpen(true)}
                   >
-                    빠른 요약 리허설
+                    수업 미리 연습하기
                   </button>
                 )}
               </div>
@@ -2065,14 +2060,14 @@ export function SequenceStudioWorkbench(props: Props) {
                   />
                 ))}
               </div>
-              <div className="flow-section-legend">
+              {total > 0 && <div className="flow-section-legend">
                 {SECTIONS.map((section) => (
                   <span key={section.id} data-section={section.id}>
                     <i />
                     {section.label} <b>{minutes(sectionTotals[section.id])}</b>
                   </span>
                 ))}
-              </div>
+              </div>}
               {total > 0 && (
                 <p className="flow-time-budget-formula" data-testid="flow-time-budget-formula">
                   구성 합계: 수행 {minutes(simulation.totals.movementSec)} (양쪽 포함) · 설명·전환{' '}
@@ -2824,8 +2819,8 @@ export function SequenceStudioWorkbench(props: Props) {
               <span>
                 <i />
                 {s.persistenceError
-                  ? '이 브라우저 미저장 · 현재 화면(메모리)에만 임시 보관 중'
-                  : '작성 중인 수업은 이 기기(브라우저)에만 로컬 보관 · 서버 자동 동기화 없음'}
+                  ? '지금은 이 화면에만 남아 있어요. 닫기 전에 백업해 주세요.'
+                  : '작성 중인 수업은 이 브라우저에 보관돼요.'}
               </span>
               {s.persistenceError ? (
                 <div className="flow-footer-recovery-actions">
@@ -2906,8 +2901,8 @@ export function SequenceStudioWorkbench(props: Props) {
                           : saveStatus === 'dirty'
                             ? '저장 후 수정됨 (미저장 초안) · 저장을 눌러 이 브라우저에 반영하세요'
                             : exerciseCount === 0
-                              ? '왼쪽 목록에서 첫 동작을 담아 수업을 시작해 보세요'
-                              : '시퀀스를 저장하고 수업을 시작하세요 (이 기기 로컬 저장)'}
+                              ? '첫 동작을 담으면 수업을 저장할 수 있어요.'
+                              : '수업을 저장하거나 바로 시작할 수 있어요.'}
                 </small>
               )}
             </div>
@@ -3396,7 +3391,7 @@ export function SequenceStudioWorkbench(props: Props) {
         </LightDismissDialog>
       )}
       {quickRehearsalOpen && (
-        <Suspense fallback={<p role="status">빠른 요약 리허설을 여는 중…</p>}>
+        <Suspense fallback={<p role="status">수업 미리 연습하기을 여는 중…</p>}>
           <LazyQuickPlanRehearsal
             onClose={() => setQuickRehearsalOpen(false)}
             onSave={saveConfirmedSequenceCopy}

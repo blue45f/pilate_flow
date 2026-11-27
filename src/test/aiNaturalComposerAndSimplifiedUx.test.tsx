@@ -173,7 +173,8 @@ describe('Natural-Language AI Sequence Composer & In-Place Studio UX', () => {
     const hero = screen.getByTestId('studio-3d-motion-hero-card');
     expect(hero).toHaveTextContent('리포머 · 편안히 누운 자세');
 
-    // Inline layer switcher switches between 완화 / 기본 / 심화 without opening drawers
+    // 강도 정보는 요청했을 때 펼쳐 같은 자리에서 조절한다.
+    fireEvent.click(screen.getByText('기구 설정과 강도 조절'));
     const layerSwitcher = screen.getByTestId('detail-layer-switcher');
     fireEvent.click(within(layerSwitcher).getByRole('button', { name: '완화' }));
     expect(layerSwitcher).toHaveTextContent(sample.layers.easy);

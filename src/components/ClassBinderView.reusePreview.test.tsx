@@ -112,7 +112,7 @@ describe('saved-class preview and deliberate copy reuse', () => {
       if (filter === 'recent') {
         fireEvent.click(screen.getByRole('button', { name: /^최근 수업 있음/ }));
       } else {
-        fireEvent.change(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' }), {
+        fireEvent.change(screen.getByRole('textbox', { name: '저장한 수업 검색' }), {
           target: { value: groupName },
         });
       }
@@ -135,7 +135,7 @@ describe('saved-class preview and deliberate copy reuse', () => {
       if (filter === 'recent') {
         expect(screen.getByRole('button', { name: /^최근 수업 있음/ })).toHaveAttribute('aria-pressed', 'true');
       } else {
-        expect(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' })).toHaveValue(groupName);
+        expect(screen.getByRole('textbox', { name: '저장한 수업 검색' })).toHaveValue(groupName);
       }
     },
   );
@@ -236,7 +236,7 @@ describe('saved-class preview and deliberate copy reuse', () => {
     fireEvent.click(within(preview).getByRole('button', { name: '다시 확인' }));
     expect(within(preview).getByRole('alert')).toHaveTextContent('보관함에서 삭제되었어요');
     fireEvent(preview, new Event('cancel', { cancelable: true }));
-    await waitFor(() => expect(screen.getByRole('textbox', { name: '저장한 시퀀스 검색' })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole('textbox', { name: '저장한 수업 검색' })).toHaveFocus());
     expect(usePilatesStore.getState()).toBe(afterRemoval);
     expect(storageWrite).not.toHaveBeenCalled();
   });

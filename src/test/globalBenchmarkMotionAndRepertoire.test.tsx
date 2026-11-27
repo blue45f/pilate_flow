@@ -381,6 +381,8 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     );
 
     expect(screen.getByTestId('studio-3d-motion-hero-card')).toBeVisible();
+    expect(screen.getByTestId('detail-essential-3-strip')).not.toBeVisible();
+    fireEvent.click(screen.getByText('기구 설정과 강도 조절'));
     expect(screen.getByTestId('detail-essential-3-strip')).toBeVisible();
     expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
 
@@ -691,14 +693,14 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const memberReformerImg = memberReformerCard.querySelector('.pf-member-slot-art');
     expect(memberReformerImg).toHaveClass('exercise-motion-artwork');
     expect(memberReformerImg).toHaveAttribute('data-exercise-id', shortSpineEx.id);
-    expect(memberReformerCard.textContent).toContain('포커스 · 척추분절');
+    expect(memberReformerCard.textContent).toContain('등을 한 마디씩 움직이기');
 
     fireEvent.click(bookReformerBtn);
     const spotBanner = screen.getByTestId('member-spot-dialog-3d-banner');
     expect(spotBanner).toBeVisible();
     expect(spotBanner).toHaveTextContent('리포머 기구·스프링 안내');
     expect(screen.getByTestId('member-dialog-focus-props-bridge')).toHaveTextContent(
-      '논슬립 토삭스 착용 권장',
+      '미끄럼 방지 양말을 신으면 좋아요',
     );
     expect(screen.getByTestId('member-dialog-focus-props-bridge')).not.toHaveTextContent(
       '비공개 강사 개인 메모',

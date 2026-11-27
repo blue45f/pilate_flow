@@ -325,7 +325,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     );
 
     expect(screen.getByTestId('blender-studio-3d-render')).toBeInTheDocument();
-    const toggleBtn = screen.getByRole('button', { name: '3D 스튜디오 렌더 숨기기' });
+    const toggleBtn = screen.getByRole('button', { name: '기구 이미지 숨기기' });
     fireEvent.click(toggleBtn);
     expect(screen.queryByTestId('blender-studio-3d-render')).toBeNull();
   });

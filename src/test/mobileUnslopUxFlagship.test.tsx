@@ -75,8 +75,8 @@ describe('Mobile-First Unslop Flagship Instructor UX', () => {
     expect(screen.getByTestId('mock-voice-slot-btn')).toBeVisible();
     expect(screen.getByTestId('anatomy-tile-benefits')).toHaveTextContent('이 동작으로 좋아지는 점');
     expect(screen.getByTestId('anatomy-tile-muscles')).toHaveTextContent('힘 들어가는 근육 지도');
-    expect(screen.getByTestId('anatomy-tile-mechanics')).toHaveTextContent('기초 원리 & 스프링 역학');
-    expect(screen.getByTestId('anatomy-tile-faults')).toHaveTextContent('회원님 단골 실수 & 바로 고치는 큐');
+    expect(screen.getByTestId('anatomy-tile-mechanics')).toHaveTextContent('몸을 받쳐 주는 곳');
+    expect(screen.getByTestId('anatomy-tile-faults')).toHaveTextContent('이럴 땐 이렇게 해 보세요');
 
     // Anatomy illustration gracefully degrades from webp -> png -> inline SVG schematic on error
     const img = screen.getByAltText(/근육 지도/);
@@ -97,7 +97,7 @@ describe('Mobile-First Unslop Flagship Instructor UX', () => {
     expect(drawer).toHaveTextContent('흉곽 호흡');
     expect(drawer).toHaveTextContent('중립 골반');
     expect(drawer).toHaveTextContent('스프링 원리');
-    expect(drawer).toHaveTextContent('척추 4평면 균형 설계');
+    expect(drawer).toHaveTextContent('등을 움직이는 네 방향');
   });
 
   it('recommends 3 zero-transition next exercises and inserts golden 10-min combos', () => {
@@ -309,6 +309,8 @@ describe('Mobile-First Unslop Flagship Instructor UX', () => {
     unmount();
 
     render(<YouTubePreviewModal exercise={sample} onClose={vi.fn()} />);
+    expect(screen.getByTestId('intuitive-anatomy-guide-card')).not.toBeVisible();
+    fireEvent.click(screen.getByText('움직이는 부위와 비슷한 동작'));
     expect(screen.getByTestId('intuitive-anatomy-guide-card')).toBeVisible();
 
     // Verify flagship CSS enforces Shift-Left audit hiding and mobile unobstructed stage rules

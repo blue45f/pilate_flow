@@ -72,29 +72,33 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
     expect(screen.queryByTestId('world-repertoire-explorer')).not.toBeInTheDocument();
     expect(container.textContent).not.toContain('세계 대백과');
 
-    // Quick action hub cleanly presents 4 core tools
+    // Tools are disclosed only when needed and all four remain reachable.
+    const materials = screen.getByText('연습·프로그램').closest('details')!;
+    expect(materials).not.toHaveAttribute('open');
+    fireEvent.click(within(materials).getByText('연습·프로그램'));
+    expect(materials).toHaveAttribute('open');
     const quickHub = screen.getByTestId('atlas-quick-hub');
     const quickButtons = within(quickHub).getAllByRole('button');
     expect(quickButtons).toHaveLength(4);
     expect(quickHub).toHaveTextContent(`4·8주 프로그램 ${CURATED_MULTI_WEEK_PROGRAMS.length}종`);
-    expect(quickHub).toHaveTextContent('동작 숙지 훈련');
+    expect(quickHub).toHaveTextContent('동작 연습');
     expect(quickHub).toHaveTextContent('필라테스 기초 원리');
     expect(quickHub).toHaveTextContent('기구 NFC · QR');
 
-    // Transparent summary bar displays 1,752 / 1,752 unified 3D / 13
+    // The results count stays visible while scope counts live with their controls.
     const summary = screen.getByTestId('atlas-results-summary');
     expect(summary).toHaveTextContent('1,752개 동작');
-    expect(summary).toHaveTextContent('3D 정밀 1,752');
-    expect(summary).toHaveTextContent(`4·8주 프로그램 ${CURATED_MULTI_WEEK_PROGRAMS.length}`);
+    fireEvent.click(screen.getByRole('button', { name: /^필터/ }));
+    expect(screen.getByRole('group', { name: '추가 검색 조건' })).toBeVisible();
 
     // Unified scope row uses role="group" + aria-pressed buttons
     const scopeRow = screen.getByTestId('atlas-unified-scope-row');
     expect(scopeRow).toHaveAttribute('role', 'group');
     expect(screen.getByTestId('atlas-scope-all')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('atlas-scope-all')).toHaveTextContent('전체 1,752');
-    expect(screen.getByTestId('atlas-scope-3d')).toHaveTextContent('3D 정밀 도해 1,752');
+    expect(screen.getByTestId('atlas-scope-3d')).toHaveTextContent('그림 있는 동작 1,752');
     expect(screen.getByTestId('atlas-scope-atomic')).toHaveTextContent('대표 동작 524');
-    expect(screen.getByTestId('atlas-scope-fusion')).toHaveTextContent('퓨전 (바레·기능성)');
+    expect(screen.getByTestId('atlas-scope-fusion')).toHaveTextContent('바레·기능성 운동 152');
     expect(screen.getByTestId('atlas-scope-programs')).toHaveTextContent('4·8주 프로그램 13');
 
     // Every exercise card preserves the exact 3-button Calm Atelier contract
@@ -109,6 +113,8 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
     const { container } = render(
       <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
     );
+
+    fireEvent.click(screen.getByRole('button', { name: /^필터/ }));
 
     // 1. 3D precision scope -> 1,752 (all 524 atomics directly rendered + 1,228 parent-matched variations)
     fireEvent.click(screen.getByTestId('atlas-scope-3d'));
@@ -154,6 +160,7 @@ describe('ExerciseAtlasView unified 1,752 catalog integration', () => {
         name: '리포머',
       }),
     );
+    fireEvent.click(screen.getByRole('button', { name: /^필터/ }));
     fireEvent.click(screen.getByTestId('atlas-scope-fusion'));
     const firstCard = container.querySelector('.flow-atlas__card') as HTMLElement;
     const exerciseId = firstCard.getAttribute('data-exercise-id')!;

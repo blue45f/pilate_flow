@@ -1,3 +1,4 @@
+import { ExercisePracticeGuide } from './ExercisePracticeGuide';
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
@@ -169,6 +170,30 @@ export function LibraryMovementInspector({
           </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
 
+          <ExercisePracticeGuide exercise={exercise} />
+          <div className="library-inspector-actions library-inspector-actions--top">
+            <button
+              type="button"
+              className="btn-primary"
+              data-added={isAdded ? 'true' : 'false'}
+              aria-label="선택한 동작 수업안에 추가"
+              onClick={() => onAdd(exercise)}
+            >
+              {isAdded ? (
+                <Check size={16} aria-hidden="true" />
+              ) : (
+                <Plus size={16} aria-hidden="true" />
+              )}
+              {isAdded ? '추가됨' : '수업안에 추가'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => onOpenDetails(exercise)}>
+              동작 따라 하기 <ArrowUpRight size={16} aria-hidden="true" />
+            </button>
+            <span className="sr-only" role="status" aria-live="polite">
+              {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
+            </span>
+          </div>
+
           <div className="library-inspector-favorite-classification">
             <label htmlFor={favoriteControlId}>이 동작의 즐겨찾기 분류</label>
             <select
@@ -199,169 +224,169 @@ export function LibraryMovementInspector({
             </p>
           </div>
 
-          <div className="pf-inspector-3sec-grid" aria-label="선택 동작 핵심 3요소 요약">
-            <div className="pf-inspector-3sec-item">
-              <span>{exercise.apparatus === 'mat' ? '사용 기구' : '기구 설정'}</span>
-              <div>
-                {exercise.springs ? (
-                  <SpringVisualPills springs={exercise.springs} />
-                ) : (
-                  <strong>{APPARATUS_LABELS[exercise.apparatus].ko}</strong>
-                )}
-                {brandSpring && !brandSpring.isNonSpringApparatus && (
-                  <small
-                    className="pf-inspector-brand-spring-note"
-                    data-testid="inspector-brand-spring-equivalent"
-                  >
-                    {brandSpring.brandShortLabelKo}: {brandSpring.equivalentLabelKo}
-                  </small>
-                )}
-                {exercise.apparatus === 'reformer' && (
-                  <small>
-                    풋바 {FOOTBAR_LABELS[exercise.footbar]} · 헤드레스트{' '}
-                    {HEADREST_LABELS[exercise.headrest]}
-                  </small>
-                )}
+          <details key={exercise.id} className="practice-inspector-more">
+            <summary>수업 준비와 강도 조절</summary>
+            <div className="pf-inspector-3sec-grid" aria-label="선택 동작 핵심 3요소 요약">
+              <div className="pf-inspector-3sec-item">
+                <span>{exercise.apparatus === 'mat' ? '사용 기구' : '기구 설정'}</span>
+                <div>
+                  {exercise.springs ? (
+                    <SpringVisualPills springs={exercise.springs} />
+                  ) : (
+                    <strong>{APPARATUS_LABELS[exercise.apparatus].ko}</strong>
+                  )}
+                  {brandSpring && !brandSpring.isNonSpringApparatus && (
+                    <small
+                      className="pf-inspector-brand-spring-note"
+                      data-testid="inspector-brand-spring-equivalent"
+                    >
+                      {brandSpring.brandShortLabelKo}: {brandSpring.equivalentLabelKo}
+                    </small>
+                  )}
+                  {exercise.apparatus === 'reformer' && (
+                    <small>
+                      풋바 {FOOTBAR_LABELS[exercise.footbar]} · 헤드레스트{' '}
+                      {HEADREST_LABELS[exercise.headrest]}
+                    </small>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="pf-inspector-3sec-item">
-              <span>호흡 &amp; 템포</span>
-              <strong>{exercise.breathPattern || '흉곽 호흡 유지'}</strong>
-            </div>
-            {exercise.cues.length > 0 && (
-              <div className="pf-inspector-3sec-item is-wide">
-                <span>핵심 티칭 큐</span>
-                <p>{exercise.cues.slice(0, 2).join(' · ')}</p>
+              <div className="pf-inspector-3sec-item">
+                <span>숨 쉬는 방법</span>
+                <strong>{exercise.breathPattern || '흉곽 호흡 유지'}</strong>
               </div>
-            )}
-          </div>
-
-          {exercise.precautions?.trim() && (
-            <section className="library-inspector-precautions">
-              <h4>
-                {reviewState === 'approved'
-                  ? '기존 주의 메모 · 내 검토 확인'
-                  : '기존 주의 메모 · 원문 확인 필요'}
-              </h4>
-              <p>{exercise.precautions}</p>
-            </section>
-          )}
-
-          <div className="library-inspector-actions library-inspector-actions--top">
-            <button
-              type="button"
-              className="btn-primary"
-              data-added={isAdded ? 'true' : 'false'}
-              aria-label="선택한 동작 수업안에 추가"
-              onClick={() => onAdd(exercise)}
-            >
-              {isAdded ? (
-                <Check size={16} aria-hidden="true" />
-              ) : (
-                <Plus size={16} aria-hidden="true" />
+              {exercise.cues.length > 0 && (
+                <div className="pf-inspector-3sec-item is-wide">
+                  <span>자세를 잡을 때</span>
+                  <p>{exercise.cues.slice(0, 2).join(' · ')}</p>
+                </div>
               )}
-              {isAdded ? '추가됨' : '수업안에 추가'}
-            </button>
-            <button type="button" className="btn-secondary" onClick={() => onOpenDetails(exercise)}>
-              전체 정보·개인 검토 열기 <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
-            <span className="sr-only" role="status" aria-live="polite">
-              {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
-            </span>
-          </div>
+            </div>
 
-          <ExerciseKinesiologyCard exercise={exercise} />
+            {exercise.precautions?.trim() && (
+              <section className="library-inspector-precautions">
+                <h4>
+                  {reviewState === 'approved'
+                    ? '기존 주의 메모 · 내 검토 확인'
+                    : '기존 주의 메모 · 원문 확인 필요'}
+                </h4>
+                <p>{exercise.precautions}</p>
+              </section>
+            )}
 
-          {(exercise.layers.easy.trim() ||
-            exercise.layers.standard.trim() ||
-            exercise.layers.hard.trim()) && (
+            <ExerciseKinesiologyCard exercise={exercise} />
+
+            {(exercise.layers.easy.trim() ||
+              exercise.layers.standard.trim() ||
+              exercise.layers.hard.trim()) && (
+              <section
+                className="pf-inspector-layers-card"
+                data-testid="inspector-layers-progression-card"
+                aria-label="회원 수준별 완화·기본·심화 프로그레션 가이드"
+              >
+                <div className="pf-inspector-layers-card__head">
+                  <strong>강도를 바꾸려면</strong>
+                  <small>{exercise.isUnilateral ? '좌·우 대칭 수행' : '양쪽 동시 수행'}</small>
+                </div>
+                <div className="pf-inspector-layers-grid">
+                  {exercise.layers.easy.trim() && (
+                    <div className="pf-inspector-layer-item is-easy">
+                      <span>조금 더 쉽게</span>
+                      <p>{exercise.layers.easy}</p>
+                    </div>
+                  )}
+                  {exercise.layers.standard.trim() && (
+                    <div className="pf-inspector-layer-item is-standard">
+                      <span>기본 자세</span>
+                      <p>{exercise.layers.standard}</p>
+                    </div>
+                  )}
+                  {exercise.layers.hard.trim() && (
+                    <div className="pf-inspector-layer-item is-hard">
+                      <span>조금 더 어렵게</span>
+                      <p>{exercise.layers.hard}</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </details>
+          <details className="practice-inspector-more" key={`review-${exercise.id}`}>
+            <summary>수업 메모와 검토 상태</summary>
+            <div
+              className="library-inspector-fact-strip"
+              data-testid="inspector-fact-distinction"
+              aria-label="검토 상태·활용 자격·출처 구분"
+            >
+              <span
+                className={`inspector-fact-pill is-review-${reviewState ?? 'pending'}`}
+                data-testid="inspector-personal-review-badge"
+              >
+                {personalReviewBadge}
+              </span>
+              <span
+                className={`inspector-fact-pill ${autoEligible ? 'is-auto-eligible' : 'is-manual-only'}`}
+                data-testid="inspector-eligibility-badge"
+              >
+                {eligibilityBadge}
+              </span>
+              <span
+                className="inspector-fact-pill is-source"
+                data-testid="inspector-source-status-badge"
+              >
+                {sourceBadge}
+              </span>
+            </div>
+
+            <dl className="library-inspector-spec-list">
+              <div>
+                <dt>기구</dt>
+                <dd>{APPARATUS_LABELS[exercise.apparatus].ko}</dd>
+              </div>
+              <div>
+                <dt>난이도</dt>
+                <dd>{LEVEL_LABELS[exercise.level]}</dd>
+              </div>
+              <div>
+                <dt>자세</dt>
+                <dd>{POSITION_LABELS[exercise.bodyPosition].ko}</dd>
+              </div>
+              <div>
+                <dt>계획 시간</dt>
+                <dd>
+                  {exercise.defaultDurationMin}분{exercise.isUnilateral ? ' · 양쪽 포함' : ''}
+                </dd>
+              </div>
+              <div>
+                <dt>출처 구분</dt>
+                <dd>{sourceSummaryLabel}</dd>
+              </div>
+            </dl>
+
             <section
-              className="pf-inspector-layers-card"
-              data-testid="inspector-layers-progression-card"
-              aria-label="회원 수준별 완화·기본·심화 프로그레션 가이드"
+              className="library-inspector-review"
+              data-testid="inspector-review-section"
+              data-review-state={reviewState ?? 'pending'}
             >
-              <div className="pf-inspector-layers-card__head">
-                <strong>난이도별 변형 · 프로그레션 가이드</strong>
-                <small>{exercise.isUnilateral ? '좌·우 대칭 수행' : '양쪽 동시 수행'}</small>
-              </div>
-              <div className="pf-inspector-layers-grid">
-                {exercise.layers.easy.trim() && (
-                  <div className="pf-inspector-layer-item is-easy">
-                    <span>완화 · 안전 진입</span>
-                    <p>{exercise.layers.easy}</p>
-                  </div>
-                )}
-                {exercise.layers.standard.trim() && (
-                  <div className="pf-inspector-layer-item is-standard">
-                    <span>기본 · 표준 수행</span>
-                    <p>{exercise.layers.standard}</p>
-                  </div>
-                )}
-                {exercise.layers.hard.trim() && (
-                  <div className="pf-inspector-layer-item is-hard">
-                    <span>심화 · 가동성·저항 확장</span>
-                    <p>{exercise.layers.hard}</p>
-                  </div>
-                )}
-              </div>
+              <h4>개인 검토 상태와 수업 활용</h4>
+              <p
+                className="library-inspector-review-headline"
+                data-testid="inspector-review-status-text"
+              >
+                {reviewHeadline}
+              </p>
+              <p className="library-inspector-review-detail">{reviewDetail}</p>
+              <p className="library-inspector-safety">
+                <Info size={15} aria-hidden="true" />
+                실제 수업 전 기구 설정과 회원 컨디션을 직접 확인해 주세요.
+              </p>
             </section>
-          )}
-
-          <div
-            className="library-inspector-fact-strip"
-            data-testid="inspector-fact-distinction"
-            aria-label="검토 상태·활용 자격·출처 구분"
-          >
-            <span
-              className={`inspector-fact-pill is-review-${reviewState ?? 'pending'}`}
-              data-testid="inspector-personal-review-badge"
-            >
-              {personalReviewBadge}
-            </span>
-            <span
-              className={`inspector-fact-pill ${autoEligible ? 'is-auto-eligible' : 'is-manual-only'}`}
-              data-testid="inspector-eligibility-badge"
-            >
-              {eligibilityBadge}
-            </span>
-            <span
-              className="inspector-fact-pill is-source"
-              data-testid="inspector-source-status-badge"
-            >
-              {sourceBadge}
-            </span>
-          </div>
-
-          <dl className="library-inspector-spec-list">
-            <div>
-              <dt>기구</dt>
-              <dd>{APPARATUS_LABELS[exercise.apparatus].ko}</dd>
-            </div>
-            <div>
-              <dt>난이도</dt>
-              <dd>{LEVEL_LABELS[exercise.level]}</dd>
-            </div>
-            <div>
-              <dt>자세</dt>
-              <dd>{POSITION_LABELS[exercise.bodyPosition].ko}</dd>
-            </div>
-            <div>
-              <dt>계획 시간</dt>
-              <dd>
-                {exercise.defaultDurationMin}분{exercise.isUnilateral ? ' · 양쪽 포함' : ''}
-              </dd>
-            </div>
-            <div>
-              <dt>출처 구분</dt>
-              <dd>{sourceSummaryLabel}</dd>
-            </div>
-          </dl>
-
+          </details>
           <section
             className="library-inspector-reference-step"
             data-testid="inspector-reference-step"
           >
-            <h4>이 동작의 참고자료 원문 확인</h4>
+            <h4>참고한 자료</h4>
             {safeLinks.length > 0 ? (
               <div className="library-inspector-reference-links">
                 {safeLinks.map((link) => (
@@ -380,35 +405,16 @@ export function LibraryMovementInspector({
                   </a>
                 ))}
                 <p className="library-inspector-reference-note">
-                  외부 원문 링크만 열며 자동 재생이나 자동 검토 승인은 일어나지 않습니다.
+                  자료를 누르면 원문이 새 창에서 열려요.
                 </p>
               </div>
             ) : (
               <p className="library-inspector-no-source" data-testid="inspector-no-external-source">
                 {hasMalformedSourceAttempt
                   ? '등록된 출처·영상 주소 형식을 확인할 수 없어 외부 링크를 열지 않습니다. 전체 정보·개인 검토에서 주소를 확인하세요.'
-                  : '연결된 외부 원문 링크 없음 — 미확인 원문이나 개별 동작 대조가 확인된 것처럼 표시하지 않습니다.'}
+                  : '연결된 외부 원문 링크 없음'}
               </p>
             )}
-          </section>
-
-          <section
-            className="library-inspector-review"
-            data-testid="inspector-review-section"
-            data-review-state={reviewState ?? 'pending'}
-          >
-            <h4>개인 검토 상태와 수업 활용</h4>
-            <p
-              className="library-inspector-review-headline"
-              data-testid="inspector-review-status-text"
-            >
-              {reviewHeadline}
-            </p>
-            <p className="library-inspector-review-detail">{reviewDetail}</p>
-            <p className="library-inspector-safety">
-              <Info size={15} aria-hidden="true" />
-              실제 수업 전 기구 설정과 회원 컨디션을 직접 확인해 주세요.
-            </p>
           </section>
 
           <details
@@ -427,9 +433,7 @@ export function LibraryMovementInspector({
           </details>
         </div>
       ) : (
-        <p className="library-inspector-empty">
-          목록에서 동작 이름을 선택하면 기구·시간·주의 메모와 출처 구분을 확인할 수 있어요.
-        </p>
+        <p className="library-inspector-empty">목록에서 궁금한 동작을 골라 보세요.</p>
       )}
     </aside>
   );

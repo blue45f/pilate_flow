@@ -353,19 +353,19 @@ export function resolveClassCardVisualMeta(params: {
 
   const flowPhaseSummaryKo = isSequenceLinked
     ? [
-        warmupMin > 0 ? `예열 ${Math.round(warmupMin)}분` : '',
+        warmupMin > 0 ? `준비 운동 ${Math.round(warmupMin)}분` : '',
         mainMin > 0 ? `본운동 ${Math.round(mainMin)}분` : '',
         cooldownMin > 0 ? `마무리 ${Math.round(cooldownMin)}분` : '',
       ]
         .filter(Boolean)
         .join(' → ') || `연결 동작 ${moveStepCount}개 구성`
-    : '예열 호흡 → 기구 본운동 → 마무리 이완';
+    : '준비 운동 호흡 → 기구 운동 → 가볍게 몸 풀기';
 
   const propPrepNote =
     collectedProps.size > 0
-      ? `소도구(${[...collectedProps].slice(0, 2).join('·')}) 스튜디오 비치됨`
-      : '별도 개인 소도구 불필요';
-  const memberPrepTipKo = `논슬립 토삭스 착용 권장 · ${propPrepNote}`;
+      ? `수업에 쓸 소도구(${[...collectedProps].slice(0, 2).join('·')})는 스튜디오에 있어요.`
+      : '개인 소도구는 챙기지 않아도 돼요.';
+  const memberPrepTipKo = `미끄럼 방지 양말을 신으면 좋아요. ${propPrepNote}`;
 
   return {
     apparatus,
@@ -712,8 +712,8 @@ function buildFallbackStudioWeekSlots(
       equipmentLabels: ['리포머', '폼롤러'],
       focusTagsKo: ['호흡·골반 정렬', '복횡근', '척추 분절'],
       propBadgesKo: ['폼롤러'],
-      flowPhaseSummaryKo: '예열 8분 → 본운동 36분 → 마무리 6분',
-      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(폼롤러) 스튜디오 비치됨',
+      flowPhaseSummaryKo: '준비 운동 8분 → 본운동 36분 → 마무리 6분',
+      memberPrepTipKo: '미끄럼 방지 양말을 신으면 좋아요. 폼롤러는 스튜디오에 있어요.',
       level: '1.0',
       springs: '2R 1B',
       baseEnrolled: 3,
@@ -730,8 +730,8 @@ function buildFallbackStudioWeekSlots(
       equipmentLabels: ['체어', '미니볼'],
       focusTagsKo: ['둔근·하지 밸런스', '심부 코어', '중둔근'],
       propBadgesKo: ['미니볼'],
-      flowPhaseSummaryKo: '예열 6분 → 본운동 38분 → 마무리 6분',
-      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(미니볼) 스튜디오 비치됨',
+      flowPhaseSummaryKo: '준비 운동 6분 → 본운동 38분 → 마무리 6분',
+      memberPrepTipKo: '미끄럼 방지 양말을 신으면 좋아요. 미니볼은 스튜디오에 있어요.',
       level: '1.5',
       springs: '1R 1Y (페달)',
       baseEnrolled: 5,
@@ -748,8 +748,8 @@ function buildFallbackStudioWeekSlots(
       equipmentLabels: ['캐딜락', '써클링'],
       focusTagsKo: ['흉추·견갑 가동성', '전신 협응', '햄스트링 이완'],
       propBadgesKo: ['써클링'],
-      flowPhaseSummaryKo: '예열 6분 → 본운동 36분 → 마무리 8분',
-      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(써클링) 스튜디오 비치됨',
+      flowPhaseSummaryKo: '준비 운동 6분 → 본운동 36분 → 마무리 8분',
+      memberPrepTipKo: '미끄럼 방지 양말을 신으면 좋아요. 필라테스 링은 스튜디오에 있어요.',
       level: '1.5',
       springs: '1B (푸쉬스루)',
       baseEnrolled: 6,

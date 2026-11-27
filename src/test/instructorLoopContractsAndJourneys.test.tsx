@@ -697,9 +697,10 @@ describe('Instructor loop contracts & 6 mandatory journeys (PF-01 ~ PF-08, P2, P
   });
 
   it('Journey 4 (PF-08, P2): media URL states stay distinct, broken video & 3D failure fall back gracefully, and opening 3D in LiveStage never alters timer or step', () => {
-    // 1) Valid video shows 'URL 존재' provenance tier + segment + publisher + date
+    // 저장한 링크와 구간을 직접 확인할 수 있다.
     const validGallery = render(<ExerciseVideoGallery exercise={reformerFootworkValidVideo} />);
-    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('URL 존재');
+    fireEvent.click(screen.getByText('출처와 확인한 내용'));
+    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('저장된 영상 주소가 있어요.');
     expect(screen.getByTestId('evg-provenance-meta')).toHaveTextContent('00:15 ~ 01:30');
     validGallery.unmount();
 
@@ -896,7 +897,7 @@ describe('Instructor loop contracts & 6 mandatory journeys (PF-01 ~ PF-08, P2, P
     ).toMatchObject({ ok: false, code: 'pii_or_health_rejected' });
   });
 
-  it('Video reference segment review handoff (P2): transfers selected gallery video & segment into Step 2 draft and upgrades tier to 해당 동작 일치 확인 upon instructor approval', () => {
+  it('Video reference segment review handoff (P2): transfers selected gallery video & segment into Step 2 draft without conflating instructor plan approval and video evidence', () => {
     // Seed an unreviewed version of reformerFootworkValidVideo so we can promote it end-to-end
     const unreviewedFootwork: PilatesExercise = {
       ...structuredClone(reformerFootworkValidVideo),
@@ -908,12 +909,13 @@ describe('Instructor loop contracts & 6 mandatory journeys (PF-01 ~ PF-08, P2, P
     }));
 
     render(<YouTubePreviewModal exercise={unreviewedFootwork} onClose={vi.fn()} />);
-    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('URL 존재');
+    fireEvent.click(screen.getByText('출처와 확인한 내용'));
+    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('저장된 영상 주소가 있어요.');
     expect(screen.getByTestId('evg-provenance-meta')).toHaveTextContent('00:15 ~ 01:30');
 
-    // Click '내 노트 참조 URL로 반영' -> opens Step 2 review editor with startSec/endSec preserved
-    fireEvent.click(screen.getByRole('button', { name: '내 노트 참조 URL로 반영' }));
-    expect(screen.getByTestId('yt-preview-step-guidance')).toHaveTextContent('2/2');
+    // Click '이 영상을 수업 메모에 담기' -> opens Step 2 review editor with startSec/endSec preserved
+    fireEvent.click(screen.getByRole('button', { name: '이 영상을 수업 메모에 담기' }));
+    expect(screen.getByRole('button', { name: '수업 메모 편집' })).toHaveAttribute('aria-current', 'page');
 
     // Enter instructor alias (non-PII), check full review confirmation, and approve
     fireEvent.change(screen.getByLabelText('검토한 강사 별칭'), {
@@ -928,6 +930,7 @@ describe('Instructor loop contracts & 6 mandatory journeys (PF-01 ~ PF-08, P2, P
       screen.getByRole('button', { name: /수정 내용을 저장하고 내 강사 검토로 승인/ }),
     );
 
-    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('해당 동작 일치 확인');
+    expect(screen.getByTestId('evg-verification-tier')).toHaveTextContent('저장된 영상 주소가 있어요.');
+    expect(screen.getByTestId('evg-verification-tier')).not.toHaveTextContent('동작 일치 확인');
   });
 });

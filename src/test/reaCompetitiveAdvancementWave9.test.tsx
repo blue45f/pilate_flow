@@ -354,6 +354,8 @@ describe('Wave 9 REA Competitive Internalization & Advancement Suite', () => {
         addedId={null}
       />,
     );
+    expect(screen.getByTestId('inspector-layers-progression-card')).not.toBeVisible();
+    fireEvent.click(screen.getByText('수업 준비와 강도 조절'));
     expect(screen.getByTestId('inspector-layers-progression-card')).toBeVisible();
 
     usePilatesStore.setState({

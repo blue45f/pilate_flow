@@ -1,4 +1,5 @@
 import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { MovementWorkspaceCover } from './EditorialApparatusCard';
 import { getAccessibleScrollBehavior } from '../utils/scrollBehavior';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { burstFrom } from '../motion';
@@ -72,6 +73,22 @@ import '../styles/atelier-luxury-v2.css';
 import '../styles/member-booking.css';
 
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const MEMBER_FOCUS_LABELS: Record<string, string> = {
+  '척추분절': '등을 한 마디씩 움직이기',
+  '척추 분절': '등을 한 마디씩 움직이기',
+  '호흡·골반 정렬': '숨 쉬며 골반 위치 느끼기',
+  '복횡근': '배를 감싸는 속근육',
+  '심부 코어': '몸통을 받쳐 주는 속근육',
+  '둔근·하지 밸런스': '엉덩이와 다리로 균형 잡기',
+  '중둔근': '엉덩이 옆 근육',
+  '흉추·견갑 가동성': '등과 날개뼈 부드럽게 움직이기',
+  '전신 협응': '팔과 다리를 함께 움직이기',
+  '햄스트링 이완': '허벅지 뒤쪽 늘이기',
+  '측면 사슬 신장': '옆구리부터 허벅지 바깥쪽까지 늘이기',
+  '흉추 신전': '등 윗부분 펴기',
+  '하지 밸런스': '다리로 균형 잡기',
+  '코어 제어': '몸통이 흔들리지 않게 버티기',
+};
 const FIRST_SCHEDULE_DATE = '1900-01-01';
 const LAST_SCHEDULE_DATE = '2199-12-31';
 
@@ -112,9 +129,9 @@ const APPARATUS_FILTERS: ReadonlyArray<{ value: 'all' | ApparatusType; label: st
 type MemberFocusFilter = 'all' | 'core' | 'lower' | 'stretch' | 'props';
 
 const FOCUS_PROP_FILTERS: ReadonlyArray<{ value: MemberFocusFilter; label: string }> = [
-  { value: 'all', label: '전체 포커스' },
+  { value: 'all', label: '모든 운동 목적' },
   { value: 'core', label: '코어·바른 자세' },
-  { value: 'lower', label: '힙·하체 탄력' },
+  { value: 'lower', label: '엉덩이·다리 힘 기르기' },
   { value: 'stretch', label: '어깨·등 스트레칭' },
   { value: 'props', label: '소도구 활용' },
 ];
@@ -135,9 +152,9 @@ function slotMatchesFocusFilter(slot: MemberBookableSlot, filter: MemberFocusFil
     );
     return hasDedicatedProp || /폼롤러|미니볼|써클링|세라밴드|요가블록|아크/.test(hay);
   }
-  if (filter === 'core') return /코어|복횡근|골반|정렬|복부/.test(hay);
-  if (filter === 'lower') return /둔근|하지|하체|중둔근|대퇴|힙|런지/.test(hay);
-  if (filter === 'stretch') return /흉추|스트레치|신장|이완|가동성|견갑|협응/.test(hay);
+  if (filter === 'core') return /코어|복횡근|골반|정렬|복부|배에 힘|배 근육|몸통/.test(hay);
+  if (filter === 'lower') return /둔근|하지|하체|중둔근|대퇴|힙|런지|엉덩이|허벅지|다리/.test(hay);
+  if (filter === 'stretch') return /흉추|스트레[칭치]|신장|이완|가동성|견갑|어깨|등 펴기/.test(hay);
   return true;
 }
 
@@ -1097,18 +1114,21 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       aria-labelledby="workspace-main-heading"
       data-testid="member-booking-view"
     >
-      <header className="pf-member-header atelier-cover atelier-cover--apparatus">
-        <div>
-          <h1 id="workspace-main-heading" tabIndex={-1}>
-            {page === 'bookings' ? '내 예약' : page === 'wallet' ? '내 수강권' : '회원 수업 시간표'}
-          </h1>
-        </div>
+      <MovementWorkspaceCover
+        apparatus={apparatusFilter === 'all' ? 'reformer' : apparatusFilter}
+        title={page === 'bookings' ? '내 예약' : page === 'wallet' ? '내 수강권' : '회원 수업 시간표'}
+        description={page === 'bookings'
+          ? '예약한 수업과 대기 순서를 확인하고, 필요하면 자리를 바꿔 보세요.'
+          : page === 'wallet'
+            ? '몇 번 더 들을 수 있는지, 언제까지 쓸 수 있는지 확인하세요.'
+            : '원하는 날을 고르고, 수업에서 사용할 자리를 선택하세요.'}
+      >
         {onSwitchToInstructor && (
           <button type="button" className="pf-member-chip" onClick={onSwitchToInstructor}>
             강사 작업실로 돌아가기
           </button>
         )}
-      </header>
+      </MovementWorkspaceCover>
       <p className="pf-member-demo-notice" data-testid="member-booking-storage-notice">
         <strong>예약 체험</strong>{' '}
         수강권과 잔여 좌석은 예시이며, 예약·취소는 이 기기에만 기록됩니다.
@@ -1159,8 +1179,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         >
           <WifiOff size={16} strokeWidth={1.5} aria-hidden="true" />
           <span>
-            현재 오프라인 읽기 전용 상태입니다. 시간표·잔여 횟수 조회만 가능하며 예약·취소는 연결
-            복구 후 진행할 수 있습니다.
+            지금은 인터넷 연결이 끊겨 있어요. 시간표와 남은 수강권은 볼 수 있어요. 예약하거나 취소하려면 인터넷에 다시 연결해 주세요.
           </span>
         </div>
       )}
@@ -1543,7 +1562,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               >
                 <span className="pf-member-day-btn__weekday">{weekday}</span>
                 <strong className="pf-member-day-btn__date">{monthDay}</strong>
-                <small className="pf-member-day-btn__count">{count}수업</small>
+                <small className="pf-member-day-btn__count">수업 {count}개</small>
               </button>
             );
           })}
@@ -1600,7 +1619,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       <div
         className="pf-member-focus-filter-row"
         role="group"
-        aria-label="수업 포커스·소도구 빠른 필터"
+        aria-label="운동 목적과 소도구로 수업 찾기"
         data-testid="member-focus-filter-group"
       >
         {FOCUS_PROP_FILTERS.map((item) => (
@@ -1633,11 +1652,11 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               <strong className="pf-member-empty-title">
                 {daySlots.length === 0
                   ? '선택한 날짜에는 개설된 수업이 없어요'
-                  : '선택한 기구·포커스·예약 가능 필터에 맞는 수업이 없어요'}
+                  : '이날은 선택한 조건에 맞는 수업이 없어요'}
               </strong>
               <p className="pf-member-empty-desc">
                 {nextMatchingClassDate
-                  ? '현재 필터에 맞는 다음 수업일을 찾았어요. 조건을 유지한 채 이동할 수 있어요.'
+                  ? '같은 조건으로 수업이 있는 다음 날짜를 확인해 보세요.'
                   : '다음 4주에 현재 조건에 맞는 수업이 없어요. 다른 주를 살펴보거나 필터를 바꿔 보세요.'}
               </p>
             </div>
@@ -1738,7 +1757,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       : `수업 ${slot.freeCancelHoursBefore}시간 전까지 무료 취소`}
                   </p>
                   <details className="mb-card-details">
-                    <summary>수업 구성 · 기구 세팅 자세히 보기</summary>
+                    <summary>운동 부위와 기구 사용법</summary>
                     <div className="mb-card-details__body">
                       <div
                         className="mb-card-details__row"
@@ -1756,7 +1775,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         >
                           {slot.focusTagsKo?.slice(0, 3).map((tag) => (
                             <span key={tag} className="mb-card-meta-item">
-                              포커스 · {tag}
+                              {MEMBER_FOCUS_LABELS[tag] ?? tag}
                             </span>
                           ))}
                           {slot.propBadgesKo?.slice(0, 2).map((propLabel) => (
@@ -1952,7 +1971,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         <div className="mb-card-details__meta">
                           {pendingAction.slot.focusTagsKo?.slice(0, 3).map((tag) => (
                             <span key={tag} className="mb-card-meta-item">
-                              포커스 · {tag}
+                              {MEMBER_FOCUS_LABELS[tag] ?? tag}
                             </span>
                           ))}
                           {pendingAction.slot.propBadgesKo?.slice(0, 2).map((propLabel) => (

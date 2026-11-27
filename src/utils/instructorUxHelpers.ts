@@ -192,41 +192,37 @@ export interface PilatesFundamentalCard {
 export const PILATES_FUNDAMENTAL_CARDS: readonly PilatesFundamentalCard[] = [
   {
     id: 'breathing-ribcage',
-    titleKo: '흉곽 호흡 (3D 갈비뼈 호흡)',
-    shortRuleKo: '마실 때 옆·뒤 갈비뼈 넓히기 → 내쉴 때 아랫배 쏙 감싸기',
-    detailKo:
-      '배만 볼록 내밀지 않고, 코로 마실 때 양옆과 등 쪽 갈비뼈가 우산처럼 부드럽게 열렸다가 입으로 길게 내쉬며 갈비뼈 아랫단이 닫히는 리듬이에요.',
-    cueTipKo: '큐 한 마디: "코로 마시며 등 쪽 갈비뼈를 넓히고, 입으로 후 내쉬며 배꼽을 등 쪽으로 얇게 붙여요."',
+    titleKo: '갈비뼈로 느껴 보는 숨 (흉곽 호흡)',
+    shortRuleKo: '양손을 갈비뼈 옆에 가볍게 대 보세요.',
+    detailKo: '코로 숨을 들이쉴 때 양손 사이가 넓어지고, 내쉴 때 다시 가까워지는지 느껴 봐요. 어깨는 편안하게 두세요.',
+    cueTipKo: '등을 대고 누우면 숨이 들어올 때 등 뒤가 바닥을 살짝 미는 느낌도 들 수 있어요.',
     webpSrc: '/images/atelier-fundamentals/fundamental-breathing-ribcage.webp',
     pngSrc: '/images/atelier-fundamentals/fundamental-breathing-ribcage.png',
   },
   {
     id: 'neutral-pelvis',
-    titleKo: '중립 골반 (Neutral Pelvis)',
-    shortRuleKo: '골반 앞뼈 2개와 치골이 바닥과 평행한 삼각형',
-    detailKo:
-      '누웠을 때 허리를 바닥에 꾹 누르지도, 과하게 띄우지도 않은 자연스러운 상태예요. 허리 아래로 손가락 한 마디 정도의 숨 쉴 공간이 남는 것이 기본이에요.',
-    cueTipKo: '큐 한 마디: "골반 위에 물 한 컵이 올려져 있다고 상상하고, 쏟아지지 않게 수평을 지켜요."',
+    titleKo: '허리가 편안한 골반 위치 (중립 골반)',
+    shortRuleKo: '무릎을 세우고 누워 골반을 앞뒤로 작게 굴려요.',
+    detailKo: '허리가 바닥에 가까워졌다가 멀어지는 걸 느껴 보세요. 두 방향 사이에서 허리에 힘을 덜 주고 편하게 숨 쉴 수 있는 자리를 찾아요.',
+    cueTipKo: '사람마다 허리 곡선이 달라요. 바닥과 허리 사이의 간격을 똑같이 맞출 필요는 없어요.',
     webpSrc: '/images/atelier-fundamentals/fundamental-neutral-pelvis.webp',
     pngSrc: '/images/atelier-fundamentals/fundamental-neutral-pelvis.png',
   },
   {
     id: 'spring-mechanics',
-    titleKo: '스프링 원리 (보조 vs 저항)',
-    shortRuleKo: '무거울수록 항상 어려운 건 아니에요',
-    detailKo:
-      '풋워크·팔 당기기처럼 스프링을 직접 밀고 당기는 동작은 무거울수록 근력 저항이 커져요. 반대로 플랭크·무릎 코어처럼 캐리지를 버티는 동작은 가벼운 스프링이 보조를 줄여 코어가 훨씬 더 많이 일해요.',
-    cueTipKo: '큐 한 마디: "캐리지가 밀리지 않게 코어로 먼저 잡은 뒤 천천히 움직여 볼게요."',
+    titleKo: '기구를 밀고 돌아올 때 (스프링 원리)',
+    shortRuleKo: '스프링은 움직임을 도와주기도 하고, 미는 힘을 더 필요하게 하기도 해요.',
+    detailKo: '리포머에 누워 발로 바를 밀면 판이 멀어지면서 스프링이 늘어나요. 무릎을 굽히면 스프링이 판을 되당기니, 마지막까지 발로 속도를 조절해 보세요.',
+    cueTipKo: '같은 색 스프링도 기구마다 강도가 달라요. 처음에는 강사와 설정을 맞춰요.',
     webpSrc: '/images/atelier-fundamentals/fundamental-spring-mechanics.webp',
     pngSrc: '/images/atelier-fundamentals/fundamental-spring-mechanics.png',
   },
   {
     id: 'spinal-articulation',
-    titleKo: '척추 4평면 균형 설계',
-    shortRuleKo: '굴곡 · 신전 · 측굴 · 회전 4방향을 50분에 고루 담기',
-    detailKo:
-      '앞으로 말기(굴곡)만 반복하면 몸이 웅크려진 느낌이 남아요. 한 수업 안에 등 펴기(신전), 옆구리 늘리기(측굴), 부드러운 비틀기(회전)를 최소 1동작씩 넣으면 회원님이 훨씬 개운하게 마무리해요.',
-    cueTipKo: '큐 한 마디: "꼬리뼈부터 정수리까지 도미노처럼 한 마디씩 천천히 움직여 보세요."',
+    titleKo: '등을 움직이는 네 방향',
+    shortRuleKo: '등은 둥글게 말고, 펴고, 옆으로 기울이고, 좌우로 돌릴 수 있어요.',
+    detailKo: '바르게 앉아 가슴을 살짝 돌려 보세요. 이번에는 정면을 본 채 어깨를 옆으로 기울여요. 등이 도는 느낌과 옆구리가 늘어나는 느낌이 달라요.',
+    cueTipKo: '처음에는 작게 움직여 보세요. 양쪽의 범위가 같지 않아도 괜찮아요.',
     webpSrc: '/images/atelier-fundamentals/fundamental-spinal-articulation.webp',
     pngSrc: '/images/atelier-fundamentals/fundamental-spinal-articulation.png',
   },
@@ -284,7 +280,7 @@ function buildMovementBenefitsKo(exercise: PilatesExercise): readonly string[] {
       ];
     case 'footwork':
       return [
-        '발목·무릎·고관절을 일직선으로 정렬하며 하체 지지력을 고르게 깨워줘요.',
+        '발로 기구나 바닥을 밀 때 무릎이 발끝을 따라 움직이는 느낌을 익혀요.',
         '허벅지 앞·뒤와 둔근에 고르게 힘을 실어 본운동 전 하체 워밍업으로 좋아요.',
       ];
     case 'bridging':
@@ -299,8 +295,8 @@ function buildMovementBenefitsKo(exercise: PilatesExercise): readonly string[] {
       ];
     case 'upper-body':
       return [
-        '어깨가 귀로 올라가지 않게 날개뼈를 안정화하며 팔·등 라인을 정리해 줘요.',
-        '가슴을 부드럽게 열어 바른 상체 정렬과 매끄러운 팔 움직임을 만들어 줘요.',
+        '팔을 밀고 당길 때 어깨와 날개뼈가 함께 움직이는 연습이에요.',
+        '팔이 움직이는 동안 목과 어깨에 힘을 덜 주는 범위를 찾아요.',
       ];
     case 'lower-body':
       return [
@@ -319,7 +315,7 @@ function buildMovementBenefitsKo(exercise: PilatesExercise): readonly string[] {
       ];
     case 'feet-in-straps':
       return [
-        '스트랩의 부드러운 지지 아래 고관절 가동 범위와 다리 길이를 시원하게 넓혀줘요.',
+        '발에 건 줄이 다리를 받쳐 줘서 원하는 방향으로 천천히 움직여 볼 수 있어요.',
         '골반을 안정시킨 채 다리를 움직여 속근육 조절력과 유연성을 함께 챙겨줘요.',
       ];
     case 'cooldown':
