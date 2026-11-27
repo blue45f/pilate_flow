@@ -232,21 +232,22 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
       }
 
       // Camera preset switching
-      const sagittalBtn = within(rigCard).getByRole('button', { name: '시상면(Side)' });
+      const sagittalBtn = within(rigCard).getByRole('button', { name: '옆에서' });
       fireEvent.click(sagittalBtn);
       expect(sagittalBtn).toHaveAttribute('aria-pressed', 'true');
 
       // Under prefers-reduced-motion: reduce, clicking continuous play steps once statically and keeps aria-pressed="false"
-      const playBtn = within(rigCard).getByRole('button', { name: '3페이즈 연속 재생' });
+      const playBtn = within(rigCard).getByRole('button', { name: '다음 자세' });
       expect(playBtn).toHaveAttribute('aria-pressed', 'false');
       fireEvent.click(playBtn);
       expect(playBtn).toHaveAttribute('aria-pressed', 'false');
       expect(
-        within(rigCard).getByRole('button', { name: '2 정점(Peak)' }),
+        within(rigCard).getByRole('button', { name: '움직인 자세' }),
       ).toHaveAttribute('aria-pressed', 'true');
 
       // Blender script disclosure links aria-controls and is keyboard focusable
-      const scriptBtn = within(rigCard).getByRole('button', { name: 'Blender 3D 스크립트(.py)' });
+      fireEvent.click(within(rigCard).getByText('3D 파일과 Blender 코드'));
+      const scriptBtn = within(rigCard).getByRole('button', { name: 'Blender 코드 보기' });
       fireEvent.click(scriptBtn);
       const scriptPre = screen.getByTestId('blender-scene-script-preview');
       expect(scriptBtn).toHaveAttribute('aria-controls', scriptPre.getAttribute('id'));
@@ -254,7 +255,7 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
 
       // Range slider has explicit label association and >=44px class
       const slider = within(rigCard).getByRole('slider', {
-        name: '캐리지 가동 범위 위치 조절',
+        name: '동작 진행 위치',
       });
       expect(slider).toHaveClass('pf-rig-preview__slider-input');
     } finally {
